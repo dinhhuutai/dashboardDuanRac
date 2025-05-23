@@ -51,6 +51,18 @@ const Report = () => {
 
     return `${day}/${month}/${year}`;
   }
+  
+  function formatDateToVNString2(date) {
+    const vnOffset = 7 * 60; // phút
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000; // chuyển về UTC
+    const vnTime = new Date(utc + vnOffset * 60000); // cộng thêm offset của VN
+
+    const day = String(vnTime.getDate()).padStart(2, '0');
+    const month = String(vnTime.getMonth() + 1).padStart(2, '0');
+    const year = vnTime.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -179,7 +191,6 @@ const Report = () => {
           );
           tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
 
-          console.log(tmp);
           setReport(tmp);
         }
       } catch (error) {
@@ -347,7 +358,7 @@ const Report = () => {
         const key = `${d.group}-${item}`;
         const data = report[key];
 
-        const values = data.map((e) => (e === 0 ? '-' : e));
+        const values = data?.map((e) => (e === 0 ? '-' : e));
 
         return [idx === 0 ? d.group : '', item, ...values];
       }),
@@ -556,10 +567,25 @@ const Report = () => {
       };
     }
 
-    XLSX.utils.book_append_sheet(wb, ws, `${today.replace(/[:\\\/\?\*\[\]]/g, '-')}`);
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      `${
+        filterType === 'one'
+          ? formatDateToVNString2(dateOne)
+          : `${formatDateToVNString2(startDate)} - ${formatDateToVNString2(endDate)}`
+      }`,
+    );
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `theodoiracthai~${today}.xlsx`);
+    saveAs(
+      new Blob([wbout], { type: 'application/octet-stream' }),
+      `theodoiracthai~${
+        filterType === 'one'
+          ? formatDateToVNString1(dateOne)
+          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
+      }.xlsx`,
+    );
   };
 
   return (
