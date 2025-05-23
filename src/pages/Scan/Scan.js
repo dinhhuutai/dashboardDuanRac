@@ -107,7 +107,7 @@ function Scan() {
 
     try {
       const res = await fetch(
-        'http://localhost:5000/trash-weighings',
+        'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/trash-weighings',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

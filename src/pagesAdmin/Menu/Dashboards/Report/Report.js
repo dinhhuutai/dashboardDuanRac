@@ -69,7 +69,7 @@ const Report = () => {
 
     const fetchTodayReport = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/statistics/weight-by-unit', {
+        const res = await axios.get('https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-unit', {
           params: {
             type: filterType,
             startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),

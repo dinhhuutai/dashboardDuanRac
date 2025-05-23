@@ -40,11 +40,11 @@ function Footer() {
                     <p className="mb-4 text-[12px]">lttnguyen328@gmail.com</p>
 
                     <div className="flex space-x-3 mt-4">
-                        <a href="#"><FaFacebookF className="bg-[#3b5998] text-white text-[40px] p-2 rounded" /></a>
-                        <a href="#"><FaYoutube className="bg-[#FF0000] text-white text-[40px] p-2 rounded" /></a>
-                        <a href="#"><FaTiktok className="bg-[#000] text-white text-[40px] p-2 rounded" /></a>
-                        <a href="#"><FaInstagram className="bg-[#E1306C] text-white text-[40px] p-2 rounded" /></a>
-                        <a href="#"><SiZalo className="bg-[#0084FF] text-white text-[40px] p-2 rounded" /></a>
+                        <a href="https://facebook.com"><FaFacebookF className="bg-[#3b5998] text-white text-[40px] p-2 rounded" /></a>
+                        <a href="https://www.youtube.com/youtube"><FaYoutube className="bg-[#FF0000] text-white text-[40px] p-2 rounded" /></a>
+                        <a href="https://www.tiktok.com/"><FaTiktok className="bg-[#000] text-white text-[40px] p-2 rounded" /></a>
+                        <a href="https://www.instagram.com/"><FaInstagram className="bg-[#E1306C] text-white text-[40px] p-2 rounded" /></a>
+                        <a href="https://chat.zalo.me/"><SiZalo className="bg-[#0084FF] text-white text-[40px] p-2 rounded" /></a>
                     </div>
                 </div>
 

@@ -18,7 +18,7 @@ function HistoryWeigh() {
       setError(null);
       try {
         const res = await axios.get(
-          'http://localhost:5000/history/date',
+          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/history/date',
           {
             params: { date },
           },

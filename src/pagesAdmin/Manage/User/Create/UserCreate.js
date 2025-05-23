@@ -24,7 +24,7 @@ function UserCreate() {
     setMessage('');
 
     try {
-      await axios.post('http://localhost:5000/user', formData);
+      await axios.post('https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/user', formData);
       setMessage('✅ Tạo tài khoản thành công!');
       setFormData({
         fullName: '',

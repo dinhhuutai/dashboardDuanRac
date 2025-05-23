@@ -51,7 +51,7 @@ const Analytics = () => {
     const fetchTodayStats = async () => {
       try {
         const res = await axios.get(
-          'http://localhost:5000/api/statistics/today',
+          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/today',
         );
         if (res.data.status === 'success') {
           setTodayStats(res.data.data);
@@ -65,7 +65,7 @@ const Analytics = () => {
     const fetchDepartmentData = async () => {
       try {
         const res = await axios.get(
-          'http://localhost:5000/api/statistics/weight-by-department',
+          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-department',
         );
         if (res.data.status === 'success') {
           setDepartmentData(res.data.data);
@@ -79,7 +79,7 @@ const Analytics = () => {
     const fetchTrashTypeData = async () => {
       try {
         const res = await axios.get(
-          'http://localhost:5000/api/statistics/today-percentage',
+          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/today-percentage',
         );
         if (res.data.status === 'success') {
           setTrashTypeData(res.data.data);

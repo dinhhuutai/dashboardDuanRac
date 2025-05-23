@@ -31,7 +31,7 @@ function Login() {
       dispatch(authSlice.actions.loginStart()); // 👈 Bắt đầu login
 
       const response = await fetch(
-        'http://localhost:5000/login',
+        'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/login',
         {
           method: 'POST',
           headers: {
