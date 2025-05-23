@@ -40,21 +40,30 @@ const Report = () => {
     return localTime.toISOString().slice(0, 10); // chỉ lấy YYYY-MM-DD
   }
 
+  function formatDateToVNString1(date) {
+    const vnOffset = 7 * 60; // phút
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000; // chuyển về UTC
+    const vnTime = new Date(utc + vnOffset * 60000); // cộng thêm offset của VN
+
+    const day = String(vnTime.getDate()).padStart(2, '0');
+    const month = String(vnTime.getMonth() + 1).padStart(2, '0');
+    const year = vnTime.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
   useEffect(() => {
     setLoading(true);
 
     const fetchTodayReport = async () => {
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-unit',
-          {
-            params: {
-              type: filterType,
-              startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
-              endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
-            },
+        const res = await axios.get('http://localhost:5000/api/statistics/weight-by-unit', {
+          params: {
+            type: filterType,
+            startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
+            endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
           },
-        );
+        });
 
         if (res.data.status === 'success') {
           let tmp = {
@@ -335,12 +344,23 @@ const Report = () => {
     // Dữ liệu bảng
     const rows = dataExcel.flatMap((d) =>
       d.items.map((item, idx) => {
-        return [idx === 0 ? d.group : '', item, ...report[`${d.group}-${item}`]];
+        const key = `${d.group}-${item}`;
+        const data = report[key];
+
+        const values = data.map((e) => (e === 0 ? '-' : e));
+
+        return [idx === 0 ? d.group : '', item, ...values];
       }),
     );
 
     const today = new Date().toLocaleDateString('vi-VN');
-    const title = [`BẢNG THEO DÕI RÁC THẢI NGÀY ${today}`];
+    const title = [
+      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+        filterType === 'one'
+          ? formatDateToVNString1(dateOne)
+          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
+      }`,
+    ];
 
     const wsData = [title, headerRow1, headerRow2, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -690,7 +710,7 @@ const Report = () => {
                     <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
                     {report[`${group.group}-${item}`]?.map((e, i) => (
                       <td key={i} className="border border-gray-300 text-center px-2 py-1">
-                        {e}
+                        {e === 0 ? '-' : e}
                       </td>
                     ))}
                   </tr>
@@ -704,7 +724,7 @@ const Report = () => {
                   (e, i) =>
                     i % 3 === 0 && (
                       <td key={i} colSpan={3} className="border border-gray-400 text-center font-bold px-2 py-1">
-                        {e}
+                        {e === 0 ? '-' : e}
                       </td>
                     ),
                 )}

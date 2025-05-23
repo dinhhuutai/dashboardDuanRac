@@ -18,7 +18,7 @@ function HistoryWeigh() {
       setError(null);
       try {
         const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/history/date',
+          'http://localhost:5000/history/date',
           {
             params: { date },
           },
@@ -35,6 +35,7 @@ function HistoryWeigh() {
   }, [date]);
 
   function formatVietnamTimeString(datetimeStr) {
+    console.log(datetimeStr);
     if (!datetimeStr) return '';
     const [date, time] = datetimeStr.split('T');
     const [hour, minute] = time.split(':');
