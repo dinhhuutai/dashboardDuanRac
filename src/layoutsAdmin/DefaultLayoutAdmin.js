@@ -17,7 +17,7 @@ function DefaultLayoutAdmin({ children }) {
             <Sidebar />
           </div>
         )}
-        <div className={`ml-[var(--admin-width-sidebar)] bg-[#F1F4F6] min-h-screen`}>{children}</div>
+        <div className={`ml-[0px] md:ml-[var(--admin-width-sidebar)] bg-[#F1F4F6] min-h-screen`}>{children}</div>
       </div>
       <Notice />
     </div>

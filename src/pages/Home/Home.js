@@ -64,7 +64,7 @@ function Home() {
 
     return (
         <div className="overflow-hidden w-full flex justify-center">
-            <div className="relative w-full h-[600px]">
+            <div className="relative w-full h-[300px] md:h-[600px]">
                 {data.map((e, i) => (
                     <div
                         key={i}
@@ -77,7 +77,7 @@ function Home() {
 
                         {index === i && (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-white space-y-4">
-                                <h1 className="text-[24px] md:text-[24px] font-bold drop-shadow-md whitespace-nowrap">
+                                <h1 className="text-[14px] md:text-[24px] font-bold drop-shadow-md whitespace-nowrap">
                                     {typedText}
                                     <span className="animate-pulse">|</span>
                                 </h1>
