@@ -51,7 +51,7 @@ const Report = () => {
 
     return `${day}/${month}/${year}`;
   }
-  
+
   function formatDateToVNString2(date) {
     const vnOffset = 7 * 60; // phút
     const utc = date.getTime() + date.getTimezoneOffset() * 60000; // chuyển về UTC
@@ -69,13 +69,16 @@ const Report = () => {
 
     const fetchTodayReport = async () => {
       try {
-        const res = await axios.get('https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-unit', {
-          params: {
-            type: filterType,
-            startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
-            endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
+        const res = await axios.get(
+          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-unit',
+          {
+            params: {
+              type: filterType,
+              startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
+              endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
+            },
           },
-        });
+        );
 
         if (res.data.status === 'success') {
           let tmp = {
@@ -736,7 +739,7 @@ const Report = () => {
                     <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
                     {report[`${group.group}-${item}`]?.map((e, i) => (
                       <td key={i} className="border border-gray-300 text-center px-2 py-1">
-                        {e === 0 ? '-' : e}
+                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
                       </td>
                     ))}
                   </tr>
@@ -750,7 +753,7 @@ const Report = () => {
                   (e, i) =>
                     i % 3 === 0 && (
                       <td key={i} colSpan={3} className="border border-gray-400 text-center font-bold px-2 py-1">
-                        {e === 0 ? '-' : e}
+                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
                       </td>
                     ),
                 )}

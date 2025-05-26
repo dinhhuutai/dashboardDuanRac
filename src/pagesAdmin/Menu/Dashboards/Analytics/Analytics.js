@@ -127,7 +127,7 @@ const Analytics = () => {
           </div>
           <div className="bg-white shadow p-4 rounded-lg text-center">
             <div className="text-[16px] font-semibold text-gray-600">Tổng (kg)</div>
-            <div className="text-2xl font-bold text-green-600">{todayStats.totalWeight}</div>
+            <div className="text-2xl font-bold text-green-600">{parseFloat(todayStats?.totalWeight?.toFixed(2))}</div>
           </div>
           <div className="bg-white shadow p-4 rounded-lg text-center">
             <div className="text-[16px] font-semibold text-gray-600">Bộ phận nhiều nhất</div>
