@@ -251,6 +251,7 @@
 // }
 
 // export default Scan;
+// File: Scan.js
 
 import React, { useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
@@ -263,7 +264,7 @@ import { FaSpinner } from 'react-icons/fa';
 function Scan() {
   const videoRef = useRef(null);
   const qrScannerRef = useRef(null);
-  const mediaStreamRef = useRef(null); // NEW: Lưu stream video
+  const mediaStreamRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [jsonData, setJsonData] = useState(null);
@@ -278,7 +279,6 @@ function Scan() {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
 
-  // Khởi động QrScanner
   const initScanner = () => {
     if (!videoRef.current) return;
 
@@ -310,7 +310,6 @@ function Scan() {
       });
   };
 
-  // Gọi khi mở trang lần đầu
   useEffect(() => {
     initScanner();
     return () => {
@@ -323,7 +322,6 @@ function Scan() {
     };
   }, []);
 
-  // Khi mở hoặc đóng modal -> quản lý camera
   useEffect(() => {
     if (resultVisible) {
       qrScannerRef.current?.stop();
@@ -336,7 +334,7 @@ function Scan() {
         qrScannerRef.current.destroy();
         qrScannerRef.current = null;
       }
-      initScanner(); // tạo lại camera mới
+      initScanner();
     }
   }, [resultVisible]);
 
@@ -347,18 +345,10 @@ function Scan() {
     }
 
     setLoading(true);
-
     const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
     let weight = parseFloat(khoiLuong);
 
     const adjustments = {
-      // 'Giẻ lau có chứa thành phần nguy hại': 1,
-      // 'Vụn logo': 1,
-      // 'Mực in thải': 0.45,
-      // 'Keo bàn thải': 1,
-      // 'Băng keo dính mực': 0.8,
-      // 'Rác sinh hoạt': 1,
-      // 'Lụa căng khung': 1,
       'Giẻ lau có chứa thành phần nguy hại': 0,
       'Vụn logo': 0,
       'Mực in thải': 0,
