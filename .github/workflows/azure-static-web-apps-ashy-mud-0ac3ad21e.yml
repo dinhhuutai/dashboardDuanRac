@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 name: Azure Static Web Apps CI/CD
 
 on:
@@ -92,4 +91,4 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ASHY_MUD_0AC3AD21E }}
           action: "close"
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
+

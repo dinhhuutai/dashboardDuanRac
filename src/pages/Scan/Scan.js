@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // import React, { useEffect, useRef, useState } from 'react';
 // import QrScanner from 'qr-scanner';
 // import { motion, AnimatePresence } from 'framer-motion';
@@ -253,8 +252,6 @@
 
 // export default Scan;
 
-=======
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
 import React, { useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -266,15 +263,9 @@ import { FaSpinner } from 'react-icons/fa';
 function Scan() {
   const videoRef = useRef(null);
   const qrScannerRef = useRef(null);
-<<<<<<< HEAD
   const mediaStreamRef = useRef(null); // NEW: Lưu stream video
 
   const [loading, setLoading] = useState(false);
-=======
-
-  const [loading, setLoading] = useState(false);
-
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
   const [jsonData, setJsonData] = useState(null);
   const [khoiLuong, setKhoiLuong] = useState('');
   const [resultVisible, setResultVisible] = useState(false);
@@ -287,12 +278,8 @@ function Scan() {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
 
-<<<<<<< HEAD
   // Khởi động QrScanner
   const initScanner = () => {
-=======
-  useEffect(() => {
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
     if (!videoRef.current) return;
 
     qrScannerRef.current = new QrScanner(
@@ -300,10 +287,6 @@ function Scan() {
       (result) => {
         try {
           const decodedStr = decodeURIComponent(result.data);
-<<<<<<< HEAD
-=======
-
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
           const parsed = JSON.parse(decodedStr);
           setJsonData(parsed);
           setResultVisible(true);
@@ -317,7 +300,6 @@ function Scan() {
       },
     );
 
-<<<<<<< HEAD
     qrScannerRef.current
       .start()
       .then(() => {
@@ -355,24 +337,6 @@ function Scan() {
         qrScannerRef.current = null;
       }
       initScanner(); // tạo lại camera mới
-=======
-    qrScannerRef.current.start();
-
-    return () => {
-      qrScannerRef.current?.stop();
-      qrScannerRef.current?.destroy();
-    };
-  }, []);
-
-  // Khi modal hiện thì dừng quét, khi đóng modal thì quét lại
-  useEffect(() => {
-    if (!qrScannerRef.current) return;
-
-    if (resultVisible) {
-      qrScannerRef.current.stop();
-    } else {
-      qrScannerRef.current.start();
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
     }
   }, [resultVisible]);
 
@@ -388,13 +352,20 @@ function Scan() {
     let weight = parseFloat(khoiLuong);
 
     const adjustments = {
-      'Giẻ lau có chứa thành phần nguy hại': 1,
-      'Vụn logo': 1,
-      'Mực in thải': 0.45,
-      'Keo bàn thải': 1,
-      'Băng keo dính mực': 0.8,
-      'Rác sinh hoạt': 1,
-      'Lụa căng khung': 1,
+      // 'Giẻ lau có chứa thành phần nguy hại': 1,
+      // 'Vụn logo': 1,
+      // 'Mực in thải': 0.45,
+      // 'Keo bàn thải': 1,
+      // 'Băng keo dính mực': 0.8,
+      // 'Rác sinh hoạt': 1,
+      // 'Lụa căng khung': 1,
+      'Giẻ lau có chứa thành phần nguy hại': 0,
+      'Vụn logo': 0,
+      'Mực in thải': 0,
+      'Keo bàn thải': 0,
+      'Băng keo dính mực': 0,
+      'Rác sinh hoạt': 0,
+      'Lụa căng khung': 0,
     };
 
     if (jsonData?.t && adjustments[jsonData.t]) {
@@ -402,10 +373,6 @@ function Scan() {
     }
 
     weight = parseFloat(weight.toFixed(2));
-<<<<<<< HEAD
-=======
-
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
     const { shift, workDate } = getCurrentShiftInfo(new Date());
 
     const payload = {
@@ -439,20 +406,10 @@ function Scan() {
       setMessageModal({ type: 'error', message: '❌ Lỗi kết nối: Không thể kết nối đến server' });
     } finally {
       setLoading(false);
-<<<<<<< HEAD
       setResultVisible(false);
       setJsonData(null);
       setKhoiLuong('');
     }
-=======
-    }
-
-    // Reset giao diện nhập liệu
-    setResultVisible(false);
-    setJsonData(null);
-    setKhoiLuong('');
-    setLoading(false);
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
   };
 
   return (
@@ -478,11 +435,7 @@ function Scan() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.2 }}
-<<<<<<< HEAD
               onClick={(e) => e.stopPropagation()}
-=======
-              onClick={(e) => e.stopPropagation()} // Ngăn nổi bọt
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
             >
               <div className="text-sm flex">
                 <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
@@ -522,11 +475,7 @@ function Scan() {
                 <button
                   onClick={handleConfirm}
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center"
-<<<<<<< HEAD
                   disabled={loading}
-=======
-                  disabled={loading} // disable khi đang loading
->>>>>>> 3852efbcb6d24cecf89b7713082256404357f2a0
                 >
                   {loading ? (
                     <>
