@@ -12,7 +12,11 @@ const Report = () => {
 
   const [filterType, setFilterType] = useState('one'); // 'one' or 'range'
   const [dateOne, setDateOne] = useState(new Date());
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday;
+  });
   const [endDate, setEndDate] = useState(new Date());
 
   const sumArrays = (...arrays) => {
@@ -62,6 +66,13 @@ const Report = () => {
     const year = vnTime.getFullYear();
 
     return `${day}-${month}-${year}`;
+  }
+
+  function sumFirstSixElements(arr) {
+    const sum = arr.slice(0, 18).reduce((total, val) => total + val, 0);
+    const newArr = [...arr];
+    newArr.splice(18, 0, sum, 0, 0); // Chèn sum vào vị trí thứ 6
+    return newArr;
   }
 
   useEffect(() => {
@@ -194,7 +205,52 @@ const Report = () => {
           );
           tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
 
+          if (filterType === 'range') {
+            tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
+            tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
+            tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
+            tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
+            tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
+            tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
+            tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
+            tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
+            tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
+            tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
+            tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
+            tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
+            tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
+            tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
+            tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
+            tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
+            tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
+            tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
+            tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
+
+            tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
+            tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
+            tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
+            tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
+            tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
+            tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
+            tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
+            tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
+            tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
+            tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
+            tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
+            tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
+            tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
+            tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
+            tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
+            tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
+            tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
+            tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
+            tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
+            tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
+          }
+
           setReport(tmp);
+
+          console.log(tmp);
         }
       } catch (error) {
         setLoading(false);
@@ -206,7 +262,7 @@ const Report = () => {
     fetchTodayReport();
 
     setLoading(false);
-  }, [dateOne, startDate, endDate]);
+  }, [dateOne, startDate, endDate, filterType]);
 
   const headers = [
     'BP/Tổ',
@@ -217,6 +273,18 @@ const Report = () => {
     'Mực in thải',
     'Vụn logo',
     'Lụa căng khung',
+    'Rác sinh hoạt',
+    'Tổng',
+  ];
+  const headersRange = [
+    'BP/Tổ',
+    'Giẻ lau dính mực',
+    'Băng keo',
+    'Keo bàn thải',
+    'Mực in thải',
+    'Vụn logo',
+    'Lụa căng khung',
+    'Tổng rác nguy hại',
     'Rác sinh hoạt',
     'Tổng',
   ];
@@ -268,6 +336,28 @@ const Report = () => {
     { group: 'IT - Bảo trì', items: [''] },
     { group: 'Văn phòng', items: [''] },
     { group: '', items: ['Cộng'] },
+  ];
+
+  const dataRange = [
+    { group: 'Tổ 3', items: [''] },
+    { group: 'Tổ 4', items: [''] },
+    { group: 'Tổ 5', items: [''] },
+    { group: 'Bổ sung', items: [''] },
+    { group: 'Mẫu', items: [''] },
+    { group: 'Canh hàng', items: [''] },
+    { group: 'Pha màu', items: [''] },
+    { group: 'Chụp khuôn', items: [''] },
+    { group: 'Kế hoạch', items: [''] },
+    { group: 'Logo', items: [''] },
+    { group: 'Bán hàng', items: [''] },
+    { group: 'Chất lượng', items: [''] },
+    { group: 'Kcs', items: [''] },
+    { group: 'Điều hành', items: [''] },
+    { group: 'Ép', items: [''] },
+    { group: 'Sửa hàng', items: [''] },
+    { group: 'Vật tư', items: [''] },
+    { group: 'IT - Bảo trì', items: [''] },
+    { group: 'Văn phòng', items: [''] },
   ];
 
   const exportToExcel = () => {
@@ -676,83 +766,132 @@ const Report = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {headers.map((header, idx) => (
-                  <th
-                    key={idx}
-                    rowSpan={idx === 0 || idx === 1 || idx === 9 ? 2 : 1}
-                    colSpan={idx >= 2 && idx < 9 ? 3 : 1}
-                    className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
-                  >
-                    {header}
-                  </th>
-                ))}
+                {filterType === 'one'
+                  ? headers.map((header, idx) => (
+                      <th
+                        key={idx}
+                        rowSpan={idx === 0 || idx === 1 || idx === 9 ? 2 : 1}
+                        colSpan={idx >= 2 && idx < 9 ? 3 : 1}
+                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
+                      >
+                        {header}
+                      </th>
+                    ))
+                  : headersRange.map((header, idx) => (
+                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
+                        {header}
+                      </th>
+                    ))}
               </tr>
               <tr>
-                {subHeaders.map((sub, idx) => (
-                  <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-100">
-                    {sub}
-                  </th>
-                ))}
+                {filterType === 'one' &&
+                  subHeaders.map((sub, idx) => (
+                    <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-100">
+                      {sub}
+                    </th>
+                  ))}
               </tr>
             </thead>
             <tbody>
-              {data.map((group, idx) =>
-                group.items.map((item, iidx) => (
-                  <tr
-                    className={`${
-                      idx === 0 && iidx === 8
-                        ? 'bg-[#cfb8b8]'
-                        : idx === 3 && iidx === 3
-                        ? 'bg-[#cfb8b8]'
-                        : idx === 4 && iidx === 5
-                        ? 'bg-[#cfb8b8]'
-                        : idx === 5 && iidx === 2
-                        ? 'bg-[#cfb8b8]'
-                        : idx === 21
-                        ? 'bg-[#cfb8b8]'
-                        : ''
-                    }`}
-                    key={`${idx}-${iidx}`}
-                  >
-                    {iidx === 0 && (
-                      <td
-                        rowSpan={
-                          idx === 0
-                            ? 9
-                            : idx === 1
-                            ? 6
-                            : idx === 2
-                            ? 5
-                            : idx === 3
-                            ? 4
-                            : idx === 4
-                            ? 6
-                            : idx === 5
-                            ? 3
-                            : 1
-                        }
-                        className="border border-gray-300 px-2 py-1"
+              {filterType === 'one'
+                ? data?.map((group, idx) =>
+                    group?.items?.map((item, iidx) => (
+                      <tr
+                        className={`${
+                          idx === 0 && iidx === 8
+                            ? 'bg-[#cfb8b8]'
+                            : idx === 3 && iidx === 3
+                            ? 'bg-[#cfb8b8]'
+                            : idx === 4 && iidx === 5
+                            ? 'bg-[#cfb8b8]'
+                            : idx === 5 && iidx === 2
+                            ? 'bg-[#cfb8b8]'
+                            : idx === 21
+                            ? 'bg-[#cfb8b8]'
+                            : ''
+                        }`}
+                        key={`${idx}-${iidx}`}
                       >
-                        {group.group}
-                      </td>
-                    )}
-                    <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
-                    {report[`${group.group}-${item}`]?.map((e, i) => (
-                      <td key={i} className="border border-gray-300 text-center px-2 py-1">
-                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
-                      </td>
-                    ))}
-                  </tr>
-                )),
-              )}
+                        {iidx === 0 && (
+                          <td
+                            rowSpan={
+                              idx === 0
+                                ? 9
+                                : idx === 1
+                                ? 6
+                                : idx === 2
+                                ? 5
+                                : idx === 3
+                                ? 4
+                                : idx === 4
+                                ? 6
+                                : idx === 5
+                                ? 3
+                                : 1
+                            }
+                            className="border border-gray-300 px-2 py-1"
+                          >
+                            {group.group}
+                          </td>
+                        )}
+                        <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
+                        {report[`${group.group}-${item}`]?.map((e, i) => (
+                          <td key={i} className="border border-gray-300 text-center px-2 py-1">
+                            {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                          </td>
+                        ))}
+                      </tr>
+                    )),
+                  )
+                : dataRange?.map((group, idx) => (
+                    <tr key={`${idx}-`}>
+                      <td className="border border-gray-300 px-2 py-1">{group.group}</td>
+                      {report[
+                        `${
+                          idx === 0
+                            ? 'T3-TC T3'
+                            : idx === 1
+                            ? 'Robot-TC T4'
+                            : idx === 2
+                            ? 'T5-TC T5'
+                            : idx === 3
+                            ? 'Bổ sung-TC TBS'
+                            : idx === 4
+                            ? 'Mẫu-M3A-3B'
+                            : idx === 5
+                            ? 'Canh hàng-M1A'
+                            : group.group + '-'
+                        }`
+                      ]?.map(
+                        (e, i) =>
+                          i % 3 === 0 && (
+                            <td
+                              key={i}
+                              className={`border ${
+                                i === 18 ? 'bg-[#f78888]' : 'border-gray-300'
+                              } text-center px-2 py-1`}
+                            >
+                              {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                            </td>
+                          ),
+                      )}
+                    </tr>
+                  ))}
               <tr className="bg-[#9e8f8f]">
-                <td className="border border-gray-400 text-center px-2 py-1 font-bold" colSpan={2}>
+                <td
+                  className="border border-gray-400 text-center px-2 py-1 font-bold"
+                  colSpan={filterType === 'one' ? 2 : 1}
+                >
                   Tổng cộng
                 </td>
                 {report['Tổng cộng-']?.map(
                   (e, i) =>
                     i % 3 === 0 && (
-                      <td key={i} colSpan={3} className="border border-gray-400 text-center font-bold px-2 py-1">
+                      <td
+                        key={i}
+                        colSpan={filterType === 'one' ? 3 : 1}
+                        className="border border-gray-400 text-center font-bold px-2 py-1"
+                      >
                         {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
                       </td>
                     ),
