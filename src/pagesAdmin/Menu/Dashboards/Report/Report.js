@@ -681,6 +681,218 @@ const Report = () => {
     );
   };
 
+  const exportToExcel2 = () => {
+    const wb = XLSX.utils.book_new();
+
+    // Header dòng 1 (gồm colSpan và rowSpan)
+    const headerRow1 = [
+      'BP/Tổ',
+      'Giẻ lau dính mực',
+      'Băng keo',
+      'Keo bàn thải',
+      'Mực in thải',
+      'Vụn logo',
+      'Lụa căng khung',
+      'Tổng rác nguy hại',
+      'Rác sinh hoạt',
+      'Tổng',
+    ];
+
+    const dataExcel = [
+      { group: 'Tổ 3', items: [''] },
+      { group: 'Tổ 4', items: [''] },
+      { group: 'Tổ 5', items: [''] },
+      { group: 'Bổ sung', items: [''] },
+      { group: 'Mẫu', items: [''] },
+      { group: 'Canh hàng', items: [''] },
+      { group: 'Pha màu', items: [''] },
+      { group: 'Chụp khuôn', items: [''] },
+      { group: 'Kế hoạch', items: [''] },
+      { group: 'Logo', items: [''] },
+      { group: 'Bán hàng', items: [''] },
+      { group: 'Chất lượng', items: [''] },
+      { group: 'Kcs', items: [''] },
+      { group: 'Điều hành', items: [''] },
+      { group: 'Ép', items: [''] },
+      { group: 'Sửa hàng', items: [''] },
+      { group: 'Vật tư', items: [''] },
+      { group: 'IT - Bảo trì', items: [''] },
+      { group: 'Văn phòng', items: [''] },
+      { group: 'Tổng cộng', items: [''] },
+    ];
+
+    // Dữ liệu bảng
+    const rows = dataExcel.map((d, idx) => {
+      const key = `${
+        idx === 0
+          ? 'T3-TC T3'
+          : idx === 1
+          ? 'Robot-TC T4'
+          : idx === 2
+          ? 'T5-TC T5'
+          : idx === 3
+          ? 'Bổ sung-TC TBS'
+          : idx === 4
+          ? 'Mẫu-M3A-3B'
+          : idx === 5
+          ? 'Canh hàng-M1A'
+          : d.group + '-'
+      }`;
+      const data = report[key];
+
+      const values = data?.map((e) => (e === 0 ? '-' : e));
+
+      return [
+        d.group,
+        values[0],
+        values[3],
+        values[6],
+        values[9],
+        values[12],
+        values[15],
+        values[18],
+        values[21],
+        values[24],
+        values[25],
+      ];
+    });
+
+    const today = new Date().toLocaleDateString('vi-VN');
+    const title = [
+      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+        filterType === 'one'
+          ? formatDateToVNString1(dateOne)
+          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
+      }`,
+    ];
+
+    const wsData = [title, headerRow1, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = [
+      // Gộp ô header chính (rowSpan 2)
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    ];
+
+    // Style title row
+    const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
+    ws[titleCell].s = {
+      alignment: {
+        horizontal: 'center',
+        vertical: 'center',
+      },
+      font: {
+        bold: true,
+        sz: 16,
+        color: { rgb: '000000' },
+      },
+    };
+
+    // Style toàn bộ sheet: border cho tất cả ô
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellAddress]) continue;
+
+        ws[cellAddress].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          },
+          alignment: {
+            vertical: 'center',
+            horizontal: 'center',
+            wrapText: true,
+          },
+        };
+      }
+    }
+
+    for (let col = 0; col <= 23; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
+      if (!ws[cellAddress]) continue;
+
+      ws[cellAddress].s = {
+        ...ws[cellAddress].s,
+        fill: {
+          fgColor: { rgb: 'e5e7eb' },
+        },
+        font: {
+          bold: true,
+          color: { rgb: '000000' },
+        },
+      };
+    }
+
+    // Tô màu và đậm dòng "Tổng cộng"
+    const lastRowIndex = wsData.length - 1;
+    for (let col = 0; col <= 23; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
+      if (!ws[cellAddress]) continue;
+
+      ws[cellAddress].s = {
+        ...ws[cellAddress].s,
+        fill: {
+          fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
+        },
+        font: {
+          bold: true,
+          color: { rgb: '000000' },
+        },
+      };
+    }
+
+    for (let row = 2; row <= 20; row++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 7 });
+      if (!ws[cellAddress]) continue;
+
+      ws[cellAddress].s = {
+        ...ws[cellAddress].s,
+        fill: {
+          fgColor: { rgb: 'f78888' }, // màu đỏ nhạt
+        },
+      };
+    }
+
+    for (let row = 2; row <= 20; row++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 9 });
+      if (!ws[cellAddress]) continue;
+
+      ws[cellAddress].s = {
+        ...ws[cellAddress].s,
+        fill: {
+          fgColor: { rgb: 'FFF3CD' }, // màu đỏ nhạt
+        },
+        font: {
+          bold: true,
+          color: { rgb: '000000' },
+        },
+      };
+    }
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      `${
+        filterType === 'one'
+          ? formatDateToVNString2(dateOne)
+          : `${formatDateToVNString2(startDate)} - ${formatDateToVNString2(endDate)}`
+      }`,
+    );
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(
+      new Blob([wbout], { type: 'application/octet-stream' }),
+      `theodoiracthai~${
+        filterType === 'one'
+          ? formatDateToVNString1(dateOne)
+          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
+      }.xlsx`,
+    );
+  };
+
   return (
     <div className="relative">
       {loading && (
@@ -692,7 +904,7 @@ const Report = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            onClick={exportToExcel}
+            onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Xuất Excel
