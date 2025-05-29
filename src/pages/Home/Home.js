@@ -62,25 +62,33 @@ function Home() {
 
   const handleConnectBluetooth = async () => {
     try {
+      console.log('Yêu cầu thiết bị...');
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ name: 'ESP32_SCALE' }],
         optionalServices: ['0000ff00-0000-1000-8000-00805f9b34fb'],
       });
 
+      console.log('Đang kết nối GATT...');
       const server = await device.gatt.connect();
+
+      console.log('Đang lấy service...');
       const service = await server.getPrimaryService('0000ff00-0000-1000-8000-00805f9b34fb');
+
+      console.log('Đang lấy characteristic...');
       const characteristic = await service.getCharacteristic('0000ff01-0000-1000-8000-00805f9b34fb');
 
+      console.log('Bắt đầu nhận dữ liệu...');
       await characteristic.startNotifications();
       characteristic.addEventListener('characteristicvaluechanged', (event) => {
         const value = new TextDecoder().decode(event.target.value);
         console.log('Dữ liệu từ ESP32:', value);
-        dispatch(weightSlice.actions.setWeight(value)); // 👈 Cập nhật Redux
+        dispatch(weightSlice.actions.setWeight(value));
         alert('Đã nhận được: ' + value);
       });
 
       alert('✅ Đã kết nối tới ESP32_SCALE');
     } catch (error) {
+      console.error('Bluetooth Error:', error);
       alert('❌ Lỗi Bluetooth: ' + error.message);
     }
   };
