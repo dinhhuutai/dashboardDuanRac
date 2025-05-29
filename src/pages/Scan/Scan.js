@@ -263,7 +263,7 @@ import { FaSpinner } from 'react-icons/fa';
 function Scan() {
   const videoRef = useRef(null);
   const qrScannerRef = useRef(null);
-  const mediaStreamRef = useRef(null); // NEW: Lưu stream video
+  const mediaStreamRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [jsonData, setJsonData] = useState(null);
@@ -274,11 +274,15 @@ function Scan() {
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
 
+  const [workShift, setWorkShift] = useState('ca1');
+  const [workDate, setWorkDate] = useState(new Date());
+
+  const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2'];
+
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
 
-  // Khởi động QrScanner
   const initScanner = () => {
     if (!videoRef.current) return;
 
@@ -310,7 +314,6 @@ function Scan() {
       });
   };
 
-  // Gọi khi mở trang lần đầu
   useEffect(() => {
     initScanner();
     return () => {
@@ -323,7 +326,6 @@ function Scan() {
     };
   }, []);
 
-  // Khi mở hoặc đóng modal -> quản lý camera
   useEffect(() => {
     if (resultVisible) {
       qrScannerRef.current?.stop();
@@ -336,7 +338,7 @@ function Scan() {
         qrScannerRef.current.destroy();
         qrScannerRef.current = null;
       }
-      initScanner(); // tạo lại camera mới
+      initScanner();
     }
   }, [resultVisible]);
 
@@ -346,19 +348,17 @@ function Scan() {
       return;
     }
 
+    if (!workShift || !workDate) {
+      setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
+      return;
+    }
+
     setLoading(true);
 
     const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
     let weight = parseFloat(khoiLuong);
 
     const adjustments = {
-      // 'Giẻ lau có chứa thành phần nguy hại': 1,
-      // 'Vụn logo': 1,
-      // 'Mực in thải': 0.45,
-      // 'Keo bàn thải': 1,
-      // 'Băng keo dính mực': 0.8,
-      // 'Rác sinh hoạt': 1,
-      // 'Lụa căng khung': 1,
       'Giẻ lau có chứa thành phần nguy hại': 0,
       'Vụn logo': 0,
       'Mực in thải': 0,
@@ -373,7 +373,6 @@ function Scan() {
     }
 
     weight = parseFloat(weight.toFixed(2));
-    const { shift, workDate } = getCurrentShiftInfo(new Date());
 
     const payload = {
       trashBinCode: jsonData?.id,
@@ -382,8 +381,8 @@ function Scan() {
       weightKg: weight,
       updatedAt: nowUTC7.toISOString(),
       updatedBy: user.userID,
-      workShift: shift || 'ca1',
-      workDate: workDate || nowUTC7,
+      workShift: workShift,
+      workDate: new Date(workDate).toISOString().split('T')[0],
     };
 
     try {
@@ -409,6 +408,8 @@ function Scan() {
       setResultVisible(false);
       setJsonData(null);
       setKhoiLuong('');
+      setWorkDate('');
+      setWorkShift('');
     }
   };
 
@@ -449,6 +450,7 @@ function Scan() {
                 <p className="font-semibold">🗑️ Loại rác:</p>
                 <p className="ml-2">{jsonData?.t || ''}</p>
               </div>
+
               <div className="text-sm">
                 <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
                 <input
@@ -458,9 +460,36 @@ function Scan() {
                   placeholder="VD: 5.25"
                   value={khoiLuong}
                   onChange={(e) => setKhoiLuong(e.target.value)}
-                  autoFocus
                 />
               </div>
+
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
+                <div className="flex flex-wrap gap-2">
+                  {workShifts.map((shift) => (
+                    <button
+                      key={shift}
+                      onClick={() => setWorkShift(shift)}
+                      className={`px-4 py-2 rounded border text-sm ${
+                        workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+                      }`}
+                    >
+                      {shift.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  value={workDate}
+                  onChange={(e) => setWorkDate(e.target.value)}
+                />
+              </div>
+
               <div className="flex justify-between pt-4">
                 <button
                   onClick={() => {
