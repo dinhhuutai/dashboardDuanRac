@@ -408,8 +408,6 @@ function Scan() {
       setResultVisible(false);
       setJsonData(null);
       setKhoiLuong('');
-      setWorkDate('');
-      setWorkShift('');
     }
   };
 
