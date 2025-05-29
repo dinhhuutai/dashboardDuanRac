@@ -256,7 +256,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { userSelector } from '~/redux/selectors';
+import { userSelector, weightSelector } from '~/redux/selectors';
 import getCurrentShiftInfo from '~/components/getCurrentShiftInfo';
 import { FaSpinner } from 'react-icons/fa';
 
@@ -272,6 +272,7 @@ function Scan() {
   const [messageModal, setMessageModal] = useState(null);
 
   const tmp = useSelector(userSelector);
+  const weightScale = useSelector(weightSelector);
   const [user, setUser] = useState({});
 
   const [workShift, setWorkShift] = useState('ca1');
@@ -282,6 +283,10 @@ function Scan() {
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
+
+  useEffect(() => {
+    setKhoiLuong(weightScale?.weight);
+  }, [weightScale]);
 
   const initScanner = () => {
     if (!videoRef.current) return;
