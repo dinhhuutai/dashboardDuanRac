@@ -271,6 +271,8 @@ function Scan() {
   const [resultVisible, setResultVisible] = useState(false);
   const [messageModal, setMessageModal] = useState(null);
 
+  const [tenNguoiCan, setTenNguoiCan] = useState('');
+
   const tmp = useSelector(userSelector);
   const weightScale = useSelector(weightSelector);
   const [user, setUser] = useState({});
@@ -490,6 +492,16 @@ function Scan() {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   value={workDate}
                   onChange={(e) => setWorkDate(e.target.value)}
+                />
+              </div>
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">👤 Tên người cân:</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  placeholder="VD: Nguyễn Văn A"
+                  value={tenNguoiCan}
+                  onChange={(e) => setTenNguoiCan(e.target.value)}
                 />
               </div>
 
