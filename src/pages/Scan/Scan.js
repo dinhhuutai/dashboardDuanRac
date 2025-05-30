@@ -287,7 +287,7 @@ function Scan() {
   }, [tmp]);
 
   useEffect(() => {
-    setKhoiLuong(weightScale?.weight);
+    setKhoiLuong(weightScale?.weight?.replace(',', '.'));
   }, [weightScale]);
 
   const initScanner = () => {
@@ -464,7 +464,10 @@ function Scan() {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   placeholder="VD: 5.25"
                   value={khoiLuong}
-                  onChange={(e) => setKhoiLuong(e.target.value)}
+                  onChange={(e) => {
+                    const inputValue = e.target.value.replace(',', '.');
+                    setKhoiLuong(inputValue);
+                  }}
                 />
               </div>
 
