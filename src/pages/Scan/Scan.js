@@ -385,7 +385,7 @@ function Scan() {
       trashBinCode: jsonData?.id,
       userID: user.userID,
       weighingTime: nowUTC7.toISOString(),
-      weightKg: weight?.replace(',', '.'),
+      weightKg: weight,
       updatedAt: nowUTC7.toISOString(),
       updatedBy: user.userID,
       workShift: workShift,
