@@ -381,6 +381,8 @@ function Scan() {
 
     weight = parseFloat(weight.toFixed(2));
 
+    weight = parseFloat(weight.replace(',', '.'));
+
     const payload = {
       trashBinCode: jsonData?.id,
       userID: user.userID,
