@@ -102,6 +102,9 @@ const Report = () => {
             ['T3-M6']: res.data.data.find((entry) => entry.u === 'Chuyền 6')?.value || [...Array(36).fill(0)],
             ['T3-M7']: res.data.data.find((entry) => entry.u === 'Chuyền 7')?.value || [...Array(36).fill(0)],
             ['T3-M8']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(36).fill(0)],
+            ['T3-RC T3']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 3')?.value || [
+              ...Array(36).fill(0),
+            ],
             ['T3-TC T3']: [...Array(36).fill(0)],
             ['T4A-M4A-4B']: res.data.data.find((entry) => entry.u === 'Chuyền 4A-4B')?.value || [...Array(36).fill(0)],
             ['T4A-M5A-5B']: res.data.data.find((entry) => entry.u === 'Chuyền 5A-5B')?.value || [...Array(36).fill(0)],
@@ -117,12 +120,17 @@ const Report = () => {
             ['Robot-MRB1']: res.data.data.find((entry) => entry.u === 'Chuyền RB1')?.value || [...Array(36).fill(0)],
             ['Robot-MRB2']: res.data.data.find((entry) => entry.u === 'Chuyền RB2')?.value || [...Array(36).fill(0)],
             ['Robot-MRB3']: res.data.data.find((entry) => entry.u === 'Chuyền RB3')?.value || [...Array(36).fill(0)],
+            ['Robot-RC T4']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 4')
+              ?.value || [...Array(36).fill(0)],
             ['Robot-TC T4']: [...Array(36).fill(0)],
             ['T5-M10B']: res.data.data.find((entry) => entry.u === 'Chuyền 10B')?.value || [...Array(36).fill(0)],
             ['T5-M11B']: res.data.data.find((entry) => entry.u === 'Chuyền 11B')?.value || [...Array(36).fill(0)],
             ['T5-M12B']: res.data.data.find((entry) => entry.u === 'Chuyền 12B')?.value || [...Array(36).fill(0)],
             ['T5-M13B']: res.data.data.find((entry) => entry.u === 'Chuyền 13B')?.value || [...Array(36).fill(0)],
             ['T5-M14B']: res.data.data.find((entry) => entry.u === 'Chuyền 14B')?.value || [...Array(36).fill(0)],
+            ['T5-RC T5']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 5')?.value || [
+              ...Array(36).fill(0),
+            ],
             ['T5-TC T5']: [...Array(36).fill(0)],
             ['Bổ sung-M1B']: res.data.data.find((entry) => entry.u === 'Chuyền 1B')?.value || [...Array(36).fill(0)],
             ['Bổ sung-M2A-2B']: res.data.data.find((entry) => entry.u === 'Chuyền 2A-2B')?.value || [
@@ -159,6 +167,7 @@ const Report = () => {
             tmp['T3-M6'],
             tmp['T3-M7'],
             tmp['T3-M8'],
+            tmp['T3-RC T3'],
           );
           tmp['Robot-TC T4'] = sumArrays(
             tmp['T4A-M4A-4B'],
@@ -175,8 +184,16 @@ const Report = () => {
             tmp['Robot-MRB1'],
             tmp['Robot-MRB2'],
             tmp['Robot-MRB3'],
+            tmp['Robot-RC T4'],
           );
-          tmp['T5-TC T5'] = sumArrays(tmp['T5-M10B'], tmp['T5-M11B'], tmp['T5-M12B'], tmp['T5-M13B'], tmp['T5-M14B']);
+          tmp['T5-TC T5'] = sumArrays(
+            tmp['T5-M10B'],
+            tmp['T5-M11B'],
+            tmp['T5-M12B'],
+            tmp['T5-M13B'],
+            tmp['T5-M14B'],
+            tmp['T5-RC T5'],
+          );
           tmp['Bổ sung-TC TBS'] = sumArrays(tmp['Bổ sung-M1B'], tmp['Bổ sung-M2A-2B']);
 
           tmp['-Cộng'] = sumArrays(
@@ -329,11 +346,11 @@ const Report = () => {
   ];
 
   const data = [
-    { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'TC T3'] },
+    { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
     { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
     { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
-    { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'TC T4'] },
-    { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'TC T5'] },
+    { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
+    { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
     { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
@@ -1053,11 +1070,11 @@ const Report = () => {
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
-                          idx === 0 && iidx === 8
+                          idx === 0 && iidx === 9
                             ? 'bg-[#cfb8b8]'
-                            : idx === 3 && iidx === 3
+                            : idx === 3 && iidx === 4
                             ? 'bg-[#cfb8b8]'
-                            : idx === 4 && iidx === 5
+                            : idx === 4 && iidx === 6
                             ? 'bg-[#cfb8b8]'
                             : idx === 5 && iidx === 2
                             ? 'bg-[#cfb8b8]'
@@ -1071,15 +1088,15 @@ const Report = () => {
                           <td
                             rowSpan={
                               idx === 0
-                                ? 9
+                                ? 10
                                 : idx === 1
                                 ? 6
                                 : idx === 2
                                 ? 5
                                 : idx === 3
-                                ? 4
+                                ? 5
                                 : idx === 4
-                                ? 6
+                                ? 7
                                 : idx === 5
                                 ? 3
                                 : 1
