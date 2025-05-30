@@ -287,7 +287,7 @@ function Scan() {
   }, [tmp]);
 
   useEffect(() => {
-    setKhoiLuong(weightScale?.weight?.replace(',', '.'));
+    setKhoiLuong(weightScale?.weight);
   }, [weightScale]);
 
   const initScanner = () => {
