@@ -34,14 +34,20 @@ function HistoryWeigh() {
     fetchHistory();
   }, [date]);
 
-  console.log(data);
-
   function formatVietnamTimeString(datetimeStr) {
-    console.log(datetimeStr);
     if (!datetimeStr) return '';
     const [date, time] = datetimeStr.split('T');
+    const [year, month, day] = date.split('-');
     const [hour, minute] = time.split(':');
-    return `${date} ${hour}:${minute}`;
+    return `${day}-${month}-${year} ${hour}:${minute}`;
+  }
+
+  function formatVietnamTimeString2(datetimeStr) {
+    if (!datetimeStr) return '';
+    const [date, time] = datetimeStr.split('T');
+    const [year, month, day] = date.split('-');
+    const [hour, minute] = time.split(':');
+    return `${day}-${month}-${year}`;
   }
 
   return (
@@ -95,7 +101,7 @@ function HistoryWeigh() {
                     <td className="border border-gray-300 px-2 py-1">{item.trashName}</td>
                     <td className="border border-gray-300 px-2 py-1">{item.trashBinCode}</td>
                     <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString(item.weighingTime)}</td>
-                    <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString(item.workDate)}</td>
+                    <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString2(item.workDate)}</td>
                     <td className="border border-gray-300 px-2 py-1 text-right">{item.weightKg}</td>
                   </tr>
                 ))}
