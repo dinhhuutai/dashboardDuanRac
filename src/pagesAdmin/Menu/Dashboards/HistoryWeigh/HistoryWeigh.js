@@ -34,6 +34,8 @@ function HistoryWeigh() {
     fetchHistory();
   }, [date]);
 
+  console.log(data);
+
   function formatVietnamTimeString(datetimeStr) {
     console.log(datetimeStr);
     if (!datetimeStr) return '';
@@ -80,6 +82,7 @@ function HistoryWeigh() {
                   <th className="border border-gray-300 px-3 py-2 text-center">Loại rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Mã thùng rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Thời gian cân</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center">Ngày đổ rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Khối lượng (kg)</th>
                 </tr>
               </thead>
@@ -92,6 +95,7 @@ function HistoryWeigh() {
                     <td className="border border-gray-300 px-2 py-1">{item.trashName}</td>
                     <td className="border border-gray-300 px-2 py-1">{item.trashBinCode}</td>
                     <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString(item.weighingTime)}</td>
+                    <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString(item.workDate)}</td>
                     <td className="border border-gray-300 px-2 py-1 text-right">{item.weightKg}</td>
                   </tr>
                 ))}
