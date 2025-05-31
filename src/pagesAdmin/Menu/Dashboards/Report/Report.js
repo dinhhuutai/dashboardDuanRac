@@ -480,11 +480,11 @@ const Report = () => {
     ];
 
     const dataExcel = [
-      { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'TC T3'] },
+      { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
       { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
       { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
-      { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'TC T4'] },
-      { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'TC T5'] },
+      { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
+      { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
       { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
       { group: 'Mẫu', items: ['M3A-3B'] },
       { group: 'Canh hàng', items: ['M1A'] },
@@ -547,22 +547,22 @@ const Report = () => {
       { s: { r: 1, c: 37 }, e: { r: 2, c: 37 } }, // Tổng
 
       // Merge tổ group
-      { s: { r: 3, c: 0 }, e: { r: 11, c: 0 } },
-      { s: { r: 12, c: 0 }, e: { r: 17, c: 0 } },
-      { s: { r: 18, c: 0 }, e: { r: 22, c: 0 } },
-      { s: { r: 23, c: 0 }, e: { r: 26, c: 0 } },
-      { s: { r: 27, c: 0 }, e: { r: 32, c: 0 } },
-      { s: { r: 33, c: 0 }, e: { r: 35, c: 0 } },
+      { s: { r: 3, c: 0 }, e: { r: 12, c: 0 } },
+      { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
+      { s: { r: 19, c: 0 }, e: { r: 23, c: 0 } },
+      { s: { r: 24, c: 0 }, e: { r: 28, c: 0 } },
+      { s: { r: 29, c: 0 }, e: { r: 35, c: 0 } },
+      { s: { r: 36, c: 0 }, e: { r: 38, c: 0 } },
 
       // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
-      { s: { r: 52, c: 0 }, e: { r: 52, c: 1 } },
-      { s: { r: 52, c: 2 }, e: { r: 52, c: 6 } },
-      { s: { r: 52, c: 7 }, e: { r: 52, c: 11 } },
-      { s: { r: 52, c: 12 }, e: { r: 52, c: 16 } },
-      { s: { r: 52, c: 17 }, e: { r: 52, c: 21 } },
-      { s: { r: 52, c: 22 }, e: { r: 52, c: 26 } },
-      { s: { r: 52, c: 27 }, e: { r: 52, c: 31 } },
-      { s: { r: 52, c: 32 }, e: { r: 52, c: 36 } },
+      { s: { r: 55, c: 0 }, e: { r: 55, c: 1 } },
+      { s: { r: 55, c: 2 }, e: { r: 55, c: 6 } },
+      { s: { r: 55, c: 7 }, e: { r: 55, c: 11 } },
+      { s: { r: 55, c: 12 }, e: { r: 55, c: 16 } },
+      { s: { r: 55, c: 17 }, e: { r: 55, c: 21 } },
+      { s: { r: 55, c: 22 }, e: { r: 55, c: 26 } },
+      { s: { r: 55, c: 27 }, e: { r: 55, c: 31 } },
+      { s: { r: 55, c: 32 }, e: { r: 55, c: 36 } },
     ];
 
     ws['!merges'].unshift({
@@ -641,7 +641,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 37; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 11, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 12, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -657,23 +657,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 37; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 26, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 37; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 32, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 28, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -705,7 +689,23 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 37; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 51, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
+      if (!ws[cellAddress]) continue;
+
+      ws[cellAddress].s = {
+        ...ws[cellAddress].s,
+        fill: {
+          fgColor: { rgb: 'cfb8b8' },
+        },
+        font: {
+          bold: true,
+          color: { rgb: '000000' },
+        },
+      };
+    }
+
+    for (let col = 0; col <= 37; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 54, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
