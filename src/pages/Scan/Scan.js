@@ -2,29 +2,41 @@
 // import QrScanner from 'qr-scanner';
 // import { motion, AnimatePresence } from 'framer-motion';
 // import { useSelector } from 'react-redux';
-// import { userSelector } from '~/redux/selectors';
-// import getCurrentShiftInfo from '~/components/getCurrentShiftInfo';
+// import { userSelector, weightSelector } from '~/redux/selectors';
 // import { FaSpinner } from 'react-icons/fa';
+// import { BASE_URL } from '~/config/index';
 
 // function Scan() {
 //   const videoRef = useRef(null);
 //   const qrScannerRef = useRef(null);
+//   const mediaStreamRef = useRef(null);
 
 //   const [loading, setLoading] = useState(false);
-
 //   const [jsonData, setJsonData] = useState(null);
 //   const [khoiLuong, setKhoiLuong] = useState('');
 //   const [resultVisible, setResultVisible] = useState(false);
 //   const [messageModal, setMessageModal] = useState(null);
 
+//   const [tenNguoiCan, setTenNguoiCan] = useState('');
+
 //   const tmp = useSelector(userSelector);
+//   const weightScale = useSelector(weightSelector);
 //   const [user, setUser] = useState({});
+
+//   const [workShift, setWorkShift] = useState('ca1');
+//   const [workDate, setWorkDate] = useState(new Date());
+
+//   const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2'];
 
 //   useEffect(() => {
 //     setUser(tmp?.login?.currentUser);
 //   }, [tmp]);
 
 //   useEffect(() => {
+//     setKhoiLuong(weightScale?.weight);
+//   }, [weightScale]);
+
+//   const initScanner = () => {
 //     if (!videoRef.current) return;
 
 //     qrScannerRef.current = new QrScanner(
@@ -32,7 +44,6 @@
 //       (result) => {
 //         try {
 //           const decodedStr = decodeURIComponent(result.data);
-
 //           const parsed = JSON.parse(decodedStr);
 //           setJsonData(parsed);
 //           setResultVisible(true);
@@ -46,22 +57,41 @@
 //       },
 //     );
 
-//     qrScannerRef.current.start();
+//     qrScannerRef.current
+//       .start()
+//       .then(() => {
+//         mediaStreamRef.current = videoRef.current.srcObject;
+//       })
+//       .catch((err) => {
+//         console.error('Không thể khởi động camera:', err);
+//       });
+//   };
 
+//   useEffect(() => {
+//     initScanner();
 //     return () => {
 //       qrScannerRef.current?.stop();
 //       qrScannerRef.current?.destroy();
+//       if (mediaStreamRef.current) {
+//         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+//         mediaStreamRef.current = null;
+//       }
 //     };
 //   }, []);
 
-//   // Khi modal hiện thì dừng quét, khi đóng modal thì quét lại
 //   useEffect(() => {
-//     if (!qrScannerRef.current) return;
-
 //     if (resultVisible) {
-//       qrScannerRef.current.stop();
+//       qrScannerRef.current?.stop();
+//       if (mediaStreamRef.current) {
+//         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+//         mediaStreamRef.current = null;
+//       }
 //     } else {
-//       qrScannerRef.current.start();
+//       if (qrScannerRef.current) {
+//         qrScannerRef.current.destroy();
+//         qrScannerRef.current = null;
+//       }
+//       initScanner();
 //     }
 //   }, [resultVisible]);
 
@@ -71,19 +101,24 @@
 //       return;
 //     }
 
+//     if (!workShift || !workDate) {
+//       setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
+//       return;
+//     }
+
 //     setLoading(true);
 
 //     const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
 //     let weight = parseFloat(khoiLuong);
 
 //     const adjustments = {
-//       'Giẻ lau có chứa thành phần nguy hại': 1,
-//       'Vụn logo': 1,
-//       'Mực in thải': 0.45,
-//       'Keo bàn thải': 1,
-//       'Băng keo dính mực': 0.8,
-//       'Rác sinh hoạt': 1,
-//       'Lụa căng khung': 1,
+//       'Giẻ lau có chứa thành phần nguy hại': 0,
+//       'Vụn logo': 0,
+//       'Mực in thải': 0,
+//       'Keo bàn thải': 0,
+//       'Băng keo dính mực': 0,
+//       'Rác sinh hoạt': 0,
+//       'Lụa căng khung': 0,
 //     };
 
 //     if (jsonData?.t && adjustments[jsonData.t]) {
@@ -92,8 +127,6 @@
 
 //     weight = parseFloat(weight.toFixed(2));
 
-//     const { shift, workDate } = getCurrentShiftInfo(new Date());
-
 //     const payload = {
 //       trashBinCode: jsonData?.id,
 //       userID: user.userID,
@@ -101,19 +134,16 @@
 //       weightKg: weight,
 //       updatedAt: nowUTC7.toISOString(),
 //       updatedBy: user.userID,
-//       workShift: shift || 'ca1',
-//       workDate: workDate || nowUTC7,
+//       workShift: workShift,
+//       workDate: new Date(workDate).toISOString().split('T')[0],
 //     };
 
 //     try {
-//       const res = await fetch(
-//         'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/trash-weighings',
-//         {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify(payload),
-//         },
-//       );
+//       const res = await fetch(`${BASE_URL}/trash-weighings`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(payload),
+//       });
 
 //       if (res.ok) {
 //         setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
@@ -125,13 +155,10 @@
 //       setMessageModal({ type: 'error', message: '❌ Lỗi kết nối: Không thể kết nối đến server' });
 //     } finally {
 //       setLoading(false);
+//       setResultVisible(false);
+//       setJsonData(null);
+//       setKhoiLuong('');
 //     }
-
-//     // Reset giao diện nhập liệu
-//     setResultVisible(false);
-//     setJsonData(null);
-//     setKhoiLuong('');
-//     setLoading(false);
 //   };
 
 //   return (
@@ -157,7 +184,7 @@
 //               animate={{ scale: 1, opacity: 1 }}
 //               exit={{ scale: 0.9, opacity: 0 }}
 //               transition={{ duration: 0.2 }}
-//               onClick={(e) => e.stopPropagation()} // Ngăn nổi bọt
+//               onClick={(e) => e.stopPropagation()}
 //             >
 //               <div className="text-sm flex">
 //                 <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
@@ -171,6 +198,7 @@
 //                 <p className="font-semibold">🗑️ Loại rác:</p>
 //                 <p className="ml-2">{jsonData?.t || ''}</p>
 //               </div>
+
 //               <div className="text-sm">
 //                 <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
 //                 <input
@@ -179,10 +207,50 @@
 //                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
 //                   placeholder="VD: 5.25"
 //                   value={khoiLuong}
-//                   onChange={(e) => setKhoiLuong(e.target.value)}
-//                   autoFocus
+//                   onChange={(e) => {
+//                     const inputValue = e.target.value.replace(',', '.');
+//                     setKhoiLuong(inputValue);
+//                   }}
 //                 />
 //               </div>
+
+//               <div className="text-sm">
+//                 <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
+//                 <div className="flex flex-wrap gap-2">
+//                   {workShifts.map((shift) => (
+//                     <button
+//                       key={shift}
+//                       onClick={() => setWorkShift(shift)}
+//                       className={`px-4 py-2 rounded border text-sm ${
+//                         workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+//                       }`}
+//                     >
+//                       {shift.toUpperCase()}
+//                     </button>
+//                   ))}
+//                 </div>
+//               </div>
+
+//               <div className="text-sm">
+//                 <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
+//                 <input
+//                   type="date"
+//                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+//                   value={workDate}
+//                   onChange={(e) => setWorkDate(e.target.value)}
+//                 />
+//               </div>
+//               <div className="text-sm">
+//                 <label className="font-semibold block mb-1">👤 Tên người cân:</label>
+//                 <input
+//                   type="text"
+//                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+//                   placeholder="VD: Nguyễn Văn A"
+//                   value={tenNguoiCan}
+//                   onChange={(e) => setTenNguoiCan(e.target.value)}
+//                 />
+//               </div>
+
 //               <div className="flex justify-between pt-4">
 //                 <button
 //                   onClick={() => {
@@ -197,7 +265,7 @@
 //                 <button
 //                   onClick={handleConfirm}
 //                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center"
-//                   disabled={loading} // disable khi đang loading
+//                   disabled={loading}
 //                 >
 //                   {loading ? (
 //                     <>
@@ -257,8 +325,8 @@ import QrScanner from 'qr-scanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { userSelector, weightSelector } from '~/redux/selectors';
-import getCurrentShiftInfo from '~/components/getCurrentShiftInfo';
 import { FaSpinner } from 'react-icons/fa';
+import { BASE_URL } from '~/config';
 
 function Scan() {
   const videoRef = useRef(null);
@@ -270,24 +338,21 @@ function Scan() {
   const [khoiLuong, setKhoiLuong] = useState('');
   const [resultVisible, setResultVisible] = useState(false);
   const [messageModal, setMessageModal] = useState(null);
-
   const [tenNguoiCan, setTenNguoiCan] = useState('');
 
   const tmp = useSelector(userSelector);
   const weightScale = useSelector(weightSelector);
   const [user, setUser] = useState({});
-
   const [workShift, setWorkShift] = useState('ca1');
-  const [workDate, setWorkDate] = useState(new Date());
-
+  const [workDate, setWorkDate] = useState(new Date().toISOString().split('T')[0]);
   const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2'];
 
   useEffect(() => {
-    setUser(tmp?.login?.currentUser);
+    setUser(tmp?.login?.currentUser || {});
   }, [tmp]);
 
   useEffect(() => {
-    setKhoiLuong(weightScale?.weight);
+    setKhoiLuong(weightScale?.weight || '');
   }, [weightScale]);
 
   const initScanner = () => {
@@ -326,43 +391,35 @@ function Scan() {
     return () => {
       qrScannerRef.current?.stop();
       qrScannerRef.current?.destroy();
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
-      }
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     };
   }, []);
 
   useEffect(() => {
     if (resultVisible) {
       qrScannerRef.current?.stop();
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
-      }
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     } else {
-      if (qrScannerRef.current) {
-        qrScannerRef.current.destroy();
-        qrScannerRef.current = null;
-      }
+      qrScannerRef.current?.destroy();
+      qrScannerRef.current = null;
       initScanner();
     }
   }, [resultVisible]);
 
   const handleConfirm = async () => {
     if (!khoiLuong || isNaN(parseFloat(khoiLuong))) {
-      setMessageModal({ type: 'error', message: 'Vui lòng nhập khối lượng hợp lệ' });
-      return;
+      return setMessageModal({ type: 'error', message: 'Vui lòng nhập khối lượng hợp lệ' });
     }
 
     if (!workShift || !workDate) {
-      setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
-      return;
+      return setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
     }
 
     setLoading(true);
 
-    const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+    const nowUTC7 = new Date(Date.now() + 7 * 60 * 60 * 1000);
     let weight = parseFloat(khoiLuong);
 
     const adjustments = {
@@ -375,7 +432,7 @@ function Scan() {
       'Lụa căng khung': 0,
     };
 
-    if (jsonData?.t && adjustments[jsonData.t]) {
+    if (jsonData?.t && adjustments[jsonData.t] !== undefined) {
       weight = Math.max(0, weight - adjustments[jsonData.t]);
     }
 
@@ -388,19 +445,17 @@ function Scan() {
       weightKg: weight,
       updatedAt: nowUTC7.toISOString(),
       updatedBy: user.userID,
-      workShift: workShift,
-      workDate: new Date(workDate).toISOString().split('T')[0],
+      workShift,
+      workDate,
+      weighedByName: tenNguoiCan || '',
     };
 
     try {
-      const res = await fetch(
-        'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/trash-weighings',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        },
-      );
+      const res = await fetch(`${BASE_URL}/trash-weighings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
       if (res.ok) {
         setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
@@ -422,6 +477,7 @@ function Scan() {
     <div className="relative flex flex-col items-center bg-white text-white p-4">
       <video ref={videoRef} className="w-full max-w-lg rounded-xl shadow-lg border-2 border-white" />
 
+      {/* Modal nhập liệu sau khi quét */}
       <AnimatePresence>
         {resultVisible && jsonData && (
           <motion.div
@@ -443,19 +499,21 @@ function Scan() {
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Thông tin hiển thị từ QR */}
               <div className="text-sm flex">
                 <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
-                <p className="ml-2">{jsonData?.d || ''}</p>
+                <p className="ml-2">{jsonData?.d}</p>
               </div>
               <div className="text-sm flex">
                 <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
-                <p className="ml-2">{jsonData?.u || ''}</p>
+                <p className="ml-2">{jsonData?.u}</p>
               </div>
               <div className="text-sm flex">
                 <p className="font-semibold">🗑️ Loại rác:</p>
-                <p className="ml-2">{jsonData?.t || ''}</p>
+                <p className="ml-2">{jsonData?.t}</p>
               </div>
 
+              {/* Nhập khối lượng */}
               <div className="text-sm">
                 <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
                 <input
@@ -464,13 +522,11 @@ function Scan() {
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   placeholder="VD: 5.25"
                   value={khoiLuong}
-                  onChange={(e) => {
-                    const inputValue = e.target.value.replace(',', '.');
-                    setKhoiLuong(inputValue);
-                  }}
+                  onChange={(e) => setKhoiLuong(e.target.value.replace(',', '.'))}
                 />
               </div>
 
+              {/* Chọn ca làm */}
               <div className="text-sm">
                 <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
                 <div className="flex flex-wrap gap-2">
@@ -488,6 +544,7 @@ function Scan() {
                 </div>
               </div>
 
+              {/* Ngày làm việc */}
               <div className="text-sm">
                 <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
                 <input
@@ -497,6 +554,8 @@ function Scan() {
                   onChange={(e) => setWorkDate(e.target.value)}
                 />
               </div>
+
+              {/* Tên người cân */}
               <div className="text-sm">
                 <label className="font-semibold block mb-1">👤 Tên người cân:</label>
                 <input
@@ -508,13 +567,10 @@ function Scan() {
                 />
               </div>
 
+              {/* Nút xác nhận */}
               <div className="flex justify-between pt-4">
                 <button
-                  onClick={() => {
-                    setResultVisible(false);
-                    setJsonData(null);
-                    setKhoiLuong('');
-                  }}
+                  onClick={() => setResultVisible(false)}
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                 >
                   Đóng
@@ -539,6 +595,7 @@ function Scan() {
         )}
       </AnimatePresence>
 
+      {/* Modal thông báo lỗi/thành công */}
       <AnimatePresence>
         {messageModal && (
           <motion.div

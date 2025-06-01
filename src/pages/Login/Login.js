@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import config from '~/config';
 import { useDispatch } from 'react-redux'; // 👈 Import Redux hook
 import authSlice from '~/redux/slices/authSlice';
+import { BASE_URL } from '~/config/index';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -30,16 +31,13 @@ function Login() {
       setIsLoading(true);
       dispatch(authSlice.actions.loginStart()); // 👈 Bắt đầu login
 
-      const response = await fetch(
-        'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/login',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
+      const response = await fetch(`${BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({ username, password }),
+      });
 
       const resData = await response.json();
 

@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
+import { BASE_URL } from '~/config/index';
 
 const Report = () => {
   const [loading, setLoading] = useState(true);
@@ -80,16 +81,13 @@ const Report = () => {
 
     const fetchTodayReport = async () => {
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-unit',
-          {
-            params: {
-              type: filterType,
-              startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
-              endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
-            },
+        const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
+          params: {
+            type: filterType,
+            startDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(startDate),
+            endDate: filterType === 'one' ? formatDateToVNString(dateOne) : formatDateToVNString(endDate),
           },
-        );
+        });
 
         console.log(res.data.data);
         if (res.data.status === 'success') {

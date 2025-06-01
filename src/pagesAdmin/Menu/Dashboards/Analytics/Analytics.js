@@ -2,6 +2,8 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+import { BASE_URL } from '~/config/index';
+
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
 
@@ -50,9 +52,7 @@ const Analytics = () => {
 
     const fetchTodayStats = async () => {
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/today',
-        );
+        const res = await axios.get(`${BASE_URL}/api/statistics/today`);
         if (res.data.status === 'success') {
           setTodayStats(res.data.data);
         }
@@ -64,9 +64,7 @@ const Analytics = () => {
 
     const fetchDepartmentData = async () => {
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/weight-by-department',
-        );
+        const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-department`);
         if (res.data.status === 'success') {
           setDepartmentData(res.data.data);
         }
@@ -78,9 +76,7 @@ const Analytics = () => {
 
     const fetchTrashTypeData = async () => {
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/api/statistics/today-percentage',
-        );
+        const res = await axios.get(`${BASE_URL}/api/statistics/today-percentage`);
         if (res.data.status === 'success') {
           setTrashTypeData(res.data.data);
         }

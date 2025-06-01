@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '~/config/index';
 
 function UserCreate() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ function UserCreate() {
     setMessage('');
 
     try {
-      await axios.post('https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/user', formData);
+      await axios.post(`${BASE_URL}/user`, formData);
       setMessage('✅ Tạo tài khoản thành công!');
       setFormData({
         fullName: '',
@@ -119,7 +120,7 @@ function UserCreate() {
   };
 
   return (
-    <div className='' style={containerStyle}>
+    <div className="" style={containerStyle}>
       {/* Spinner animation keyframes */}
       <style>
         {`@keyframes spin {
@@ -134,8 +135,10 @@ function UserCreate() {
         </div>
       )}
 
-      <form className='mb-[50px] mt-[10px]' onSubmit={handleSubmit} style={formStyle}>
-        <h2 className="text-[18px] font-[600] uppercase" style={titleStyle}>Tạo tài khoản</h2>
+      <form className="mb-[50px] mt-[10px]" onSubmit={handleSubmit} style={formStyle}>
+        <h2 className="text-[18px] font-[600] uppercase" style={titleStyle}>
+          Tạo tài khoản
+        </h2>
 
         <input
           style={inputStyle}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '~/config/index';
 
 function HistoryWeigh() {
   const [date, setDate] = useState(() => {
@@ -17,12 +18,9 @@ function HistoryWeigh() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get(
-          'https://duanrac-api-node-habqhehnc6a2hkaq.southeastasia-01.azurewebsites.net/history/date',
-          {
-            params: { date },
-          },
-        );
+        const res = await axios.get(`${BASE_URL}/history/date`, {
+          params: { date },
+        });
         setData(res.data);
       } catch (err) {
         setError('❌ Lỗi khi tải dữ liệu lịch sử cân');
