@@ -54,11 +54,26 @@ function Scan() {
       {
         highlightScanRegion: true,
         highlightCodeOutline: true,
+        preferredCamera: 'environment',
+        maxScansPerSecond: 10,
+        // 👇 Cấu hình constraints cho camera
+        returnDetailedScanResult: true,
+        onDecodeError: (err) => console.warn('Decode error', err),
+        calculateScanRegion: () => ({
+          x: 0,
+          y: 0,
+          width: videoRef.current.videoWidth,
+          height: videoRef.current.videoHeight,
+        }),
       },
     );
 
     qrScannerRef.current
-      .start()
+      .start({
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      })
       .then(() => {
         mediaStreamRef.current = videoRef.current.srcObject;
       })
