@@ -44,7 +44,7 @@ function Scan() {
         .then((data) => {
           setTeamMembers(data);
           if (teamMembers.length === 0) {
-            setTenNguoiCan(user?.userName);
+            setTenNguoiCan(user?.fullName);
           }
         })
         .catch((err) => {
