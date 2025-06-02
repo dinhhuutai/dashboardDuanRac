@@ -406,7 +406,7 @@ function Scan() {
             >
               <div className="flex justify-center">
                 <img
-                  src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjd0c21zdHZtb2dtbHNhNTJwcHNrZ2FkN2RuNmprNjFybDN1YzI2bCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/GDnomdqpSHlIs/giphy.gif"
+                  src="https://media1.tenor.com/m/Ygxb5vbxoKAAAAAC/tontonfriends-shocked.gif"
                   alt="funny chick"
                   className="w-32 h-32"
                 />
