@@ -404,7 +404,14 @@ function Scan() {
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-red-600 font-semibold text-center">
+              <div className="flex justify-center">
+                <img
+                  src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjd0c21zdHZtb2dtbHNhNTJwcHNrZ2FkN2RuNmprNjFybDN1YzI2bCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/GDnomdqpSHlIs/giphy.gif"
+                  alt="funny chick"
+                  className="w-32 h-32"
+                />
+              </div>
+              <p className="text-[#020202] font-semibold text-center">
                 🐤 Ối dồi ôi! Mã QR này không thuộc tổ của bạn rồi 😅 Quét lại hen!
               </p>
               <div className="flex justify-center pt-4">

@@ -88,15 +88,17 @@ function Header() {
       {menuOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden z-50">
           <div className="flex flex-col p-4 gap-4">
-            <button
-              onClick={() => {
-                navigate(config.routes.adminAnalytics);
-                setMenuOpen(false);
-              }}
-              className="text-[13px] px-3 py-2 bg-[#f4253a] text-white rounded hover:bg-[#f4253ad8] transition"
-            >
-              Dashboard
-            </button>
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => {
+                  navigate(config.routes.adminAnalytics);
+                  setMenuOpen(false);
+                }}
+                className="text-[13px] px-3 py-2 bg-[#f4253a] text-white rounded hover:bg-[#f4253ad8] transition"
+              >
+                Dashboard
+              </button>
+            )}
             <NavLink
               to={config.routes.home}
               onClick={() => setMenuOpen(false)}
