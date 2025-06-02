@@ -16,6 +16,8 @@ function Scan() {
   const [khoiLuong, setKhoiLuong] = useState('');
   const [resultVisible, setResultVisible] = useState(false);
   const [messageModal, setMessageModal] = useState(null);
+  const [wrongTeamModal, setWrongTeamModal] = useState(false);
+
   const [teamMembers, setTeamMembers] = useState([]);
 
   const [tenNguoiCan, setTenNguoiCan] = useState('');
@@ -64,7 +66,18 @@ function Scan() {
           const decodedStr = decodeURIComponent(result.data);
           const parsed = JSON.parse(decodedStr);
           setJsonData(parsed);
-          setResultVisible(true);
+
+          if (user?.role === 'admin') {
+            setResultVisible(true);
+          } else if (user?.role === 'user') {
+            const userTeam = user?.fullName?.toLowerCase(); // hoặc user.teamName nếu có
+            const qrTeam = parsed?.d?.toLowerCase();
+            if (qrTeam && userTeam && qrTeam.includes(userTeam)) {
+              setResultVisible(true);
+            } else {
+              setWrongTeamModal(true);
+            }
+          }
         } catch (err) {
           console.error('Lỗi khi parse JSON:', err);
         }
@@ -365,6 +378,44 @@ function Scan() {
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
                   Đóng
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {wrongTeamModal && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setWrongTeamModal(false)}
+          >
+            <motion.div
+              className="bg-white text-black p-6 rounded-xl shadow-xl space-y-4 w-full max-w-md mx-4"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-red-600 font-semibold text-center">
+                🐤 Ối dồi ôi! Mã QR này không thuộc tổ của bạn rồi 😅 Quét lại hen!
+              </p>
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => {
+                    setWrongTeamModal(false);
+                    setJsonData(null);
+                    setKhoiLuong('');
+                    setResultVisible(false);
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Quét lại
                 </button>
               </div>
             </motion.div>
