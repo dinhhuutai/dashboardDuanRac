@@ -13,11 +13,18 @@ function DefaultLayoutAdmin({ children }) {
       </div>
       <div className="mt-[var(--admin-height-header)]">
         {sidebarVisible && (
-          <div className="w-[var(--admin-width-sidebar)] fixed top-[var(--admin-height-header)] left-0 bottom-0 bg-[#fff]">
+          <div className="w-[var(--admin-width-sidebar)] z-[99] fixed top-[var(--admin-height-header)] left-0 bottom-0 bg-[#fff]">
             <Sidebar />
           </div>
         )}
-        <div className={`ml-[0px] md:ml-[var(--admin-width-sidebar)] bg-[#F1F4F6] min-h-screen`}>{children}</div>
+        <div
+          style={{
+            marginLeft: sidebarVisible ? 'var(--admin-width-sidebar)' : '0px',
+          }}
+          className={`ml-[0px] bg-[#F1F4F6] min-h-screen`}
+        >
+          {children}
+        </div>
       </div>
       <Notice />
     </div>
