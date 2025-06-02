@@ -259,7 +259,15 @@ function Scan() {
                         workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
                       }`}
                     >
-                      {shift.toUpperCase()}
+                      {shift === 'ca1'
+                        ? 'Ca Ngắn 1 (8 tiếng)'
+                        : shift === 'ca2'
+                        ? 'Ca Ngắn 2 (8 tiếng)'
+                        : shift === 'ca3'
+                        ? 'Ca Ngắn 3 (8 tiếng)'
+                        : shift === 'dai1'
+                        ? 'Ca Dài 1 (12 tiếng)'
+                        : 'Ca Dài 2 (12 tiếng)'}
                     </button>
                   ))}
                 </div>
