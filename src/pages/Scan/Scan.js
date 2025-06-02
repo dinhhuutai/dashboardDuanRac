@@ -114,7 +114,9 @@ function Scan() {
   };
 
   useEffect(() => {
-    initScanner();
+    if (user) {
+      initScanner();
+    }
     return () => {
       qrScannerRef.current?.stop();
       qrScannerRef.current?.destroy();
@@ -123,7 +125,7 @@ function Scan() {
         mediaStreamRef.current = null;
       }
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (resultVisible) {
