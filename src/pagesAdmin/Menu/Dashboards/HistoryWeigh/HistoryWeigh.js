@@ -80,13 +80,15 @@ function HistoryWeigh() {
             <table className="w-full border border-gray-300 text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-3 py-2 text-center">Người cân</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center">Tài khoản cân</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Bộ phận</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Đơn vị</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Loại rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Mã thùng rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Thời gian cân</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Ngày đổ rác</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center">Ca đổ rác</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center">Người cân rác</th>
                   <th className="border border-gray-300 px-3 py-2 text-center">Khối lượng (kg)</th>
                 </tr>
               </thead>
@@ -100,6 +102,18 @@ function HistoryWeigh() {
                     <td className="border border-gray-300 px-2 py-1">{item.trashBinCode}</td>
                     <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString(item.weighingTime)}</td>
                     <td className="border border-gray-300 px-2 py-1">{formatVietnamTimeString2(item.workDate)}</td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {item.workShift === 'ca1'
+                        ? 'Ca ngắn 1'
+                        : item.workShift === 'ca2'
+                        ? 'Ca ngắn 2'
+                        : item.workShift === 'ca3'
+                        ? 'Ca ngắn 3'
+                        : item.workShift === 'dai1'
+                        ? 'Ca dài 1'
+                        : 'Ca dài 2'}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">{item.userName}</td>
                     <td className="border border-gray-300 px-2 py-1 text-right">{item.weightKg}</td>
                   </tr>
                 ))}
