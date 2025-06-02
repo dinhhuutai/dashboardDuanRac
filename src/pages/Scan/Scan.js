@@ -128,7 +128,7 @@ function Scan() {
   }, [user]);
 
   useEffect(() => {
-    if (resultVisible) {
+    if (resultVisible || wrongTeamModal) {
       qrScannerRef.current?.stop();
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -141,7 +141,7 @@ function Scan() {
       }
       initScanner();
     }
-  }, [resultVisible]);
+  }, [resultVisible, wrongTeamModal]);
 
   const handleConfirm = async () => {
     if (!khoiLuong || isNaN(parseFloat(khoiLuong))) {
