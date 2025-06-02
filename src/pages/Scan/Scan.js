@@ -16,6 +16,7 @@ function Scan() {
   const [khoiLuong, setKhoiLuong] = useState('');
   const [resultVisible, setResultVisible] = useState(false);
   const [messageModal, setMessageModal] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const [tenNguoiCan, setTenNguoiCan] = useState('');
 
@@ -35,6 +36,18 @@ function Scan() {
   useEffect(() => {
     setKhoiLuong(weightScale?.weight);
   }, [weightScale]);
+
+  useEffect(() => {
+    if (user?.userID) {
+      fetch(`${BASE_URL}/api/team-members?userID=${user.userID}`)
+        .then((res) => res.json())
+        .then((data) => setTeamMembers(data))
+        .catch((err) => {
+          console.error('Lỗi khi tải teamMembers:', err);
+          setTeamMembers([]);
+        });
+    }
+  }, [user]);
 
   const initScanner = () => {
     if (!videoRef.current) return;
@@ -151,6 +164,7 @@ function Scan() {
       updatedBy: user.userID,
       workShift: workShift,
       workDate: new Date(workDate).toISOString().split('T')[0],
+      userName: tenNguoiCan,
     };
 
     try {
@@ -257,13 +271,28 @@ function Scan() {
               </div>
               <div className="text-sm">
                 <label className="font-semibold block mb-1">👤 Tên người cân:</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                  placeholder="VD: Nguyễn Văn A"
-                  value={tenNguoiCan}
-                  onChange={(e) => setTenNguoiCan(e.target.value)}
-                />
+                {teamMembers.length > 0 ? (
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    value={tenNguoiCan}
+                    onChange={(e) => setTenNguoiCan(e.target.value)}
+                  >
+                    <option value="">-- Chọn thành viên --</option>
+                    {teamMembers.map((member) => (
+                      <option key={member.teamMemberID} value={member.name}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    placeholder="VD: Nguyễn Văn A"
+                    value={tenNguoiCan}
+                    onChange={(e) => setTenNguoiCan(e.target.value)}
+                  />
+                )}
               </div>
 
               <div className="flex justify-between pt-4">

@@ -13,6 +13,7 @@ import {
   BsPersonPlus,
   BsBarChartLine,
 } from 'react-icons/bs';
+import { HiOutlineUserGroup } from 'react-icons/hi';
 import { useState } from 'react';
 import config from '~/config';
 
@@ -24,6 +25,7 @@ function Sidebar() {
   const [downQrcode, setDownQrcode] = useState(false);
   const [downUser, setDownUser] = useState(false);
   const [downWaste, setDownWaste] = useState(false);
+  const [downTeamMember, setDownTeamMember] = useState(false);
 
   const hiddenItem = (key) => {
     key !== 'dashboard' && setDownDashboard(false);
@@ -32,6 +34,7 @@ function Sidebar() {
     key !== 'qrcode' && setDownQrcode(false);
     key !== 'user' && setDownUser(false);
     key !== 'waste' && setDownWaste(false);
+    key !== 'teamMember' && setDownTeamMember(false);
   };
 
   return (
@@ -413,6 +416,63 @@ function Sidebar() {
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
                   <NavLink
                     to={config.routes.adminTrashTypeCreate}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Create
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
+            <div className="mt-[6px]">
+              <li
+                onClick={() => {
+                  hiddenItem('teamMember');
+                  setDownTeamMember((prev) => !prev);
+                }}
+                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
+              >
+                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
+                  <HiOutlineUserGroup />
+                </div>
+                <span
+                  className={`${
+                    downTeamMember ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
+                  } capitalize`}
+                >
+                  Team Member
+                </span>
+                <div
+                  className={`${
+                    downTeamMember ? 'rotate-[180deg]' : 'rotate-[0deg]'
+                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
+                >
+                  <BsChevronDown />
+                </div>
+              </li>
+              <ul
+                className={`${
+                  downTeamMember ? 'animate-downSlide' : 'animate-upSlide'
+                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
+              >
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminTeamMember}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    List
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminTeamMemberCreate}
                     className={(nav) =>
                       nav.isActive
                         ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
