@@ -41,7 +41,12 @@ function Scan() {
     if (user?.userID) {
       fetch(`${BASE_URL}/api/team-members?userID=${user.userID}`)
         .then((res) => res.json())
-        .then((data) => setTeamMembers(data))
+        .then((data) => {
+          setTeamMembers(data);
+          if (teamMembers.length === 0) {
+            setTenNguoiCan(user?.userName);
+          }
+        })
         .catch((err) => {
           console.error('Lỗi khi tải teamMembers:', err);
           setTeamMembers([]);
