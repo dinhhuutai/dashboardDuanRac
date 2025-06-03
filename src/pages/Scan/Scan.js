@@ -251,7 +251,7 @@ function Scan() {
               <div className="text-sm">
                 <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   placeholder="VD: 5.25"
