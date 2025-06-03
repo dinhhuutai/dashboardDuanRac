@@ -107,7 +107,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    History Weigh
+                    Weigh History
                   </NavLink>
                 </li>
               </ul>
