@@ -31,10 +31,12 @@ const Report = () => {
   function groupSumWithZeros(arr) {
     const result = [...arr]; // clone mảng để không sửa trực tiếp mảng gốc
     for (let i = 0; i < arr.length - 1; i += 5) {
-      const sum = (arr[i] || 0) + (arr[i + 1] || 0) + (arr[i + 2] || 0);
+      const sum = (arr[i] || 0) + (arr[i + 1] || 0) + (arr[i + 2] || 0) + (arr[i + 3] || 0) + (arr[i + 4] || 0);
       result[i] = sum;
       result[i + 1] = 0;
       result[i + 2] = 0;
+      result[i + 3] = 0;
+      result[i + 4] = 0;
     }
     return result;
   }
