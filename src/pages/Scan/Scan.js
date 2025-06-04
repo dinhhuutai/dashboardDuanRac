@@ -275,16 +275,16 @@ function Scan() {
                       }`}
                     >
                       {shift === 'ca1'
-                        ? 'Ca Ngắn 1 (06<sup>h</sup>00 → 14<sup>h</sup>00)'
+                        ? 'Ca Ngắn 1 (06h00 → 14h00)'
                         : shift === 'ca2'
-                        ? 'Ca Ngắn 2 (14<sup>h</sup>00 → 22<sup>h</sup>00)'
+                        ? 'Ca Ngắn 2 (14h00 → 22h00)'
                         : shift === 'ca3'
-                        ? 'Ca Ngắn 3 (22<sup>h</sup>00 → 06<sup>h</sup>00)'
+                        ? 'Ca Ngắn 3 (22h00 → 06h00)'
                         : shift === 'dai1'
-                        ? 'Ca Dài 1 (06<sup>h</sup>00 → 18<sup>h</sup>00)'
+                        ? 'Ca Dài 1 (06h00 → 18h00)'
                         : shift === 'dai2'
-                        ? 'Ca Dài 2 (18<sup>h</sup>00 → 06<sup>h</sup>00)'
-                        : 'Ca Hành Chính (7<sup>h</sup>30 → 16<sup>h</sup>30)'}
+                        ? 'Ca Dài 2 (18h00 → 06h00)'
+                        : 'Ca Hành Chính (7h30 → 16h30)'}
                     </button>
                   ))}
                 </div>
@@ -301,7 +301,7 @@ function Scan() {
               </div>
               <div className="text-sm">
                 <label className="font-semibold block mb-1">👤 Tên người cân:</label>
-                {teamMembers.length > 0 ? (
+                {/* {teamMembers.length > 0 ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                     value={tenNguoiCan}
@@ -322,7 +322,14 @@ function Scan() {
                     value={tenNguoiCan}
                     onChange={(e) => setTenNguoiCan(e.target.value)}
                   />
-                )}
+                )} */}
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  placeholder="VD: Nguyễn Văn A"
+                  value={tenNguoiCan}
+                  onChange={(e) => setTenNguoiCan(e.target.value)}
+                />
               </div>
 
               <div className="flex justify-between pt-4">

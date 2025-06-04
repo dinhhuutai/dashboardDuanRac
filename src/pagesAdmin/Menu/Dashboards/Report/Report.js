@@ -30,13 +30,20 @@ const Report = () => {
 
   function groupSumWithZeros(arr) {
     const result = [...arr]; // clone mảng để không sửa trực tiếp mảng gốc
-    for (let i = 0; i < arr.length - 1; i += 5) {
-      const sum = (arr[i] || 0) + (arr[i + 1] || 0) + (arr[i + 2] || 0) + (arr[i + 3] || 0) + (arr[i + 4] || 0);
+    for (let i = 0; i < arr.length - 1; i += 6) {
+      const sum =
+        (arr[i] || 0) +
+        (arr[i + 1] || 0) +
+        (arr[i + 2] || 0) +
+        (arr[i + 3] || 0) +
+        (arr[i + 4] || 0) +
+        (arr[i + 5] || 0);
       result[i] = sum;
       result[i + 1] = 0;
       result[i + 2] = 0;
       result[i + 3] = 0;
       result[i + 4] = 0;
+      result[i + 5] = 0;
     }
     return result;
   }
@@ -72,9 +79,9 @@ const Report = () => {
   }
 
   function sumFirstSixElements(arr) {
-    const sum = arr.slice(0, 30).reduce((total, val) => total + val, 0);
+    const sum = arr.slice(0, 36).reduce((total, val) => total + val, 0);
     const newArr = [...arr];
-    newArr.splice(30, 0, sum, 0, 0, 0, 0); // Chèn sum vào vị trí thứ 6
+    newArr.splice(36, 0, sum, 0, 0, 0, 0); // Chèn sum vào vị trí thứ 6
     return newArr;
   }
 
@@ -313,36 +320,43 @@ const Report = () => {
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
     'C1',
     'C2',
     'C3',
     'D1',
     'D2',
+    'HC',
   ];
 
   const data = [
@@ -1043,7 +1057,7 @@ const Report = () => {
                       <th
                         key={idx}
                         rowSpan={idx === 0 || idx === 1 || idx === 9 ? 2 : 1}
-                        colSpan={idx >= 2 && idx < 9 ? 5 : 1}
+                        colSpan={idx >= 2 && idx < 9 ? 6 : 1}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
                       >
                         {header}
