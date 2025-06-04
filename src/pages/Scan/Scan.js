@@ -29,7 +29,7 @@ function Scan() {
   const [workShift, setWorkShift] = useState('ca1');
   const [workDate, setWorkDate] = useState(new Date());
 
-  const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2'];
+  const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2', 'cahc'];
 
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
@@ -275,14 +275,16 @@ function Scan() {
                       }`}
                     >
                       {shift === 'ca1'
-                        ? 'Ca Ngắn 1 (8 tiếng)'
+                        ? 'Ca Ngắn 1 (06<sup>h</sup>00 → 14<sup>h</sup>00)'
                         : shift === 'ca2'
-                        ? 'Ca Ngắn 2 (8 tiếng)'
+                        ? 'Ca Ngắn 2 (14<sup>h</sup>00 → 22<sup>h</sup>00)'
                         : shift === 'ca3'
-                        ? 'Ca Ngắn 3 (8 tiếng)'
+                        ? 'Ca Ngắn 3 (22<sup>h</sup>00 → 06<sup>h</sup>00)'
                         : shift === 'dai1'
-                        ? 'Ca Dài 1 (12 tiếng)'
-                        : 'Ca Dài 2 (12 tiếng)'}
+                        ? 'Ca Dài 1 (06<sup>h</sup>00 → 18<sup>h</sup>00)'
+                        : shift === 'dai2'
+                        ? 'Ca Dài 2 (18<sup>h</sup>00 → 06<sup>h</sup>00)'
+                        : 'Ca Hành Chính (7<sup>h</sup>30 → 16<sup>h</sup>30)'}
                     </button>
                   ))}
                 </div>

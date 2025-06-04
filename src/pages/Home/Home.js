@@ -81,9 +81,7 @@ function Home() {
       await characteristic.startNotifications();
       characteristic.addEventListener('characteristicvaluechanged', (event) => {
         const value = new TextDecoder().decode(event.target.value);
-        console.log('Dữ liệu từ ESP32:', value);
         dispatch(weightSlice.actions.setWeight(value));
-        alert('Đã nhận được: ' + value);
       });
 
       alert('✅ Đã kết nối tới ESP32_SCALE');
