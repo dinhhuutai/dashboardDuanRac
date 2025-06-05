@@ -36,6 +36,8 @@ function Scan() {
   const [confirmedData, setConfirmedData] = useState(null); // chứa thông tin đã xác nhận
   const [isSaving, setIsSaving] = useState(false);
 
+  const [alreadyWeighedData, setAlreadyWeighedData] = useState(null);
+
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
@@ -220,6 +222,87 @@ function Scan() {
     }
   };
 
+  const checkIfWeighed = async () => {
+    if (!khoiLuong || isNaN(parseFloat(khoiLuong))) {
+      setMessageModal({ type: 'error', message: 'Vui lòng nhập khối lượng hợp lệ' });
+      return;
+    }
+
+    if (!workShift || !workDate) {
+      setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
+      return;
+    }
+
+    setLoading(true);
+
+    const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+    let weight = parseFloat(khoiLuong);
+
+    const adjustments = {
+      'Giẻ lau có chứa thành phần nguy hại': 0,
+      'Vụn logo': 0,
+      'Mực in thải': 0,
+      'Keo bàn thải': 0,
+      'Băng keo dính mực': 0,
+      'Rác sinh hoạt': 0,
+      'Lụa căng khung': 0,
+    };
+
+    if (jsonData?.t && adjustments[jsonData.t]) {
+      weight = Math.max(0, weight - adjustments[jsonData.t]);
+    }
+
+    weight = parseFloat(weight.toFixed(2));
+
+    const payload = {
+      trashBinCode: jsonData?.id,
+      userID: user.userID,
+      weighingTime: nowUTC7.toISOString(),
+      weightKg: weight,
+      updatedAt: nowUTC7.toISOString(),
+      updatedBy: user.userID,
+      workShift: workShift,
+      workDate: new Date(workDate).toISOString().split('T')[0],
+      userName: tenNguoiCan,
+    };
+    try {
+      const res = await fetch(
+        `${BASE_URL}/trash-weighings/check?trashBinCode=${payload?.trashBinCode}&workShift=${payload?.workShift}&workDate=${payload?.workDate}`,
+      );
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error('❌ Lỗi kiểm tra cân:', error);
+      return null;
+    }
+  };
+
+  const handleCheckAndConfirm = async () => {
+    if (!khoiLuong || isNaN(parseFloat(khoiLuong))) {
+      setMessageModal({ type: 'error', message: 'Vui lòng nhập khối lượng hợp lệ' });
+      return;
+    }
+
+    if (!workShift || !workDate) {
+      setMessageModal({ type: 'error', message: 'Vui lòng chọn ca làm và ngày làm việc' });
+      return;
+    }
+
+    const checkResult = await checkIfWeighed();
+
+    if (checkResult?.alreadyWeighed) {
+      setAlreadyWeighedData({
+        id: checkResult.existingData.id,
+        trashBinCode: checkResult.existingData.trashBinCode,
+        workDate: checkResult.existingData.workDate.split('T')[0],
+        workShift: checkResult.existingData.workShift,
+        weightKg: checkResult.existingData.weightKg,
+      });
+    } else {
+      await handleConfirm(); // không có dữ liệu → cho lưu luôn
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-center bg-white text-white p-4">
       <video ref={videoRef} className="w-full max-w-lg rounded-xl shadow-lg border-2 border-white" />
@@ -354,7 +437,7 @@ function Scan() {
                   Đóng
                 </button>
                 <button
-                  onClick={handleConfirm}
+                  onClick={handleCheckAndConfirm}
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center"
                   disabled={loading}
                 >
@@ -442,6 +525,58 @@ function Scan() {
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 ✅ Tiếp tục
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      {alreadyWeighedData && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setAlreadyWeighedData(null)}
+        >
+          <motion.div
+            className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 space-y-4"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold">⚠️ Đã cân rác</h2>
+            <p className="text-sm text-gray-600">
+              Thùng rác <strong>{alreadyWeighedData.trashBinCode}</strong> đã được cân trong ca{' '}
+              <strong>{alreadyWeighedData.workShift}</strong> ngày <strong>{alreadyWeighedData.workDate}</strong>.
+            </p>
+            <p className="text-sm text-gray-600">
+              ⚖️ Khối lượng đã lưu: <strong>{alreadyWeighedData.weightKg} kg</strong>
+            </p>
+
+            <div className="flex justify-between pt-4">
+              <button
+                onClick={() => {
+                  setAlreadyWeighedData(null);
+                  setLoading(false);
+                  setResultVisible(false);
+                  setJsonData(null);
+                  setKhoiLuong('');
+                  setMessageModal({ type: 'info', message: '⛔ Đã hủy lượt cân này!' });
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                ❌ Hủy lượt cân
+              </button>
+
+              <button
+                onClick={async () => {
+                  setAlreadyWeighedData(null);
+                  await handleConfirm(); // vẫn gọi lại lưu nếu người dùng muốn
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                ✅ Tiếp tục lưu
               </button>
             </div>
           </motion.div>
