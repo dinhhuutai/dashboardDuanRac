@@ -228,7 +228,7 @@ function Scan() {
             }}
           >
             <motion.div
-              className="bg-white text-black p-6 rounded-xl shadow-xl space-y-4 w-full max-w-md mx-4 max-h-[80%] overflow-y-auto"
+              className="bg-white text-black p-6 rounded-xl shadow-xl py-4 w-full max-w-md mx-4 max-h-[80%] overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
