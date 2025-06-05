@@ -217,7 +217,7 @@ function Scan() {
       <AnimatePresence>
         {resultVisible && jsonData && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -228,7 +228,7 @@ function Scan() {
             }}
           >
             <motion.div
-              className="bg-white text-black p-6 rounded-xl shadow-xl space-y-4 w-full max-w-md mx-4"
+              className="bg-white text-black p-6 rounded-xl shadow-xl space-y-4 w-full max-w-md mx-4 max-h-[80%] overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
