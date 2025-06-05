@@ -531,7 +531,11 @@ function Scan() {
                     const res = await fetch(`${BASE_URL}/trash-weighings/${confirmedData.id}`, {
                       method: 'PUT', // hoặc PATCH nếu có ID
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(confirmedData),
+                      body: JSON.stringify({
+                        ...confirmedData,
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: confirmedData.id, // thay bằng user ID thực tế
+                      }),
                     });
 
                     if (res.ok) {
