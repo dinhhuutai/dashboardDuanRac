@@ -527,6 +527,7 @@ function Scan() {
 
               <button
                 onClick={async () => {
+                  setIsSaving(true);
                   try {
                     const res = await fetch(`${BASE_URL}/trash-weighings/${confirmedData.id}`, {
                       method: 'PUT', // hoặc PATCH nếu có ID
@@ -548,6 +549,7 @@ function Scan() {
                     setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
                   } finally {
                     setEditModalVisible(false);
+                    setIsSaving(false);
                   }
                 }}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
