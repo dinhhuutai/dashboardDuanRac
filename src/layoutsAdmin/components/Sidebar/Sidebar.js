@@ -71,7 +71,7 @@ function Sidebar() {
               </li>
               <ul
                 className={`${
-                  downDashboard ? 'animate-downSlide1' : 'animate-upSlide'
+                  downDashboard ? 'animate-downSlide2' : 'animate-upSlide2'
                 } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
               >
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -110,6 +110,18 @@ function Sidebar() {
                     Weigh History
                   </NavLink>
                 </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminUnscannedQR}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Unscanned QR
+                  </NavLink>
+                </li>
               </ul>
             </div>
             <div className="mt-[6px]">
@@ -140,7 +152,7 @@ function Sidebar() {
               </li>
               <ul
                 className={`${
-                  downPage ? 'animate-downSlide1' : 'animate-upSlide'
+                  downPage ? 'animate-downSlide1' : 'animate-upSlide1'
                 } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
               >
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
