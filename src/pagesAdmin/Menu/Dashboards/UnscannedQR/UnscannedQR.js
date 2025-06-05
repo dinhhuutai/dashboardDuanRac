@@ -7,7 +7,7 @@ function UnscannedQRList() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`/trash-weighings/unscanned?workDate=${workDate}&workShift=${workShift}`);
+      const res = await fetch(`/trash-weighings/unscanned-teams?workDate=${workDate}&workShift=${workShift}`);
       const json = await res.json();
       setData(json.unscanned || {});
     };
