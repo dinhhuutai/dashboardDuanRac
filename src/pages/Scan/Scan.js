@@ -34,6 +34,7 @@ function Scan() {
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirmedData, setConfirmedData] = useState(null); // chứa thông tin đã xác nhận
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
@@ -199,7 +200,9 @@ function Scan() {
       });
 
       if (res.ok) {
-        const savedPayload = { ...payload }; // lưu lại để hiển thị ở modal
+        const result = await res.json();
+        const savedPayload = { ...payload, id: result.id }; // lưu lại để hiển thị ở modal
+
         setConfirmedData(savedPayload);
         setReviewModalVisible(true); // mở modal xem lại
         //setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
@@ -291,7 +294,7 @@ function Scan() {
                         ? 'Ca Dài 1 (06h00 → 18h00)'
                         : shift === 'dai2'
                         ? 'Ca Dài 2 (18h00 → 06h00)'
-                        : 'Ca Hành Chính (7h30 → 16h30)'}
+                        : 'Ca Hành Chính (07h30 → 16h30)'}
                     </button>
                   ))}
                 </div>
@@ -393,10 +396,28 @@ function Scan() {
               <strong>Khối lượng:</strong> {confirmedData.weightKg} kg
             </p>
             <p>
-              <strong>Ca làm:</strong> {confirmedData.workShift}
+              <strong>Ca làm:</strong>
+              {confirmedData.workShift === 'ca1'
+                ? 'Ca Ngắn 1 (06h00 → 14h00)'
+                : confirmedData.workShift === 'ca2'
+                ? 'Ca Ngắn 2 (14h00 → 22h00)'
+                : confirmedData.workShift === 'ca3'
+                ? 'Ca Ngắn 3 (22h00 → 06h00)'
+                : confirmedData.workShift === 'dai1'
+                ? 'Ca Dài 1 (06h00 → 18h00)'
+                : confirmedData.workShift === 'dai2'
+                ? 'Ca Dài 2 (18h00 → 06h00)'
+                : 'Ca Hành Chính (07h30 → 16h30)'}
             </p>
             <p>
-              <strong>Ngày:</strong> {confirmedData.workDate}
+              <strong>Ngày:</strong>{' '}
+              {(() => {
+                const d = new Date(confirmedData.workDate);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}-${month}-${year}`;
+              })()}
             </p>
             <p>
               <strong>Người cân:</strong> {confirmedData.userName}
@@ -464,12 +485,12 @@ function Scan() {
                 value={confirmedData.workShift}
                 onChange={(e) => setConfirmedData({ ...confirmedData, workShift: e.target.value })}
               >
-                <option value="ca1">Ca Ngắn 1</option>
-                <option value="ca2">Ca Ngắn 2</option>
-                <option value="ca3">Ca Ngắn 3</option>
-                <option value="dai1">Ca Dài 1</option>
-                <option value="dai2">Ca Dài 2</option>
-                <option value="hc">Ca Hành Chính</option>
+                <option value="ca1">Ca Ngắn 1 (06h00 → 14h00)</option>
+                <option value="ca2">Ca Ngắn 2 (14h00 → 22h00)</option>
+                <option value="ca3">Ca Ngắn 3 (22h00 → 06h00)</option>
+                <option value="dai1">Ca Dài 1 (06h00 → 18h00)</option>
+                <option value="dai2">Ca Dài 2 (18h00 → 06h00)</option>
+                <option value="cahc">Ca Hành Chính (07h30 → 16h30)</option>
               </select>
             </div>
 
@@ -507,8 +528,8 @@ function Scan() {
               <button
                 onClick={async () => {
                   try {
-                    const res = await fetch(`${BASE_URL}/trash-weighings`, {
-                      method: 'POST', // hoặc PATCH nếu có ID
+                    const res = await fetch(`${BASE_URL}/trash-weighings/${confirmedData.id}`, {
+                      method: 'PUT', // hoặc PATCH nếu có ID
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(confirmedData),
                     });
@@ -527,7 +548,18 @@ function Scan() {
                 }}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
-                💾 Lưu
+                {isSaving && (
+                  <svg
+                    className="w-4 h-4 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {isSaving ? 'Đang lưu...' : '💾 Lưu'}
               </button>
             </div>
           </motion.div>
