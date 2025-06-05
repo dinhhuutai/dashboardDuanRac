@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL } from '~/config';
 
 function UnscannedQRList() {
   const [data, setData] = useState({});
@@ -7,15 +8,17 @@ function UnscannedQRList() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`/trash-weighings/unscanned-teams?workDate=${workDate}&workShift=${workShift}`);
+      const res = await fetch(
+        `${BASE_URL}/trash-weighings/unscanned-teams?workDate=${workDate}&workShift=${workShift}`,
+      );
       const json = await res.json();
-      setData(json.unscanned || {});
+      setData(json.unscannedTeams || []);
     };
     fetchData();
   }, [workDate, workShift]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md mt-6 border border-gray-200">
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl mt-6 border border-gray-200">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">📋 Danh sách tổ - đơn vị chưa quét mã QR</h2>
 
       {/* Bộ lọc ngày và ca */}
