@@ -31,6 +31,10 @@ function Scan() {
 
   const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2', 'cahc'];
 
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [confirmedData, setConfirmedData] = useState(null); // chứa thông tin đã xác nhận
+
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
@@ -195,7 +199,10 @@ function Scan() {
       });
 
       if (res.ok) {
-        setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
+        const savedPayload = { ...payload }; // lưu lại để hiển thị ở modal
+        setConfirmedData(savedPayload);
+        setReviewModalVisible(true); // mở modal xem lại
+        //setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
       } else {
         const errText = await res.text();
         setMessageModal({ type: 'error', message: `❌ Lỗi: ${errText || 'Không thể lưu dữ liệu cân rác'}` });
@@ -362,6 +369,170 @@ function Scan() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {reviewModalVisible && confirmedData && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setReviewModalVisible(false)}
+        >
+          <motion.div
+            className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 space-y-4"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold mb-4">📋 Thông tin đã lưu</h2>
+            <p>
+              <strong>Mã thùng rác:</strong> {confirmedData.trashBinCode}
+            </p>
+            <p>
+              <strong>Khối lượng:</strong> {confirmedData.weightKg} kg
+            </p>
+            <p>
+              <strong>Ca làm:</strong> {confirmedData.workShift}
+            </p>
+            <p>
+              <strong>Ngày:</strong> {confirmedData.workDate}
+            </p>
+            <p>
+              <strong>Người cân:</strong> {confirmedData.userName}
+            </p>
+
+            <div className="flex justify-between pt-4">
+              <button
+                onClick={() => {
+                  setReviewModalVisible(false);
+                  setEditModalVisible(true);
+                }}
+                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+              >
+                ✏️ Chỉnh sửa
+              </button>
+
+              <button
+                onClick={() => {
+                  setReviewModalVisible(false);
+                  setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                ✅ Tiếp tục
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {editModalVisible && confirmedData && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setEditModalVisible(false)}
+        >
+          <motion.div
+            className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 space-y-4"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold mb-4">✏️ Chỉnh sửa thông tin</h2>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">⚖️ Khối lượng:</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.weightKg}
+                onChange={(e) =>
+                  setConfirmedData({ ...confirmedData, weightKg: parseFloat(e.target.value.replace(',', '.')) || 0 })
+                }
+              />
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">🕓 Ca làm:</label>
+              <select
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.workShift}
+                onChange={(e) => setConfirmedData({ ...confirmedData, workShift: e.target.value })}
+              >
+                <option value="ca1">Ca Ngắn 1</option>
+                <option value="ca2">Ca Ngắn 2</option>
+                <option value="ca3">Ca Ngắn 3</option>
+                <option value="dai1">Ca Dài 1</option>
+                <option value="dai2">Ca Dài 2</option>
+                <option value="hc">Ca Hành Chính</option>
+              </select>
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">📅 Ngày làm việc:</label>
+              <input
+                type="date"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.workDate}
+                onChange={(e) => setConfirmedData({ ...confirmedData, workDate: e.target.value })}
+              />
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">👤 Người cân:</label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.userName}
+                onChange={(e) => setConfirmedData({ ...confirmedData, userName: e.target.value })}
+              />
+            </div>
+
+            <div className="flex justify-between pt-4">
+              <button
+                onClick={() => {
+                  setEditModalVisible(false);
+                  setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                ❌ Hủy
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`${BASE_URL}/trash-weighings`, {
+                      method: 'POST', // hoặc PATCH nếu có ID
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(confirmedData),
+                    });
+
+                    if (res.ok) {
+                      setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu cân rác thành công!' });
+                    } else {
+                      const err = await res.text();
+                      setMessageModal({ type: 'error', message: `❌ Lỗi: ${err}` });
+                    }
+                  } catch {
+                    setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
+                  } finally {
+                    setEditModalVisible(false);
+                  }
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                💾 Lưu
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {messageModal && (
