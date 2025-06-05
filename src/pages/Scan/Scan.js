@@ -228,14 +228,14 @@ function Scan() {
             }}
           >
             <motion.div
-              className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4"
+              className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[55%]"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="space-y-4 max-h-[55%] overflow-y-auto">
+              <div className="space-y-4 overflow-y-auto">
                 <div className="text-sm flex">
                   <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
                   <p className="ml-2">{jsonData?.d || ''}</p>
