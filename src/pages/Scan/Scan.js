@@ -228,81 +228,80 @@ function Scan() {
             }}
           >
             <motion.div
-              className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[55%]"
+              className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 space-y-4 max-h-[85%] overflow-y-auto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="space-y-4 overflow-y-auto">
-                <div className="text-sm flex">
-                  <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
-                  <p className="ml-2">{jsonData?.d || ''}</p>
-                </div>
-                <div className="text-sm flex">
-                  <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
-                  <p className="ml-2">{jsonData?.u || ''}</p>
-                </div>
-                <div className="text-sm flex">
-                  <p className="font-semibold">🗑️ Loại rác:</p>
-                  <p className="ml-2">{jsonData?.t || ''}</p>
-                </div>
+              <div className="text-sm flex">
+                <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
+                <p className="ml-2">{jsonData?.d || ''}</p>
+              </div>
+              <div className="text-sm flex">
+                <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
+                <p className="ml-2">{jsonData?.u || ''}</p>
+              </div>
+              <div className="text-sm flex">
+                <p className="font-semibold">🗑️ Loại rác:</p>
+                <p className="ml-2">{jsonData?.t || ''}</p>
+              </div>
 
-                <div className="text-sm">
-                  <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    placeholder="VD: 5.25"
-                    value={khoiLuong}
-                    onChange={(e) => {
-                      const inputValue = e.target.value.replace(',', '.');
-                      setKhoiLuong(inputValue);
-                    }}
-                  />
-                </div>
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">⚖️ Nhập khối lượng:</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  placeholder="VD: 5.25"
+                  value={khoiLuong}
+                  onChange={(e) => {
+                    const inputValue = e.target.value.replace(',', '.');
+                    setKhoiLuong(inputValue);
+                  }}
+                />
+              </div>
 
-                <div className="text-sm">
-                  <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
-                  <div className="flex flex-wrap gap-2">
-                    {workShifts.map((shift) => (
-                      <button
-                        key={shift}
-                        onClick={() => setWorkShift(shift)}
-                        className={`px-4 py-2 rounded border text-sm ${
-                          workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
-                      >
-                        {shift === 'ca1'
-                          ? 'Ca Ngắn 1 (06h00 → 14h00)'
-                          : shift === 'ca2'
-                          ? 'Ca Ngắn 2 (14h00 → 22h00)'
-                          : shift === 'ca3'
-                          ? 'Ca Ngắn 3 (22h00 → 06h00)'
-                          : shift === 'dai1'
-                          ? 'Ca Dài 1 (06h00 → 18h00)'
-                          : shift === 'dai2'
-                          ? 'Ca Dài 2 (18h00 → 06h00)'
-                          : 'Ca Hành Chính (7h30 → 16h30)'}
-                      </button>
-                    ))}
-                  </div>
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
+                <div className="flex flex-wrap gap-2">
+                  {workShifts.map((shift) => (
+                    <button
+                      key={shift}
+                      onClick={() => setWorkShift(shift)}
+                      className={`px-4 py-2 rounded border text-sm ${
+                        workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+                      }`}
+                    >
+                      {shift === 'ca1'
+                        ? 'Ca Ngắn 1 (06h00 → 14h00)'
+                        : shift === 'ca2'
+                        ? 'Ca Ngắn 2 (14h00 → 22h00)'
+                        : shift === 'ca3'
+                        ? 'Ca Ngắn 3 (22h00 → 06h00)'
+                        : shift === 'dai1'
+                        ? 'Ca Dài 1 (06h00 → 18h00)'
+                        : shift === 'dai2'
+                        ? 'Ca Dài 2 (18h00 → 06h00)'
+                        : 'Ca Hành Chính (7h30 → 16h30)'}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div className="text-sm">
-                  <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
-                  <input
-                    type="date"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    value={workDate}
-                    onChange={(e) => setWorkDate(e.target.value)}
-                  />
-                </div>
-                <div className="text-sm">
-                  <label className="font-semibold block mb-1">👤 Tên người cân:</label>
-                  {/* {teamMembers.length > 0 ? (
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  value={workDate}
+                  onChange={(e) => setWorkDate(e.target.value)}
+                />
+              </div>
+              <div className="text-sm">
+                <label className="font-semibold block mb-1">👤 Tên người cân:</label>
+                {/* {teamMembers.length > 0 ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                     value={tenNguoiCan}
@@ -324,41 +323,40 @@ function Scan() {
                     onChange={(e) => setTenNguoiCan(e.target.value)}
                   />
                 )} */}
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    placeholder="VD: Nguyễn Văn A"
-                    value={tenNguoiCan}
-                    onChange={(e) => setTenNguoiCan(e.target.value)}
-                  />
-                </div>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  placeholder="VD: Nguyễn Văn A"
+                  value={tenNguoiCan}
+                  onChange={(e) => setTenNguoiCan(e.target.value)}
+                />
+              </div>
 
-                <div className="flex justify-between pt-4">
-                  <button
-                    onClick={() => {
-                      setResultVisible(false);
-                      setJsonData(null);
-                      setKhoiLuong('');
-                    }}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Đóng
-                  </button>
-                  <button
-                    onClick={handleConfirm}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <FaSpinner className="animate-spin mr-2" />
-                        Đang gửi...
-                      </>
-                    ) : (
-                      'Xác nhận'
-                    )}
-                  </button>
-                </div>
+              <div className="flex justify-between pt-4">
+                <button
+                  onClick={() => {
+                    setResultVisible(false);
+                    setJsonData(null);
+                    setKhoiLuong('');
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      Đang gửi...
+                    </>
+                  ) : (
+                    'Xác nhận'
+                  )}
+                </button>
               </div>
             </motion.div>
           </motion.div>
