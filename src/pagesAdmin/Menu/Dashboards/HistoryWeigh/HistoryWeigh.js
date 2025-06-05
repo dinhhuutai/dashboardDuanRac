@@ -190,7 +190,7 @@ function HistoryWeigh() {
                   {paginatedData.map((item, i) => (
                     <tr key={item.weighingID} className="text-center hover:bg-gray-50 odd:bg-white even:bg-gray-50">
                       <td className="px-2 py-2 border">{(currentPage - 1) * pageSize + i + 1}</td>
-                      <td className="px-2 py-2 border">{item.userName}</td>
+                      <td className="px-2 py-2 border">{item.fullName}</td>
                       <td className="px-2 py-2 border">{item.departmentName}</td>
                       <td className="px-2 py-2 border">{item.unitName || '-'}</td>
                       <td className="px-2 py-2 border">{item.trashName}</td>
