@@ -235,7 +235,7 @@ function Scan() {
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="space-y-4 max-h-[85%] overflow-y-auto">
+              <div className="space-y-4 max-h-[55%] overflow-y-auto">
                 <div className="text-sm flex">
                   <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
                   <p className="ml-2">{jsonData?.d || ''}</p>
