@@ -190,8 +190,10 @@ function HistoryWeigh() {
                   {paginatedData.map((item, i) => (
                     <tr
                       key={item.weighingID}
-                      className={`text-center hover:bg-gray-50 ${
-                        !item.workShift || !item.workDate ? 'bg-red-100' : 'odd:bg-white even:bg-gray-50'
+                      className={`text-center ${
+                        !item.workShift || !item.workDate
+                          ? 'bg-[#ff564a] text-[#fff]'
+                          : 'hover:bg-gray-50 odd:bg-white even:bg-gray-50'
                       }`}
                     >
                       <td className="px-2 py-2 border">{(currentPage - 1) * pageSize + i + 1}</td>
@@ -204,7 +206,7 @@ function HistoryWeigh() {
                       <td className="px-2 py-2 border">
                         {!item.workDate ? (
                           <button
-                            className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default"
+                            className="px-2 py-1 rounded border text-sm bg-red-200 text-red-600 cursor-default"
                             disabled
                           >
                             Không ngày
@@ -216,7 +218,7 @@ function HistoryWeigh() {
                       <td className="px-2 py-2 border">
                         {!item.workShift ? (
                           <button
-                            className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default"
+                            className="px-2 py-1 rounded border text-sm bg-red-200 text-red-600 cursor-default"
                             disabled
                           >
                             Không ca
@@ -226,9 +228,20 @@ function HistoryWeigh() {
                         )}
                       </td>
                       <td className="px-2 py-2 border">{item.userName}</td>
-                      <td className="px-2 py-2 border text-right font-medium text-blue-800">{item.weightKg}</td>
+                      <td
+                        className={`px-2 py-2 border text-right font-medium ${
+                          !item.workShift || !item.workDate ? 'text-[#fff]' : 'text-blue-800'
+                        }`}
+                      >
+                        {item.weightKg}
+                      </td>
                       <td className="px-2 py-2 border">
-                        <button onClick={() => setDeleteItem(item)} className="text-red-500 hover:text-red-700">
+                        <button
+                          onClick={() => setDeleteItem(item)}
+                          className={`${
+                            !item.workShift || !item.workDate ? 'text-[#fff]' : 'text-red-500'
+                          } hover:text-red-700`}
+                        >
                           <FaTrash />
                         </button>
                       </td>
