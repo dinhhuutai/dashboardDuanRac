@@ -2,7 +2,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config/index';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaEdit } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSelector } from 'react-redux';
+import { userSelector } from '~/redux/selectors';
 
 function HistoryWeigh() {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -12,6 +15,20 @@ function HistoryWeigh() {
   const [deleteItem, setDeleteItem] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [missingFilter, setMissingFilter] = useState('all');
+
+  const [confirmedData, setConfirmedData] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isWorkShift, setIsWorkShift] = useState(true);
+  const [isWorkDate, setIsWorkDate] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [messageModal, setMessageModal] = useState(null);
+
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+  }, [tmp]);
 
   const [filters, setFilters] = useState({
     userName: '',
@@ -28,22 +45,23 @@ function HistoryWeigh() {
 
   useEffect(() => {
     if (!date) return;
-    async function fetchHistory() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await axios.get(`${BASE_URL}/history/date`, {
-          params: { date },
-        });
-        setData(res.data);
-      } catch (err) {
-        setError('❌ Lỗi khi tải dữ liệu lịch sử cân');
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchHistory();
   }, [date]);
+
+  async function fetchHistory() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`${BASE_URL}/history/date`, {
+        params: { date },
+      });
+      setData(res.data);
+    } catch (err) {
+      setError('❌ Lỗi khi tải dữ liệu lịch sử cân');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const uniqueOptions = (key) => [...new Set(data.map((d) => d[key]).filter(Boolean))];
 
@@ -279,14 +297,34 @@ function HistoryWeigh() {
                         {item.weightKg}
                       </td>
                       <td className="px-2 py-2 border">
-                        <button
-                          onClick={() => setDeleteItem(item)}
-                          className={`${
-                            !item.workShift || !item.workDate ? 'text-[#fff]' : 'text-red-500'
-                          } hover:text-red-700`}
-                        >
-                          <FaTrash />
-                        </button>
+                        <div className="flex items-center gap-3 justify-between">
+                          {/* Nút chỉnh sửa */}
+                          <button
+                            onClick={() => {
+                              setConfirmedData(item);
+                              setIsWorkDate(!!item.workDate);
+                              setIsWorkShift(!!item.workShift);
+                              setEditModalVisible(true);
+                            }}
+                            className={`${
+                              !item.workShift || !item.workDate ? 'text-[#fff]' : 'text-blue-600'
+                            } hover:text-blue-800`}
+                            title="Chỉnh sửa"
+                          >
+                            <FaEdit />
+                          </button>
+
+                          {/* Nút xóa */}
+                          <button
+                            onClick={() => setDeleteItem(item)}
+                            className={`${
+                              !item.workShift || !item.workDate ? 'text-[#fff]' : 'text-red-500'
+                            } hover:text-red-700`}
+                            title="Xóa"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -358,6 +396,228 @@ function HistoryWeigh() {
           </div>
         )}
       </div>
+
+      {editModalVisible && confirmedData && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setEditModalVisible(false)}
+        >
+          <motion.div
+            className="bg-white text-black p-6 rounded-xl shadow-xl w-full max-w-md mx-4 space-y-4"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold mb-4">✏️ Chỉnh sửa thông tin</h2>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">⚖️ Khối lượng:</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.weightKg}
+                onChange={(e) =>
+                  setConfirmedData({ ...confirmedData, weightKg: parseFloat(e.target.value.replace(',', '.')) || 0 })
+                }
+              />
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">🕓 Ca làm:</label>
+              <div className="flex items-center gap-6 mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="true"
+                    checked={isWorkShift === true}
+                    onChange={() => setIsWorkShift(true)}
+                  />
+                  <span>Có ca</span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="false"
+                    checked={isWorkShift === false}
+                    onChange={() => setIsWorkShift(false)}
+                  />
+                  <span>Không ca</span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {isWorkShift ? (
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    value={confirmedData.workShift}
+                    onChange={(e) => setConfirmedData({ ...confirmedData, workShift: e.target.value })}
+                  >
+                    <option value="ca1">Ca Ngắn 1 (06h00 → 14h00)</option>
+                    <option value="ca2">Ca Ngắn 2 (14h00 → 22h00)</option>
+                    <option value="ca3">Ca Ngắn 3 (22h00 → 06h00)</option>
+                    <option value="dai1">Ca Dài 1 (06h00 → 18h00)</option>
+                    <option value="dai2">Ca Dài 2 (18h00 → 06h00)</option>
+                    <option value="cahc">Ca Hành Chính (07h30 → 16h30)</option>
+                  </select>
+                ) : (
+                  <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                    Tem không để ca
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">📅 Ngày làm việc:</label>
+              <div className="flex items-center gap-6 mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="date"
+                    value="true"
+                    checked={isWorkDate === true}
+                    onChange={() => setIsWorkDate(true)}
+                  />
+                  <span>Có ngày</span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="date"
+                    value="false"
+                    checked={isWorkDate === false}
+                    onChange={() => setIsWorkDate(false)}
+                  />
+                  <span>Không ngày</span>
+                </label>
+              </div>
+              {isWorkDate ? (
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  value={confirmedData.workDate}
+                  onChange={(e) => setConfirmedData({ ...confirmedData, workDate: e.target.value })}
+                />
+              ) : (
+                <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                  Tem không để ngày
+                </button>
+              )}
+            </div>
+
+            <div className="text-sm">
+              <label className="block mb-1 font-semibold">👤 Người cân:</label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={confirmedData.userName}
+                onChange={(e) => setConfirmedData({ ...confirmedData, userName: e.target.value })}
+              />
+            </div>
+
+            <div className="flex justify-between pt-4">
+              <button
+                onClick={() => {
+                  setEditModalVisible(false);
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                ❌ Hủy
+              </button>
+
+              <button
+                onClick={async () => {
+                  setIsSaving(true);
+                  const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+                  console.log(confirmedData);
+                  try {
+                    const res = await fetch(`${BASE_URL}/trash-weighings/${confirmedData.weighingID}`, {
+                      method: 'PUT', // hoặc PATCH nếu có ID
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        ...confirmedData,
+                        updatedAt: nowUTC7.toISOString(),
+                        updatedBy: user.userID, // thay bằng user ID thực tế
+                      }),
+                    });
+
+                    if (res.ok) {
+                      setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu cân rác thành công!' });
+
+                      await fetchHistory();
+                    } else {
+                      const err = await res.text();
+                      setMessageModal({ type: 'error', message: `❌ Lỗi: ${err}` });
+                    }
+                  } catch {
+                    setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
+                  } finally {
+                    setEditModalVisible(false);
+                    setIsSaving(false);
+                  }
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                {isSaving ? (
+                  <svg
+                    className="w-4 h-4 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  '💾 Lưu'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      <AnimatePresence>
+        {messageModal && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMessageModal(null)}
+          >
+            <motion.div
+              className="bg-white text-black p-6 rounded-xl shadow-xl space-y-4 w-full max-w-md mx-4"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className={`text-sm ${messageModal.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                {messageModal.message}
+              </p>
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => setMessageModal(null)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Đóng
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
