@@ -567,7 +567,7 @@ function Scan() {
             </p>
             <p>
               <strong>Ngày:</strong>{' '}
-              {isWorkShift ? (
+              {isWorkDate ? (
                 (() => {
                   const d = new Date(confirmedData.workDate);
                   const day = String(d.getDate()).padStart(2, '0');
@@ -694,28 +694,89 @@ function Scan() {
 
             <div className="text-sm">
               <label className="block mb-1 font-semibold">🕓 Ca làm:</label>
-              <select
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={confirmedData.workShift}
-                onChange={(e) => setConfirmedData({ ...confirmedData, workShift: e.target.value })}
-              >
-                <option value="ca1">Ca Ngắn 1 (06h00 → 14h00)</option>
-                <option value="ca2">Ca Ngắn 2 (14h00 → 22h00)</option>
-                <option value="ca3">Ca Ngắn 3 (22h00 → 06h00)</option>
-                <option value="dai1">Ca Dài 1 (06h00 → 18h00)</option>
-                <option value="dai2">Ca Dài 2 (18h00 → 06h00)</option>
-                <option value="cahc">Ca Hành Chính (07h30 → 16h30)</option>
-              </select>
+              <div className="flex items-center gap-6 mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="true"
+                    checked={isWorkShift === true}
+                    onChange={() => setIsWorkShift(true)}
+                  />
+                  <span>Có ca</span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="false"
+                    checked={isWorkShift === false}
+                    onChange={() => setIsWorkShift(false)}
+                  />
+                  <span>Không ca</span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {isWorkShift ? (
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    value={confirmedData.workShift}
+                    onChange={(e) => setConfirmedData({ ...confirmedData, workShift: e.target.value })}
+                  >
+                    <option value="ca1">Ca Ngắn 1 (06h00 → 14h00)</option>
+                    <option value="ca2">Ca Ngắn 2 (14h00 → 22h00)</option>
+                    <option value="ca3">Ca Ngắn 3 (22h00 → 06h00)</option>
+                    <option value="dai1">Ca Dài 1 (06h00 → 18h00)</option>
+                    <option value="dai2">Ca Dài 2 (18h00 → 06h00)</option>
+                    <option value="cahc">Ca Hành Chính (07h30 → 16h30)</option>
+                  </select>
+                ) : (
+                  <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                    Tem không để ca
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="text-sm">
               <label className="block mb-1 font-semibold">📅 Ngày làm việc:</label>
-              <input
-                type="date"
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={confirmedData.workDate}
-                onChange={(e) => setConfirmedData({ ...confirmedData, workDate: e.target.value })}
-              />
+              <div className="flex items-center gap-6 mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="date"
+                    value="true"
+                    checked={isWorkDate === true}
+                    onChange={() => setIsWorkDate(true)}
+                  />
+                  <span>Có ngày</span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="date"
+                    value="false"
+                    checked={isWorkDate === false}
+                    onChange={() => setIsWorkDate(false)}
+                  />
+                  <span>Không ngày</span>
+                </label>
+              </div>
+              {isWorkDate ? (
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  value={confirmedData.workDate}
+                  onChange={(e) => setConfirmedData({ ...confirmedData, workDate: e.target.value })}
+                />
+              ) : (
+                <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                  Tem không để ngày
+                </button>
+              )}
             </div>
 
             <div className="text-sm">
