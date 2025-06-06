@@ -188,7 +188,12 @@ function HistoryWeigh() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {paginatedData.map((item, i) => (
-                    <tr key={item.weighingID} className="text-center hover:bg-gray-50 odd:bg-white even:bg-gray-50">
+                    <tr
+                      key={item.weighingID}
+                      className={`text-center hover:bg-gray-50 ${
+                        !item.workShift || !item.workDate ? 'bg-red-100' : 'odd:bg-white even:bg-gray-50'
+                      }`}
+                    >
                       <td className="px-2 py-2 border">{(currentPage - 1) * pageSize + i + 1}</td>
                       <td className="px-2 py-2 border">{item.fullName}</td>
                       <td className="px-2 py-2 border">{item.departmentName}</td>
@@ -196,8 +201,30 @@ function HistoryWeigh() {
                       <td className="px-2 py-2 border">{item.trashName}</td>
                       <td className="px-2 py-2 border">{item.trashBinCode}</td>
                       <td className="px-2 py-2 border">{formatDateTime(item.weighingTime)}</td>
-                      <td className="px-2 py-2 border">{formatVietnamTimeString2(item.workDate)}</td>
-                      <td className="px-2 py-2 border">{item.workShift}</td>
+                      <td className="px-2 py-2 border">
+                        {!item.workDate ? (
+                          <button
+                            className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default"
+                            disabled
+                          >
+                            Không ngày
+                          </button>
+                        ) : (
+                          formatVietnamTimeString2(item.workDate)
+                        )}
+                      </td>
+                      <td className="px-2 py-2 border">
+                        {!item.workShift ? (
+                          <button
+                            className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default"
+                            disabled
+                          >
+                            Không ca
+                          </button>
+                        ) : (
+                          item.workShift
+                        )}
+                      </td>
                       <td className="px-2 py-2 border">{item.userName}</td>
                       <td className="px-2 py-2 border text-right font-medium text-blue-800">{item.weightKg}</td>
                       <td className="px-2 py-2 border">

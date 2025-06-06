@@ -410,7 +410,7 @@ function Scan() {
                     ))
                   ) : (
                     <button
-                      className="px-4 py-2 rounded border text-sm bg-green-100 text-green-700 cursor-default"
+                      className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default"
                       disabled
                     >
                       Tem không để ca
@@ -452,10 +452,7 @@ function Scan() {
                     onChange={(e) => setWorkDate(e.target.value)}
                   />
                 ) : (
-                  <button
-                    className="px-4 py-2 rounded border text-sm bg-green-100 text-green-700 cursor-default"
-                    disabled
-                  >
+                  <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
                     Tem không để ngày
                   </button>
                 )}
@@ -548,27 +545,41 @@ function Scan() {
             </p>
             <p>
               <strong>Ca làm:</strong>
-              {confirmedData.workShift === 'ca1'
-                ? 'Ca Ngắn 1 (06h00 → 14h00)'
-                : confirmedData.workShift === 'ca2'
-                ? 'Ca Ngắn 2 (14h00 → 22h00)'
-                : confirmedData.workShift === 'ca3'
-                ? 'Ca Ngắn 3 (22h00 → 06h00)'
-                : confirmedData.workShift === 'dai1'
-                ? 'Ca Dài 1 (06h00 → 18h00)'
-                : confirmedData.workShift === 'dai2'
-                ? 'Ca Dài 2 (18h00 → 06h00)'
-                : 'Ca Hành Chính (07h30 → 16h30)'}
+              {isWorkShift ? (
+                confirmedData.workShift === 'ca1' ? (
+                  'Ca Ngắn 1 (06h00 → 14h00)'
+                ) : confirmedData.workShift === 'ca2' ? (
+                  'Ca Ngắn 2 (14h00 → 22h00)'
+                ) : confirmedData.workShift === 'ca3' ? (
+                  'Ca Ngắn 3 (22h00 → 06h00)'
+                ) : confirmedData.workShift === 'dai1' ? (
+                  'Ca Dài 1 (06h00 → 18h00)'
+                ) : confirmedData.workShift === 'dai2' ? (
+                  'Ca Dài 2 (18h00 → 06h00)'
+                ) : (
+                  'Ca Hành Chính (07h30 → 16h30)'
+                )
+              ) : (
+                <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                  Tem không để ca
+                </button>
+              )}
             </p>
             <p>
               <strong>Ngày:</strong>{' '}
-              {(() => {
-                const d = new Date(confirmedData.workDate);
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                return `${day}-${month}-${year}`;
-              })()}
+              {isWorkShift ? (
+                (() => {
+                  const d = new Date(confirmedData.workDate);
+                  const day = String(d.getDate()).padStart(2, '0');
+                  const month = String(d.getMonth() + 1).padStart(2, '0');
+                  const year = d.getFullYear();
+                  return `${day}-${month}-${year}`;
+                })()
+              ) : (
+                <button className="px-4 py-2 rounded border text-sm bg-red-100 text-red-600 cursor-default" disabled>
+                  Tem không để ngày
+                </button>
+              )}
             </p>
             <p>
               <strong>Người cân:</strong> {confirmedData.userName}
