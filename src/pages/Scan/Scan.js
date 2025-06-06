@@ -29,6 +29,9 @@ function Scan() {
   const [workShift, setWorkShift] = useState('ca1');
   const [workDate, setWorkDate] = useState(new Date());
 
+  const [isWorkShift, setIsWorkShift] = useState(true);
+  const [isWorkDate, setIsWorkDate] = useState(true);
+
   const workShifts = ['ca1', 'ca2', 'ca3', 'dai1', 'dai2', 'cahc'];
 
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
@@ -189,8 +192,8 @@ function Scan() {
       weightKg: weight,
       updatedAt: nowUTC7.toISOString(),
       updatedBy: user.userID,
-      workShift: workShift,
-      workDate: new Date(workDate).toISOString().split('T')[0],
+      workShift: isWorkShift ? workShift : null,
+      workDate: isWorkDate ? new Date(workDate).toISOString().split('T')[0] : null,
       userName: tenNguoiCan,
     };
 
@@ -290,7 +293,7 @@ function Scan() {
 
     const checkResult = await checkIfWeighed();
 
-    if (checkResult?.alreadyWeighed) {
+    if (checkResult?.alreadyWeighed && isWorkDate && isWorkShift) {
       setAlreadyWeighedData({
         id: checkResult.existingData.id,
         trashBinCode: checkResult.existingData.trashBinCode,
@@ -358,39 +361,104 @@ function Scan() {
 
               <div className="text-sm">
                 <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
+                <div className="flex items-center gap-6 mb-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="shift"
+                      value="true"
+                      checked={isWorkShift === true}
+                      onChange={() => setIsWorkShift(true)}
+                    />
+                    <span>Có ca</span>
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="shift"
+                      value="false"
+                      checked={isWorkShift === false}
+                      onChange={() => setIsWorkShift(false)}
+                    />
+                    <span>Không ca</span>
+                  </label>
+                </div>
+
                 <div className="flex flex-wrap gap-2">
-                  {workShifts.map((shift) => (
+                  {isWorkShift ? (
+                    workShifts.map((shift) => (
+                      <button
+                        key={shift}
+                        onClick={() => setWorkShift(shift)}
+                        className={`px-4 py-2 rounded border text-sm ${
+                          workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                      >
+                        {shift === 'ca1'
+                          ? 'Ca Ngắn 1 (06h00 → 14h00)'
+                          : shift === 'ca2'
+                          ? 'Ca Ngắn 2 (14h00 → 22h00)'
+                          : shift === 'ca3'
+                          ? 'Ca Ngắn 3 (22h00 → 06h00)'
+                          : shift === 'dai1'
+                          ? 'Ca Dài 1 (06h00 → 18h00)'
+                          : shift === 'dai2'
+                          ? 'Ca Dài 2 (18h00 → 06h00)'
+                          : 'Ca Hành Chính (07h30 → 16h30)'}
+                      </button>
+                    ))
+                  ) : (
                     <button
-                      key={shift}
-                      onClick={() => setWorkShift(shift)}
-                      className={`px-4 py-2 rounded border text-sm ${
-                        workShift === shift ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
-                      }`}
+                      className="px-4 py-2 rounded border text-sm bg-green-100 text-green-700 cursor-default"
+                      disabled
                     >
-                      {shift === 'ca1'
-                        ? 'Ca Ngắn 1 (06h00 → 14h00)'
-                        : shift === 'ca2'
-                        ? 'Ca Ngắn 2 (14h00 → 22h00)'
-                        : shift === 'ca3'
-                        ? 'Ca Ngắn 3 (22h00 → 06h00)'
-                        : shift === 'dai1'
-                        ? 'Ca Dài 1 (06h00 → 18h00)'
-                        : shift === 'dai2'
-                        ? 'Ca Dài 2 (18h00 → 06h00)'
-                        : 'Ca Hành Chính (07h30 → 16h30)'}
+                      Tem không để ca
                     </button>
-                  ))}
+                  )}
                 </div>
               </div>
 
               <div className="text-sm">
                 <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                  value={workDate}
-                  onChange={(e) => setWorkDate(e.target.value)}
-                />
+                <div className="flex items-center gap-6 mb-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="date"
+                      value="true"
+                      checked={isWorkDate === true}
+                      onChange={() => setIsWorkDate(true)}
+                    />
+                    <span>Có ngày</span>
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="date"
+                      value="false"
+                      checked={isWorkDate === false}
+                      onChange={() => setIsWorkDate(false)}
+                    />
+                    <span>Không ngày</span>
+                  </label>
+                </div>
+                {isWorkDate ? (
+                  <input
+                    type="date"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    value={workDate}
+                    onChange={(e) => setWorkDate(e.target.value)}
+                  />
+                ) : (
+                  <button
+                    className="px-4 py-2 rounded border text-sm bg-green-100 text-green-700 cursor-default"
+                    disabled
+                  >
+                    Tem không để ngày
+                  </button>
+                )}
               </div>
               <div className="text-sm">
                 <label className="font-semibold block mb-1">👤 Tên người cân:</label>
