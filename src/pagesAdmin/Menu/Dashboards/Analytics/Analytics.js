@@ -1,8 +1,44 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+} from 'recharts';
 
 import { BASE_URL } from '~/config/index';
+
+const departmentsList = [
+  'Điều hành',
+  'Chất lượng',
+  'Bán hàng',
+  'Kế hoạch',
+  'IT - Bảo trì',
+  'Văn phòng',
+  'Vật tư',
+  'Tổ canh hàng',
+  'Tổ bổ sung',
+  'Tổ mẫu',
+  'Tổ 3',
+  'Tổ 4',
+  'Tổ 5',
+  'Tổ sửa hàng',
+  'Tổ ép',
+  'Tổ logo',
+  'Kcs',
+  'Chụp khung',
+  'Pha màu',
+];
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
@@ -15,37 +51,11 @@ const Analytics = () => {
     totalAccounts: 27,
   });
 
-  const [departmentData, setDepartmentData] = useState([
-    { name: 'T3', weight: 35 },
-    { name: 'T4', weight: 50 },
-    { name: 'T5', weight: 112 },
-    { name: 'Bổ Sung', weight: 80 },
-    { name: 'Mẫu', weight: 60 },
-    { name: 'Canh hàng', weight: 25 },
-    { name: 'Pha màu', weight: 29 },
-    { name: 'Chụp khuôn', weight: 14 },
-    { name: 'Kế hoạch', weight: 56 },
-    { name: 'Bán hàng', weight: 95 },
-    { name: 'Logo', weight: 13 },
-    { name: 'Chất lượng', weight: 15 },
-    { name: 'Kcs', weight: 4 },
-    { name: 'Điều hành', weight: 7 },
-    { name: 'Ép', weight: 36 },
-    { name: 'Sửa hàng', weight: 48 },
-    { name: 'Vật tư', weight: 22 },
-    { name: 'IT - Bảo trì', weight: 25 },
-    { name: 'Văn phòng', weight: 38 },
-  ]);
+  const [departmentData, setDepartmentData] = useState([]);
+  const [trashTypeData, setTrashTypeData] = useState([]);
 
-  const [trashTypeData, setTrashTypeData] = useState([
-    { name: 'Rác sinh hoạt', value: 90 },
-    { name: 'Băng keo', value: 120 },
-    { name: 'Giẻ lau dính mực', value: 80 },
-    { name: 'Lụa căng khung', value: 60 },
-    { name: 'Mực in thải', value: 55 },
-    { name: 'Keo bàn thải', value: 30 },
-    { name: 'Vụn logo', value: 57 },
-  ]);
+  const [selectedDep1, setSelectedDep1] = useState('Tổ 3');
+  const [selectedDep2, setSelectedDep2] = useState('Tổ 4');
 
   useEffect(() => {
     setLoading(true);
@@ -57,7 +67,6 @@ const Analytics = () => {
           setTodayStats(res.data.data);
         }
       } catch (error) {
-        setLoading(false);
         console.error('Lỗi khi tải dữ liệu hôm nay:', error.message);
       }
     };
@@ -69,7 +78,6 @@ const Analytics = () => {
           setDepartmentData(res.data.data);
         }
       } catch (error) {
-        setLoading(false);
         console.error('Lỗi khi tải dữ liệu phòng ban:', error.message);
       }
     };
@@ -81,12 +89,10 @@ const Analytics = () => {
           setTrashTypeData(res.data.data);
         }
       } catch (error) {
-        setLoading(false);
         console.error('Lỗi khi tải dữ liệu loại rác:', error.message);
       }
     };
 
-    // Gọi lần lượt từng API
     fetchTodayStats();
     fetchDepartmentData();
     fetchTrashTypeData();
@@ -94,15 +100,7 @@ const Analytics = () => {
     setLoading(false);
   }, []);
 
-  const COLORS = [
-    '#8884d8', // tím
-    '#82ca9d', // xanh lá nhạt
-    '#ffc658', // vàng cam
-    '#ff8042', // cam đậm
-    '#a4de6c', // xanh lá sáng
-    '#d0ed57', // vàng chanh nhạt
-    '#0088FE', // xanh dương tươi
-  ];
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c', '#d0ed57', '#0088FE'];
 
   return (
     <div className="relative">
@@ -115,7 +113,6 @@ const Analytics = () => {
       <div className="p-4 pb-[60px] bg-gray-100 min-h-screen">
         <h1 className="text-2xl font-bold mb-4 text-center">📈 Thống kê cân rác hôm nay</h1>
 
-        {/* Tổng quan 5 thông số */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white shadow p-4 rounded-lg text-center">
             <div className="text-[16px] font-semibold text-gray-600">Lượt cân</div>
@@ -139,8 +136,45 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Biểu đồ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Biểu đồ Line so sánh khối lượng 2 bộ phận */}
+        <div className="mt-8">
+          <div className="w-full h-96 p-4 bg-white rounded-xl shadow flex flex-col">
+            <h2 className="text-xl font-bold text-center mb-2 h-12">
+              So sánh khối lượng rác: {selectedDep1} vs {selectedDep2}
+            </h2>
+            <div className="flex flex-wrap gap-4 items-center justify-center mb-4">
+              <select
+                value={selectedDep1}
+                onChange={(e) => setSelectedDep1(e.target.value)}
+                className="border border-gray-300 rounded p-2"
+              >
+                <option value="">Chọn tổ 1</option>
+                {departmentsList.map((dep) => (
+                  <option key={dep} value={dep}>
+                    {dep}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedDep2}
+                onChange={(e) => setSelectedDep2(e.target.value)}
+                className="border border-gray-300 rounded p-2"
+              >
+                <option value="">Chọn tổ 2</option>
+                {departmentsList.map((dep) => (
+                  <option key={dep} value={dep}>
+                    {dep}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <WeightComparisonChart department1={selectedDep1} department2={selectedDep2} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-[35px]">
           <div className="bg-white shadow rounded-lg p-4">
             <h2 className="text-lg font-semibold mb-2 text-center">Khối lượng theo bộ phận</h2>
             <ResponsiveContainer width="100%" height={300}>
@@ -177,9 +211,57 @@ const Analytics = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Thêm biểu đồ nếu muốn */}
       </div>
+    </div>
+  );
+};
+
+const formatDayOfWeek = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('vi-VN', { weekday: 'short' }); // => "Th 2", "Th 3"
+};
+
+const WeightComparisonChart = ({ department1, department2 }) => {
+  const [chartData, setChartData] = useState([]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/trash-weighings/compare-weight-by-department`, {
+          params: { department1, department2 },
+        });
+
+        // Format lại ngày và số liệu
+        const formattedData = res.data.chartData.map((item) => ({
+          date: formatDayOfWeek(item.date),
+          [department1]: parseFloat(item[department1]),
+          [department2]: parseFloat(item[department2]),
+        }));
+
+        setChartData(formattedData);
+      } catch (err) {
+        console.error('Lỗi lấy dữ liệu biểu đồ:', err);
+      }
+    };
+
+    if (department1 && department2) {
+      fetchChartData();
+    }
+  }, [department1, department2]);
+
+  return (
+    <div className="flex-1">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis unit=" kg" />
+          <Tooltip formatter={(value) => `${parseFloat(value).toFixed(2)} kg`} />
+          <Legend />
+          <Line type="monotone" dataKey={department1} stroke="#8884d8" strokeWidth={2} />
+          <Line type="monotone" dataKey={department2} stroke="#82ca9d" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
