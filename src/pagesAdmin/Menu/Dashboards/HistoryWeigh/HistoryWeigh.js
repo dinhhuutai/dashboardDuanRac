@@ -11,6 +11,7 @@ function HistoryWeigh() {
   const [error, setError] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [missingFilter, setMissingFilter] = useState('all');
 
   const [filters, setFilters] = useState({
     userName: '',
@@ -49,17 +50,43 @@ function HistoryWeigh() {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const match = (value, keyword) => value?.toLowerCase().includes(keyword.toLowerCase());
-      return (
+
+      const passesTextFilters =
         match(item.userName, filters.userName) &&
         match(item.departmentName, filters.departmentName) &&
         match(item.unitName || '', filters.unitName) &&
         match(item.trashName, filters.trashName) &&
         (!filters.workShift || item.workShift === filters.workShift) &&
         (!filters.timeFrom || new Date(item.weighingTime) >= new Date(`${date}T${filters.timeFrom}`)) &&
-        (!filters.timeTo || new Date(item.weighingTime) <= new Date(`${date}T${filters.timeTo}`))
-      );
+        (!filters.timeTo || new Date(item.weighingTime) <= new Date(`${date}T${filters.timeTo}`));
+
+      const hasDate = Boolean(item.workDate);
+      const hasShift = Boolean(item.workShift);
+
+      let passesMissingFilter = true;
+      switch (missingFilter) {
+        case 'validOnly':
+          passesMissingFilter = hasDate && hasShift;
+          break;
+        case 'missingDate':
+          passesMissingFilter = !hasDate;
+          break;
+        case 'missingShift':
+          passesMissingFilter = !hasShift;
+          break;
+        case 'missingEither':
+          passesMissingFilter = !hasDate || !hasShift;
+          break;
+        case 'missingBoth':
+          passesMissingFilter = !hasDate && !hasShift;
+          break;
+        default:
+          passesMissingFilter = true;
+      }
+
+      return passesTextFilters && passesMissingFilter;
     });
-  }, [data, filters, date]);
+  }, [data, filters, date, missingFilter]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -155,6 +182,22 @@ function HistoryWeigh() {
               <option value="dai1">Ca dài 1</option>
               <option value="dai2">Ca dài 2</option>
               <option value="cahc">Ca hành chính</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Lọc ngày/ca:</label>
+            <select
+              value={missingFilter}
+              onChange={(e) => setMissingFilter(e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              <option value="all">Tất cả</option>
+              <option value="validOnly">Loại bỏ không ngày & không ca</option>
+              <option value="missingDate">Không ngày</option>
+              <option value="missingShift">Không ca</option>
+              <option value="missingEither">Không ca hoặc không ngày</option>
+              <option value="missingBoth">Không ca và không ngày</option>
             </select>
           </div>
         </div>
