@@ -544,18 +544,18 @@ function Scan() {
             <p>
               <strong>Mã thùng rác:</strong> {confirmedData?.trashBinCode}
             </p>
-              <div className="text-sm flex">
-                <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
-                <p className="ml-2">{confirmedData?.d || ''}</p>
-              </div>
-              <div className="text-sm flex">
-                <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
-                <p className="ml-2">{confirmedData?.u || ''}</p>
-              </div>
-              <div className="text-sm flex">
-                <p className="font-semibold">🗑️ Loại rác:</p>
-                <p className="ml-2">{confirmedData?.t || ''}</p>
-              </div>
+            <div className="text-sm flex">
+              <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
+              <p className="ml-2">{confirmedData?.d || ''}</p>
+            </div>
+            <div className="text-sm flex">
+              <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
+              <p className="ml-2">{confirmedData?.u || ''}</p>
+            </div>
+            <div className="text-sm flex">
+              <p className="font-semibold">🗑️ Loại rác:</p>
+              <p className="ml-2">{confirmedData?.t || ''}</p>
+            </div>
             <p>
               <strong>Khối lượng:</strong> {confirmedData?.weightKg} kg
             </p>
