@@ -36,7 +36,7 @@ function Scan() {
 
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [confirmedData, setConfirmedData] = useState(null); // chứa thông tin đã xác nhận
+  const [confirmedData, setConfirmedData] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [alreadyWeighedData, setAlreadyWeighedData] = useState(null);
@@ -206,7 +206,7 @@ function Scan() {
 
       if (res.ok) {
         const result = await res.json();
-        const savedPayload = { ...payload, id: result.id }; // lưu lại để hiển thị ở modal
+        const savedPayload = { ...payload, id: result.id, d: jsonData?.d, u: jsonData?.u, t: jsonData?.t }; // lưu lại để hiển thị ở modal
 
         setConfirmedData(savedPayload);
         setReviewModalVisible(true); // mở modal xem lại
@@ -361,7 +361,8 @@ function Scan() {
 
               <div className="text-sm">
                 <label className="font-semibold block mb-1">🕓 Chọn ca làm việc:</label>
-                <div className="flex items-center gap-6 mb-4">
+                {
+                  user?.role === 'admin' && <div className="flex items-center gap-6 mb-4">
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -384,6 +385,7 @@ function Scan() {
                     <span>Không ca</span>
                   </label>
                 </div>
+                }
 
                 <div className="flex flex-wrap gap-2">
                   {isWorkShift ? (
@@ -421,7 +423,8 @@ function Scan() {
 
               <div className="text-sm">
                 <label className="font-semibold block mb-1">📅 Ngày làm việc:</label>
-                <div className="flex items-center gap-6 mb-4">
+                {
+                  user?.role === 'admin' && <div className="flex items-center gap-6 mb-4">
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -444,6 +447,7 @@ function Scan() {
                     <span>Không ngày</span>
                   </label>
                 </div>
+                }
                 {isWorkDate ? (
                   <input
                     type="date"
@@ -538,10 +542,22 @@ function Scan() {
           >
             <h2 className="text-lg font-bold mb-4">📋 Thông tin đã lưu</h2>
             <p>
-              <strong>Mã thùng rác:</strong> {confirmedData.trashBinCode}
+              <strong>Mã thùng rác:</strong> {confirmedData?.trashBinCode}
             </p>
+              <div className="text-sm flex">
+                <p className="font-semibold">📍 Bộ phận / Khu vực:</p>
+                <p className="ml-2">{confirmedData?.d || ''}</p>
+              </div>
+              <div className="text-sm flex">
+                <p className="font-semibold">🏭 Đơn vị sản xuất:</p>
+                <p className="ml-2">{confirmedData?.u || ''}</p>
+              </div>
+              <div className="text-sm flex">
+                <p className="font-semibold">🗑️ Loại rác:</p>
+                <p className="ml-2">{confirmedData?.t || ''}</p>
+              </div>
             <p>
-              <strong>Khối lượng:</strong> {confirmedData.weightKg} kg
+              <strong>Khối lượng:</strong> {confirmedData?.weightKg} kg
             </p>
             <p>
               <strong>Ca làm:</strong>
@@ -694,7 +710,8 @@ function Scan() {
 
             <div className="text-sm">
               <label className="block mb-1 font-semibold">🕓 Ca làm:</label>
-              <div className="flex items-center gap-6 mb-4">
+              {
+                user?.role === 'admin' && <div className="flex items-center gap-6 mb-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -717,6 +734,7 @@ function Scan() {
                   <span>Không ca</span>
                 </label>
               </div>
+              }
 
               <div className="flex flex-wrap gap-2">
                 {isWorkShift ? (
@@ -742,7 +760,8 @@ function Scan() {
 
             <div className="text-sm">
               <label className="block mb-1 font-semibold">📅 Ngày làm việc:</label>
-              <div className="flex items-center gap-6 mb-4">
+              {
+                user?.role === 'admin' && <div className="flex items-center gap-6 mb-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -765,6 +784,7 @@ function Scan() {
                   <span>Không ngày</span>
                 </label>
               </div>
+              }
               {isWorkDate ? (
                 <input
                   type="date"

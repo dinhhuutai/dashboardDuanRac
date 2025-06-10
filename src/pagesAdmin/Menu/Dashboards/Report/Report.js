@@ -12,6 +12,17 @@ const Report = () => {
   const [report, setReport] = useState([]);
 
   const [filterType, setFilterType] = useState('one'); // 'one' or 'range'
+  const [statusUpdate, setStatusUpdate] = useState(false);
+  const [selectInput, setSelectInput] = useState({
+    group: '',
+    item: '',
+  });
+  const [value, setValue] = useState({
+
+  })
+
+  console.log(selectInput);
+
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {
     const yesterday = new Date();
@@ -29,7 +40,7 @@ const Report = () => {
   };
 
   function groupSumWithZeros(arr) {
-    const result = [...arr]; // clone mảng để không sửa trực tiếp mảng gốc
+    const result = [...arr];
     for (let i = 0; i < arr.length - 1; i += 6) {
       const sum =
         (arr[i] || 0) +
@@ -1139,8 +1150,28 @@ const Report = () => {
                           <td
                             key={i}
                             className={`border border-gray-300 text-center px-2 py-1 ${i === 35 && 'font-[600]'}`}
+                            onDoubleClick={() => {
+                              setStatusUpdate(true);
+                              console.log('Clicked cell:', group.group, item, e);
+                              setSelectInput({
+                                  group: group.group,
+                                  item: item,
+                                  index: i,
+                              })
+                            }}
                           >
-                            {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                            {
+                              statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
+                              <input
+                                className={``}
+                                type="text"
+                                value={e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                                onChange={() => {}}
+                              /> :
+                              <button>
+                                {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                              </button>
+                            }
                           </td>
                         ))}
                       </tr>
