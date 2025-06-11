@@ -59,7 +59,7 @@ function Sidebar() {
                     downDashboard ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
                   } capitalize`}
                 >
-                  Dashboards
+                  Tổng Hợp
                 </span>
                 <div
                   className={`${
