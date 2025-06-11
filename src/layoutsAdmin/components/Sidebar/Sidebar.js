@@ -83,7 +83,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Analytics
+                    Tổng quan
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -95,7 +95,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Report
+                    Báo cáo
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -107,7 +107,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Weigh History
+                    Lịch sử cân
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -119,7 +119,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Unscanned QR
+                    Theo dõi cân
                   </NavLink>
                 </li>
               </ul>

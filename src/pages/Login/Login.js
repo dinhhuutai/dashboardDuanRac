@@ -16,7 +16,7 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // 👈 Khởi tạo dispatch
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     if (isLoading) return;
