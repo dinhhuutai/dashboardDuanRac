@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config/index';
+import { useSelector } from 'react-redux';
+import { userSelector } from '~/redux/selectors';
 
 function UserCreate() {
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
-    password: '1',
+    password: '',
     phone: '0987654321',
     role: 'user',
     createdBy: 1, // thay bằng userID đang đăng nhập
   });
+
+  
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+    setFormData({
+      ...formData,
+      createdBy: tmp?.login?.currentUser?.userID,
+    })
+  }, [tmp]);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -162,13 +176,12 @@ function UserCreate() {
 
         <input
           style={inputStyle}
-          type="password"
+          type="text"
           name="password"
           placeholder="Mật khẩu"
           value={formData.password}
           onChange={handleChange}
           required
-          readOnly
         />
 
         <input
@@ -181,9 +194,9 @@ function UserCreate() {
           readOnly
         />
 
-        <select name="role" value={formData.role} onChange={handleChange} style={inputStyle} disabled>
-          <option value="user">Người dùng</option>
-          <option value="admin">Quản trị</option>
+        <select name="role" value={formData.role} onChange={handleChange} style={inputStyle}>
+          <option value="user">user</option>
+          <option value="admin">admin</option>
         </select>
 
         <button type="submit" disabled={loading} style={buttonStyle}>

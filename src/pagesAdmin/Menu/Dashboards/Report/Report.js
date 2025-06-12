@@ -1,11 +1,16 @@
 import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import { saveAs } from 'file-saver';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config/index';
+import { FaCheck, FaTimes } from "react-icons/fa";
+import HandleGetCodeQr from '~/components/HandleGetCodeQR';
+import { useSelector } from 'react-redux';
+import { userSelector } from '~/redux/selectors';
+
 
 const Report = () => {
   const [loading, setLoading] = useState(true);
@@ -17,11 +22,9 @@ const Report = () => {
     group: '',
     item: '',
   });
-  const [value, setValue] = useState({
+  const [value, setValue] = useState('');
+  const inputRef = useRef(null);
 
-  })
-
-  console.log(selectInput);
 
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {
@@ -30,6 +33,14 @@ const Report = () => {
     return yesterday;
   });
   const [endDate, setEndDate] = useState(new Date());
+  
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+  }, [tmp]);
+
 
   const sumArrays = (...arrays) => {
     const length = arrays[0]?.length || 0;
@@ -98,6 +109,13 @@ const Report = () => {
 
   useEffect(() => {
     setLoading(true);
+
+    // Gọi lần lượt từng API
+    fetchTodayReport();
+
+    setLoading(false);
+  }, [dateOne, startDate, endDate, filterType]);
+  
 
     const fetchTodayReport = async () => {
       try {
@@ -293,12 +311,6 @@ const Report = () => {
         console.error('Lỗi khi tải dữ liệu: ', error.message);
       }
     };
-
-    // Gọi lần lượt từng API
-    fetchTodayReport();
-
-    setLoading(false);
-  }, [dateOne, startDate, endDate, filterType]);
 
   const headers = [
     'BP/Tổ',
@@ -992,6 +1004,63 @@ const Report = () => {
     );
   };
 
+  const handleSave = async (data) => {
+    if (!value || value === 0 || isNaN(parseFloat(value)) || value === '') {
+      return;
+    }
+
+    setLoading(true);
+
+    const {trashBinCode, workShift} = await HandleGetCodeQr(selectInput);
+    
+    const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+    let weight = parseFloat(value);
+    
+    const payload = {
+      trashBinCode: trashBinCode,
+      userID: user.userID,
+      weighingTime: nowUTC7.toISOString(),
+      weightKg: weight,
+      updatedAt: nowUTC7.toISOString(),
+      updatedBy: user.userID,
+      workShift: workShift,
+      workDate: new Date(dateOne).toISOString().split('T')[0],
+      userName: user?.fullName,
+    };
+
+
+        try {
+          const res = await fetch(`${BASE_URL}/trash-weighings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+    
+          if (res.ok) {
+            const result = await res.json();
+  
+            await fetchTodayReport();
+
+            //setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
+          } else {
+            const errText = await res.text();
+          }
+        } catch (err) {
+
+        } finally {
+          setLoading(false);
+    
+          setStatusUpdate(false);
+          setSelectInput({
+            group: "",
+            item: "",
+            index: "",
+          })
+          setValue(0);
+        }
+
+  }
+
   return (
     <div className="relative">
       {loading && (
@@ -1149,25 +1218,51 @@ const Report = () => {
                         {report[`${group.group}-${item}`]?.map((e, i) => (
                           <td
                             key={i}
-                            className={`border border-gray-300 text-center px-2 py-1 ${i === 35 && 'font-[600]'}`}
+                            className={`border border-gray-300 text-center px-2 py-1 ${i === 42 && 'font-[600]'}`}
                             onDoubleClick={() => {
                               setStatusUpdate(true);
-                              console.log('Clicked cell:', group.group, item, e);
                               setSelectInput({
                                   group: group.group,
                                   item: item,
                                   index: i,
-                              })
+                              });
+                              setValue(e);
+                              setTimeout(() => {
+                                inputRef.current?.focus();
+                              }, 0);
                             }}
                           >
                             {
                               statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
-                              <input
-                                className={``}
-                                type="text"
-                                value={e === 0 ? '-' : parseFloat(e?.toFixed(2))}
-                                onChange={() => {}}
-                              /> :
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  ref={inputRef}
+                                  className="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                                  type="text"
+                                  value={value}
+                                  onChange={(e) => {setValue(e.target.value)}}
+                                />
+                                <button
+                                  className="text-green-600 hover:text-green-800 transition-colors"
+                                  onClick={() => handleSave(e)}
+                                >
+                                  <FaCheck className="w-4 h-4" />
+                                </button>
+                                <button
+                                  className="text-red-600 hover:text-red-800 transition-colors"
+                                  onClick={() => {
+                                    setStatusUpdate(false);
+                                    setSelectInput({
+                                        group: "",
+                                        item: "",
+                                        index: "",
+                                    })
+                                    setValue(0);
+                                  }}
+                                >
+                                  <FaTimes className="w-4 h-4" />
+                                </button>
+                              </div> :
                               <button>
                                 {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
                               </button>
