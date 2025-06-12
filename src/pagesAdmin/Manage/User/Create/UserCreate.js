@@ -13,7 +13,6 @@ function UserCreate() {
     role: 'user',
     createdBy: 1, // thay bằng userID đang đăng nhập
   });
-
   
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
