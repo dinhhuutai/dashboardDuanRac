@@ -347,9 +347,33 @@ function Home() {
       unit: selectedUnit,
       trashBins,
       feedbackNote,
+      user: user.userID,
     }
+    
+    setIsLoadingClassification(true);
 
-    console.log(payload);
+    try {
+      const res = await fetch(`${BASE_URL}/submit-classification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      if (data.success) {
+        setFinalConfirmModalOpen(false);
+        showError('Lưu thành công');
+      } else {
+        showError('Lỗi: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Lỗi kết nối đến server');
+    } finally {
+      setIsLoadingClassification(false);
+    }
   }
 
   return (
