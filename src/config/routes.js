@@ -9,6 +9,9 @@ const routes = {
   adminHistoryWeigh: '/admin/menu/dashboard/historyWeigh',
   adminUnscannedQR: '/admin/menu/dashboard/unscannedQR',
 
+  adminClassCheckHistory: '/admin/menu/classification-check/history',
+  adminClassCheckReport: '/admin/menu/classification-check/report',
+  
   adminPageHome: '/admin/menu/pages/home',
   adminPageScan: '/admin/menu/pages/scan',
   adminPageUser: '/admin/menu/pages/user',

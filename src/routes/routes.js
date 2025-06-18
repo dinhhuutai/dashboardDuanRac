@@ -26,6 +26,9 @@ import TrashTypeUpdate from '~/pagesAdmin/Manage/TrashType/Update';
 import TeamMemberList from '~/pagesAdmin/Manage/TeamMember/List';
 import TeamMemberCreate from '~/pagesAdmin/Manage/TeamMember/Create';
 
+import ReportClassCheck from '~/pagesAdmin/Menu/ClassChecks/Report';
+import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
+
 export const routes = [
   {
     path: config.routes.home,
@@ -154,6 +157,17 @@ export const routesAdmin = [
   {
     path: config.routes.adminHistoryWeigh,
     component: HistoryWeigh,
+    login: true,
+  },
+  
+  {
+    path: config.routes.adminClassCheckHistory,
+    component: HistoryClassCheck,
+    login: true,
+  },
+  {
+    path: config.routes.adminClassCheckReport,
+    component: ReportClassCheck,
     login: true,
   },
 ];
