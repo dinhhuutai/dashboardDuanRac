@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function Report() {
+function ListBin() {
     return (
-        <h1>ClassCheck Report</h1>
+        <h1>ClassCheck ListBin</h1>
     )
 }
 
-export default Report;
+export default ListBin;

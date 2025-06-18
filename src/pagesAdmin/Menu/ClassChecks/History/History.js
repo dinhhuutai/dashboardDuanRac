@@ -14,10 +14,18 @@ function History() {
     const [deletingId, setDeletingId] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
+    const [departments, setDepartments] = useState([]);
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
-        const res = await axios.get(`${BASE_URL}/classification-history?date=${selectedDate}`);
+        const res = await axios.get(`${BASE_URL}/classification-history`, {
+            params: {
+                date: selectedDate,
+                departmentId: selectedDepartmentId || undefined
+            }
+        });
         setHistoryData(res.data.data || []);
         } catch (err) {
         console.error('Lỗi lấy dữ liệu:', err);
@@ -28,7 +36,21 @@ function History() {
 
     useEffect(() => {
         fetchData();
-    }, [selectedDate]);
+    }, [selectedDate, selectedDepartmentId]);
+
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const res = await axios.get(`${BASE_URL}/departments`);
+                setDepartments(res.data);
+            } catch (err) {
+                console.error('Lỗi lấy danh sách bộ phận:', err);
+            }
+        };
+
+        fetchDepartments();
+    }, []);
+
 
     const formatDateTime = (datetimeStr) => {
         const [date, time] = datetimeStr.split('T');
@@ -65,12 +87,28 @@ function History() {
       <div className="p-4 bg-white rounded-xl shadow space-y-4">
         <h1 className="text-xl font-semibold">🗂️ Lịch sử kiểm tra phân loại</h1>
 
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border px-3 py-2 rounded-md text-sm"
-        />
+        <div className="flex flex-wrap gap-4 items-center">
+            <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border px-3 py-2 rounded-md text-sm"
+            />
+
+            <select
+                value={selectedDepartmentId}
+                onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                className="border px-3 py-2 rounded-md text-sm"
+            >
+                <option value="">Tất cả bộ phận</option>
+                {departments.map((dept) => (
+                <option key={dept.departmentID} value={dept.departmentID}>
+                    {dept.departmentName}
+                </option>
+                ))}
+            </select>
+        </div>
+
 
         {isLoading ? (
             <p className="text-gray-500 mt-4 italic">Đang tải dữ liệu...</p>

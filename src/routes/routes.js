@@ -26,7 +26,7 @@ import TrashTypeUpdate from '~/pagesAdmin/Manage/TrashType/Update';
 import TeamMemberList from '~/pagesAdmin/Manage/TeamMember/List';
 import TeamMemberCreate from '~/pagesAdmin/Manage/TeamMember/Create';
 
-import ReportClassCheck from '~/pagesAdmin/Menu/ClassChecks/Report';
+import ListBinClassCheck from '~/pagesAdmin/Menu/ClassChecks/ListBin';
 import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
 
 export const routes = [
@@ -166,8 +166,8 @@ export const routesAdmin = [
     login: true,
   },
   {
-    path: config.routes.adminClassCheckReport,
-    component: ReportClassCheck,
+    path: config.routes.adminClassCheckListBin,
+    component: ListBinClassCheck,
     login: true,
   },
 ];

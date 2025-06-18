@@ -10,7 +10,7 @@ const routes = {
   adminUnscannedQR: '/admin/menu/dashboard/unscannedQR',
 
   adminClassCheckHistory: '/admin/menu/classification-check/history',
-  adminClassCheckReport: '/admin/menu/classification-check/report',
+  adminClassCheckListBin: '/admin/menu/classification-check/list-bin',
   
   adminPageHome: '/admin/menu/pages/home',
   adminPageScan: '/admin/menu/pages/scan',
