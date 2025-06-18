@@ -173,7 +173,7 @@ import weightSlice from '~/redux/slices/weightSlice';
 import Modal from 'react-modal';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
-import { set } from 'date-fns';
+import { format } from 'date-fns';
 
 Modal.setAppElement('#root');
 
@@ -269,6 +269,29 @@ function Home() {
     return () => clearInterval(intervalRef.current); // Dọn sạch
   }, [isModalOpen, isErrorModalOpen, isTrashModalOpen, isCheckModalOpen, isInstructionModalOpen]);
 
+  useEffect(() => {
+    const fetchUnits = async () => {
+      if (!selectedDept?.id) return;
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        const res = await axios.get(`${BASE_URL}/api/units`, {
+          params: {
+            departmentId: selectedDept.id,
+            date: today
+          }
+        });
+
+        setUnits(res.data); // Chỉ chứa units chưa kiểm tra
+      } catch (err) {
+        showError('Lỗi khi tải đơn vị: ' + err.message);
+      }
+    };
+
+    fetchUnits();
+  }, [selectedDept]);
+
 
   const handleSlider = (i) => {
     setIndex(i);
@@ -302,12 +325,14 @@ function Home() {
   const handleCheckClassification = async () => {
     try {
       setIsLoadingClassification(true);
-      const [deptRes, unitRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/departments`),
-        axios.get(`${BASE_URL}/api/units`),
-      ]);
+      
+      const today = format(new Date(), 'yyyy-MM-dd'); // format ngày cho đúng
+
+      const deptRes = await axios.get(`${BASE_URL}/api/departments`, {
+        params: { date: today }
+      });
+
       setDepartments(deptRes.data);
-      setUnits(unitRes.data);
       setModalOpen(true);
     } catch (err) {
       showError('Lỗi khi tải dữ liệu: ' + err.message);
@@ -317,7 +342,7 @@ function Home() {
   };
 
   const handleContinue = async () => {
-    if (!selectedDept?.id || (!selectedUnit?.id && units.filter((unit) => unit.departmentId === Number(selectedDept?.id)).length > 0)) {
+    if (!selectedDept?.id || !selectedUnit?.id) {
       showError('⚠️ Vui lòng chọn đầy đủ thông tin.');
       return;
     }
@@ -479,7 +504,7 @@ function Home() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">-- Chọn bộ phận --</option>
-            {departments.map((dept) => (
+            {departments?.map((dept) => (
               <option
                 key={dept.departmentID}
                 value={dept.departmentID}
@@ -507,9 +532,7 @@ function Home() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">-- Chọn đơn vị --</option>
-            {units
-              .filter((unit) => unit.departmentId === Number(selectedDept?.id))
-              .map((unit) => (
+            {units?.map((unit) => (
                 <option
                   key={unit.unitID}
                   value={unit.unitID}
