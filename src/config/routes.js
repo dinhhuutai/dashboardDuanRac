@@ -3,6 +3,7 @@ const routes = {
   scan: '/scan',
   home: '/',
   user: '/user',
+  history: '/history',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',

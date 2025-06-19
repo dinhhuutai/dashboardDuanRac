@@ -43,7 +43,19 @@ function Header() {
                   : 'text-[#333] hover:text-[#008cff] hover:underline hover:underline-offset-4'
               }
             >
-              Home
+              Trang chủ
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to={config.routes.history}
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-[#008cff] underline underline-offset-4'
+                  : 'text-[#333] hover:text-[#008cff] hover:underline hover:underline-offset-4'
+              }
+            >
+              Lịch sử cân
             </NavLink>
           </li>
           <li>
@@ -55,7 +67,7 @@ function Header() {
                   : 'text-[#333] hover:text-[#008cff] hover:underline hover:underline-offset-4'
               }
             >
-              User
+              Thông tin
             </NavLink>
           </li>
         </ul>
@@ -106,7 +118,16 @@ function Header() {
                 (isActive ? 'text-[#008cff]' : 'text-[#333] hover:text-[#008cff]') + ' text-[13px]'
               }
             >
-              Home
+              Trang chủ
+            </NavLink>
+            <NavLink
+              to={config.routes.history}
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                (isActive ? 'text-[#008cff]' : 'text-[#333] hover:text-[#008cff]') + ' text-[13px]'
+              }
+            >
+              Lịch sử cân
             </NavLink>
             <NavLink
               to={config.routes.user}
@@ -115,7 +136,7 @@ function Header() {
                 (isActive ? 'text-[#008cff]' : 'text-[#333] hover:text-[#008cff]') + ' text-[13px]'
               }
             >
-              User
+              Thông tin
             </NavLink>
           </div>
         </div>

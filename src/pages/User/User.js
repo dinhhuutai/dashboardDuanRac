@@ -44,7 +44,7 @@ function User() {
       </div>
 
       {/* Nút hành động */}
-      <div className="w-full max-w-5xl px-4 mt-[150px] md:mt-[40px] flex flex-col md:flex-row items-center md:justify-end gap-3 md:gap-5">
+      <div className="w-full z-[999] max-w-5xl px-4 mt-[150px] md:mt-[40px] flex flex-col md:flex-row items-center md:justify-end gap-3 md:gap-5">
         <button className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md text-[16px] w-full md:w-auto">
           ✏️ Chỉnh sửa trang cá nhân
         </button>

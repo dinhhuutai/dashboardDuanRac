@@ -4,6 +4,8 @@ import Home from '~/pages/Home';
 import Login from '~/pages/Login';
 import Scan from '~/pages/Scan';
 import User from '~/pages/User';
+import History from '~/pages/History';
+
 import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
 import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
 import QrcodeUpdate from '~/pagesAdmin/Manage/Qrcode/Update';
@@ -49,6 +51,11 @@ export const routes = [
   {
     path: config.routes.user,
     component: User,
+    login: true,
+  },
+  {
+    path: config.routes.history,
+    component: History,
     login: true,
   },
 ];
