@@ -7,6 +7,11 @@ const ModernQR = () => {
   const canvasRef = useRef(null);
   const [qrCode, setQrCode] = useState(null);
 
+  const [url, setUrl] = useState("");
+  const urlQrRef = useRef(null);
+  const urlCanvasRef = useRef(null);
+
+
   // Các trường nhập liệu
   const [id, setId] = useState("TR109");
   const [department, setDepartment] = useState("Tổ 4");
@@ -164,6 +169,56 @@ const ModernQR = () => {
     img.src = qrImage;
   };
 
+  const generateUrlQR = () => {
+  if (!url || !qrCode || !urlQrRef.current) return;
+
+  urlQrRef.current.innerHTML = "";
+  qrCode.update({ data: url });
+  qrCode.append(urlQrRef.current);
+
+  // Delay vẽ canvas 500ms sau khi render xong
+  setTimeout(() => {
+    const canvas = urlCanvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    const qrCanvas = urlQrRef.current.querySelector("canvas");
+    if (!qrCanvas) return;
+
+    const qrImage = qrCanvas.toDataURL("image/png");
+
+    const img = new Image();
+    img.onload = () => {
+      const width = 400;
+      const height = 450;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.drawImage(img, 20, 20, 360, 360);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(url, width / 2, 410);
+    };
+    img.src = qrImage;
+  }, 500);
+};
+
+const downloadUrlQR = () => {
+  const canvas = urlCanvasRef.current;
+  if (!canvas) return;
+  const link = document.createElement("a");
+  link.download = "link_qr.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+};
+
+
+
   return (
     <div className="pt-[2px]">
         <div className='m-[20px] p-[16px] bg-[#fff] rounded-[4px] box-shadow-admin-path'>
@@ -195,6 +250,46 @@ const ModernQR = () => {
 
             <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
         </div>
+
+
+        <div className='m-[20px] p-[16px] bg-[#fff] rounded-[4px] box-shadow-admin-path'>
+          <div className="mt-[40px] p-[16px] rounded-[4px]">
+            <h3 className="text-[16px] font-[600] mb-[10px] text-center">Tạo QR từ đường link</h3>
+            
+            <div className="flex md:flex-row flex-col gap-[10px] justify-between">
+              <input
+                type="text"
+                className="flex-1 outline-none px-[8px] py-[4px] border-[1px] border-[#333] rounded-[6px] text-[14px]"
+                placeholder="Nhập đường dẫn (https://...)"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <button
+                onClick={generateUrlQR}
+                className="text-[14px] px-[12px] py-[6px] bg-[#007bff] text-white rounded-[6px]"
+              >
+                Tạo QR từ URL
+              </button>
+            </div>
+
+            <div className="mt-[20px] flex justify-center">
+              <div ref={urlQrRef}></div>
+            </div>
+
+            <div className="mt-[20px] flex flex-col items-center gap-3">
+  <div ref={urlQrRef}></div>
+  <button
+    onClick={downloadUrlQR}
+    className="text-[14px] px-[12px] py-[6px] bg-[#28a745] text-white rounded-[6px]"
+  >
+    Tải QR PNG
+  </button>
+</div>
+<canvas ref={urlCanvasRef} style={{ display: "none" }}></canvas>
+
+          </div>
+        </div>
+
     </div>
   );
 };
