@@ -206,6 +206,10 @@ function QRScanTracking() {
   const [workShift, setWorkShift] = useState('ca1');
   const [longestUnscanned, setLongestUnscanned] = useState([]);
 
+  const [filterStatus, setFilterStatus] = useState(""); // 'scanned' | 'unscanned' | ''
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterUnit, setFilterUnit] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -256,6 +260,39 @@ function QRScanTracking() {
     fetchLongestUnscanned();
   }, []);
 
+  const removeVietnameseTones = (str) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // xóa dấu
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+};
+
+
+  const filteredList = groupedScannedList.filter((item) => {
+  const matchStatus =
+    filterStatus === "" ||
+    (filterStatus === "scanned" && item.isScannedTeam) ||
+    (filterStatus === "unscanned" && !item.isScannedTeam);
+
+  const matchDepartment =
+    filterDepartment === "" ||
+    removeVietnameseTones(item.departmentName || "").includes(
+      removeVietnameseTones(filterDepartment)
+    );
+
+  const matchUnit =
+    filterUnit === "" ||
+    removeVietnameseTones(item.unitName || "").includes(
+      removeVietnameseTones(filterUnit)
+    );
+
+  return matchStatus && matchDepartment && matchUnit;
+});
+
+
+
   return (
     <div className="p-4">
       <div className="p-4 space-y-6 bg-white rounded-[6px]">
@@ -287,6 +324,41 @@ function QRScanTracking() {
               <option value="cahc">Ca Hành Chính</option>
             </select>
           </div>
+          <div>
+  <label className="text-sm text-gray-600 block mb-1">Tình trạng quét:</label>
+  <select
+    value={filterStatus}
+    onChange={(e) => setFilterStatus(e.target.value)}
+    className="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm text-sm focus:ring-2 focus:ring-blue-400"
+  >
+    <option value="">Tất cả</option>
+    <option value="scanned">Đã quét</option>
+    <option value="unscanned">Chưa quét</option>
+  </select>
+</div>
+
+<div>
+  <label className="text-sm text-gray-600 block mb-1">Bộ phận:</label>
+  <input
+    type="text"
+    value={filterDepartment}
+    onChange={(e) => setFilterDepartment(e.target.value)}
+    placeholder="Nhập tên tổ"
+    className="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm text-sm focus:ring-2 focus:ring-blue-400"
+  />
+</div>
+
+<div>
+  <label className="text-sm text-gray-600 block mb-1">Đơn vị:</label>
+  <input
+    type="text"
+    value={filterUnit}
+    onChange={(e) => setFilterUnit(e.target.value)}
+    placeholder="Nhập tên đơn vị"
+    className="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm text-sm focus:ring-2 focus:ring-blue-400"
+  />
+</div>
+
         </div>
 
         {/* Loading */}
@@ -308,7 +380,7 @@ function QRScanTracking() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {groupedScannedList.map((item, idx) => {
+                {filteredList.map((item, idx) => {
                   const isScanned = item.isScannedTeam;
                   const statusClass = isScanned
                     ? 'text-green-600 font-semibold'

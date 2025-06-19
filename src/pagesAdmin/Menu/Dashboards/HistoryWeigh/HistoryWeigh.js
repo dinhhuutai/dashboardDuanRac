@@ -38,7 +38,10 @@ function HistoryWeigh() {
     workShift: '',
     timeFrom: '',
     timeTo: '',
+    disposalDate: '',
   });
+
+  console.log(filters, data);
 
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,7 +79,8 @@ function HistoryWeigh() {
         match(item.trashName, filters.trashName) &&
         (!filters.workShift || item.workShift === filters.workShift) &&
         (!filters.timeFrom || new Date(item.weighingTime) >= new Date(`${date}T${filters.timeFrom}`)) &&
-        (!filters.timeTo || new Date(item.weighingTime) <= new Date(`${date}T${filters.timeTo}`));
+        (!filters.timeTo || new Date(item.weighingTime) <= new Date(`${date}T${filters.timeTo}`)) &&
+        (!filters.disposalDate || item.workDate?.startsWith(filters.disposalDate));
 
       const hasDate = Boolean(item.workDate);
       const hasShift = Boolean(item.workShift);
@@ -218,6 +222,17 @@ function HistoryWeigh() {
               <option value="missingBoth">Không ca và không ngày</option>
             </select>
           </div>
+
+          <div>
+            <label>Ngày đổ:</label>
+            <input
+              type="date"
+              value={filters.disposalDate}
+              onChange={(e) => setFilters((f) => ({ ...f, disposalDate: e.target.value }))}
+              className="border rounded px-2 py-1"
+            />
+          </div>
+
         </div>
 
         {loading ? (

@@ -251,7 +251,6 @@ const downloadUrlQR = () => {
             <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
         </div>
 
-
         <div className='m-[20px] p-[16px] bg-[#fff] rounded-[4px] box-shadow-admin-path'>
           <div className="mt-[40px] p-[16px] rounded-[4px]">
             <h3 className="text-[16px] font-[600] mb-[10px] text-center">Tạo QR từ đường link</h3>
