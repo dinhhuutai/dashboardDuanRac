@@ -4,7 +4,7 @@ import routes from './routes';
 export const BASE_URL = 'http://thlasohoa-ap-env.eba-qv9yn5kt.ap-southeast-2.elasticbeanstalk.com';
 
 const config = {
-  routes,
+  routes
 };
 
 export default config;
