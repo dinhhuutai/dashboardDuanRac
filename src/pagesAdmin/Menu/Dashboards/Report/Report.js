@@ -1051,6 +1051,7 @@ const Report = () => {
       userName: user?.fullName,
     };
 
+    console.log(payload);
 
         try {
           const res = await fetch(`${BASE_URL}/trash-weighings`, {

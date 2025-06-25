@@ -54,18 +54,22 @@ function ListBin() {
               <tr>
                 <th className="px-4 py-2 border">Bộ phận</th>
                 <th className="px-4 py-2 border">Đơn vị</th>
-                <th className="px-4 py-2 border">Giẻ lau dính mực</th>
+                <th className="px-4 py-2 border">Giẻ lau dính mực thường</th>
+                <th className="px-4 py-2 border">Giẻ lau dính mực lapa</th>
                 <th className="px-4 py-2 border">Vụn logo</th>
                 <th className="px-4 py-2 border">Băng keo dính hóa chất</th>
-                <th className="px-4 py-2 border">Mực in thải thường</th>
-                <th className="px-4 py-2 border">Mực in thải lapa</th>
-                <th className="px-4 py-2 border">Rác sinh hoạt</th>
+                <th className="px-4 py-2 border">Mực in thường thải</th>
+                <th className="px-4 py-2 border">Mực in lapa thải</th>
                 <th className="px-4 py-2 border font-bold">Tổng</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
+  <tr>
+    <td colSpan="100%">
                     <p className="text-gray-500 mt-4 italic">Đang tải dữ liệu...</p>
+    </td>
+  </tr>
                 ) : (() => {
     const rowSpanMap = {};
     data.forEach(row => {
@@ -89,12 +93,12 @@ function ListBin() {
             </td>
           )}
           <td className="px-4 py-2 border">{row.unitName}</td>
-          <td className="px-4 py-2 border text-center">{row['Giẻ lau dính mực']}</td>
+          <td className="px-4 py-2 border text-center">{row['Giẻ lau dính mực thường']}</td>
+          <td className="px-4 py-2 border text-center">{row['Giẻ lau dính mực lapa']}</td>
           <td className="px-4 py-2 border text-center">{row['Vụn logo']}</td>
           <td className="px-4 py-2 border text-center">{row['Băng keo dính hóa chất']}</td>
-          <td className="px-4 py-2 border text-center">{row['Mực in thải thường']}</td>
-          <td className="px-4 py-2 border text-center">{row['Mực in thải lapa']}</td>
-          <td className="px-4 py-2 border text-center">{row['Rác sinh hoạt']}</td>
+          <td className="px-4 py-2 border text-center">{row['Mực in thường thải']}</td>
+          <td className="px-4 py-2 border text-center">{row['Mực in lapa thải']}</td>
           <td className="px-4 py-2 border text-center font-semibold">{row.totalQuantity}</td>
         </tr>
       );

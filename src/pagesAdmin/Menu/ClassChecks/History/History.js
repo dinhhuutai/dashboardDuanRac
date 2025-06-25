@@ -26,6 +26,7 @@ function History() {
                 departmentId: selectedDepartmentId || undefined
             }
         });
+        console.log(res.data.data);
         setHistoryData(res.data.data || []);
         } catch (err) {
         console.error('Lỗi lấy dữ liệu:', err);
