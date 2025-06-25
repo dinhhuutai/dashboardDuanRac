@@ -13,8 +13,6 @@ function ProtecteRouterLogin() {
     setUser(tmp);
   }, [tmp]);
 
-  console.log('user: ', user);
-
   return user.login.currentUser ? <Outlet /> : <Navigate to={config.routes.login} />;
 }
 
