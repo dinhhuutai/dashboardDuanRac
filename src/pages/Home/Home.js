@@ -342,7 +342,7 @@ function Home() {
   };
 
   const handleContinue = async () => {
-    if (!selectedDept?.id || !selectedUnit?.id) {
+    if (!selectedDept?.id || (!selectedUnit?.id && units.length > 0)) {
       showError('⚠️ Vui lòng chọn đầy đủ thông tin.');
       return;
     }
@@ -385,7 +385,6 @@ function Home() {
       });
 
       const data = await res.json();
-      console.log(data);
 
       if (data.success) {
         setFinalConfirmModalOpen(false);
@@ -494,6 +493,7 @@ function Home() {
             onChange={(e) => {
               const selectedOption = e.target.options[e.target.selectedIndex];
               const selectedName = selectedOption.dataset.name;
+
 
               setSelectedDept({
                 id: e.target.value,
@@ -612,10 +612,11 @@ function Home() {
               // Gán màu theo tên rác
               const normalizedTrashName = item.trashName?.normalize('NFC')?.trim();
               const colorMap = {
-                'Giẻ lau dính mực': 'bg-yellow-400',
+                'Giẻ lau dính mực thường': 'bg-yellow-400',
+                'Giẻ lau dính mực lapa': 'bg-yellow-400',
                 'Băng keo dính hóa chất': 'bg-white border border-gray-400',
-                'Mực in thải thường': 'bg-red-500',
-                'Mực in thải lapa': 'bg-red-500',
+                'Mực in thường thải': 'bg-red-500',
+                'Mực in lapa thải': 'bg-red-500',
                 'Rác sinh hoạt': 'bg-green-500',
                 'Vụn logo': 'bg-black'
               };
@@ -738,12 +739,13 @@ function Home() {
           {trashBins.map((item, index) => {
             const normalizedTrashName = item.trashName?.normalize('NFC')?.trim();
             const colorMap = {
-              'Giẻ lau dính mực': 'bg-yellow-400',
-              'Băng keo dính hóa chất': 'bg-white border border-gray-400',
-              'Mực in thải thường': 'bg-red-500',
-              'Mực in thải lapa': 'bg-red-500',
-              'Rác sinh hoạt': 'bg-green-500',
-              'Vụn logo': 'bg-black'
+                'Giẻ lau dính mực thường': 'bg-yellow-400',
+                'Giẻ lau dính mực lapa': 'bg-yellow-400',
+                'Băng keo dính hóa chất': 'bg-white border border-gray-400',
+                'Mực in thường thải': 'bg-red-500',
+                'Mực in lapa thải': 'bg-red-500',
+                'Rác sinh hoạt': 'bg-green-500',
+                'Vụn logo': 'bg-black'
             };
             const colorClass = colorMap[normalizedTrashName] || 'bg-gray-300';
 
