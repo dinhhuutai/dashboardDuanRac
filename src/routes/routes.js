@@ -31,6 +31,11 @@ import TeamMemberCreate from '~/pagesAdmin/Manage/TeamMember/Create';
 import ListBinClassCheck from '~/pagesAdmin/Menu/ClassChecks/ListBin';
 import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
 
+import AnalyticsInk from '~/pagesInkWeighAdmin/Dashboards/Analytics';
+import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
+import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
+
+
 export const routes = [
   {
     path: config.routes.home,
@@ -178,3 +183,21 @@ export const routesAdmin = [
     login: true,
   },
 ];
+
+export const routesInkAdmin = [
+  {
+    path: config.routes.adminInkWeighAnalytics,
+    component: AnalyticsInk,
+    login: true,
+  },
+  {
+    path: config.routes.adminInkWeighReport,
+    component: ReportInk,
+    login: true,
+  },
+  {
+    path: config.routes.adminInkWeighHistory,
+    component: HistoryWeighInk,
+    login: true,
+  },
+]

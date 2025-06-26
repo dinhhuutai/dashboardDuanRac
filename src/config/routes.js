@@ -35,6 +35,12 @@ const routes = {
 
   adminTeamMember: '/admin/manage/teammember/list',
   adminTeamMemberCreate: '/admin/manage/teammember/create',
+
+
+  adminInkWeighAnalytics: '/admin/menu/dashboard/analytics/ink-weigh',
+  adminInkWeighReport: '/admin/menu/dashboard/report/ink-weigh',
+  adminInkWeighHistory: '/admin/menu/dashboard/history/ink-weigh',
+
 };
 
 export default routes;

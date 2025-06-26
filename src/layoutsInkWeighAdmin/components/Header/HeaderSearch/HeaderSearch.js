@@ -18,10 +18,10 @@ function HeaderSearch() {
                 </button>
                 
   <button
-    onClick={() => navigate(config.routes.adminInkWeighAnalytics)}
-    className={`text-[13px] px-[22px] py-[6px] bg-[#0077b6] text-white rounded hover:bg-[#0096c7] transition-all`}
+    onClick={() => navigate(config.routes.adminAnalytics)}
+    className="text-[13px] px-[22px] py-[6px] bg-[#2d8f6f] text-white rounded hover:bg-[#36a584] transition-all"
   >
-    Cân mực
+    Cân rác
   </button>
         </div>
     );

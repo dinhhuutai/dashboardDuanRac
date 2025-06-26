@@ -53,7 +53,12 @@ function Login() {
         console.log('Đăng nhập thành công:', user);
         setErrorMessage('');
 
-        navigate(config.routes.home);
+        if (user?.operationType.trim().toLowerCase() === 'full') {
+          navigate(config.routes.adminAnalytics);
+        } else {
+          navigate(config.routes.home);
+        }
+
       } else {
         setErrorMessage('Tên đăng nhập hoặc mật khẩu không đúng.');
         dispatch(authSlice.actions.loginFailed()); // 👈 Báo lỗi login
