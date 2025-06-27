@@ -34,6 +34,7 @@ import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
 import AnalyticsInk from '~/pagesInkWeighAdmin/Dashboards/Analytics';
 import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
 import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
+import LogfileInk from '~/pagesInkWeighAdmin/Dashboards/Logfile';
 
 
 export const routes = [
@@ -198,6 +199,11 @@ export const routesInkAdmin = [
   {
     path: config.routes.adminInkWeighHistory,
     component: HistoryWeighInk,
+    login: true,
+  },
+  {
+    path: config.routes.adminInkWeighLogfile,
+    component: LogfileInk,
     login: true,
   },
 ]
