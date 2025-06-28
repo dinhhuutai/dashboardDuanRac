@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BASE_URL } from '../../../config';
+import { BASE_URL, BASE_URL_SERVER_THLA } from '../../../config';
 
 const PAGE_SIZE = 10;
 
@@ -12,6 +12,7 @@ function HistoryWeigh() {
     shift: '',
     department: '',
     unit: '',
+    operation: '',
   });
   const [data, setData] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -30,7 +31,7 @@ function HistoryWeigh() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/ink-weighing/history`, {
+      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/history`, {
         params: {
           ...filters,
           page: currentPage,
@@ -111,6 +112,19 @@ function HistoryWeigh() {
         />
         <select
           className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+          value={filters.operation}
+          onChange={(e) => handleFilterChange('operation', e.target.value)}
+        >
+          <option value="">Chọn nghiệp vụ</option>
+          <option value="CP">Cấp phát</option>
+          <option value="TH">Thu hồi</option>
+          <option value="CM">Cấp mực</option>
+          <option value="TV">Trả lại</option>
+          <option value="GC">Giao ca</option>
+          <option value="CX">Chuyển xe</option>
+        </select>
+        <select
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
           value={filters.shift}
           onChange={(e) => handleFilterChange('shift', e.target.value)}
         >
@@ -166,9 +180,10 @@ function HistoryWeigh() {
   </thead>
   <tbody>
     {data.map((session, sIdx) =>
+      Array.isArray(session.items) && session.items.length > 0 ? (
       session.items.map((item, iIdx) => (
         <tr
-          key={`${session.weighingSessionId}-${iIdx}`}
+          key={`row-${sIdx}-${iIdx}`}
           className={sIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
         >
           {iIdx === 0 && (
@@ -180,7 +195,7 @@ function HistoryWeigh() {
                 {session.operation === 'CP' ? 'Cấp phát' :
                   session.operation === 'TH' ? 'Thu hồi' :
                   session.operation === 'CM' ? 'Cấp mực' :
-                  session.operation === 'TV' ? 'Trả lời' :
+                  session.operation === 'TV' ? 'Trả lại' :
                   session.operation === 'GC' ? 'Giao ca' :
                   session.operation === 'CX' ? 'Chuyển xe' :
                   session.operation}
@@ -212,6 +227,31 @@ function HistoryWeigh() {
           )}
         </tr>
       ))
+  ) : (
+    <tr key={`row-${sIdx}-0`} className={sIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+      <td className="border border-gray-300 px-4 py-3">{sIdx + 1}</td>
+      <td className="border border-gray-300 px-4 py-3">
+        {session.operation === 'CP' ? 'Cấp phát' :
+         session.operation === 'TH' ? 'Thu hồi' :
+         session.operation === 'CM' ? 'Cấp mực' :
+         session.operation === 'TV' ? 'Trả lời' :
+         session.operation === 'GC' ? 'Giao ca' :
+         session.operation === 'CX' ? 'Chuyển xe' :
+         session.operation}
+      </td>
+      <td className="border border-gray-300 px-4 py-3">{session.department?.replace(/^T/, 'Tổ ')}</td>
+      <td className="border border-gray-300 px-4 py-3">{session.unit}</td>
+      <td className="border border-gray-300 px-4 py-3">{session.workShift}</td>
+      <td className="border border-gray-300 px-4 py-3">
+        {formatTime(session.startTime)} {formatDate(session.weighStartDate)}
+        <span className="p-[4px]">-</span>
+        {formatTime(session.endTime)} {formatDate(session.weighEndDate)}
+      </td>
+      <td className="border border-gray-300 px-4 py-3 italic text-gray-400" colSpan={5}>
+        (Không có mục mực nào)
+      </td>
+    </tr>
+  )
     )}
   </tbody>
 </table>

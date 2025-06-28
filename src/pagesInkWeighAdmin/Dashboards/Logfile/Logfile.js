@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BASE_URL } from '~/config';
+import { BASE_URL, BASE_URL_SERVER_THLA } from '~/config';
 import { FaFileAlt } from 'react-icons/fa';
 
 function Logfile() {
@@ -21,7 +21,7 @@ function Logfile() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL}/api/logfile`, {
+      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/logfile`, {
         params: { from, to }
       });
       setLogs(res.data);
