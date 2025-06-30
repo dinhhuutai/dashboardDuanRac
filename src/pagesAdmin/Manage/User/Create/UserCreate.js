@@ -32,10 +32,36 @@ function UserCreate() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const [operationOptions, setOperationOptions] = useState({
+    canrac: false,
+    canmuc: false,
+  });
+
+  useEffect(() => {
+    const { canrac, canmuc } = operationOptions;
+    let type = '';
+    if (canrac && canmuc) type = 'full';
+    else if (canrac) type = 'canrac';
+    else if (canmuc) type = 'canmuc';
+
+    setFormData((prev) => ({
+      ...prev,
+      operationType: type,
+    }));
+  }, [operationOptions]);
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+
+    if (!formData.operationType) {
+      setMessage('❌ Vui lòng chọn loại tài khoản: Cân rác, Cân mực hoặc cả hai.');
+      setLoading(false);
+      return;
+    }
+
 
     try {
       await axios.post(`${BASE_URL}/user`, formData);
@@ -132,6 +158,24 @@ function UserCreate() {
     animation: 'spin 1s linear infinite',
   };
 
+  const tableHeaderStyle = {
+  padding: '10px',
+  border: '1px solid #ccc',
+  fontWeight: '600',
+  backgroundColor: '#f0f2f5',
+};
+
+const tableCellStyle = {
+  padding: '12px',
+  border: '1px solid #ccc',
+};
+
+const checkboxStyle = {
+  transform: 'scale(1.4)',
+  cursor: 'pointer',
+};
+
+
   return (
     <div className="" style={containerStyle}>
       {/* Spinner animation keyframes */}
@@ -197,6 +241,53 @@ function UserCreate() {
           <option value="user">user</option>
           <option value="admin">admin</option>
         </select>
+
+        <div style={{ marginTop: '20px' }}>
+  <label style={{ display: 'block', marginBottom: '8px' }}>
+    Phân quyền
+  </label>
+
+  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+    <thead>
+      <tr style={{ backgroundColor: '#f7f7f7' }}>
+        <th style={tableHeaderStyle}>Cân mực</th>
+        <th style={tableHeaderStyle}>Cân rác</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style={tableCellStyle}>
+          <input
+            type="checkbox"
+            checked={operationOptions.canmuc}
+            onChange={() =>
+              setOperationOptions((prev) => ({
+                ...prev,
+                canmuc: !prev.canmuc,
+              }))
+            }
+            style={checkboxStyle}
+          />
+        </td>
+        <td style={tableCellStyle}>
+          <input
+            type="checkbox"
+            checked={operationOptions.canrac}
+            onChange={() =>
+              setOperationOptions((prev) => ({
+                ...prev,
+                canrac: !prev.canrac,
+              }))
+            }
+            style={checkboxStyle}
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
 
         <button type="submit" disabled={loading} style={buttonStyle}>
           {loading ? 'Đang tạo...' : 'Tạo tài khoản'}

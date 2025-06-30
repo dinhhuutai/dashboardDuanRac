@@ -291,8 +291,6 @@ function QRScanTracking() {
   return matchStatus && matchDepartment && matchUnit;
 });
 
-
-
   return (
     <div className="p-4">
       <div className="p-4 space-y-6 bg-white rounded-[6px]">
