@@ -7,6 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+
+
 function HistoryWeigh() {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [data, setData] = useState([]);
@@ -145,6 +149,39 @@ function HistoryWeigh() {
     return `${day}-${month}-${year}`;
   };
 
+  const exportToExcel = () => {
+  const exportData = filteredData.map((item, index) => ({
+    STT: index + 1,
+    'Tài khoản cân': item.fullName,
+    'Bộ phận': item.departmentName,
+    'Đơn vị': item.unitName || '-',
+    'Loại rác': item.trashName,
+    'Mã thùng': item.trashBinCode,
+    'Thời gian cân': formatDateTime(item.weighingTime),
+    'Ngày đổ': item.workDate ? formatVietnamTimeString2(item.workDate) : 'Không ngày',
+    'Ca': item.workShift || 'Không ca',
+    'Người cân': item.userName,
+    'Khối lượng (kg)': item.weightKg,
+  }));
+
+  // Thêm dòng tổng ở cuối
+  exportData.push({});
+  exportData.push({
+    STT: '',
+    'Tài khoản cân': 'Tổng cộng:',
+    'Khối lượng (kg)': totalWeight.toFixed(2),
+    'Loại rác': `Lượt cân: ${filteredData.length}`,
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData, { skipHeader: false });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'BaoCaoCanRac');
+
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  saveAs(blob, `BaoCaoCanRac_${date}.xlsx`);
+};
+
   return (
     <div className="p-4">
       <div className="p-4 space-y-6 bg-white rounded-[6px]">
@@ -234,6 +271,14 @@ function HistoryWeigh() {
           </div>
 
         </div>
+
+        <button
+  onClick={exportToExcel}
+  className="mb-4 px-4 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+>
+  📤 Xuất Excel
+</button>
+
 
         {loading ? (
           <div className="text-center text-blue-500">Đang tải dữ liệu...</div>
