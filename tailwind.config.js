@@ -42,6 +42,14 @@ module.exports = {
           '0%': { height: '146px', display: 'block' },
           '100%': { height: '0px', display: 'hidden' },
         },
+        downSlide3: {
+          '0%': { height: '0px', display: 'hidden' },
+          '100%': { height: '181.5px', display: 'block' },
+        },
+        upSlide3: {
+          '0%': { height: '181.5px', display: 'block' },
+          '100%': { height: '0px', display: 'hidden' },
+        },
         loading: {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
@@ -76,6 +84,8 @@ module.exports = {
         upSlide1: 'upSlide1 .2s ease-in-out forwards',
         downSlide2: 'downSlide2 .2s ease-in-out forwards',
         upSlide2: 'upSlide2 .2s ease-in-out forwards',
+        downSlide3: 'downSlide3 .2s ease-in-out forwards',
+        upSlide3: 'upSlide3 .2s ease-in-out forwards',
         loading: 'loading .8s linear infinite',
         noticeSlideLeft: 'noticeSlideLeft .6s linear forwards',
         noticeSlideRight: 'noticeSlideRight .6s linear forwards',

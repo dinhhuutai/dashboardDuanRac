@@ -7,6 +7,7 @@ const routes = {
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',
+  adminReportMiss: '/admin/menu/dashboard/report-missing-fields',
   adminHistoryWeigh: '/admin/menu/dashboard/historyWeigh',
   adminUnscannedQR: '/admin/menu/dashboard/unscannedQR',
 
