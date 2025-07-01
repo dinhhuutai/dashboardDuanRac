@@ -16,8 +16,10 @@ import {
   BsChatDots,
 } from 'react-icons/bs';
 import { HiOutlineUserGroup } from 'react-icons/hi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import config from '~/config';
+import { useSelector } from 'react-redux';
+import { userSelector } from '~/redux/selectors';
 
 function Sidebar() {
   const [downDashboard, setDownDashboard] = useState(true);
@@ -31,6 +33,14 @@ function Sidebar() {
   const [downTeamMember, setDownTeamMember] = useState(false);
   const [downFeedback, setDownFeedback] = useState(false);
 
+  
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+  }, [tmp]);
+
   const hiddenItem = (key) => {
     key !== 'dashboard' && setDownDashboard(false);
     key !== 'classCheck' && setDownClassCheck(false);
@@ -42,6 +52,8 @@ function Sidebar() {
     key !== 'teamMember' && setDownTeamMember(false);
     key !== 'feedback' && setDownFeedback(false);
   };
+
+  
 
   return (
     <div className="hover:scrollbar-admin-sidebar w-full h-full shadow-lg shadow-indigo-500/50 overflow-y-auto scrollbar-admin-sidebar-none group/parent">
@@ -333,6 +345,8 @@ function Sidebar() {
         <li className="mt-[12px]">
           <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">Manage</span>
           <ul className="mt-[12px]">
+            {
+              user?.managerQRcode &&
             <div>
               <li
                 onClick={() => {
@@ -390,6 +404,9 @@ function Sidebar() {
                 </li>
               </ul>
             </div>
+            }
+            {
+              user?.managerUser &&
             <div className="mt-[6px]">
               <li
                 onClick={() => {
@@ -447,6 +464,9 @@ function Sidebar() {
                 </li>
               </ul>
             </div>
+            }
+            {
+              user?.managerTrash &&
             <div className="mt-[6px]">
               <li
                 onClick={() => {
@@ -504,6 +524,9 @@ function Sidebar() {
                 </li>
               </ul>
             </div>
+            }
+            {
+              user?.managerTeamMember &&
             <div className="mt-[6px]">
               <li
                 onClick={() => {
@@ -561,8 +584,9 @@ function Sidebar() {
                 </li>
               </ul>
             </div>
-
-            
+            }
+            {
+              user?.managerFeedback &&
             <div className="mt-[6px]">
               <li
                 onClick={() => {
@@ -632,6 +656,7 @@ function Sidebar() {
                 </li>
               </ul>
             </div>
+            }
           </ul>
         </li>
       </ul>

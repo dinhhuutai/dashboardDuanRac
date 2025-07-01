@@ -12,6 +12,14 @@ function UserCreate() {
     phone: '0987654321',
     role: 'user',
     createdBy: 1, // thay bằng userID đang đăng nhập
+    operationType: '',
+    roleEditReport: false,
+    actionHistoryWeigh: false,
+    managerQRcode: false,
+    managerUser: false,
+    managerTrash: false,
+    managerTeamMember: false,
+    managerFeedback: false,
   });
   
   const tmp = useSelector(userSelector);
@@ -51,6 +59,7 @@ function UserCreate() {
   }, [operationOptions]);
 
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -73,6 +82,14 @@ function UserCreate() {
         phone: '0987654321',
         role: 'user',
         createdBy: 1,
+        operationType: '',
+        roleEditReport: false,
+        actionHistoryWeigh: false,
+        managerQRcode: false,
+        managerUser: false,
+        managerTrash: false,
+        managerTeamMember: false,
+        managerFeedback: false,
       });
     } catch (error) {
       if (error.response && error.response.data) {
@@ -98,7 +115,7 @@ function UserCreate() {
     backgroundColor: '#fff',
     padding: '25px',
     borderRadius: '10px',
-    maxWidth: '400px',
+    maxWidth: '800px',
     width: '100%',
     boxShadow: '0 0 10px rgba(0,0,0,0.1)',
   };
@@ -244,7 +261,7 @@ const checkboxStyle = {
 
         <div style={{ marginTop: '20px' }}>
   <label style={{ display: 'block', marginBottom: '8px' }}>
-    Phân quyền
+    Nghiệp vụ
   </label>
 
   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
@@ -286,6 +303,104 @@ const checkboxStyle = {
     </tbody>
   </table>
 </div>
+
+{operationOptions.canrac && (
+  <div style={{ marginTop: '20px' }}>
+    <label style={{ display: 'block', marginBottom: '8px' }}>
+      Phân quyền cho nghiệp vụ cân rác:
+    </label>
+
+<div style={{ overflowX: 'auto' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+      <thead>
+        <tr style={{ backgroundColor: '#f7f7f7' }}>
+          <th style={tableHeaderStyle}>Sửa báo cáo</th>
+          <th style={tableHeaderStyle}>Thao tác lịch sử cân</th>
+          <th style={tableHeaderStyle}>Quản lý QR</th>
+          <th style={tableHeaderStyle}>Quản lý người dùng</th>
+          <th style={tableHeaderStyle}>Quản lý loại rác</th>
+          <th style={tableHeaderStyle}>Quản lý tổ/chuyền</th>
+          <th style={tableHeaderStyle}>Quản lý ý kiến CNV</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.roleEditReport}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, roleEditReport: !prev.roleEditReport }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.actionHistoryWeigh}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, actionHistoryWeigh: !prev.actionHistoryWeigh }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.managerQRcode}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, managerQRcode: !prev.managerQRcode }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.managerUser}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, managerUser: !prev.managerUser }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.managerTrash}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, managerTrash: !prev.managerTrash }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.managerTeamMember}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, managerTeamMember: !prev.managerTeamMember }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+          <td style={tableCellStyle}>
+            <input
+              type="checkbox"
+              checked={formData.managerFeedback}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, managerFeedback: !prev.managerFeedback }))
+              }
+              style={checkboxStyle}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+)}
 
 
 

@@ -1310,7 +1310,7 @@ const Report = () => {
                             }}
                           >
                             {
-                              statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
+                              user?.roleEditReport && statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
                               <div className="flex items-center space-x-2">
                                 <input
                                   ref={inputRef}

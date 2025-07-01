@@ -304,7 +304,10 @@ function HistoryWeigh() {
                     <th className="px-2 py-3">Ca</th>
                     <th className="px-2 py-3">Người cân</th>
                     <th className="px-2 py-3 text-right">Khối lượng</th>
-                    <th className="px-2 py-3">Thao tác</th>
+                    {
+                      user?.actionHistoryWeigh &&
+                      <th className="px-2 py-3">Thao tác</th>
+                    }
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -356,6 +359,8 @@ function HistoryWeigh() {
                       >
                         {item.weightKg}
                       </td>
+                      {
+                        user?.actionHistoryWeigh &&
                       <td className="px-2 py-2 border">
                         <div className="flex items-center gap-3 justify-between">
                           {/* Nút chỉnh sửa */}
@@ -386,6 +391,7 @@ function HistoryWeigh() {
                           </button>
                         </div>
                       </td>
+                      }
                     </tr>
                   ))}
                 </tbody>
