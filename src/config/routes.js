@@ -43,6 +43,10 @@ const routes = {
   adminInkWeighReport: '/admin/menu/dashboard/report/ink-weigh',
   adminInkWeighHistory: '/admin/menu/dashboard/history/ink-weigh',
   adminInkWeighLogfile: '/admin/menu/dashboard/logfile/ink-weigh',
+  
+  adminFeedbackList: '/admin/manage/list-feedback',
+  adminFeedbackAnalytics: '/admin/manage/analytics-feedback',
+  adminFeedbackRole: '/admin/manage/role-feedback',
 
 };
 

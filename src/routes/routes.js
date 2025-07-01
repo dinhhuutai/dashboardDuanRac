@@ -37,6 +37,10 @@ import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
 import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
 import LogfileInk from '~/pagesInkWeighAdmin/Dashboards/Logfile';
 
+import FeedbackList from '~/pagesAdmin/Manage/Feedback/FeedbackList';
+import FeedbackAnalytics from '~/pagesAdmin/Manage/Feedback/FeedbackAnalytics';
+import FeedbackRole from '~/pagesAdmin/Manage/Feedback/FeedbackRole';
+
 
 export const routes = [
   {
@@ -74,6 +78,21 @@ export const routes = [
 ];
 
 export const routesAdmin = [
+  {
+    path: config.routes.adminFeedbackList,
+    component: FeedbackList,
+    login: true,
+  },
+  {
+    path: config.routes.adminFeedbackAnalytics,
+    component: FeedbackAnalytics,
+    login: true,
+  },
+  {
+    path: config.routes.adminFeedbackRole,
+    component: FeedbackRole,
+    login: true,
+  },
   {
     path: config.routes.adminQrcodeCreate,
     component: QrcodeCreate,
