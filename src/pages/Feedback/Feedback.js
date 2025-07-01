@@ -46,7 +46,7 @@ const [previewUrls, setPreviewUrls] = useState([]); // mảng URL preview
   backgroundPosition: 'center',
 }}
 
-    className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+    className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4 sm:p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-semibold text-blue-700 text-center mb-4">📝 Góp ý công ty</h1>
 
