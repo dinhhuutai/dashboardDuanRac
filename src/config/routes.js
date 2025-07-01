@@ -4,6 +4,7 @@ const routes = {
   home: '/',
   user: '/user',
   history: '/history',
+  feedback: '/feedback',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',

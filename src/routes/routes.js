@@ -5,6 +5,7 @@ import Login from '~/pages/Login';
 import Scan from '~/pages/Scan';
 import User from '~/pages/User';
 import History from '~/pages/History';
+import Feedback from '~/pages/Feedback';
 
 import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
 import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
@@ -48,6 +49,12 @@ export const routes = [
     component: Login,
     login: false,
     isLogin: true,
+  },
+  {
+    path: config.routes.feedback,
+    component: Feedback,
+    login: false,
+    isLogin: false,
   },
   {
     path: config.routes.scan,

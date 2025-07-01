@@ -38,6 +38,8 @@ function App() {
                     ) : (
                       <route.component />
                     )
+                  ) : !route.isLogin && !route.login ? (
+                    <route.component />
                   ) : (
                     <DefaultLayout>
                       <route.component />
