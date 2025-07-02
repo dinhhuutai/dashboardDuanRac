@@ -14,6 +14,7 @@ import {
   BsBarChartLine,
   BsClipboardCheck,
   BsChatDots,
+  BsCart2,
 } from 'react-icons/bs';
 import { HiOutlineUserGroup } from 'react-icons/hi';
 import { useEffect, useState } from 'react';
@@ -32,6 +33,7 @@ function Sidebar() {
   const [downWaste, setDownWaste] = useState(false);
   const [downTeamMember, setDownTeamMember] = useState(false);
   const [downFeedback, setDownFeedback] = useState(false);
+  const [downTrashTruck, setDownTrashTruck] = useState(false);
 
   
   const tmp = useSelector(userSelector);
@@ -51,6 +53,7 @@ function Sidebar() {
     key !== 'waste' && setDownWaste(false);
     key !== 'teamMember' && setDownTeamMember(false);
     key !== 'feedback' && setDownFeedback(false);
+    key !== 'trashTrush' && setDownTrashTruck(false);
   };
 
   
@@ -89,7 +92,7 @@ function Sidebar() {
               </li>
               <ul
                 className={`${
-                  downDashboard ? 'animate-downSlide2' : 'animate-upSlide2'
+                  downDashboard ? 'animate-downSlide3' : 'animate-upSlide3'
                 } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
               >
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -138,6 +141,18 @@ function Sidebar() {
                     }
                   >
                     Theo dõi cân
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminWeighTruck}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Khối lượng xe
                   </NavLink>
                 </li>
               </ul>
@@ -345,6 +360,66 @@ function Sidebar() {
         <li className="mt-[12px]">
           <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">Manage</span>
           <ul className="mt-[12px]">
+            {
+              
+            <div className="mt-[6px]">
+              <li
+                onClick={() => {
+                  hiddenItem('trashTrush');
+                  setDownTrashTruck((prev) => !prev);
+                }}
+                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
+              >
+                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
+                  <BsCart2 />
+                </div>
+                <span
+                  className={`${
+                    downTrashTruck ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
+                  } capitalize`}
+                >
+                  Xe đựng rác
+                </span>
+                <div
+                  className={`${
+                    downTrashTruck ? 'rotate-[180deg]' : 'rotate-[0deg]'
+                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
+                >
+                  <BsChevronDown />
+                </div>
+              </li>
+              <ul
+                className={`${
+                  downTrashTruck ? 'animate-downSlide' : 'animate-upSlide'
+                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
+              >
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminTrashTruck}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Danh sách xe
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminTrashTruckCreate}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Thêm xe
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
+            }
             {
               user?.managerQRcode &&
             <div>

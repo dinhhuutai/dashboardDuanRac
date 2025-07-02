@@ -20,6 +20,7 @@ import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
 import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
 import Report from '~/pagesAdmin/Menu/Dashboards/Report';
 import UnscannedQR from '~/pagesAdmin/Menu/Dashboards/UnscannedQR';
+import WeighTruck from '~/pagesAdmin/Menu/Dashboards/WeighTruck';
 import AdminHome from '~/pagesAdmin/Menu/Pages/Home';
 import AdminScan from '~/pagesAdmin/Menu/Pages/Scan';
 import AdminUser from '~/pagesAdmin/Menu/Pages/User';
@@ -40,6 +41,9 @@ import LogfileInk from '~/pagesInkWeighAdmin/Dashboards/Logfile';
 import FeedbackList from '~/pagesAdmin/Manage/Feedback/FeedbackList';
 import FeedbackAnalytics from '~/pagesAdmin/Manage/Feedback/FeedbackAnalytics';
 import FeedbackRole from '~/pagesAdmin/Manage/Feedback/FeedbackRole';
+
+import TrashTruckList from '~/pagesAdmin/Manage/TrashTruck/List';
+import TrashTruckCreate from '~/pagesAdmin/Manage/TrashTruck/Create';
 
 
 export const routes = [
@@ -78,6 +82,21 @@ export const routes = [
 ];
 
 export const routesAdmin = [
+  {
+    path: config.routes.adminTrashTruck,
+    component: TrashTruckList,
+    login: true,
+  },
+  {
+    path: config.routes.adminTrashTruckCreate,
+    component: TrashTruckCreate,
+    login: true,
+  },
+  {
+    path: config.routes.adminWeighTruck,
+    component: WeighTruck,
+    login: true,
+  },
   {
     path: config.routes.adminFeedbackList,
     component: FeedbackList,

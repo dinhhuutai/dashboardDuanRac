@@ -11,6 +11,7 @@ const routes = {
   adminReportMiss: '/admin/menu/dashboard/report-missing-fields',
   adminHistoryWeigh: '/admin/menu/dashboard/historyWeigh',
   adminUnscannedQR: '/admin/menu/dashboard/unscannedQR',
+  adminWeighTruck: '/admin/menu/dashboard/weighTruck',
 
   adminClassCheckHistory: '/admin/menu/classification-check/history',
   adminClassCheckListBin: '/admin/menu/classification-check/list-bin',
@@ -30,6 +31,10 @@ const routes = {
   adminUser: '/admin/manage/user/list',
   adminUserCreate: '/admin/manage/user/create',
   adminUserUpdate: '/admin/manage/user/update',
+
+  adminTrashTruck: '/admin/manage/trashtruck/list',
+  adminTrashTruckCreate: '/admin/manage/trashtruck/create',
+  adminTrashTruckUpdate: '/admin/manage/trashtruck/update',
 
   adminTrashType: '/admin/manage/trashtype/list',
   adminTrashTypeCreate: '/admin/manage/trashtype/create',
