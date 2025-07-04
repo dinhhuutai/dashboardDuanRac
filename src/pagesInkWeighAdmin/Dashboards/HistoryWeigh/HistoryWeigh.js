@@ -41,8 +41,6 @@ function HistoryWeigh() {
 
       const sessions = res.data.items || [];
 
-      console.log(sessions);
-
       setData(sessions || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalSessions(res.data.items?.length || 0);
@@ -166,7 +164,9 @@ function HistoryWeigh() {
   <thead className="bg-blue-100 text-blue-900 font-semibold">
     <tr>
       <th className="border border-gray-300 px-4 py-3">STT</th>
+      <th className="border border-gray-300 px-4 py-3">Mã cân</th>
       <th className="border border-gray-300 px-4 py-3">Nghiệp vụ</th>
+      <th className="border border-gray-300 px-4 py-3">Mã HSKT</th>
       <th className="border border-gray-300 px-4 py-3">Bộ phận</th>
       <th className="border border-gray-300 px-4 py-3">Đơn vị</th>
       <th className="border border-gray-300 px-4 py-3">Ca làm</th>
@@ -192,13 +192,19 @@ function HistoryWeigh() {
                 {sIdx + 1}
               </td>
               <td className="border border-gray-300 px-4 py-3" rowSpan={session.items.length}>
-                {session.operation === 'CP' ? 'Cấp phát' :
-                  session.operation === 'TH' ? 'Thu hồi' :
-                  session.operation === 'CM' ? 'Cấp mực' :
-                  session.operation === 'TV' ? 'Trả lại' :
-                  session.operation === 'GC' ? 'Giao ca' :
-                  session.operation === 'CX' ? 'Chuyển xe' :
-                  session.operation}
+                {session?.scaleCode}
+              </td>
+              <td className="border border-gray-300 px-4 py-3" rowSpan={session.items.length}>
+                {session.operationCode === 'CP' ? 'Cấp phát' :
+                  session.operationCode === 'TH' ? 'Thu hồi' :
+                  session.operationCode === 'CM' ? 'Cấp mực' :
+                  session.operationCode === 'TV' ? 'Trả lại' :
+                  session.operationCode === 'GC' ? 'Giao ca' :
+                  session.operationCode === 'CX' ? 'Chuyển xe' :
+                  session.operationCode}
+              </td>
+              <td className="border border-gray-300 px-4 py-3" rowSpan={session.items.length}>
+                {session?.hsktId}
               </td>
               <td className="border border-gray-300 px-4 py-3" rowSpan={session.items.length}>
                 {session.department.replace(/^T/, 'Tổ ')}
@@ -230,14 +236,18 @@ function HistoryWeigh() {
   ) : (
     <tr key={`row-${sIdx}-0`} className={sIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
       <td className="border border-gray-300 px-4 py-3">{sIdx + 1}</td>
+      <td className="border border-gray-300 px-4 py-3">{session?.scaleCode}</td>
       <td className="border border-gray-300 px-4 py-3">
-        {session.operation === 'CP' ? 'Cấp phát' :
-         session.operation === 'TH' ? 'Thu hồi' :
-         session.operation === 'CM' ? 'Cấp mực' :
-         session.operation === 'TV' ? 'Trả lời' :
-         session.operation === 'GC' ? 'Giao ca' :
-         session.operation === 'CX' ? 'Chuyển xe' :
-         session.operation}
+        {session.operationCode === 'CP' ? 'Cấp phát' :
+         session.operationCode === 'TH' ? 'Thu hồi' :
+         session.operationCode === 'CM' ? 'Cấp mực' :
+         session.operationCode === 'TV' ? 'Trả lời' :
+         session.operationCode === 'GC' ? 'Giao ca' :
+         session.operationCode === 'CX' ? 'Chuyển xe' :
+         session.operationCode}
+      </td>
+      <td className="border border-gray-300 px-4 py-3">
+        {session?.hsktId}
       </td>
       <td className="border border-gray-300 px-4 py-3">{session.department?.replace(/^T/, 'Tổ ')}</td>
       <td className="border border-gray-300 px-4 py-3">{session.unit}</td>
