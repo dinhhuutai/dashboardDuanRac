@@ -19,6 +19,7 @@ import Section from '~/pagesAdmin/Menu/Applications/Section';
 import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
 import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
 import Report from '~/pagesAdmin/Menu/Dashboards/Report';
+import ReportByShift from '~/pagesAdmin/Menu/Dashboards/ReportByShift';
 import UnscannedQR from '~/pagesAdmin/Menu/Dashboards/UnscannedQR';
 import WeighTruck from '~/pagesAdmin/Menu/Dashboards/WeighTruck';
 import AdminHome from '~/pagesAdmin/Menu/Pages/Home';
@@ -190,6 +191,11 @@ export const routesAdmin = [
   {
     path: config.routes.adminReport,
     component: Report,
+    login: true,
+  },
+  {
+    path: config.routes.adminReportByShift,
+    component: ReportByShift,
     login: true,
   },
   {
