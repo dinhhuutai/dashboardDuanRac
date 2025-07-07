@@ -123,7 +123,7 @@ const ReportByShift = () => {
     }
 
     result.push(arr[arr.length - 1]);
-    result.splice(5, 1);
+    result.splice(6, 1);
     return result;
 }
 
@@ -148,7 +148,6 @@ const ReportByShift = () => {
           },
         });
 
-        console.log(res.data.data);
         if (res.data.status === 'success') {
           let tmp = {
             ['T3-M1']: res.data.data.find((entry) => entry.u === 'Chuyền 1')?.value || [...Array(64).fill(0)],
@@ -214,7 +213,7 @@ const ReportByShift = () => {
             ['-Cộng']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
             ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
           };
-
+          
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
             tmp['T3-M2'],
@@ -226,6 +225,7 @@ const ReportByShift = () => {
             tmp['T3-M8'],
             tmp['T3-RC T3'],
           );
+          
           tmp['Robot-TC T4'] = sumArrays(
             tmp['T4A-M4A-4B'],
             tmp['T4A-M5A-5B'],
@@ -324,7 +324,6 @@ const ReportByShift = () => {
         //   }
 
           setReport(tmp);
-          console.log(tmp);
           
             for (const key in tmp) {
               tmp[key] = sumEvery7(tmp[key]);
