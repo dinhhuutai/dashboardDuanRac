@@ -113,7 +113,7 @@ function FeedbackFlow() {
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
-    height: "calc(100vh - 2rem)",
+    height: "calc(100vh - 6rem)",
   }}
 >
         {loading && (
@@ -292,7 +292,7 @@ function FeedbackFlow() {
         className="bg-red-200 text-red-800 px-6 py-2 rounded-full font-semibold">
         Không cần nha
       </button>
-      <button onClick={() => setStep(4)}
+      <button onClick={() => { setWantContact(true); setStep(4)}}
         className="bg-green-500 text-white px-6 py-2 rounded-full font-semibold">
         Có nha
       </button>
