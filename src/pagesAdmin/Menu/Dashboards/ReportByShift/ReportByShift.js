@@ -952,7 +952,7 @@ const ReportByShift = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
+            onClick={exportToExcel}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Xuất Excel
@@ -1026,25 +1026,18 @@ const ReportByShift = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {filterType === 'one'
-                  ? headers.map((header, idx) => (
+                {headers.map((header, idx) => (
                       <th
                         key={idx}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
                       >
                         {header}
                       </th>
-                    ))
-                  : headersRange.map((header, idx) => (
-                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
-                        {header}
-                      </th>
                     ))}
               </tr>
             </thead>
             <tbody>
-              {filterType === 'one'
-                ? data?.map((group, idx) =>
+              {data?.map((group, idx) =>
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
@@ -1140,46 +1133,12 @@ const ReportByShift = () => {
                           </td>
                         ))}
                       </tr>
-                    )),
-                  )
-                : dataRange?.map((group, idx) => (
-                    <tr key={`${idx}-`}>
-                      <td className="border border-gray-300 px-2 py-1">{group.group}</td>
-                      {report[
-                        `${
-                          idx === 0
-                            ? 'T3-TC T3'
-                            : idx === 1
-                            ? 'Robot-TC T4'
-                            : idx === 2
-                            ? 'T5-TC T5'
-                            : idx === 3
-                            ? 'Bổ sung-TC TBS'
-                            : idx === 4
-                            ? 'Mẫu-M3A-3B'
-                            : idx === 5
-                            ? 'Canh hàng-M1A'
-                            : group.group + '-'
-                        }`
-                      ]?.map(
-                        (e, i) =>
-                          i % 7 === 0 && (
-                            <td
-                              key={i}
-                              className={`border ${
-                                i === 56 ? 'bg-[#f78888] font-[600]' : i === 70 ? 'font-[600]' : 'border-gray-300'
-                              } text-center px-2 py-1`}
-                            >
-                              {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
-                            </td>
-                          ),
-                      )}
-                    </tr>
-                  ))}
+                    ))
+                  )}
               <tr className="bg-[#9e8f8f]">
                 <td
                   className="border border-gray-400 text-center px-2 py-1 font-bold"
-                  colSpan={filterType === 'one' ? 2 : 1}
+                  colSpan={2}
                 >
                   Tổng cộng
                 </td>

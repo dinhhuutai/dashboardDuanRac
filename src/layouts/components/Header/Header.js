@@ -120,7 +120,7 @@ function Header() {
             >
               Trang chủ
             </NavLink>
-            <NavLink
+            {/* <NavLink
               to={config.routes.history}
               onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
@@ -128,7 +128,7 @@ function Header() {
               }
             >
               Lịch sử cân
-            </NavLink>
+            </NavLink> */}
             <NavLink
               to={config.routes.user}
               onClick={() => setMenuOpen(false)}

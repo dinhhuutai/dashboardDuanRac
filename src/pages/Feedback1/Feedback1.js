@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import logo from "~/assets/imgs/logoAdmin.png";
 import textThanks from "~/assets/imgs/thankyou_transparent_centered.png";
 import logoFeedback from "~/assets/imgs/logoFeedback.png";
+import bg_page from '~/assets/imgs/bg_page_2.jpg';
+
 import {
   FaHardHat, FaToilet, FaTools, FaBuilding, FaMoneyBill, FaQuestion,
   FaPenNib, FaArrowLeft, FaPaperPlane
@@ -11,14 +13,6 @@ import { motion } from "framer-motion";
 import { BASE_URL } from "~/config";
 import axios from "axios";
 
-const categories = [
-  { icon: <FaHardHat />, label: "An toàn lao động" },
-  { icon: <FaToilet />, label: "Vệ sinh & môi trường" },
-  { icon: <FaTools />, label: "Máy móc & thiết bị" },
-  { icon: <FaBuilding />, label: "Điều kiện làm việc" },
-  { icon: <FaMoneyBill />, label: "Lương thưởng" },
-  { icon: <FaQuestion />, label: "Khác" },
-];
 
 function FeedbackFlow() {
   const [categories, setCategories] = useState([]);
@@ -106,13 +100,22 @@ function FeedbackFlow() {
         setContactInfo({ name: "", department: "", phone: "" });
         setLoading(false);
         setModalMessage("");
-      setLoading(false);
+        setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5ff] p-4">
-      <div className="w-full max-w-md border-2 border-purple-300 bg-white shadow-lg rounded-xl p-6 text-center h-[550px] flex flex-col justify-between transition-all duration-300 ease-in-out overflow-y-auto relative">
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5ff]">
+      <div
+  className="w-full border-2 border-purple-300 bg-white shadow-lg rounded-xl p-6 text-center m-4 flex flex-col justify-between transition-all duration-300 ease-in-out overflow-y-auto relative"
+  style={{
+    backgroundImage: `url('${bg_page}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    height: "calc(100vh - 2rem)",
+  }}
+>
         {loading && (
           <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-50">
             <div className="w-10 h-10 border-4 border-purple-300 border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -146,7 +149,7 @@ function FeedbackFlow() {
   >
     <img src={logoFeedback} alt="Mail animation" className="w-32 h-32 mb-4 animate-bounce" />
     <h2 className="text-xl font-bold text-purple-800 mb-3 flex items-center">
-      📩 <span className="ml-2">HỘM THƯ GÓP Ý</span>
+      📩 <span className="ml-2">HÒM THƯ GÓP Ý</span>
     </h2>
     <p className="text-sm text-gray-700 italic leading-relaxed">
       Chào bạn! Hãy thoải mái gửi ý kiến.<br />
