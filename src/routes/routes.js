@@ -6,6 +6,7 @@ import Scan from '~/pages/Scan';
 import User from '~/pages/User';
 import History from '~/pages/History';
 import Feedback from '~/pages/Feedback';
+import Feedback1 from '~/pages/Feedback1';
 
 import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
 import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
@@ -62,6 +63,12 @@ export const routes = [
   {
     path: config.routes.feedback,
     component: Feedback,
+    login: false,
+    isLogin: false,
+  },
+  {
+    path: config.routes.feedback1,
+    component: Feedback1,
     login: false,
     isLogin: false,
   },

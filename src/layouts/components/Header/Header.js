@@ -46,7 +46,7 @@ function Header() {
               Trang chủ
             </NavLink>
           </li>
-          <li>
+          {/* <li>
             <NavLink
               to={config.routes.history}
               className={({ isActive }) =>
@@ -57,7 +57,7 @@ function Header() {
             >
               Lịch sử cân
             </NavLink>
-          </li>
+          </li> */}
           <li>
             <NavLink
               to={config.routes.user}

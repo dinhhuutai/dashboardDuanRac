@@ -5,6 +5,7 @@ const routes = {
   user: '/user',
   history: '/history',
   feedback: '/feedback',
+  feedback1: '/feedback-1',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',
