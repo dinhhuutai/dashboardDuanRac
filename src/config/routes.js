@@ -10,6 +10,9 @@ const routes = {
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',
   adminReportByShift: '/admin/menu/dashboard/report-by-shift',
+  adminReportByTrash: '/admin/menu/dashboard/report-by-trash',
+  adminReportByDepartment: '/admin/menu/dashboard/report-by-department',
+  adminReportMaterials: '/admin/menu/dashboard/report-materials',
   adminHistoryWeigh: '/admin/menu/dashboard/historyWeigh',
   adminUnscannedQR: '/admin/menu/dashboard/unscannedQR',
   adminWeighTruck: '/admin/menu/dashboard/weighTruck',
@@ -54,6 +57,11 @@ const routes = {
   adminFeedbackAnalytics: '/admin/manage/analytics-feedback',
   adminFeedbackRole: '/admin/manage/role-feedback',
 
+  
+  adminSuggestionCategoriCreate: '/admin/menu/suggestion/categori/create',
+  adminSuggestionCategoriList: '/admin/menu/suggestion/categori/list',
+  adminSuggestionList: '/admin/menu/suggestion/create',
+  
 };
 
 export default routes;

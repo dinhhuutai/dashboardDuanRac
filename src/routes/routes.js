@@ -19,8 +19,13 @@ import MailBox from '~/pagesAdmin/Menu/Applications/MailBox';
 import Section from '~/pagesAdmin/Menu/Applications/Section';
 import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
 import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
-import Report from '~/pagesAdmin/Menu/Dashboards/Report';
-import ReportByShift from '~/pagesAdmin/Menu/Dashboards/ReportByShift';
+
+import Report from '~/pagesAdmin/Menu/Reports/Report';
+import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
+import ReportByTrash from '~/pagesAdmin/Menu/Reports/ReportTrash';
+import ReportByDepartment from '~/pagesAdmin/Menu/Reports/ReportDepartment';
+import ReportMaterials from '~/pagesAdmin/Menu/Reports/ReportMaterials';
+
 import UnscannedQR from '~/pagesAdmin/Menu/Dashboards/UnscannedQR';
 import WeighTruck from '~/pagesAdmin/Menu/Dashboards/WeighTruck';
 import AdminHome from '~/pagesAdmin/Menu/Pages/Home';
@@ -47,6 +52,9 @@ import FeedbackRole from '~/pagesAdmin/Manage/Feedback/FeedbackRole';
 import TrashTruckList from '~/pagesAdmin/Manage/TrashTruck/List';
 import TrashTruckCreate from '~/pagesAdmin/Manage/TrashTruck/Create';
 
+import SuggestionList from '~/pagesSuggestionAdmin/Menu/Suggestion/SuggestionList';
+import SuggestionCategoriList from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriList';
+import SuggestionCategoriCreate from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriCreate';
 
 export const routes = [
   {
@@ -206,6 +214,21 @@ export const routesAdmin = [
     login: true,
   },
   {
+    path: config.routes.adminReportByTrash,
+    component: ReportByTrash,
+    login: true,
+  },
+  {
+    path: config.routes.adminReportByDepartment,
+    component: ReportByDepartment,
+    login: true,
+  },
+  {
+    path: config.routes.adminReportMaterials,
+    component: ReportMaterials,
+    login: true,
+  },
+  {
     path: config.routes.adminUnscannedQR,
     component: UnscannedQR,
     login: true,
@@ -262,6 +285,24 @@ export const routesInkAdmin = [
   {
     path: config.routes.adminInkWeighLogfile,
     component: LogfileInk,
+    login: true,
+  },
+]
+
+export const routesSuggest = [
+  {
+    path: config.routes.adminSuggestionList,
+    component: SuggestionList,
+    login: true,
+  },
+  {
+    path: config.routes.adminSuggestionCategoriList,
+    component: SuggestionCategoriList,
+    login: true,
+  },
+  {
+    path: config.routes.adminSuggestionCategoriCreate,
+    component: SuggestionCategoriCreate,
     login: true,
   },
 ]

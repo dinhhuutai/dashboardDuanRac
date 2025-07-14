@@ -35,34 +35,40 @@ export default async function HandleGetCodeQr(selectInput) {
         unitName = 'Rác thải chung';
     }
 
-    if (trashName <= 5) {
+    if (trashName <= 6) {
         trashName = 'Giẻ lau có chứa thành phần nguy hại';
-    } else if (trashName <= 11) {
-        trashName = 'Băng keo dính mực'
-    } else if (trashName <= 17) {
-        trashName = 'Keo bàn thải'
-    } else if (trashName <= 23) {
-        trashName = 'Mực in thải'
-    } else if (trashName <= 29) {
-        trashName = 'Vụn logo'
-    } else if (trashName <= 35) {
-        trashName = 'Lụa căng khung'
+    } else if (trashName <= 13) {
+        trashName = 'Giẻ lau dính lapa'
+    } else if (trashName <= 20) {
+        trashName = 'Băng keo dính mực'
+    } else if (trashName <= 27) {
+        trashName = 'Keo bàn thải'
+    } else if (trashName <= 34) {
+        trashName = 'Mực in thải'
     } else if (trashName <= 41) {
-        trashName = 'Rác sinh hoạt'
+        trashName = 'Mực in lapa thải'
+    } else if (trashName <= 48) {
+        trashName = 'Vụn logo'
+    } else if (trashName <= 55) {
+        trashName = 'Lụa căng khung'
+    } else if (trashName <= 62) {
+        trashName = 'Rác sinh hoạt'
     }
 
-    if (workShift % 6 === 0) {
+    if (workShift % 7 === 0) {
         workShift = 'ca1';
-    } else if (workShift % 6 === 1) {
+    } else if (workShift % 7 === 1) {
         workShift = 'ca2';
-    } else if (workShift % 6 === 2) {
+    } else if (workShift % 7 === 2) {
         workShift = 'ca3';
-    } else if (workShift % 6 === 3) {
+    } else if (workShift % 7 === 3) {
         workShift = 'dai1';
-    } else if (workShift % 6 === 4) {
+    } else if (workShift % 7 === 4) {
         workShift = 'dai2';
-    } else if (workShift % 6 === 5) {
+    } else if (workShift % 7 === 5) {
         workShift = 'cahc';
+    } else if (workShift % 7 === 6) {
+        workShift = 'null';
     }
 
     

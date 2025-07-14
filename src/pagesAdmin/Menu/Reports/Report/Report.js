@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
 
-const ReportByShift = () => {
+const Report = () => {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
 
@@ -109,24 +109,17 @@ const ReportByShift = () => {
     return newArr;
   }
 
-  function sumEvery7(arr) {
-    const result = [];
+  function trimKeepLast(arr, numToRemove = 8) {
+    if (!Array.isArray(arr) || arr.length === 0) return [];
 
-    for (let i = 0; i < 7; i++) {
-        let sum = 0;
-        for (let j = i; j < arr.length; j += 7) {
-            if(j !== arr.length - 1) {
-                sum += arr[j];
-            }
-        }
-        result.push(sum);
+    if (arr.length <= numToRemove) {
+      // Nếu mảng quá ngắn, chỉ giữ lại phần tử cuối (nếu có)
+      return arr.slice(-1);
     }
 
-    result.push(arr[arr.length - 1]);
-    result.splice(6, 1);
-    return result;
-}
-
+    const cutIndex = arr.length - numToRemove - 1;
+    return [...arr.slice(0, cutIndex + 1), arr[arr.length - 1]];
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -148,6 +141,7 @@ const ReportByShift = () => {
           },
         });
 
+        console.log(res.data.data);
         if (res.data.status === 'success') {
           let tmp = {
             ['T3-M1']: res.data.data.find((entry) => entry.u === 'Chuyền 1')?.value || [...Array(64).fill(0)],
@@ -213,7 +207,7 @@ const ReportByShift = () => {
             ['-Cộng']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
             ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
           };
-          
+
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
             tmp['T3-M2'],
@@ -225,7 +219,6 @@ const ReportByShift = () => {
             tmp['T3-M8'],
             tmp['T3-RC T3'],
           );
-          
           tmp['Robot-TC T4'] = sumArrays(
             tmp['T4A-M4A-4B'],
             tmp['T4A-M5A-5B'],
@@ -278,59 +271,59 @@ const ReportByShift = () => {
             tmp['Bổ sung-TC TBS'],
             tmp['-Cộng'],
           );
-        //   tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
+          tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
+          
+          for (const key in tmp) {
+            tmp[key] = trimKeepLast(tmp[key]);
+          }
 
-        //   if (filterType === 'range') {
-        //     tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
-        //     tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
-        //     tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
-        //     tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
-        //     tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
-        //     tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
-        //     tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
-        //     tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
-        //     tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
-        //     tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
-        //     tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
-        //     tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
-        //     tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
-        //     tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
-        //     tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
-        //     tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
-        //     tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
-        //     tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
-        //     tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
+          if (filterType === 'range') {
+            tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
+            tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
+            tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
+            tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
+            tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
+            tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
+            tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
+            tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
+            tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
+            tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
+            tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
+            tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
+            tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
+            tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
+            tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
+            tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
+            tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
+            tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
+            tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
 
-        //     tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
-        //     tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
-        //     tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
-        //     tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
-        //     tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
-        //     tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
-        //     tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
-        //     tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
-        //     tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
-        //     tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
-        //     tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
-        //     tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
-        //     tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
-        //     tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
-        //     tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
-        //     tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
-        //     tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
-        //     tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
-        //     tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
-        //     tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
-        //   }
+            // tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
+            // tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
+            // tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
+            // tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
+            // tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
+            // tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
+            // tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
+            // tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
+            // tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
+            // tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
+            // tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
+            // tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
+            // tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
+            // tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
+            // tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
+            // tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
+            // tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
+            // tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
+            // tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
+            // tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
+          }
+          
 
           setReport(tmp);
-          
-            for (const key in tmp) {
-              tmp[key] = sumEvery7(tmp[key]);
-            }
-        }  
-        
 
+        }
       } catch (error) {
         setLoading(false);
         console.error('Lỗi khi tải dữ liệu: ', error.message);
@@ -340,12 +333,14 @@ const ReportByShift = () => {
   const headers = [
     'BP/Tổ',
     'Chuyền',
-    'Ca Ngắn 1',
-    'Ca Ngắn 2',
-    'Ca Ngắn 3',
-    'Ca Dài 1',
-    'Ca Dài 2',
-    'Ca Hành Chính',
+    'Giẻ lau dính mực thường',
+    'Giẻ lau dính mực lapa',
+    'Băng keo',
+    'Keo bàn thải',
+    'Mực in thải',
+    'Mực in lapa thải',
+    'Vụn logo',
+    'Lụa căng khung',
     'Tổng',
   ];
 
@@ -359,9 +354,66 @@ const ReportByShift = () => {
     'Mực in lapa thải',
     'Vụn logo',
     'Lụa căng khung',
-    'Tổng rác nguy hại',
-    'Rác sinh hoạt',
     'Tổng',
+  ];
+
+  const subHeaders = [
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
+    'C1',
+    'C2',
+    'C3',
+    'D1',
+    'D2',
+    'HC',
+    'KoC',
   ];
 
   const data = [
@@ -418,13 +470,126 @@ const ReportByShift = () => {
     const headerRow1 = [
       'BP/Tổ',
       'Chuyền',
-        'Ca Ngắn 1',
-        'Ca Ngắn 2',
-        'Ca Ngắn 3',
-        'Ca Dài 1',
-        'Ca Dài 2',
-        'Ca Hành Chính',
+      'Giẻ lau dính mực thường',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Giẻ lau dính mực lapa',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Băng keo',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Keo bàn thải',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Mực in thải',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Mực in lapa thải',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Vụn logo',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Lụa căng khung',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
       'Tổng',
+    ];
+
+    // Header dòng 2 (sub headers)
+    const headerRow2 = [
+      '',
+      '',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      'C1',
+      'C2',
+      'C3',
+      'D1',
+      'D2',
+      'HC',
+      'KoC',
+      '',
     ];
 
     const dataExcel = [
@@ -474,27 +639,50 @@ const ReportByShift = () => {
       }`,
     ];
 
-    const wsData = [title, headerRow1, ...rows];
+    const wsData = [title, headerRow1, headerRow2, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // Gộp ô (colSpan và rowSpan) trong header
     ws['!merges'] = [
+      // Gộp ô header chính (rowSpan 2)
+      { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } }, // BP/Tổ
+      { s: { r: 1, c: 1 }, e: { r: 2, c: 1 } }, // Chuyền
+
+      // Gộp các nhóm rác thải theo cột (colSpan 5)
+      { s: { r: 1, c: 2 }, e: { r: 1, c: 8 } },
+      { s: { r: 1, c: 9 }, e: { r: 1, c: 15 } },
+      { s: { r: 1, c: 16 }, e: { r: 1, c: 22 } },
+      { s: { r: 1, c: 23 }, e: { r: 1, c: 29 } },
+      { s: { r: 1, c: 30 }, e: { r: 1, c: 36 } },
+      { s: { r: 1, c: 37 }, e: { r: 1, c: 43 } },
+      { s: { r: 1, c: 44 }, e: { r: 1, c: 50 } },
+      { s: { r: 1, c: 51 }, e: { r: 1, c: 57 } },
+
+      { s: { r: 1, c: 58 }, e: { r: 2, c: 58 } }, // Tổng
+
       // Merge tổ group
-      { s: { r: 2, c: 0 }, e: { r: 11, c: 0 } },
-      { s: { r: 12, c: 0 }, e: { r: 17, c: 0 } },
-      { s: { r: 18, c: 0 }, e: { r: 22, c: 0 } },
-      { s: { r: 23, c: 0 }, e: { r: 27, c: 0 } },
-      { s: { r: 28, c: 0 }, e: { r: 34, c: 0 } },
-      { s: { r: 35, c: 0 }, e: { r: 37, c: 0 } },
+      { s: { r: 3, c: 0 }, e: { r: 12, c: 0 } },
+      { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
+      { s: { r: 19, c: 0 }, e: { r: 23, c: 0 } },
+      { s: { r: 24, c: 0 }, e: { r: 28, c: 0 } },
+      { s: { r: 29, c: 0 }, e: { r: 35, c: 0 } },
+      { s: { r: 36, c: 0 }, e: { r: 38, c: 0 } },
 
       // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
-      { s: { r: 54, c: 0 }, e: { r: 54, c: 1 } },
+      { s: { r: 55, c: 0 }, e: { r: 55, c: 1 } },
+      { s: { r: 55, c: 2 }, e: { r: 55, c: 8 } },
+      { s: { r: 55, c: 9 }, e: { r: 55, c: 15 } },
+      { s: { r: 55, c: 16 }, e: { r: 55, c: 22 } },
+      { s: { r: 55, c: 23 }, e: { r: 55, c: 29 } },
+      { s: { r: 55, c: 30 }, e: { r: 55, c: 36 } },
+      { s: { r: 55, c: 37 }, e: { r: 55, c: 43 } },
+      { s: { r: 55, c: 44 }, e: { r: 55, c: 50 } },
+      { s: { r: 55, c: 51 }, e: { r: 55, c: 57 } },
     ];
-    
 
     ws['!merges'].unshift({
       s: { r: 0, c: 0 },
-      e: { r: 0, c: 8 },
+      e: { r: 0, c: 58 },
     });
     // Style title row
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
@@ -533,7 +721,7 @@ const ReportByShift = () => {
       }
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -551,7 +739,7 @@ const ReportByShift = () => {
 
     // Tô màu và đậm dòng "Tổng cộng"
     const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -567,8 +755,8 @@ const ReportByShift = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 11, c: col });
+    for (let col = 0; col <= 58; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 12, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -583,8 +771,8 @@ const ReportByShift = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 27, c: col });
+    for (let col = 0; col <= 58; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 28, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -599,8 +787,8 @@ const ReportByShift = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 34, c: col });
+    for (let col = 0; col <= 58; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 35, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -615,8 +803,8 @@ const ReportByShift = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 37, c: col });
+    for (let col = 0; col <= 58; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -631,8 +819,8 @@ const ReportByShift = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 53, c: col });
+    for (let col = 0; col <= 58; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 54, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -682,8 +870,6 @@ const ReportByShift = () => {
       'Mực in lapa thải',
       'Vụn logo',
       'Lụa căng khung',
-      'Tổng rác nguy hại',
-      'Rác sinh hoạt',
       'Tổng',
     ];
 
@@ -743,8 +929,6 @@ const ReportByShift = () => {
         values[49],
         values[56],
         values[63],
-        values[70],
-        values[77],
       ];
     });
 
@@ -761,7 +945,7 @@ const ReportByShift = () => {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!merges'] = [
       // Gộp ô header chính (rowSpan 2)
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
     ];
 
     // Style title row
@@ -952,7 +1136,7 @@ const ReportByShift = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            onClick={exportToExcel}
+            onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Xuất Excel
@@ -1026,18 +1210,35 @@ const ReportByShift = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {headers.map((header, idx) => (
+                {filterType === 'one'
+                  ? headers.map((header, idx) => (
                       <th
                         key={idx}
+                        rowSpan={idx === 0 || idx === 1 || idx === 10 ? 2 : 1}
+                        colSpan={idx >= 2 && idx <= 9 ? 7 : 1}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
                       >
                         {header}
                       </th>
+                    ))
+                  : headersRange.map((header, idx) => (
+                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
+                        {header}
+                      </th>
                     ))}
+              </tr>
+              <tr>
+                {filterType === 'one' &&
+                  subHeaders.map((sub, idx) => (
+                    <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-100">
+                      {sub}
+                    </th>
+                  ))}
               </tr>
             </thead>
             <tbody>
-              {data?.map((group, idx) =>
+              {filterType === 'one'
+                ? data?.map((group, idx) =>
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
@@ -1133,23 +1334,60 @@ const ReportByShift = () => {
                           </td>
                         ))}
                       </tr>
-                    ))
-                  )}
+                    )),
+                  )
+                : dataRange?.map((group, idx) => (
+                    <tr key={`${idx}-`}>
+                      <td className="border border-gray-300 px-2 py-1">{group.group}</td>
+                      {report[
+                        `${
+                          idx === 0
+                            ? 'T3-TC T3'
+                            : idx === 1
+                            ? 'Robot-TC T4'
+                            : idx === 2
+                            ? 'T5-TC T5'
+                            : idx === 3
+                            ? 'Bổ sung-TC TBS'
+                            : idx === 4
+                            ? 'Mẫu-M3A-3B'
+                            : idx === 5
+                            ? 'Canh hàng-M1A'
+                            : group.group + '-'
+                        }`
+                      ]?.map(
+                        (e, i) =>
+                          i % 7 === 0 && (
+                            <td
+                              key={i}
+                              className={`border font-[600] ${
+                                 'border-gray-300'
+                              } text-center px-2 py-1`}
+                            >
+                              {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                            </td>
+                          ),
+                      )}
+                    </tr>
+                  ))}
               <tr className="bg-[#9e8f8f]">
                 <td
                   className="border border-gray-400 text-center px-2 py-1 font-bold"
-                  colSpan={2}
+                  colSpan={filterType === 'one' ? 2 : 1}
                 >
                   Tổng cộng
                 </td>
                 {report['Tổng cộng-']?.map(
                   (e, i) =>
-                    <td
+                    i % 7 === 0 && (
+                      <td
                         key={i}
+                        colSpan={filterType === 'one' ? 7 : 1}
                         className="border border-gray-400 text-center font-bold px-2 py-1"
                       >
                         {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
                       </td>
+                    ),
                 )}
               </tr>
             </tbody>
@@ -1161,4 +1399,4 @@ const ReportByShift = () => {
   );
 };
 
-export default ReportByShift;
+export default Report;

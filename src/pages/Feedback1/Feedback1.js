@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import logo from "~/assets/imgs/logoAdmin.png";
 import textThanks from "~/assets/imgs/thankyou_transparent_centered.png";
 import logoFeedback from "~/assets/imgs/logoFeedback.png";
-import bg_page from '~/assets/imgs/bg_page_2.jpg';
+import bg_page from '~/assets/imgs/bg_page_3.png';
 
 import {
   FaHardHat, FaToilet, FaTools, FaBuilding, FaMoneyBill, FaQuestion,
@@ -237,7 +237,7 @@ function FeedbackFlow() {
       onChange={(e) => setFeedback(e.target.value)}
       rows={4}
       className="w-full outline-none border border-purple-300 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 min-h-[120px]"
-      placeholder="Viết ngắn gọn ý kiến của bạn..."
+      placeholder="Viết rõ ý kiến của bạn..."
     />
 
     <div className="mt-4 text-left">

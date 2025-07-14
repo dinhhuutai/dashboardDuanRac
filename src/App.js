@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { routes, routesAdmin, routesInkAdmin } from './routes';
+import { routes, routesAdmin, routesInkAdmin, routesSuggest } from './routes';
 import DefaultLayout from './layouts/DefaultLayout';
 import config from './config';
 import DefaultLayoutAdmin from './layoutsAdmin/DefaultLayoutAdmin';
 import DefaultLayoutAdminInk from './layoutsInkWeighAdmin/DefaultLayoutAdmin';
+import DefaultLayoutAdminSuggest from './layoutSuggestionAdmin/DefaultLayoutAdmin';
 import ProtecteRouterLogin from './routing/ProtecteRouterLogin';
 import ProtectedRouteAdmin from './routing/ProtectedRouteAdmin';
 import { useSelector } from 'react-redux';
@@ -81,6 +82,22 @@ function App() {
                     <DefaultLayoutAdminInk>
                       <route.component />
                     </DefaultLayoutAdminInk>
+                  }
+                />
+              </Route>
+            );
+          })}
+          
+          {routesSuggest.map((route, index) => {
+            return (
+              <Route element={route.login && <ProtectedRouteAdminInk />}>
+                <Route
+                  key={index}
+                  path={route.addId ? `${route.path}/:id` : route.path}
+                  element={
+                    <DefaultLayoutAdminSuggest>
+                      <route.component />
+                    </DefaultLayoutAdminSuggest>
                   }
                 />
               </Route>

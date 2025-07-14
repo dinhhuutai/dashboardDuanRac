@@ -5,7 +5,7 @@ import {
   BsWindowFullscreen,
   BsBoxes,
   BsQrCodeScan,
-  BsMusicNoteList,
+  BsFileEarmarkBarGraph,
   BsTrash2,
   BsJournalAlbum,
   BsPerson,
@@ -24,6 +24,7 @@ import { userSelector } from '~/redux/selectors';
 
 function Sidebar() {
   const [downDashboard, setDownDashboard] = useState(true);
+  const [downReport, setDownReport] = useState(false);
   const [downClassCheck, setDownClassCheck] = useState(false);
   const [downPage, setDownPage] = useState(false);
   const [downApplication, setDownApplication] = useState(false);
@@ -45,6 +46,7 @@ function Sidebar() {
 
   const hiddenItem = (key) => {
     key !== 'dashboard' && setDownDashboard(false);
+    key !== 'report' && setDownReport(false);
     key !== 'classCheck' && setDownClassCheck(false);
     key !== 'page' && setDownPage(false);
     key !== 'application' && setDownApplication(false);
@@ -92,7 +94,7 @@ function Sidebar() {
               </li>
               <ul
                 className={`${
-                  downDashboard ? 'animate-downSlide4' : 'animate-upSlide4'
+                  downDashboard ? 'animate-downSlide2' : 'animate-upSlide2'
                 } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
               >
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -105,30 +107,6 @@ function Sidebar() {
                     }
                   >
                     Tổng quan
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReport}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Báo cáo
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReportByShift}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Báo cáo theo ca
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -165,6 +143,100 @@ function Sidebar() {
                     }
                   >
                     Khối lượng xe
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <li
+                onClick={() => {
+                  hiddenItem('report');
+                  setDownReport((prev) => !prev);
+                }}
+                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
+              >
+                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
+                  <BsFileEarmarkBarGraph />
+                </div>
+                <span
+                  className={`${
+                    downReport ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
+                  } capitalize`}
+                >
+                  Báo cáo
+                </span>
+                <div
+                  className={`${
+                    downReport ? 'rotate-[180deg]' : 'rotate-[0deg]'
+                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
+                >
+                  <BsChevronDown />
+                </div>
+              </li>
+              <ul
+                className={`${
+                  downReport ? 'animate-downSlide3' : 'animate-upSlide3'
+                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
+              >
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReport}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    chi tiết
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReportByShift}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    theo ca làm
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReportByTrash}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    theo loại rác
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReportByDepartment}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    theo bộ phận
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReportMaterials}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    vật tư
                   </NavLink>
                 </li>
               </ul>

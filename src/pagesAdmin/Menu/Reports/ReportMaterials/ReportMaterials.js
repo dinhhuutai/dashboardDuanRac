@@ -1,8 +1,7 @@
-
 import { motion } from "framer-motion";
 import { FaTools, FaSmileWink } from "react-icons/fa";
 
-function AdminHome() {
+function ReportMaterials() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FFEBEE] via-[#E3F2FD] to-[#E8F5E9] overflow-hidden px-4 py-12">
       {/* 🎈 Animated background shapes */}
@@ -64,5 +63,4 @@ function AdminHome() {
   );
 }
 
-export default AdminHome;
-
+export default ReportMaterials;

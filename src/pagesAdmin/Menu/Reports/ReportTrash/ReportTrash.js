@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
 
-const Report = () => {
+const ReportTrash = () => {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
 
@@ -107,6 +107,18 @@ const Report = () => {
     const newArr = [...arr];
     newArr.splice(56, 0, sum, 0, 0, 0, 0, 0, 0); // Chèn sum vào vị trí thứ 6
     return newArr;
+  }
+
+  function trimKeepLast(arr, numToRemove = 8) {
+    if (!Array.isArray(arr) || arr.length === 0) return [];
+
+    if (arr.length <= numToRemove) {
+      // Nếu mảng quá ngắn, chỉ giữ lại phần tử cuối (nếu có)
+      return arr.slice(-1);
+    }
+
+    const cutIndex = arr.length - numToRemove - 1;
+    return [...arr.slice(0, cutIndex + 1), arr[arr.length - 1]];
   }
 
   useEffect(() => {
@@ -260,8 +272,12 @@ const Report = () => {
             tmp['-Cộng'],
           );
           tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
+          
+          for (const key in tmp) {
+            tmp[key] = trimKeepLast(tmp[key]);
+          }
 
-          if (filterType === 'range') {
+          
             tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
             tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
             tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
@@ -281,32 +297,10 @@ const Report = () => {
             tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
             tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
             tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
-
-            tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
-            tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
-            tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
-            tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
-            tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
-            tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
-            tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
-            tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
-            tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
-            tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
-            tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
-            tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
-            tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
-            tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
-            tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
-            tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
-            tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
-            tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
-            tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
-            tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
-          }
+          
 
           setReport(tmp);
 
-          console.log(tmp);
         }
       } catch (error) {
         setLoading(false);
@@ -325,7 +319,6 @@ const Report = () => {
     'Mực in lapa thải',
     'Vụn logo',
     'Lụa căng khung',
-    'Rác sinh hoạt',
     'Tổng',
   ];
 
@@ -339,19 +332,10 @@ const Report = () => {
     'Mực in lapa thải',
     'Vụn logo',
     'Lụa căng khung',
-    'Tổng rác nguy hại',
-    'Rác sinh hoạt',
     'Tổng',
   ];
 
   const subHeaders = [
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
     'C1',
     'C2',
     'C3',
@@ -520,13 +504,6 @@ const Report = () => {
       '',
       '',
       '',
-      'Rác sinh hoạt',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
       'Tổng',
     ];
 
@@ -534,13 +511,6 @@ const Report = () => {
     const headerRow2 = [
       '',
       '',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
       'C1',
       'C2',
       'C3',
@@ -665,9 +635,8 @@ const Report = () => {
       { s: { r: 1, c: 37 }, e: { r: 1, c: 43 } },
       { s: { r: 1, c: 44 }, e: { r: 1, c: 50 } },
       { s: { r: 1, c: 51 }, e: { r: 1, c: 57 } },
-      { s: { r: 1, c: 58 }, e: { r: 1, c: 64 } },
 
-      { s: { r: 1, c: 65 }, e: { r: 2, c: 65 } }, // Tổng
+      { s: { r: 1, c: 58 }, e: { r: 2, c: 58 } }, // Tổng
 
       // Merge tổ group
       { s: { r: 3, c: 0 }, e: { r: 12, c: 0 } },
@@ -691,7 +660,7 @@ const Report = () => {
 
     ws['!merges'].unshift({
       s: { r: 0, c: 0 },
-      e: { r: 0, c: 65 },
+      e: { r: 0, c: 58 },
     });
     // Style title row
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
@@ -730,7 +699,7 @@ const Report = () => {
       }
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -748,7 +717,7 @@ const Report = () => {
 
     // Tô màu và đậm dòng "Tổng cộng"
     const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -764,7 +733,7 @@ const Report = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 12, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -780,7 +749,7 @@ const Report = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 28, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -796,7 +765,7 @@ const Report = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 35, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -812,7 +781,7 @@ const Report = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -828,7 +797,7 @@ const Report = () => {
       };
     }
 
-    for (let col = 0; col <= 65; col++) {
+    for (let col = 0; col <= 58; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 54, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -879,8 +848,6 @@ const Report = () => {
       'Mực in lapa thải',
       'Vụn logo',
       'Lụa căng khung',
-      'Tổng rác nguy hại',
-      'Rác sinh hoạt',
       'Tổng',
     ];
 
@@ -940,8 +907,6 @@ const Report = () => {
         values[49],
         values[56],
         values[63],
-        values[70],
-        values[77],
       ];
     });
 
@@ -958,7 +923,7 @@ const Report = () => {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!merges'] = [
       // Gộp ô header chính (rowSpan 2)
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
     ];
 
     // Style title row
@@ -1149,7 +1114,7 @@ const Report = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
+            onClick={exportToExcel2}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Xuất Excel
@@ -1223,133 +1188,15 @@ const Report = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {filterType === 'one'
-                  ? headers.map((header, idx) => (
-                      <th
-                        key={idx}
-                        rowSpan={idx === 0 || idx === 1 || idx === 11 ? 2 : 1}
-                        colSpan={idx >= 2 && idx <= 10 ? 7 : 1}
-                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
-                      >
-                        {header}
-                      </th>
-                    ))
-                  : headersRange.map((header, idx) => (
+                {headersRange.map((header, idx) => (
                       <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
                         {header}
                       </th>
                     ))}
               </tr>
-              <tr>
-                {filterType === 'one' &&
-                  subHeaders.map((sub, idx) => (
-                    <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-100">
-                      {sub}
-                    </th>
-                  ))}
-              </tr>
             </thead>
             <tbody>
-              {filterType === 'one'
-                ? data?.map((group, idx) =>
-                    group?.items?.map((item, iidx) => (
-                      <tr
-                        className={`${
-                          idx === 0 && iidx === 9
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 3 && iidx === 4
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 4 && iidx === 6
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 5 && iidx === 2
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 21
-                            ? 'bg-[#cfb8b8]'
-                            : ''
-                        }`}
-                        key={`${idx}-${iidx}`}
-                      >
-                        {iidx === 0 && (
-                          <td
-                            rowSpan={
-                              idx === 0
-                                ? 10
-                                : idx === 1
-                                ? 6
-                                : idx === 2
-                                ? 5
-                                : idx === 3
-                                ? 5
-                                : idx === 4
-                                ? 7
-                                : idx === 5
-                                ? 3
-                                : 1
-                            }
-                            className="border border-gray-300 px-2 py-1"
-                          >
-                            {group.group}
-                          </td>
-                        )}
-                        <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
-                        {report[`${group.group}-${item}`]?.map((e, i) => (
-                          <td
-                            key={i}
-                            className={`border border-gray-300 text-center px-2 py-1 ${i === 63 && 'font-[600]'}`}
-                            onDoubleClick={() => {
-                              setStatusUpdate(true);
-                              setSelectInput({
-                                  group: group.group,
-                                  item: item,
-                                  index: i,
-                              });
-                              setValue(e);
-                              setTimeout(() => {
-                                inputRef.current?.focus();
-                              }, 0);
-                            }}
-                          >
-                            {
-                              user?.roleEditReport && statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  ref={inputRef}
-                                  className="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-                                  type="text"
-                                  value={value}
-                                  onChange={(e) => {setValue(e.target.value)}}
-                                />
-                                <button
-                                  className="text-green-600 hover:text-green-800 transition-colors"
-                                  onClick={() => handleSave(e)}
-                                >
-                                  <FaCheck className="w-4 h-4" />
-                                </button>
-                                <button
-                                  className="text-red-600 hover:text-red-800 transition-colors"
-                                  onClick={() => {
-                                    setStatusUpdate(false);
-                                    setSelectInput({
-                                        group: "",
-                                        item: "",
-                                        index: "",
-                                    })
-                                    setValue(0);
-                                  }}
-                                >
-                                  <FaTimes className="w-4 h-4" />
-                                </button>
-                              </div> :
-                              <button>
-                                {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
-                              </button>
-                            }
-                          </td>
-                        ))}
-                      </tr>
-                    )),
-                  )
-                : dataRange?.map((group, idx) => (
+              {dataRange?.map((group, idx) => (
                     <tr key={`${idx}-`}>
                       <td className="border border-gray-300 px-2 py-1">{group.group}</td>
                       {report[
@@ -1373,8 +1220,8 @@ const Report = () => {
                           i % 7 === 0 && (
                             <td
                               key={i}
-                              className={`border ${
-                                i === 56 ? 'bg-[#f78888] font-[600]' : i === 70 ? 'font-[600]' : 'border-gray-300'
+                              className={`border font-[600] ${
+                                 'border-gray-300'
                               } text-center px-2 py-1`}
                             >
                               {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
@@ -1386,7 +1233,7 @@ const Report = () => {
               <tr className="bg-[#9e8f8f]">
                 <td
                   className="border border-gray-400 text-center px-2 py-1 font-bold"
-                  colSpan={filterType === 'one' ? 2 : 1}
+                  colSpan={1}
                 >
                   Tổng cộng
                 </td>
@@ -1395,7 +1242,7 @@ const Report = () => {
                     i % 7 === 0 && (
                       <td
                         key={i}
-                        colSpan={filterType === 'one' ? 7 : 1}
+                        colSpan={1}
                         className="border border-gray-400 text-center font-bold px-2 py-1"
                       >
                         {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
@@ -1412,4 +1259,4 @@ const Report = () => {
   );
 };
 
-export default Report;
+export default ReportTrash;
