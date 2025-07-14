@@ -1039,16 +1039,7 @@ const ReportByShift = () => {
                             key={i}
                             className={`border border-gray-300 text-center px-2 py-1 ${i === 63 && 'font-[600]'}`}
                             onDoubleClick={() => {
-                              setStatusUpdate(true);
-                              setSelectInput({
-                                  group: group.group,
-                                  item: item,
-                                  index: i,
-                              });
-                              setValue(e);
-                              setTimeout(() => {
-                                inputRef.current?.focus();
-                              }, 0);
+                              
                             }}
                           >
                             {
