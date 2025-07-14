@@ -94,7 +94,7 @@ function Sidebar() {
               </li>
               <ul
                 className={`${
-                  downDashboard ? 'animate-downSlide2' : 'animate-upSlide2'
+                  downDashboard ? 'animate-downSlide' : 'animate-upSlide'
                 } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
               >
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -121,7 +121,7 @@ function Sidebar() {
                     Lịch sử cân
                   </NavLink>
                 </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                {/* <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
                   <NavLink
                     to={config.routes.adminUnscannedQR}
                     className={(nav) =>
@@ -144,7 +144,7 @@ function Sidebar() {
                   >
                     Khối lượng xe
                   </NavLink>
-                </li>
+                </li> */}
               </ul>
             </div>
             
