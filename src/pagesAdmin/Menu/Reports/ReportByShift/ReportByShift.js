@@ -172,32 +172,35 @@ const ReportByShift = () => {
     return result;
 }
 
-  console.log(report);
+  // console.log(report);
 
-  useEffect(() => {
+  // useEffect(() => {
 
-  const prefixes = selectedDepartment.includes('|')
-    ? selectedDepartment.split('|')
-    : [selectedDepartment];
+  //   const prefixes = selectedDepartment.includes('|')
+  //     ? selectedDepartment.split('|')
+  //     : [selectedDepartment];
 
-    const filtered = Object.entries(reportTmp)
-  .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
-  .reduce((obj, [key, value]) => {
-    obj[key] = value;
-    return obj;
-  }, {});
+  //     const filtered = Object.entries(reportTmp)
+  //   .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
+  //   .reduce((obj, [key, value]) => {
+  //     obj[key] = value;
+  //     return obj;
+  //   }, {});
 
-  setReport(filtered);
+  //   setReport(filtered);
 
-  if(selectedDepartment === '') {
-    setData(dataTmp);
-  } else {
-    const selected = dataTmp.filter(item => item.group === selectedDepartment);
+  //   if(selectedDepartment === '') {
+  //     setData(dataTmp);
+  //   } else {
+  //     const selected = dataTmp.filter(item => item.group === selectedDepartment);
 
-    setData(selected);
-  }
+  //     setData(selected);
+  //     if(selectedDepartment === 'T3') {
+  //       setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
+  //     }
+  //   }
 
-  }, [selectedDepartment])
+  // }, [selectedDepartment])
 
 
   useEffect(() => {
@@ -206,8 +209,46 @@ const ReportByShift = () => {
     // Gọi lần lượt từng API
     fetchTodayReport();
 
+    
+
+    const prefixes = selectedDepartment.includes('|')
+      ? selectedDepartment.split('|')
+      : [selectedDepartment];
+
+      const filtered = Object.entries(reportTmp)
+    .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
+    .reduce((obj, [key, value]) => {
+      obj[key] = value;
+      return obj;
+    }, {});
+
+    setReport(filtered);
+
+    if(selectedDepartment === '') {
+      setData(dataTmp);
+    } else {
+      const selected = dataTmp.filter(item => item.group === selectedDepartment);
+
+      setData(selected);
+      if(selectedDepartment === 'T3') {
+        setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
+      } else if (selectedDepartment === 'Bổ sung') {
+        setData([{ group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] }])
+      } else if (selectedDepartment === 'Logo|Ép') {
+        setData([{ group: 'Logo', items: [''] },
+                { group: 'Ép', items: [''] }])
+      } else if (selectedDepartment === 'T4|Robot') {
+        setData([{ group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+                { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
+                { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] }])
+      } else if (selectedDepartment === 'T5') {
+        setData([{ group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] }])
+      }
+
+    }
+
     setLoading(false);
-  }, [dateOne, startDate, endDate, filterType]);
+  }, [dateOne, startDate, endDate, filterType, selectedDepartment]);
   
 
     const fetchTodayReport = async () => {
@@ -411,6 +452,18 @@ const ReportByShift = () => {
 
   const headers = [
     'BP/Tổ',
+    'Ca Ngắn 1',
+    'Ca Ngắn 2',
+    'Ca Ngắn 3',
+    'Ca Dài 1',
+    'Ca Dài 2',
+    'Ca Hành Chính',
+    'Tổng',
+  ];
+  
+  const headersDetail = [
+    'BP/Tổ',
+    'Chuyền',
     'Ca Ngắn 1',
     'Ca Ngắn 2',
     'Ca Ngắn 3',
@@ -1075,14 +1128,23 @@ const ReportByShift = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {headers.map((header, idx) => (
+                {selectedDepartment === '' ? headers.map((header, idx) => (
                       <th
                         key={idx}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
                       >
                         {header}
                       </th>
-                    ))}
+                    )) : 
+                    headersDetail.map((header, idx) => (
+                      <th
+                        key={idx}
+                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
+                      >
+                        {header}
+                      </th>
+                    ))
+                  }
               </tr>
             </thead>
             <tbody>
@@ -1090,30 +1152,32 @@ const ReportByShift = () => {
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
-                          idx === 0 && iidx === 9
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 3 && iidx === 4
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 4 && iidx === 6
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 5 && iidx === 2
-                            ? 'bg-[#cfb8b8]'
-                            : idx === 21
-                            ? 'bg-[#cfb8b8]'
-                            : ''
+                              selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T3' && iidx === 9 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T4|Robot' && idx === 2 && iidx === 4 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : ''
                         }`}
                         key={`${idx}-${iidx}`}
                       >
                         {iidx === 0 && (
                           <td
                             rowSpan={
-                              1
+                              selectedDepartment === 'Bổ sung' ? 3 :
+                              selectedDepartment === 'T3' ? 10 :
+                              selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
+                              selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
+                              selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
+                              selectedDepartment === 'T5' ? 7 : 1
                             }
                             className="border border-gray-300 px-2 py-1"
                           >
-                            {group.group === 'Robot' ? 'T4' : group.group}
+                            {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group}
                           </td>
                         )}
+                        {
+                          selectedDepartment !== "" &&
+                        <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
+                        }
                         {report[`${group.group}-${item}`]?.map((e, i) => (
                           <td
                             key={i}
@@ -1162,23 +1226,26 @@ const ReportByShift = () => {
                       </tr>
                     ))
                   )}
-              <tr className="bg-[#9e8f8f]">
-                <td
-                  className="border border-gray-400 text-center px-2 py-1 font-bold"
-                  colSpan={1}
-                >
-                  Tổng cộng
-                </td>
-                {report['Tổng cộng-']?.map(
-                  (e, i) =>
-                    <td
-                        key={i}
-                        className="border border-gray-400 text-center font-bold px-2 py-1"
-                      >
-                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
-                      </td>
-                )}
-              </tr>
+              {
+                selectedDepartment === "" &&
+                <tr className="bg-[#9e8f8f]">
+                  <td
+                    className="border border-gray-400 text-center px-2 py-1 font-bold"
+                    colSpan={1}
+                  >
+                    Tổng cộng
+                  </td>
+                  {report['Tổng cộng-']?.map(
+                    (e, i) =>
+                      <td
+                          key={i}
+                          className="border border-gray-400 text-center font-bold px-2 py-1"
+                        >
+                          {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                        </td>
+                  )}
+                </tr>
+              }
             </tbody>
           </table>
         </div>
