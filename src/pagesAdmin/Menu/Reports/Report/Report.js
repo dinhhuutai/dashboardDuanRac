@@ -144,6 +144,13 @@ const Report = () => {
         console.log(res.data.data);
         if (res.data.status === 'success') {
           let tmp = {
+            ['Bổ sung-M1B']: res.data.data.find((entry) => entry.u === 'Chuyền 1B')?.value || [...Array(64).fill(0)],
+            ['Bổ sung-M2A-2B']: res.data.data.find((entry) => entry.u === 'Chuyền 2A-2B')?.value || [
+              ...Array(64).fill(0),
+            ],
+            ['Bổ sung-TC TBS']: [...Array(64).fill(0)],
+            ['Logo-']: res.data.data.find((entry) => entry.d === 'Tổ logo')?.value || [...Array(64).fill(0)],
+            ['Ép-']: res.data.data.find((entry) => entry.d === 'Tổ ép')?.value || [...Array(64).fill(0)],
             ['T3-M1']: res.data.data.find((entry) => entry.u === 'Chuyền 1')?.value || [...Array(64).fill(0)],
             ['T3-M2']: res.data.data.find((entry) => entry.u === 'Chuyền 2')?.value || [...Array(64).fill(0)],
             ['T3-M3']: res.data.data.find((entry) => entry.u === 'Chuyền 3')?.value || [...Array(64).fill(0)],
@@ -182,22 +189,15 @@ const Report = () => {
               ...Array(64).fill(0),
             ],
             ['T5-TC T5']: [...Array(64).fill(0)],
-            ['Bổ sung-M1B']: res.data.data.find((entry) => entry.u === 'Chuyền 1B')?.value || [...Array(64).fill(0)],
-            ['Bổ sung-M2A-2B']: res.data.data.find((entry) => entry.u === 'Chuyền 2A-2B')?.value || [
-              ...Array(64).fill(0),
-            ],
-            ['Bổ sung-TC TBS']: [...Array(64).fill(0)],
             ['Mẫu-M3A-3B']: res.data.data.find((entry) => entry.u === 'Chuyền 3A-3B')?.value || [...Array(64).fill(0)],
             ['Canh hàng-M1A']: res.data.data.find((entry) => entry.u === 'Chuyền 1A')?.value || [...Array(64).fill(0)],
             ['Pha màu-']: res.data.data.find((entry) => entry.d === 'Pha màu')?.value || [...Array(64).fill(0)],
             ['Chụp khuôn-']: res.data.data.find((entry) => entry.d === 'Chụp khung')?.value || [...Array(64).fill(0)],
             ['Kế hoạch-']: res.data.data.find((entry) => entry.d === 'Kế hoạch')?.value || [...Array(64).fill(0)],
-            ['Logo-']: res.data.data.find((entry) => entry.d === 'Tổ logo')?.value || [...Array(64).fill(0)],
             ['Bán hàng-']: res.data.data.find((entry) => entry.d === 'Bán hàng')?.value || [...Array(64).fill(0)],
             ['Chất lượng-']: res.data.data.find((entry) => entry.d === 'Chất lượng')?.value || [...Array(64).fill(0)],
             ['Kcs-']: res.data.data.find((entry) => entry.d === 'Kcs')?.value || [...Array(64).fill(0)],
             ['Điều hành-']: res.data.data.find((entry) => entry.d === 'Điều hành')?.value || [...Array(64).fill(0)],
-            ['Ép-']: res.data.data.find((entry) => entry.d === 'Tổ ép')?.value || [...Array(64).fill(0)],
             ['Sửa hàng-']: res.data.data.find((entry) => entry.d === 'Tổ sửa hàng')?.value || [...Array(64).fill(0)],
             ['Vật tư-']: res.data.data.find((entry) => entry.d === 'Vật tư')?.value || [...Array(64).fill(0)],
             ['IT - Bảo trì-']: res.data.data.find((entry) => entry.d === 'IT - Bảo trì')?.value || [
@@ -207,6 +207,11 @@ const Report = () => {
             ['-Cộng']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
             ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
           };
+
+          tmp['T2-'] = sumArrays(
+            tmp['Logo-'],
+            tmp['Ép-'],
+          );
 
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
@@ -278,6 +283,7 @@ const Report = () => {
           }
 
           if (filterType === 'range') {
+            tmp['T2-'] = groupSumWithZeros(tmp['T2-']);
             tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
             tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
             tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
@@ -417,23 +423,22 @@ const Report = () => {
   ];
 
   const data = [
+    { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
+    { group: 'T2', items: [''] },
     { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
     { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
     { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
     { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
     { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
-    { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
     { group: 'Bán hàng', items: [''] },
     { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
     { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
     { group: 'Sửa hàng', items: [''] },
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
@@ -442,21 +447,20 @@ const Report = () => {
   ];
 
   const dataRange = [
+    { group: 'Tổ 1', items: [''] },
+    { group: 'Tổ 2', items: [''] },
     { group: 'Tổ 3', items: [''] },
     { group: 'Tổ 4', items: [''] },
     { group: 'Tổ 5', items: [''] },
-    { group: 'Bổ sung', items: [''] },
     { group: 'Mẫu', items: [''] },
     { group: 'Canh hàng', items: [''] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
     { group: 'Bán hàng', items: [''] },
     { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
     { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
     { group: 'Sửa hàng', items: [''] },
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
@@ -593,23 +597,22 @@ const Report = () => {
     ];
 
     const dataExcel = [
+      { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
+      { group: 'T2', items: [''] },
       { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
       { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
       { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
       { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
       { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
-      { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
       { group: 'Mẫu', items: ['M3A-3B'] },
       { group: 'Canh hàng', items: ['M1A'] },
       { group: 'Pha màu', items: [''] },
       { group: 'Chụp khuôn', items: [''] },
       { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
       { group: 'Bán hàng', items: [''] },
       { group: 'Chất lượng', items: [''] },
       { group: 'Kcs', items: [''] },
       { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
       { group: 'Sửa hàng', items: [''] },
       { group: 'Vật tư', items: [''] },
       { group: 'IT - Bảo trì', items: [''] },
@@ -624,15 +627,15 @@ const Report = () => {
         const key = `${d.group}-${item}`;
         const data = report[key];
 
-        const values = data?.map((e) => (e === 0 ? '-' : e));
+        const values = data?.map((e) => (e === 0 ? '-' : e)) || [];
 
-        return [idx === 0 ? d.group : '', item, ...values];
+        return [idx === 0 ? d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
       }),
     );
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+      `BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -661,12 +664,12 @@ const Report = () => {
       { s: { r: 1, c: 58 }, e: { r: 2, c: 58 } }, // Tổng
 
       // Merge tổ group
-      { s: { r: 3, c: 0 }, e: { r: 12, c: 0 } },
-      { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
-      { s: { r: 19, c: 0 }, e: { r: 23, c: 0 } },
-      { s: { r: 24, c: 0 }, e: { r: 28, c: 0 } },
-      { s: { r: 29, c: 0 }, e: { r: 35, c: 0 } },
-      { s: { r: 36, c: 0 }, e: { r: 38, c: 0 } },
+      { s: { r: 3, c: 0 }, e: { r: 5, c: 0 } },
+      { s: { r: 7, c: 0 }, e: { r: 16, c: 0 } },
+      { s: { r: 17, c: 0 }, e: { r: 22, c: 0 } },
+      { s: { r: 23, c: 0 }, e: { r: 27, c: 0 } },
+      { s: { r: 28, c: 0 }, e: { r: 32, c: 0 } },
+      { s: { r: 33, c: 0 }, e: { r: 39, c: 0 } },
 
       // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
       { s: { r: 55, c: 0 }, e: { r: 55, c: 1 } },
@@ -756,7 +759,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 12, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 5, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -772,7 +775,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 28, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 16, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -788,7 +791,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 35, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 32, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -804,7 +807,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 39, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -820,7 +823,7 @@ const Report = () => {
     }
 
     for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 54, c: col });
+      const cellAddress = XLSX.utils.encode_cell({ r: 53, c: col });
       if (!ws[cellAddress]) continue;
 
       ws[cellAddress].s = {
@@ -848,7 +851,7 @@ const Report = () => {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
+      `BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -874,21 +877,20 @@ const Report = () => {
     ];
 
     const dataExcel = [
+      { group: 'Tổ 1', items: [''] },
+      { group: 'Tổ 2', items: [''] },
       { group: 'Tổ 3', items: [''] },
       { group: 'Tổ 4', items: [''] },
       { group: 'Tổ 5', items: [''] },
-      { group: 'Bổ sung', items: [''] },
       { group: 'Mẫu', items: [''] },
       { group: 'Canh hàng', items: [''] },
       { group: 'Pha màu', items: [''] },
       { group: 'Chụp khuôn', items: [''] },
       { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
       { group: 'Bán hàng', items: [''] },
       { group: 'Chất lượng', items: [''] },
       { group: 'Kcs', items: [''] },
       { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
       { group: 'Sửa hàng', items: [''] },
       { group: 'Vật tư', items: [''] },
       { group: 'IT - Bảo trì', items: [''] },
@@ -899,17 +901,19 @@ const Report = () => {
     // Dữ liệu bảng
     const rows = dataExcel.map((d, idx) => {
       const key = `${
-        idx === 0
-          ? 'T3-TC T3'
-          : idx === 1
-          ? 'Robot-TC T4'
+                          idx === 0
+                            ? 'Bổ sung-TC TBS'
+                            : idx === 1
+                            ? 'T2-'
           : idx === 2
-          ? 'T5-TC T5'
+          ? 'T3-TC T3'
           : idx === 3
-          ? 'Bổ sung-TC TBS'
+          ? 'Robot-TC T4'
           : idx === 4
-          ? 'Mẫu-M3A-3B'
+          ? 'T5-TC T5'
           : idx === 5
+          ? 'Mẫu-M3A-3B'
+          : idx === 6
           ? 'Canh hàng-M1A'
           : d.group + '-'
       }`;
@@ -934,7 +938,7 @@ const Report = () => {
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+      `BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -1060,7 +1064,7 @@ const Report = () => {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
+      `BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -1242,15 +1246,15 @@ const Report = () => {
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
-                          idx === 0 && iidx === 9
+                          idx === 0 && iidx === 2
                             ? 'bg-[#cfb8b8]'
-                            : idx === 3 && iidx === 4
+                            : idx === 5 && iidx === 4
                             ? 'bg-[#cfb8b8]'
-                            : idx === 4 && iidx === 6
+                            : idx === 6 && iidx === 6
                             ? 'bg-[#cfb8b8]'
-                            : idx === 5 && iidx === 2
+                            : idx === 2 && iidx === 9
                             ? 'bg-[#cfb8b8]'
-                            : idx === 21
+                            : idx === 20
                             ? 'bg-[#cfb8b8]'
                             : ''
                         }`}
@@ -1259,23 +1263,23 @@ const Report = () => {
                         {iidx === 0 && (
                           <td
                             rowSpan={
-                              idx === 0
+                              idx === 2
                                 ? 10
-                                : idx === 1
-                                ? 6
-                                : idx === 2
-                                ? 5
                                 : idx === 3
-                                ? 5
+                                ? 6
                                 : idx === 4
-                                ? 7
+                                ? 5
                                 : idx === 5
+                                ? 5
+                                : idx === 6
+                                ? 7
+                                : idx === 0
                                 ? 3
                                 : 1
                             }
                             className="border border-gray-300 px-2 py-1"
                           >
-                            {group.group}
+                            {group.group === 'Bổ sung' ? 'T1' : group.group}
                           </td>
                         )}
                         <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
@@ -1328,7 +1332,7 @@ const Report = () => {
                                 </button>
                               </div> :
                               <button>
-                                {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                                {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                               </button>
                             }
                           </td>
@@ -1342,16 +1346,18 @@ const Report = () => {
                       {report[
                         `${
                           idx === 0
-                            ? 'T3-TC T3'
-                            : idx === 1
-                            ? 'Robot-TC T4'
-                            : idx === 2
-                            ? 'T5-TC T5'
-                            : idx === 3
                             ? 'Bổ sung-TC TBS'
+                            : idx === 1
+                            ? 'T2-'
+                            : idx === 2
+                            ? 'T3-TC T3'
+                            : idx === 3
+                            ? 'Robot-TC T4'
                             : idx === 4
-                            ? 'Mẫu-M3A-3B'
+                            ? 'T5-TC T5'
                             : idx === 5
+                            ? 'Mẫu-M3A-3B'
+                            : idx === 6
                             ? 'Canh hàng-M1A'
                             : group.group + '-'
                         }`
@@ -1364,7 +1370,7 @@ const Report = () => {
                                  'border-gray-300'
                               } text-center px-2 py-1`}
                             >
-                              {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                              {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                             </td>
                           ),
                       )}
@@ -1385,7 +1391,7 @@ const Report = () => {
                         colSpan={filterType === 'one' ? 7 : 1}
                         className="border border-gray-400 text-center font-bold px-2 py-1"
                       >
-                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                        {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                       </td>
                     ),
                 )}

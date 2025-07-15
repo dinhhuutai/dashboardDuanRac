@@ -24,7 +24,9 @@ const ReportTrash = () => {
   });
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
-
+  
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+    
 
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {

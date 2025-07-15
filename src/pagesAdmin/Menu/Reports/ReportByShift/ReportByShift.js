@@ -36,21 +36,20 @@ const ReportByShift = () => {
   const [endDate, setEndDate] = useState(new Date());
   
   const [dataTmp, setDataTmp] = useState([
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'T2', items: [''] },
     { group: 'T3', items: ['TC T3'] },
     { group: 'Robot', items: ['TC T4'] },
     { group: 'T5', items: ['TC T5'] },
-    { group: 'Bổ sung', items: ['TC TBS'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
     { group: 'Bán hàng', items: [''] },
     { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
     { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
     { group: 'Sửa hàng', items: [''] },
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
@@ -58,21 +57,20 @@ const ReportByShift = () => {
   ]);
 
   const [data, setData] = useState([
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'T2', items: [''] },
     { group: 'T3', items: ['TC T3'] },
     { group: 'Robot', items: ['TC T4'] },
     { group: 'T5', items: ['TC T5'] },
-    { group: 'Bổ sung', items: ['TC TBS'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
     { group: 'Bán hàng', items: [''] },
     { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
     { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
     { group: 'Sửa hàng', items: [''] },
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
@@ -327,6 +325,11 @@ const ReportByShift = () => {
             ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
           };
           
+          tmp['T2-'] = sumArrays(
+            tmp['Logo-'],
+            tmp['Ép-'],
+          );
+          
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
             tmp['T3-M2'],
@@ -473,42 +476,6 @@ const ReportByShift = () => {
     'Tổng',
   ];
 
-  const headersRange = [
-    'BP/Tổ',
-    'Giẻ lau dính mực thường',
-    'Giẻ lau dính mực lapa',
-    'Băng keo',
-    'Keo bàn thải',
-    'Mực in thải',
-    'Mực in lapa thải',
-    'Vụn logo',
-    'Lụa căng khung',
-    'Tổng rác nguy hại',
-    'Rác sinh hoạt',
-    'Tổng',
-  ];
-
-  const dataRange = [
-    { group: 'Tổ 3', items: [''] },
-    { group: 'Tổ 4', items: [''] },
-    { group: 'Tổ 5', items: [''] },
-    { group: 'Bổ sung', items: [''] },
-    { group: 'Mẫu', items: [''] },
-    { group: 'Canh hàng', items: [''] },
-    { group: 'Pha màu', items: [''] },
-    { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
-    { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
-    { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
-  ];
 
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
@@ -524,23 +491,33 @@ const ReportByShift = () => {
         'Ca Hành Chính',
       'Tổng',
     ];
+    const headerRow1DEtail = [
+      'BP/Tổ',
+      'Chuyền',
+        'Ca Ngắn 1',
+        'Ca Ngắn 2',
+        'Ca Ngắn 3',
+        'Ca Dài 1',
+        'Ca Dài 2',
+        'Ca Hành Chính',
+      'Tổng',
+    ];
 
     const dataExcel = [
+      { group: 'Bổ sung', items: ['TC TBS'] },
+      { group: 'T2', items: [''] },
       { group: 'T3', items: ['TC T3'] },
       { group: 'Robot', items: ['TC T4'] },
       { group: 'T5', items: ['TC T5'] },
-      { group: 'Bổ sung', items: ['TC TBS'] },
       { group: 'Mẫu', items: ['M3A-3B'] },
       { group: 'Canh hàng', items: ['M1A'] },
       { group: 'Pha màu', items: [''] },
       { group: 'Chụp khuôn', items: [''] },
       { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
       { group: 'Bán hàng', items: [''] },
       { group: 'Chất lượng', items: [''] },
       { group: 'Kcs', items: [''] },
       { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
       { group: 'Sửa hàng', items: [''] },
       { group: 'Vật tư', items: [''] },
       { group: 'IT - Bảo trì', items: [''] },
@@ -549,27 +526,32 @@ const ReportByShift = () => {
     ];
 
     // Dữ liệu bảng
-    const rows = dataExcel.flatMap((d) =>
+    const rows = data.flatMap((d) =>
       d.items.map((item, idx) => {
         const key = `${d.group}-${item}`;
         const data = report[key];
 
         const values = data?.map((e) => (e === 0 ? '-' : e));
 
-        return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group : '', ...values];
+        if(selectedDepartment === '') {
+          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', ...values];
+        } else {
+          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
+        }
+
       }),
     );
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI THEO CA LÀM NGÀY ${
+      `BẢNG THEO DÕI RÁC THẢI${selectedDepartment === 'T4|Robot' ? ' TỔ 4' : selectedDepartment === 'Bổ sung' ? ' TỔ 1' : ' ' + selectedDepartment.replace(/^T/, 'TỔ ')} THEO CA LÀM NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
       }`,
     ];
 
-    const wsData = [title, headerRow1, ...rows];
+    const wsData = [title, selectedDepartment === '' ? headerRow1 : headerRow1DEtail, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // Gộp ô (colSpan và rowSpan) trong header
@@ -578,264 +560,36 @@ const ReportByShift = () => {
       // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
       { s: { r: 54, c: 0 }, e: { r: 54, c: 1 } },
     ];
-    
 
-    ws['!merges'].unshift({
-      s: { r: 0, c: 0 },
-      e: { r: 0, c: 7 },
-    });
-    // Style title row
-    const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
-    ws[titleCell].s = {
-      alignment: {
-        horizontal: 'center',
-        vertical: 'center',
-      },
-      font: {
-        bold: true,
-        sz: 16,
-        color: { rgb: '000000' },
-      },
-    };
-
-    // Style toàn bộ sheet: border cho tất cả ô
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!ws[cellAddress]) continue;
-
-        ws[cellAddress].s = {
-          border: {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } },
-          },
-          alignment: {
-            vertical: 'center',
-            horizontal: 'center',
-            wrapText: true,
-          },
-        };
-      }
-    }
-
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'e5e7eb' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    // Tô màu và đậm dòng "Tổng cộng"
-    const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 27, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 34, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 37, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 53, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `${
-        filterType === 'one'
-          ? formatDateToVNString2(dateOne)
-          : `${formatDateToVNString2(startDate)} - ${formatDateToVNString2(endDate)}`
-      }`,
-    );
-
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(
-      new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
-        filterType === 'one'
-          ? formatDateToVNString1(dateOne)
-          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
-      }.xlsx`,
-    );
-  };
-
-  const exportToExcel2 = () => {
-    const wb = XLSX.utils.book_new();
-
-    // Header dòng 1 (gồm colSpan và rowSpan)
-    const headerRow1 = [
-      'BP/Tổ',
-      'Giẻ lau dính mực thường',
-      'Giẻ lau dính mực lapa',
-      'Băng keo',
-      'Keo bàn thải',
-      'Mực in thải',
-      'Mực in lapa thải',
-      'Vụn logo',
-      'Lụa căng khung',
-      'Tổng rác nguy hại',
-      'Rác sinh hoạt',
-      'Tổng',
-    ];
-
-    const dataExcel = [
-      { group: 'Tổ 3', items: [''] },
-      { group: 'Tổ 4', items: [''] },
-      { group: 'Tổ 5', items: [''] },
-      { group: 'Bổ sung', items: [''] },
-      { group: 'Mẫu', items: [''] },
-      { group: 'Canh hàng', items: [''] },
-      { group: 'Pha màu', items: [''] },
-      { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
-      { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
-      { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
-      { group: 'Tổng cộng', items: [''] },
-    ];
-
-    // Dữ liệu bảng
-    const rows = dataExcel.map((d, idx) => {
-      const key = `${
-        idx === 0
-          ? 'T3-TC T3'
-          : idx === 1
-          ? 'Robot-TC T4'
-          : idx === 2
-          ? 'T5-TC T5'
-          : idx === 3
-          ? 'Bổ sung-TC TBS'
-          : idx === 4
-          ? 'Mẫu-M3A-3B'
-          : idx === 5
-          ? 'Canh hàng-M1A'
-          : d.group + '-'
-      }`;
-      const data = report[key];
-
-      const values = data?.map((e) => (e === 0 ? '-' : e));
-
-      return [
-        d.group,
-        values[0],
-        values[7],
-        values[14],
-        values[21],
-        values[28],
-        values[35],
-        values[42],
-        values[49],
-        values[56],
-        values[63],
-        values[70],
-        values[77],
+    if(selectedDepartment === 'Bổ sung') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } },
       ];
-    });
-
-    const today = new Date().toLocaleDateString('vi-VN');
-    const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
-        filterType === 'one'
-          ? formatDateToVNString1(dateOne)
-          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
-      }`,
-    ];
-
-    const wsData = [title, headerRow1, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!merges'] = [
-      // Gộp ô header chính (rowSpan 2)
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
-    ];
-
+    } else if(selectedDepartment === 'T3') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 11, c: 0 } },
+      ];
+    } else if(selectedDepartment === 'T4|Robot') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 17, c: 0 } },
+      ];
+    } else if(selectedDepartment === 'T5') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 8, c: 0 } },
+      ];
+    }
+    
+    if(selectedDepartment === '') {
+      ws['!merges'].unshift({
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: 7 },
+      });
+    } else {
+      ws['!merges'].unshift({
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: 8 },
+      });
+    }
     // Style title row
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
     ws[titleCell].s = {
@@ -873,7 +627,7 @@ const ReportByShift = () => {
       }
     }
 
-    for (let col = 0; col <= 35; col++) {
+    for (let col = 0; col <= 65; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -891,7 +645,7 @@ const ReportByShift = () => {
 
     // Tô màu và đậm dòng "Tổng cộng"
     const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 35; col++) {
+    for (let col = 0; col <= 65; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -899,34 +653,6 @@ const ReportByShift = () => {
         ...ws[cellAddress].s,
         fill: {
           fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let row = 2; row <= 20; row++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 9 });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'f78888' }, // màu đỏ nhạt
-        },
-      };
-    }
-
-    for (let row = 2; row <= 20; row++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 11 });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'FFF3CD' }, // màu đỏ nhạt
         },
         font: {
           bold: true,
@@ -948,7 +674,7 @@ const ReportByShift = () => {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
+      `BẢNG THEO DÕI RÁC THẢI${selectedDepartment === 'T4|Robot' ? ' TỔ 4' : selectedDepartment === 'Bổ sung' ? ' TỔ 1' : ' ' + selectedDepartment.replace(/^T/, 'TỔ ')} THEO CA LÀM NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -956,61 +682,6 @@ const ReportByShift = () => {
     );
   };
 
-  const handleSave = async (data) => {
-    if (!value || value === 0 || isNaN(parseFloat(value)) || value === '') {
-      return;
-    }
-
-    setLoading(true);
-
-    const {trashBinCode, workShift} = await HandleGetCodeQr(selectInput);
-    
-    const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
-    let weight = parseFloat(value);
-    
-    const payload = {
-      trashBinCode: trashBinCode,
-      userID: user.userID,
-      weighingTime: nowUTC7.toISOString(),
-      weightKg: weight,
-      updatedAt: nowUTC7.toISOString(),
-      updatedBy: user.userID,
-      workShift: workShift,
-      workDate: new Date(dateOne).toISOString().split('T')[0],
-      userName: user?.fullName,
-    };
-
-        try {
-          const res = await fetch(`${BASE_URL}/trash-weighings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-    
-          if (res.ok) {
-            const result = await res.json();
-  
-            await fetchTodayReport();
-
-            //setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
-          } else {
-            const errText = await res.text();
-          }
-        } catch (err) {
-
-        } finally {
-          setLoading(false);
-    
-          setStatusUpdate(false);
-          setSelectInput({
-            group: "",
-            item: "",
-            index: "",
-          })
-          setValue(0);
-        }
-
-  }
 
   return (
     <div className="p-2">
@@ -1040,7 +711,7 @@ const ReportByShift = () => {
   >
     <option value="">-- Tất cả --</option>
     <option value="Bổ sung">Tổ 1</option>
-    <option value="Logo|Ép">Tổ 2</option>
+    <option value="T2">Tổ 2</option>
     <option value="T3">Tổ 3</option>
     <option value="T4|Robot">Tổ 4</option>
     <option value="T5">Tổ 5</option>
@@ -1171,7 +842,7 @@ const ReportByShift = () => {
                             }
                             className="border border-gray-300 px-2 py-1"
                           >
-                            {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group}
+                            {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'T1' : group.group}
                           </td>
                         )}
                         {
@@ -1198,7 +869,7 @@ const ReportByShift = () => {
                                 />
                                 <button
                                   className="text-green-600 hover:text-green-800 transition-colors"
-                                  onClick={() => handleSave(e)}
+                                  onClick={() => {}}
                                 >
                                   <FaCheck className="w-4 h-4" />
                                 </button>
