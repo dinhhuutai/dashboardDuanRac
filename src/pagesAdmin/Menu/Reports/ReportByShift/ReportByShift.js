@@ -11,10 +11,10 @@ import HandleGetCodeQr from '~/components/HandleGetCodeQR';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
-
 const ReportByShift = () => {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
+  const [reportTmp, setReportTmp] = useState([]);
 
   const [filterType, setFilterType] = useState('one'); // 'one' or 'range'
   const [statusUpdate, setStatusUpdate] = useState(false);
@@ -25,6 +25,7 @@ const ReportByShift = () => {
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
 
+  const [selectedDepartment, setSelectedDepartment] = useState('');
 
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {
@@ -34,6 +35,50 @@ const ReportByShift = () => {
   });
   const [endDate, setEndDate] = useState(new Date());
   
+  const [dataTmp, setDataTmp] = useState([
+    { group: 'T3', items: ['TC T3'] },
+    { group: 'Robot', items: ['TC T4'] },
+    { group: 'T5', items: ['TC T5'] },
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'Mẫu', items: ['M3A-3B'] },
+    { group: 'Canh hàng', items: ['M1A'] },
+    { group: 'Pha màu', items: [''] },
+    { group: 'Chụp khuôn', items: [''] },
+    { group: 'Kế hoạch', items: [''] },
+    { group: 'Logo', items: [''] },
+    { group: 'Bán hàng', items: [''] },
+    { group: 'Chất lượng', items: [''] },
+    { group: 'Kcs', items: [''] },
+    { group: 'Điều hành', items: [''] },
+    { group: 'Ép', items: [''] },
+    { group: 'Sửa hàng', items: [''] },
+    { group: 'Vật tư', items: [''] },
+    { group: 'IT - Bảo trì', items: [''] },
+    { group: 'Văn phòng', items: [''] },
+  ]);
+
+  const [data, setData] = useState([
+    { group: 'T3', items: ['TC T3'] },
+    { group: 'Robot', items: ['TC T4'] },
+    { group: 'T5', items: ['TC T5'] },
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'Mẫu', items: ['M3A-3B'] },
+    { group: 'Canh hàng', items: ['M1A'] },
+    { group: 'Pha màu', items: [''] },
+    { group: 'Chụp khuôn', items: [''] },
+    { group: 'Kế hoạch', items: [''] },
+    { group: 'Logo', items: [''] },
+    { group: 'Bán hàng', items: [''] },
+    { group: 'Chất lượng', items: [''] },
+    { group: 'Kcs', items: [''] },
+    { group: 'Điều hành', items: [''] },
+    { group: 'Ép', items: [''] },
+    { group: 'Sửa hàng', items: [''] },
+    { group: 'Vật tư', items: [''] },
+    { group: 'IT - Bảo trì', items: [''] },
+    { group: 'Văn phòng', items: [''] },
+  ]);
+
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   
@@ -126,6 +171,33 @@ const ReportByShift = () => {
     result.splice(6, 1);
     return result;
 }
+
+  console.log(report);
+
+  useEffect(() => {
+
+  const prefixes = selectedDepartment.includes('|')
+    ? selectedDepartment.split('|')
+    : [selectedDepartment];
+
+    const filtered = Object.entries(reportTmp)
+  .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
+  .reduce((obj, [key, value]) => {
+    obj[key] = value;
+    return obj;
+  }, {});
+
+  setReport(filtered);
+
+  if(selectedDepartment === '') {
+    setData(dataTmp);
+  } else {
+    const selected = dataTmp.filter(item => item.group === selectedDepartment);
+
+    setData(selected);
+  }
+
+  }, [selectedDepartment])
 
 
   useEffect(() => {
@@ -324,13 +396,13 @@ const ReportByShift = () => {
         //   }
 
         
-        for (const key in tmp) {
-          tmp[key] = sumEvery7(tmp[key]);
-        }
-        setReport(tmp);
-        }  
-        
+          for (const key in tmp) {
+            tmp[key] = sumEvery7(tmp[key]);
+          }
+          setReport(tmp);
+          setReportTmp(tmp);
 
+        }  
       } catch (error) {
         setLoading(false);
         console.error('Lỗi khi tải dữ liệu: ', error.message);
@@ -361,28 +433,6 @@ const ReportByShift = () => {
     'Tổng rác nguy hại',
     'Rác sinh hoạt',
     'Tổng',
-  ];
-
-  const data = [
-    { group: 'T3', items: ['TC T3'] },
-    { group: 'Robot', items: ['TC T4'] },
-    { group: 'T5', items: ['TC T5'] },
-    { group: 'Bổ sung', items: ['TC TBS'] },
-    { group: 'Mẫu', items: ['M3A-3B'] },
-    { group: 'Canh hàng', items: ['M1A'] },
-    { group: 'Pha màu', items: [''] },
-    { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
-    { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
-    { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
   ];
 
   const dataRange = [
@@ -459,7 +509,7 @@ const ReportByShift = () => {
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+      `BẢNG THEO DÕI RÁC THẢI THEO CA LÀM NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -926,6 +976,36 @@ const ReportByShift = () => {
           >
             Xuất Excel
           </button>
+
+    {/* 👇 Chọn bộ phận */}
+<div className="flex flex-col mb-3 min-w-[160px]">
+  <label className="text-sm font-semibold mb-1">Chọn bộ phận</label>
+  <select
+    value={selectedDepartment}
+    onChange={(e) => setSelectedDepartment(e.target.value)}
+    className="px-3 py-1 bg-white border border-gray-300 text-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150"
+  >
+    <option value="">-- Tất cả --</option>
+    <option value="Bổ sung">Tổ 1</option>
+    <option value="Logo|Ép">Tổ 2</option>
+    <option value="T3">Tổ 3</option>
+    <option value="T4|Robot">Tổ 4</option>
+    <option value="T5">Tổ 5</option>
+    <option value="Mẫu">Mẫu</option>
+    <option value="Canh hàng">Canh Hàng</option>
+    <option value="Pha màu">Pha Màu</option>
+    <option value="Chụp khuôn">Chụp Khuôn</option>
+    <option value="Kế hoạch">Kế Hoạch</option>
+    <option value="Bán hàng">Bán Hàng</option>
+    <option value="Chất lượng">Chất Lượng</option>
+    <option value="Kcs">KCS</option>
+    <option value="Điều hành">Điều Hành</option>
+    <option value="Sửa hàng">Sửa Hàng</option>
+    <option value="Vật tư">Vật Tư</option>
+    <option value="IT - Bảo trì">IT - Bảo Trì</option>
+    <option value="Văn phòng">Văn Phòng</option>
+  </select>
+</div>
 
           <div className="flex gap-[10px]">
             {filterType === 'one' && (

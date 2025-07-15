@@ -912,7 +912,7 @@ const ReportTrash = () => {
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
+      `BẢNG THEO DÕI RÁC THẢI THEO LOẠI RÁC NGÀY  ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
