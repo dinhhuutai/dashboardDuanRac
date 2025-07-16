@@ -232,9 +232,8 @@ const ReportByShift = () => {
         setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
       } else if (selectedDepartment === 'Bổ sung') {
         setData([{ group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] }])
-      } else if (selectedDepartment === 'Logo|Ép') {
-        setData([{ group: 'Logo', items: [''] },
-                { group: 'Ép', items: [''] }])
+      } else if (selectedDepartment === 'T2') {
+        setData([{ group: 'T2', items: [''] }])
       } else if (selectedDepartment === 'T4|Robot') {
         setData([{ group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
                 { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
@@ -889,7 +888,7 @@ const ReportByShift = () => {
                                 </button>
                               </div> :
                               <button>
-                                {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                                {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                               </button>
                             }
                           </td>
@@ -912,7 +911,7 @@ const ReportByShift = () => {
                           key={i}
                           className="border border-gray-400 text-center font-bold px-2 py-1"
                         >
-                          {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                          {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                         </td>
                   )}
                 </tr>

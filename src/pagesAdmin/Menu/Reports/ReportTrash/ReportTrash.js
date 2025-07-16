@@ -15,6 +15,7 @@ import { userSelector } from '~/redux/selectors';
 const ReportTrash = () => {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
+    const [reportTmp, setReportTmp] = useState([]);
 
   const [filterType, setFilterType] = useState('one'); // 'one' or 'range'
   const [statusUpdate, setStatusUpdate] = useState(false);
@@ -26,7 +27,7 @@ const ReportTrash = () => {
   const inputRef = useRef(null);
   
     const [selectedDepartment, setSelectedDepartment] = useState('');
-    
+
 
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {
@@ -35,6 +36,48 @@ const ReportTrash = () => {
     return yesterday;
   });
   const [endDate, setEndDate] = useState(new Date());
+  
+    const [dataTmp, setDataTmp] = useState([
+    { group: 'Bổ sung', items: [''] },
+    { group: 'Tổ 2', items: [''] },
+    { group: 'Tổ 3', items: [''] },
+    { group: 'Tổ 4', items: [''] },
+    { group: 'Tổ 5', items: [''] },
+    { group: 'Mẫu', items: [''] },
+    { group: 'Canh hàng', items: [''] },
+    { group: 'Pha màu', items: [''] },
+    { group: 'Chụp khuôn', items: [''] },
+    { group: 'Kế hoạch', items: [''] },
+    { group: 'Bán hàng', items: [''] },
+    { group: 'Chất lượng', items: [''] },
+    { group: 'Kcs', items: [''] },
+    { group: 'Điều hành', items: [''] },
+    { group: 'Sửa hàng', items: [''] },
+    { group: 'Vật tư', items: [''] },
+    { group: 'IT - Bảo trì', items: [''] },
+    { group: 'Văn phòng', items: [''] },
+    ]);
+  
+    const [dataRange, setDataRange] = useState([
+    { group: 'Bổ sung', items: [''] },
+    { group: 'Tổ 2', items: [''] },
+    { group: 'Tổ 3', items: [''] },
+    { group: 'Tổ 4', items: [''] },
+    { group: 'Tổ 5', items: [''] },
+    { group: 'Mẫu', items: [''] },
+    { group: 'Canh hàng', items: [''] },
+    { group: 'Pha màu', items: [''] },
+    { group: 'Chụp khuôn', items: [''] },
+    { group: 'Kế hoạch', items: [''] },
+    { group: 'Bán hàng', items: [''] },
+    { group: 'Chất lượng', items: [''] },
+    { group: 'Kcs', items: [''] },
+    { group: 'Điều hành', items: [''] },
+    { group: 'Sửa hàng', items: [''] },
+    { group: 'Vật tư', items: [''] },
+    { group: 'IT - Bảo trì', items: [''] },
+    { group: 'Văn phòng', items: [''] },
+    ]);
   
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
@@ -128,10 +171,49 @@ const ReportTrash = () => {
 
     // Gọi lần lượt từng API
     fetchTodayReport();
+    
+
+    const prefixes = selectedDepartment.includes('|')
+      ? selectedDepartment.split('|')
+      : [selectedDepartment];
+
+      const filtered = Object.entries(reportTmp)
+    .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
+    .reduce((obj, [key, value]) => {
+      obj[key] = value;
+      return obj;
+    }, {});
+
+    setReport(filtered);
+
+    if(selectedDepartment === '') {
+      setDataRange(dataTmp);
+    } else {
+      const selected = dataTmp.filter(item => item.group === selectedDepartment);
+
+      setDataRange(selected);
+      if(selectedDepartment === 'T3') {
+        setDataRange([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
+      } else if (selectedDepartment === 'Bổ sung') {
+        setDataRange([{ group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] }])
+      } else if (selectedDepartment === 'T2') {
+        setDataRange([{ group: 'T2', items: [''] }])
+      } else if (selectedDepartment === 'T4|Robot') {
+        setDataRange([{ group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+                { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
+                { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] }])
+      } else if (selectedDepartment === 'T5') {
+        setDataRange([{ group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] }])
+      } else if (selectedDepartment === 'Mẫu') {
+        setDataRange([{ group: 'Mẫu', items: ['M3A-3B'] }])
+      } else if (selectedDepartment === 'Canh hàng') {
+        setDataRange([{ group: 'Canh hàng', items: ['M1A'] }])
+      }
+
+    }
 
     setLoading(false);
-  }, [dateOne, startDate, endDate, filterType]);
-  
+  }, [dateOne, startDate, endDate, filterType, selectedDepartment]);
 
     const fetchTodayReport = async () => {
       try {
@@ -143,7 +225,6 @@ const ReportTrash = () => {
           },
         });
 
-        console.log(res.data.data);
         if (res.data.status === 'success') {
           let tmp = {
             ['T3-M1']: res.data.data.find((entry) => entry.u === 'Chuyền 1')?.value || [...Array(64).fill(0)],
@@ -209,6 +290,11 @@ const ReportTrash = () => {
             ['-Cộng']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
             ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
           };
+          
+          tmp['T2-'] = sumArrays(
+            tmp['Logo-'],
+            tmp['Ép-'],
+          );
 
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
@@ -302,6 +388,7 @@ const ReportTrash = () => {
           
 
           setReport(tmp);
+          setReportTmp(tmp);
 
         }
       } catch (error) {
@@ -337,504 +424,33 @@ const ReportTrash = () => {
     'Tổng',
   ];
 
-  const subHeaders = [
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'HC',
-    'KoC',
-  ];
 
-  const data = [
-    { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
-    { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
-    { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
-    { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
-    { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
-    { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
-    { group: 'Mẫu', items: ['M3A-3B'] },
-    { group: 'Canh hàng', items: ['M1A'] },
-    { group: 'Pha màu', items: [''] },
-    { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
-    { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
-    { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
-    { group: '', items: ['Cộng'] },
-  ];
+//   const data = [
+//     { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
+//     { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+//     { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
+//     { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
+//     { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
+//     { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
+//     { group: 'Mẫu', items: ['M3A-3B'] },
+//     { group: 'Canh hàng', items: ['M1A'] },
+//     { group: 'Pha màu', items: [''] },
+//     { group: 'Chụp khuôn', items: [''] },
+//     { group: 'Kế hoạch', items: [''] },
+//     { group: 'Logo', items: [''] },
+//     { group: 'Bán hàng', items: [''] },
+//     { group: 'Chất lượng', items: [''] },
+//     { group: 'Kcs', items: [''] },
+//     { group: 'Điều hành', items: [''] },
+//     { group: 'Ép', items: [''] },
+//     { group: 'Sửa hàng', items: [''] },
+//     { group: 'Vật tư', items: [''] },
+//     { group: 'IT - Bảo trì', items: [''] },
+//     { group: 'Văn phòng', items: [''] },
+//     { group: '', items: ['Cộng'] },
+//   ];
 
-  const dataRange = [
-    { group: 'Tổ 3', items: [''] },
-    { group: 'Tổ 4', items: [''] },
-    { group: 'Tổ 5', items: [''] },
-    { group: 'Bổ sung', items: [''] },
-    { group: 'Mẫu', items: [''] },
-    { group: 'Canh hàng', items: [''] },
-    { group: 'Pha màu', items: [''] },
-    { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Logo', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
-    { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
-    { group: 'Ép', items: [''] },
-    { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
-  ];
 
-  const exportToExcel = () => {
-    const wb = XLSX.utils.book_new();
-
-    // Header dòng 1 (gồm colSpan và rowSpan)
-    const headerRow1 = [
-      'BP/Tổ',
-      'Chuyền',
-      'Giẻ lau dính mực thường',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Giẻ lau dính mực lapa',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Băng keo',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Keo bàn thải',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Mực in thải',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Mực in lapa thải',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Vụn logo',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Lụa căng khung',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Tổng',
-    ];
-
-    // Header dòng 2 (sub headers)
-    const headerRow2 = [
-      '',
-      '',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      'C1',
-      'C2',
-      'C3',
-      'D1',
-      'D2',
-      'HC',
-      'KoC',
-      '',
-    ];
-
-    const dataExcel = [
-      { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
-      { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
-      { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
-      { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
-      { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
-      { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
-      { group: 'Mẫu', items: ['M3A-3B'] },
-      { group: 'Canh hàng', items: ['M1A'] },
-      { group: 'Pha màu', items: [''] },
-      { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
-      { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
-      { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
-      { group: '', items: ['Cộng'] },
-      { group: 'Tổng cộng', items: [''] },
-    ];
-
-    // Dữ liệu bảng
-    const rows = dataExcel.flatMap((d) =>
-      d.items.map((item, idx) => {
-        const key = `${d.group}-${item}`;
-        const data = report[key];
-
-        const values = data?.map((e) => (e === 0 ? '-' : e));
-
-        return [idx === 0 ? d.group : '', item, ...values];
-      }),
-    );
-
-    const today = new Date().toLocaleDateString('vi-VN');
-    const title = [
-      `BẢNG THEO DÕI RÁC THẢI NGÀY ${
-        filterType === 'one'
-          ? formatDateToVNString1(dateOne)
-          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
-      }`,
-    ];
-
-    const wsData = [title, headerRow1, headerRow2, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Gộp ô (colSpan và rowSpan) trong header
-    ws['!merges'] = [
-      // Gộp ô header chính (rowSpan 2)
-      { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } }, // BP/Tổ
-      { s: { r: 1, c: 1 }, e: { r: 2, c: 1 } }, // Chuyền
-
-      // Gộp các nhóm rác thải theo cột (colSpan 5)
-      { s: { r: 1, c: 2 }, e: { r: 1, c: 8 } },
-      { s: { r: 1, c: 9 }, e: { r: 1, c: 15 } },
-      { s: { r: 1, c: 16 }, e: { r: 1, c: 22 } },
-      { s: { r: 1, c: 23 }, e: { r: 1, c: 29 } },
-      { s: { r: 1, c: 30 }, e: { r: 1, c: 36 } },
-      { s: { r: 1, c: 37 }, e: { r: 1, c: 43 } },
-      { s: { r: 1, c: 44 }, e: { r: 1, c: 50 } },
-      { s: { r: 1, c: 51 }, e: { r: 1, c: 57 } },
-
-      { s: { r: 1, c: 58 }, e: { r: 2, c: 58 } }, // Tổng
-
-      // Merge tổ group
-      { s: { r: 3, c: 0 }, e: { r: 12, c: 0 } },
-      { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
-      { s: { r: 19, c: 0 }, e: { r: 23, c: 0 } },
-      { s: { r: 24, c: 0 }, e: { r: 28, c: 0 } },
-      { s: { r: 29, c: 0 }, e: { r: 35, c: 0 } },
-      { s: { r: 36, c: 0 }, e: { r: 38, c: 0 } },
-
-      // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
-      { s: { r: 55, c: 0 }, e: { r: 55, c: 1 } },
-      { s: { r: 55, c: 2 }, e: { r: 55, c: 8 } },
-      { s: { r: 55, c: 9 }, e: { r: 55, c: 15 } },
-      { s: { r: 55, c: 16 }, e: { r: 55, c: 22 } },
-      { s: { r: 55, c: 23 }, e: { r: 55, c: 29 } },
-      { s: { r: 55, c: 30 }, e: { r: 55, c: 36 } },
-      { s: { r: 55, c: 37 }, e: { r: 55, c: 43 } },
-      { s: { r: 55, c: 44 }, e: { r: 55, c: 50 } },
-      { s: { r: 55, c: 51 }, e: { r: 55, c: 57 } },
-    ];
-
-    ws['!merges'].unshift({
-      s: { r: 0, c: 0 },
-      e: { r: 0, c: 58 },
-    });
-    // Style title row
-    const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
-    ws[titleCell].s = {
-      alignment: {
-        horizontal: 'center',
-        vertical: 'center',
-      },
-      font: {
-        bold: true,
-        sz: 16,
-        color: { rgb: '000000' },
-      },
-    };
-
-    // Style toàn bộ sheet: border cho tất cả ô
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!ws[cellAddress]) continue;
-
-        ws[cellAddress].s = {
-          border: {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } },
-          },
-          alignment: {
-            vertical: 'center',
-            horizontal: 'center',
-            wrapText: true,
-          },
-        };
-      }
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'e5e7eb' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    // Tô màu và đậm dòng "Tổng cộng"
-    const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 12, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 28, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 35, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let col = 0; col <= 58; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 54, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'cfb8b8' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `${
-        filterType === 'one'
-          ? formatDateToVNString2(dateOne)
-          : `${formatDateToVNString2(startDate)} - ${formatDateToVNString2(endDate)}`
-      }`,
-    );
-
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(
-      new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
-        filterType === 'one'
-          ? formatDateToVNString1(dateOne)
-          : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
-      }.xlsx`,
-    );
-  };
 
   const exportToExcel2 = () => {
     const wb = XLSX.utils.book_new();
@@ -852,12 +468,26 @@ const ReportTrash = () => {
       'Lụa căng khung',
       'Tổng',
     ];
+    
+    const headerRow1DEtail = [
+      'BP/Tổ',
+      'Chuyền',
+      'Giẻ lau dính mực thường',
+      'Giẻ lau dính mực lapa',
+      'Băng keo',
+      'Keo bàn thải',
+      'Mực in thải',
+      'Mực in lapa thải',
+      'Vụn logo',
+      'Lụa căng khung',
+      'Tổng',
+    ];
 
     const dataExcel = [
+      { group: 'Bổ sung', items: [''] },
       { group: 'Tổ 3', items: [''] },
       { group: 'Tổ 4', items: [''] },
       { group: 'Tổ 5', items: [''] },
-      { group: 'Bổ sung', items: [''] },
       { group: 'Mẫu', items: [''] },
       { group: 'Canh hàng', items: [''] },
       { group: 'Pha màu', items: [''] },
@@ -877,7 +507,7 @@ const ReportTrash = () => {
     ];
 
     // Dữ liệu bảng
-    const rows = dataExcel.map((d, idx) => {
+    const rows = dataRange?.map((d, idx) => {
       const key = `${
         idx === 0
           ? 'T3-TC T3'
@@ -914,7 +544,7 @@ const ReportTrash = () => {
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI THEO LOẠI RÁC NGÀY  ${
+      `BẢNG THEO DÕI RÁC THẢI${selectedDepartment === 'T4|Robot' ? ' TỔ 4' : selectedDepartment === 'Bổ sung' ? ' TỔ 1' : ' ' + selectedDepartment.replace(/^T/, 'TỔ ')} THEO LOẠI RÁC NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -1040,7 +670,7 @@ const ReportTrash = () => {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([wbout], { type: 'application/octet-stream' }),
-      `theodoiracthai~${
+      `BẢNG THEO DÕI RÁC THẢI${selectedDepartment === 'T4|Robot' ? ' TỔ 4' : selectedDepartment === 'Bổ sung' ? ' TỔ 1' : ' ' + selectedDepartment.replace(/^T/, 'TỔ ')} THEO LOẠI RÁC NGÀY ${
         filterType === 'one'
           ? formatDateToVNString1(dateOne)
           : `${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`
@@ -1048,61 +678,6 @@ const ReportTrash = () => {
     );
   };
 
-  const handleSave = async (data) => {
-    if (!value || value === 0 || isNaN(parseFloat(value)) || value === '') {
-      return;
-    }
-
-    setLoading(true);
-
-    const {trashBinCode, workShift} = await HandleGetCodeQr(selectInput);
-    
-    const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
-    let weight = parseFloat(value);
-    
-    const payload = {
-      trashBinCode: trashBinCode,
-      userID: user.userID,
-      weighingTime: nowUTC7.toISOString(),
-      weightKg: weight,
-      updatedAt: nowUTC7.toISOString(),
-      updatedBy: user.userID,
-      workShift: workShift,
-      workDate: new Date(dateOne).toISOString().split('T')[0],
-      userName: user?.fullName,
-    };
-
-        try {
-          const res = await fetch(`${BASE_URL}/trash-weighings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-    
-          if (res.ok) {
-            const result = await res.json();
-  
-            await fetchTodayReport();
-
-            //setMessageModal({ type: 'success', message: '✅ Đã lưu dữ liệu cân rác thành công!' });
-          } else {
-            const errText = await res.text();
-          }
-        } catch (err) {
-
-        } finally {
-          setLoading(false);
-    
-          setStatusUpdate(false);
-          setSelectInput({
-            group: "",
-            item: "",
-            index: "",
-          })
-          setValue(0);
-        }
-
-  }
 
   return (
     <div className="p-2">
@@ -1121,6 +696,36 @@ const ReportTrash = () => {
           >
             Xuất Excel
           </button>
+          
+    {/* 👇 Chọn bộ phận */}
+<div className="flex flex-col mb-3 min-w-[160px]">
+  <label className="text-sm font-semibold mb-1">Chọn bộ phận</label>
+  <select
+    value={selectedDepartment}
+    onChange={(e) => setSelectedDepartment(e.target.value)}
+    className="px-3 py-1 bg-white border border-gray-300 text-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150"
+  >
+    <option value="">-- Tất cả --</option>
+    <option value="Bổ sung">Tổ 1</option>
+    <option value="T2">Tổ 2</option>
+    <option value="T3">Tổ 3</option>
+    <option value="T4|Robot">Tổ 4</option>
+    <option value="T5">Tổ 5</option>
+    <option value="Mẫu">Mẫu</option>
+    <option value="Canh hàng">Canh Hàng</option>
+    <option value="Pha màu">Pha Màu</option>
+    <option value="Chụp khuôn">Chụp Khuôn</option>
+    <option value="Kế hoạch">Kế Hoạch</option>
+    <option value="Bán hàng">Bán Hàng</option>
+    <option value="Chất lượng">Chất Lượng</option>
+    <option value="Kcs">KCS</option>
+    <option value="Điều hành">Điều Hành</option>
+    <option value="Sửa hàng">Sửa Hàng</option>
+    <option value="Vật tư">Vật Tư</option>
+    <option value="IT - Bảo trì">IT - Bảo Trì</option>
+    <option value="Văn phòng">Văn Phòng</option>
+  </select>
+</div>
 
           <div className="flex gap-[10px]">
             {filterType === 'one' && (
@@ -1190,7 +795,12 @@ const ReportTrash = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {headersRange.map((header, idx) => (
+                {selectedDepartment === '' ? headersRange.map((header, idx) => (
+                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
+                        {header}
+                      </th>
+                    )) : 
+                    headers.map((header, idx) => (
                       <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
                         {header}
                       </th>
@@ -1198,22 +808,26 @@ const ReportTrash = () => {
               </tr>
             </thead>
             <tbody>
-              {dataRange?.map((group, idx) => (
+              {selectedDepartment === "" ? 
+              dataRange?.map((group, idx) => (
                     <tr key={`${idx}-`}>
-                      <td className="border border-gray-300 px-2 py-1">{group.group}</td>
+                      <td className="border border-gray-300 px-2 py-1">{selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'Tổ 1' : group.group}</td>
+                      
                       {report[
                         `${
                           idx === 0
-                            ? 'T3-TC T3'
-                            : idx === 1
-                            ? 'Robot-TC T4'
-                            : idx === 2
-                            ? 'T5-TC T5'
-                            : idx === 3
                             ? 'Bổ sung-TC TBS'
+                            : idx === 1
+                            ? 'T2-'
+                            : idx === 2
+                            ? 'T3-TC T3'
+                            : idx === 3
+                            ? 'Robot-TC T4'
                             : idx === 4
-                            ? 'Mẫu-M3A-3B'
+                            ? 'T5-TC T5'
                             : idx === 5
+                            ? 'Mẫu-M3A-3B'
+                            : idx === 6
                             ? 'Canh hàng-M1A'
                             : group.group + '-'
                         }`
@@ -1226,12 +840,93 @@ const ReportTrash = () => {
                                  'border-gray-300'
                               } text-center px-2 py-1`}
                             >
-                              {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                              {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                             </td>
                           ),
                       )}
                     </tr>
-                  ))}
+                  )) : 
+                  dataRange?.map((group, idx) =>
+                                      group?.items?.map((item, iidx) => (
+                                        <tr
+                                          className={`${
+                                                selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
+                                                selectedDepartment === 'T3' && iidx === 9 ? 'bg-[#cfb8b8]' :
+                                                selectedDepartment === 'T4|Robot' && idx === 2 && iidx === 4 ? 'bg-[#cfb8b8]' :
+                                                selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : ''
+                                          }`}
+                                          key={`${idx}-${iidx}`}
+                                        >
+                                          {iidx === 0 && (
+                                            <td
+                                              rowSpan={
+                                                selectedDepartment === 'Bổ sung' ? 3 :
+                                                selectedDepartment === 'T3' ? 10 :
+                                                selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
+                                                selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
+                                                selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
+                                                selectedDepartment === 'T5' ? 7 : 1
+                                              }
+                                              className="border border-gray-300 px-2 py-1"
+                                            >
+                                              {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'T1' : group.group}
+                                            </td>
+                                          )}
+                                          {
+                                            selectedDepartment !== "" &&
+                                          <td className={`border border-gray-300 px-2 py-1`}>{item}</td>
+                                          }
+                                          {report[`${group.group}-${item}`]?.map((e, i) => i % 7 === 0 && (
+                                            <td
+                                              key={i}
+                                              className={`border border-gray-300 text-center px-2 py-1`}
+                                              onDoubleClick={() => {
+                                                
+                                              }}
+                                            >
+                                              {
+                                                user?.roleEditReport && statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
+                                                <div className="flex items-center space-x-2">
+                                                  <input
+                                                    ref={inputRef}
+                                                    className="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                                                    type="text"
+                                                    value={value}
+                                                    onChange={(e) => {setValue(e.target.value)}}
+                                                  />
+                                                  <button
+                                                    className="text-green-600 hover:text-green-800 transition-colors"
+                                                    onClick={() => {}}
+                                                  >
+                                                    <FaCheck className="w-4 h-4" />
+                                                  </button>
+                                                  <button
+                                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                                    onClick={() => {
+                                                      setStatusUpdate(false);
+                                                      setSelectInput({
+                                                          group: "",
+                                                          item: "",
+                                                          index: "",
+                                                      })
+                                                      setValue(0);
+                                                    }}
+                                                  >
+                                                    <FaTimes className="w-4 h-4" />
+                                                  </button>
+                                                </div> :
+                                                <button>
+                                                  {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
+                                                </button>
+                                              }
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      ))
+                                    )
+                  }
+                  {
+                    selectedDepartment === "" &&
               <tr className="bg-[#9e8f8f]">
                 <td
                   className="border border-gray-400 text-center px-2 py-1 font-bold"
@@ -1247,11 +942,12 @@ const ReportTrash = () => {
                         colSpan={1}
                         className="border border-gray-400 text-center font-bold px-2 py-1"
                       >
-                        {e === 0 ? '-' : parseFloat(e?.toFixed(2))}
+                        {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                       </td>
                     ),
                 )}
               </tr>
+                  }
             </tbody>
           </table>
         </div>
