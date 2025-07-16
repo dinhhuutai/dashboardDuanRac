@@ -152,7 +152,7 @@ function TrashTruckList() {
             {tIdx === 0 && (
               <>
                 <td className="border border-gray-200 px-4 py-3 text-center text-gray-700 align-middle" rowSpan={truck.trashTypes.length}>
-                  {truck.weightKg?.toFixed(2) || 0}
+                  {truck.weightKg?.toFixed(1) || 0}
                 </td>
                 <td className="border border-gray-200 px-4 py-3 text-center text-gray-600 align-middle" rowSpan={truck.trashTypes.length}>
                   {new Date(truck.createdAt).toLocaleString("vi-VN")}
@@ -295,7 +295,7 @@ function TrashTruckList() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Khối lượng (kg)</label>
           <input
             type="text"
-            value={editForm.weightKg?.toFixed(2)}
+            value={editForm.weightKg?.toFixed(1)}
             className="w-full bg-gray-100 border p-2 rounded-md"
             readOnly
           />

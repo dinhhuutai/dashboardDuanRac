@@ -502,30 +502,21 @@ const ReportByShift = () => {
       'Tổng',
     ];
 
-    const dataExcel = [
-      { group: 'Bổ sung', items: ['TC TBS'] },
-      { group: 'T2', items: [''] },
-      { group: 'T3', items: ['TC T3'] },
-      { group: 'Robot', items: ['TC T4'] },
-      { group: 'T5', items: ['TC T5'] },
-      { group: 'Mẫu', items: ['M3A-3B'] },
-      { group: 'Canh hàng', items: ['M1A'] },
-      { group: 'Pha màu', items: [''] },
-      { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
-      { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
-      { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
-      { group: 'Tổng cộng', items: [''] },
-    ];
+    let dataExcel = [];
+
+    if(selectedDepartment === '') {
+      dataExcel = [
+            ...data,
+            { group: 'Tổng cộng', items: [''] },
+      ]
+    } else {
+      dataExcel = [
+            ...data,
+      ]
+    }
 
     // Dữ liệu bảng
-    const rows = data.flatMap((d) =>
+    const rows = dataExcel.flatMap((d) =>
       d.items.map((item, idx) => {
         const key = `${d.group}-${item}`;
         const data = report[key];

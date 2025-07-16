@@ -116,7 +116,7 @@ const [truckToReload, setTruckToReload] = useState(null);
           <div key={truck.garbageTruckID} className="border p-4 rounded-lg min-w-[200px] shadow bg-white">
             <p className="font-semibold">{truck.truckName}</p>
             <p className="text-sm text-gray-500">Mã: {truck.truckCode}</p>
-            <p className="text-sm">Khối lượng: {truck.weightKg?.toFixed(2) || 0} kg</p>
+            <p className="text-sm">Khối lượng: {truck.weightKg?.toFixed(1) || 0} kg</p>
             <button
   onClick={() => handleReload(truck.truckCode)}
   title="Thu hồi phân phối"
@@ -137,7 +137,7 @@ const [truckToReload, setTruckToReload] = useState(null);
           <ul className="space-y-2">
             {weighings.map((rec, idx) => (
               <li key={rec.weighingRecordID} className="flex items-center justify-between border-b pb-1">
-                <span className="text-sm">⚖️ {rec.weightKg.toFixed(2)} kg - {new Date(rec.createdAt).toLocaleString("vi-VN")}</span>
+                <span className="text-sm">⚖️ {rec.weightKg.toFixed(1)} kg - {new Date(rec.createdAt).toLocaleString("vi-VN")}</span>
                 <button
                   disabled={assigning}
                   onClick={() => handleAssign(idx, 0)} // phân cho xe đầu tiên

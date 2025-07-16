@@ -169,7 +169,7 @@ function HistoryWeigh() {
   exportData.push({
     STT: '',
     'Tài khoản cân': 'Tổng cộng:',
-    'Khối lượng (kg)': totalWeight.toFixed(2),
+    'Khối lượng (kg)': totalWeight.toFixed(1),
     'Loại rác': `Lượt cân: ${filteredData.length}`,
   });
 
@@ -287,7 +287,7 @@ function HistoryWeigh() {
         ) : (
           <div>
             <p className="font-medium">
-              🔢 Tổng lượt cân: {filteredData.length} | ⚖️ Tổng khối lượng: {totalWeight.toFixed(2)} kg
+              🔢 Tổng lượt cân: {filteredData.length} | ⚖️ Tổng khối lượng: {totalWeight.toFixed(1)} kg
             </p>
             <div className="overflow-x-auto mt-4 rounded-lg border border-gray-200">
               <table className="min-w-full text-sm text-gray-700 border border-gray-300 border-collapse">

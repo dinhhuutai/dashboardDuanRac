@@ -120,7 +120,7 @@ const Analytics = () => {
           </div>
           <div className="bg-white shadow p-4 rounded-lg text-center">
             <div className="text-[16px] font-semibold text-gray-600">Tổng (kg)</div>
-            <div className="text-2xl font-bold text-green-600">{parseFloat(todayStats?.totalWeight?.toFixed(2))}</div>
+            <div className="text-2xl font-bold text-green-600">{parseFloat(todayStats?.totalWeight?.toFixed(1))}</div>
           </div>
           <div className="bg-white shadow p-4 rounded-lg text-center">
             <div className="text-[16px] font-semibold text-gray-600">Bộ phận nhiều nhất</div>
@@ -256,7 +256,7 @@ const WeightComparisonChart = ({ department1, department2 }) => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
           <YAxis unit=" kg" />
-          <Tooltip formatter={(value) => `${parseFloat(value).toFixed(2)} kg`} />
+          <Tooltip formatter={(value) => `${parseFloat(value).toFixed(1)} kg`} />
           <Legend />
           <Line type="monotone" dataKey={department1} stroke="#8884d8" strokeWidth={2} />
           <Line type="monotone" dataKey={department2} stroke="#82ca9d" strokeWidth={2} />

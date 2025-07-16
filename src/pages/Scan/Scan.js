@@ -183,7 +183,7 @@ function Scan() {
       weight = Math.max(0, weight - adjustments[jsonData.t]);
     }
 
-    weight = parseFloat(weight.toFixed(2));
+    weight = parseFloat(weight.toFixed(1));
 
     const payload = {
       trashBinCode: jsonData?.id,

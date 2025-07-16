@@ -11,11 +11,10 @@ import HandleGetCodeQr from '~/components/HandleGetCodeQR';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
-
 const ReportTrash = () => {
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
-    const [reportTmp, setReportTmp] = useState([]);
+  const [reportTmp, setReportTmp] = useState([]);
 
   const [filterType, setFilterType] = useState('one'); // 'one' or 'range'
   const [statusUpdate, setStatusUpdate] = useState(false);
@@ -25,9 +24,8 @@ const ReportTrash = () => {
   });
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
-  
-    const [selectedDepartment, setSelectedDepartment] = useState('');
 
+  const [selectedDepartment, setSelectedDepartment] = useState('');
 
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => {
@@ -37,14 +35,14 @@ const ReportTrash = () => {
   });
   const [endDate, setEndDate] = useState(new Date());
   
-    const [dataTmp, setDataTmp] = useState([
-    { group: 'Bổ sung', items: [''] },
-    { group: 'Tổ 2', items: [''] },
-    { group: 'Tổ 3', items: [''] },
-    { group: 'Tổ 4', items: [''] },
-    { group: 'Tổ 5', items: [''] },
-    { group: 'Mẫu', items: [''] },
-    { group: 'Canh hàng', items: [''] },
+  const [dataTmp, setDataTmp] = useState([
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'T2', items: [''] },
+    { group: 'T3', items: ['TC T3'] },
+    { group: 'Robot', items: ['TC T4'] },
+    { group: 'T5', items: ['TC T5'] },
+    { group: 'Mẫu', items: ['M3A-3B'] },
+    { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
@@ -56,16 +54,16 @@ const ReportTrash = () => {
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
     { group: 'Văn phòng', items: [''] },
-    ]);
-  
-    const [dataRange, setDataRange] = useState([
-    { group: 'Bổ sung', items: [''] },
-    { group: 'Tổ 2', items: [''] },
-    { group: 'Tổ 3', items: [''] },
-    { group: 'Tổ 4', items: [''] },
-    { group: 'Tổ 5', items: [''] },
-    { group: 'Mẫu', items: [''] },
-    { group: 'Canh hàng', items: [''] },
+  ]);
+
+  const [data, setData] = useState([
+    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'T2', items: [''] },
+    { group: 'T3', items: ['TC T3'] },
+    { group: 'Robot', items: ['TC T4'] },
+    { group: 'T5', items: ['TC T5'] },
+    { group: 'Mẫu', items: ['M3A-3B'] },
+    { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
     { group: 'Kế hoạch', items: [''] },
@@ -77,8 +75,8 @@ const ReportTrash = () => {
     { group: 'Vật tư', items: [''] },
     { group: 'IT - Bảo trì', items: [''] },
     { group: 'Văn phòng', items: [''] },
-    ]);
-  
+  ]);
+
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   
@@ -154,23 +152,61 @@ const ReportTrash = () => {
     return newArr;
   }
 
-  function trimKeepLast(arr, numToRemove = 8) {
-    if (!Array.isArray(arr) || arr.length === 0) return [];
+  function sumEvery7(arr) {
+    const result = [];
 
-    if (arr.length <= numToRemove) {
-      // Nếu mảng quá ngắn, chỉ giữ lại phần tử cuối (nếu có)
-      return arr.slice(-1);
+    for (let i = 0; i < arr.length; i += 7) {
+        let sum = 0;
+        for (let j = i; j < i + 7; j++) {
+            if(i !== arr.length - 1) {
+                sum += arr[j];
+            }
+        }
+        result.push(sum);
     }
 
-    const cutIndex = arr.length - numToRemove - 1;
-    return [...arr.slice(0, cutIndex + 1), arr[arr.length - 1]];
-  }
+    result.push(arr[arr.length - 1]);
+    result.splice(8, 2);
+    return result;
+}
+
+  // console.log(report);
+
+  // useEffect(() => {
+
+  //   const prefixes = selectedDepartment.includes('|')
+  //     ? selectedDepartment.split('|')
+  //     : [selectedDepartment];
+
+  //     const filtered = Object.entries(reportTmp)
+  //   .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
+  //   .reduce((obj, [key, value]) => {
+  //     obj[key] = value;
+  //     return obj;
+  //   }, {});
+
+  //   setReport(filtered);
+
+  //   if(selectedDepartment === '') {
+  //     setData(dataTmp);
+  //   } else {
+  //     const selected = dataTmp.filter(item => item.group === selectedDepartment);
+
+  //     setData(selected);
+  //     if(selectedDepartment === 'T3') {
+  //       setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
+  //     }
+  //   }
+
+  // }, [selectedDepartment])
+
 
   useEffect(() => {
     setLoading(true);
 
     // Gọi lần lượt từng API
     fetchTodayReport();
+
     
 
     const prefixes = selectedDepartment.includes('|')
@@ -187,33 +223,30 @@ const ReportTrash = () => {
     setReport(filtered);
 
     if(selectedDepartment === '') {
-      setDataRange(dataTmp);
+      setData(dataTmp);
     } else {
       const selected = dataTmp.filter(item => item.group === selectedDepartment);
 
-      setDataRange(selected);
+      setData(selected);
       if(selectedDepartment === 'T3') {
-        setDataRange([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
+        setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
       } else if (selectedDepartment === 'Bổ sung') {
-        setDataRange([{ group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] }])
+        setData([{ group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] }])
       } else if (selectedDepartment === 'T2') {
-        setDataRange([{ group: 'T2', items: [''] }])
+        setData([{ group: 'T2', items: [''] }])
       } else if (selectedDepartment === 'T4|Robot') {
-        setDataRange([{ group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+        setData([{ group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
                 { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
                 { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] }])
       } else if (selectedDepartment === 'T5') {
-        setDataRange([{ group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] }])
-      } else if (selectedDepartment === 'Mẫu') {
-        setDataRange([{ group: 'Mẫu', items: ['M3A-3B'] }])
-      } else if (selectedDepartment === 'Canh hàng') {
-        setDataRange([{ group: 'Canh hàng', items: ['M1A'] }])
+        setData([{ group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] }])
       }
 
     }
 
     setLoading(false);
   }, [dateOne, startDate, endDate, filterType, selectedDepartment]);
+  
 
     const fetchTodayReport = async () => {
       try {
@@ -295,7 +328,7 @@ const ReportTrash = () => {
             tmp['Logo-'],
             tmp['Ép-'],
           );
-
+          
           tmp['T3-TC T3'] = sumArrays(
             tmp['T3-M1'],
             tmp['T3-M2'],
@@ -307,6 +340,7 @@ const ReportTrash = () => {
             tmp['T3-M8'],
             tmp['T3-RC T3'],
           );
+          
           tmp['Robot-TC T4'] = sumArrays(
             tmp['T4A-M4A-4B'],
             tmp['T4A-M5A-5B'],
@@ -359,38 +393,59 @@ const ReportTrash = () => {
             tmp['Bổ sung-TC TBS'],
             tmp['-Cộng'],
           );
-          tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
-          
+        //   tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
+
+        //   if (filterType === 'range') {
+        //     tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
+        //     tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
+        //     tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
+        //     tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
+        //     tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
+        //     tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
+        //     tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
+        //     tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
+        //     tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
+        //     tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
+        //     tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
+        //     tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
+        //     tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
+        //     tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
+        //     tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
+        //     tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
+        //     tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
+        //     tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
+        //     tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
+
+        //     tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
+        //     tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
+        //     tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
+        //     tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
+        //     tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
+        //     tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
+        //     tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
+        //     tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
+        //     tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
+        //     tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
+        //     tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
+        //     tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
+        //     tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
+        //     tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
+        //     tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
+        //     tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
+        //     tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
+        //     tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
+        //     tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
+        //     tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
+        //   }
+
+        
           for (const key in tmp) {
-            tmp[key] = trimKeepLast(tmp[key]);
+            tmp[key] = sumEvery7(tmp[key]);
           }
-
-          
-            tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
-            tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
-            tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
-            tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
-            tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
-            tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
-            tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
-            tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
-            tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
-            tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
-            tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
-            tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
-            tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
-            tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
-            tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
-            tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
-            tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
-            tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
-            tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
-          
-
           setReport(tmp);
           setReportTmp(tmp);
 
-        }
+        }  
       } catch (error) {
         setLoading(false);
         console.error('Lỗi khi tải dữ liệu: ', error.message);
@@ -398,6 +453,19 @@ const ReportTrash = () => {
     };
 
   const headers = [
+    'BP/Tổ',
+    'Giẻ lau dính mực thường',
+    'Giẻ lau dính mực lapa',
+    'Băng keo',
+    'Keo bàn thải',
+    'Mực in thải',
+    'Mực in lapa thải',
+    'Vụn logo',
+    'Lụa căng khung',
+    'Tổng',
+  ];
+  
+  const headersDetail = [
     'BP/Tổ',
     'Chuyền',
     'Giẻ lau dính mực thường',
@@ -411,7 +479,12 @@ const ReportTrash = () => {
     'Tổng',
   ];
 
-  const headersRange = [
+
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    // Header dòng 1 (gồm colSpan và rowSpan)
+    const headerRow1 = [
     'BP/Tổ',
     'Giẻ lau dính mực thường',
     'Giẻ lau dính mực lapa',
@@ -422,125 +495,50 @@ const ReportTrash = () => {
     'Vụn logo',
     'Lụa căng khung',
     'Tổng',
-  ];
-
-
-//   const data = [
-//     { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
-//     { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
-//     { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },
-//     { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
-//     { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
-//     { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
-//     { group: 'Mẫu', items: ['M3A-3B'] },
-//     { group: 'Canh hàng', items: ['M1A'] },
-//     { group: 'Pha màu', items: [''] },
-//     { group: 'Chụp khuôn', items: [''] },
-//     { group: 'Kế hoạch', items: [''] },
-//     { group: 'Logo', items: [''] },
-//     { group: 'Bán hàng', items: [''] },
-//     { group: 'Chất lượng', items: [''] },
-//     { group: 'Kcs', items: [''] },
-//     { group: 'Điều hành', items: [''] },
-//     { group: 'Ép', items: [''] },
-//     { group: 'Sửa hàng', items: [''] },
-//     { group: 'Vật tư', items: [''] },
-//     { group: 'IT - Bảo trì', items: [''] },
-//     { group: 'Văn phòng', items: [''] },
-//     { group: '', items: ['Cộng'] },
-//   ];
-
-
-
-  const exportToExcel2 = () => {
-    const wb = XLSX.utils.book_new();
-
-    // Header dòng 1 (gồm colSpan và rowSpan)
-    const headerRow1 = [
-      'BP/Tổ',
-      'Giẻ lau dính mực thường',
-      'Giẻ lau dính mực lapa',
-      'Băng keo',
-      'Keo bàn thải',
-      'Mực in thải',
-      'Mực in lapa thải',
-      'Vụn logo',
-      'Lụa căng khung',
-      'Tổng',
     ];
-    
     const headerRow1DEtail = [
-      'BP/Tổ',
-      'Chuyền',
-      'Giẻ lau dính mực thường',
-      'Giẻ lau dính mực lapa',
-      'Băng keo',
-      'Keo bàn thải',
-      'Mực in thải',
-      'Mực in lapa thải',
-      'Vụn logo',
-      'Lụa căng khung',
-      'Tổng',
+    'BP/Tổ',
+    'Chuyền',
+    'Giẻ lau dính mực thường',
+    'Giẻ lau dính mực lapa',
+    'Băng keo',
+    'Keo bàn thải',
+    'Mực in thải',
+    'Mực in lapa thải',
+    'Vụn logo',
+    'Lụa căng khung',
+    'Tổng',
     ];
 
-    const dataExcel = [
-      { group: 'Bổ sung', items: [''] },
-      { group: 'Tổ 3', items: [''] },
-      { group: 'Tổ 4', items: [''] },
-      { group: 'Tổ 5', items: [''] },
-      { group: 'Mẫu', items: [''] },
-      { group: 'Canh hàng', items: [''] },
-      { group: 'Pha màu', items: [''] },
-      { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Logo', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
-      { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
-      { group: 'Ép', items: [''] },
-      { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
-      { group: 'Tổng cộng', items: [''] },
-    ];
+    let dataExcel = [];
+
+    if(selectedDepartment === '') {
+      dataExcel = [
+            ...data,
+            { group: 'Tổng cộng', items: [''] },
+      ]
+    } else {
+      dataExcel = [
+            ...data,
+      ]
+    }
 
     // Dữ liệu bảng
-    const rows = dataRange?.map((d, idx) => {
-      const key = `${
-        idx === 0
-          ? 'T3-TC T3'
-          : idx === 1
-          ? 'Robot-TC T4'
-          : idx === 2
-          ? 'T5-TC T5'
-          : idx === 3
-          ? 'Bổ sung-TC TBS'
-          : idx === 4
-          ? 'Mẫu-M3A-3B'
-          : idx === 5
-          ? 'Canh hàng-M1A'
-          : d.group + '-'
-      }`;
-      const data = report[key];
+    const rows = dataExcel.flatMap((d) =>
+      d.items.map((item, idx) => {
+        const key = `${d.group}-${item}`;
+        const data = report[key];
 
-      const values = data?.map((e) => (e === 0 ? '-' : e));
+        const values = data?.map((e) => (e === 0 ? '-' : e));
 
-      return [
-        d.group,
-        values[0],
-        values[7],
-        values[14],
-        values[21],
-        values[28],
-        values[35],
-        values[42],
-        values[49],
-        values[56],
-        values[63],
-      ];
-    });
+        if(selectedDepartment === '') {
+          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', ...values];
+        } else {
+          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
+        }
+
+      }),
+    );
 
     const today = new Date().toLocaleDateString('vi-VN');
     const title = [
@@ -551,13 +549,45 @@ const ReportTrash = () => {
       }`,
     ];
 
-    const wsData = [title, headerRow1, ...rows];
+    const wsData = [title, selectedDepartment === '' ? headerRow1 : headerRow1DEtail, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Gộp ô (colSpan và rowSpan) trong header
     ws['!merges'] = [
-      // Gộp ô header chính (rowSpan 2)
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+
+      // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
+      { s: { r: 54, c: 0 }, e: { r: 54, c: 1 } },
     ];
 
+    if(selectedDepartment === 'Bổ sung') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } },
+      ];
+    } else if(selectedDepartment === 'T3') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 11, c: 0 } },
+      ];
+    } else if(selectedDepartment === 'T4|Robot') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 17, c: 0 } },
+      ];
+    } else if(selectedDepartment === 'T5') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 8, c: 0 } },
+      ];
+    }
+    
+    if(selectedDepartment === '') {
+      ws['!merges'].unshift({
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: 9 },
+      });
+    } else {
+      ws['!merges'].unshift({
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: 10 },
+      });
+    }
     // Style title row
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
     ws[titleCell].s = {
@@ -595,7 +625,7 @@ const ReportTrash = () => {
       }
     }
 
-    for (let col = 0; col <= 35; col++) {
+    for (let col = 0; col <= 65; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -613,7 +643,7 @@ const ReportTrash = () => {
 
     // Tô màu và đậm dòng "Tổng cộng"
     const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 35; col++) {
+    for (let col = 0; col <= 65; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
       if (!ws[cellAddress]) continue;
 
@@ -621,34 +651,6 @@ const ReportTrash = () => {
         ...ws[cellAddress].s,
         fill: {
           fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    for (let row = 2; row <= 20; row++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 9 });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'f78888' }, // màu đỏ nhạt
-        },
-      };
-    }
-
-    for (let row = 2; row <= 20; row++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 11 });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'FFF3CD' }, // màu đỏ nhạt
         },
         font: {
           bold: true,
@@ -691,12 +693,12 @@ const ReportTrash = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            onClick={exportToExcel2}
+            onClick={exportToExcel}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Xuất Excel
           </button>
-          
+
     {/* 👇 Chọn bộ phận */}
 <div className="flex flex-col mb-3 min-w-[160px]">
   <label className="text-sm font-semibold mb-1">Chọn bộ phận</label>
@@ -795,159 +797,124 @@ const ReportTrash = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {selectedDepartment === '' ? headersRange.map((header, idx) => (
-                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
+                {selectedDepartment === '' ? headers.map((header, idx) => (
+                      <th
+                        key={idx}
+                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
+                      >
                         {header}
                       </th>
                     )) : 
-                    headers.map((header, idx) => (
-                      <th key={idx} className="border border-gray-400 px-2 py-1 text-center bg-gray-200">
+                    headersDetail.map((header, idx) => (
+                      <th
+                        key={idx}
+                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
+                      >
                         {header}
                       </th>
-                    ))}
+                    ))
+                  }
               </tr>
             </thead>
             <tbody>
-              {selectedDepartment === "" ? 
-              dataRange?.map((group, idx) => (
-                    <tr key={`${idx}-`}>
-                      <td className="border border-gray-300 px-2 py-1">{selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'Tổ 1' : group.group}</td>
-                      
-                      {report[
-                        `${
-                          idx === 0
-                            ? 'Bổ sung-TC TBS'
-                            : idx === 1
-                            ? 'T2-'
-                            : idx === 2
-                            ? 'T3-TC T3'
-                            : idx === 3
-                            ? 'Robot-TC T4'
-                            : idx === 4
-                            ? 'T5-TC T5'
-                            : idx === 5
-                            ? 'Mẫu-M3A-3B'
-                            : idx === 6
-                            ? 'Canh hàng-M1A'
-                            : group.group + '-'
-                        }`
-                      ]?.map(
-                        (e, i) =>
-                          i % 7 === 0 && (
-                            <td
-                              key={i}
-                              className={`border font-[600] ${
-                                 'border-gray-300'
-                              } text-center px-2 py-1`}
-                            >
-                              {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
-                            </td>
-                          ),
-                      )}
-                    </tr>
-                  )) : 
-                  dataRange?.map((group, idx) =>
-                                      group?.items?.map((item, iidx) => (
-                                        <tr
-                                          className={`${
-                                                selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
-                                                selectedDepartment === 'T3' && iidx === 9 ? 'bg-[#cfb8b8]' :
-                                                selectedDepartment === 'T4|Robot' && idx === 2 && iidx === 4 ? 'bg-[#cfb8b8]' :
-                                                selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : ''
-                                          }`}
-                                          key={`${idx}-${iidx}`}
-                                        >
-                                          {iidx === 0 && (
-                                            <td
-                                              rowSpan={
-                                                selectedDepartment === 'Bổ sung' ? 3 :
-                                                selectedDepartment === 'T3' ? 10 :
-                                                selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
-                                                selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
-                                                selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
-                                                selectedDepartment === 'T5' ? 7 : 1
-                                              }
-                                              className="border border-gray-300 px-2 py-1"
-                                            >
-                                              {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'T1' : group.group}
-                                            </td>
-                                          )}
-                                          {
-                                            selectedDepartment !== "" &&
-                                          <td className={`border border-gray-300 px-2 py-1`}>{item}</td>
-                                          }
-                                          {report[`${group.group}-${item}`]?.map((e, i) => i % 7 === 0 && (
-                                            <td
-                                              key={i}
-                                              className={`border border-gray-300 text-center px-2 py-1`}
-                                              onDoubleClick={() => {
-                                                
-                                              }}
-                                            >
-                                              {
-                                                user?.roleEditReport && statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
-                                                <div className="flex items-center space-x-2">
-                                                  <input
-                                                    ref={inputRef}
-                                                    className="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-                                                    type="text"
-                                                    value={value}
-                                                    onChange={(e) => {setValue(e.target.value)}}
-                                                  />
-                                                  <button
-                                                    className="text-green-600 hover:text-green-800 transition-colors"
-                                                    onClick={() => {}}
-                                                  >
-                                                    <FaCheck className="w-4 h-4" />
-                                                  </button>
-                                                  <button
-                                                    className="text-red-600 hover:text-red-800 transition-colors"
-                                                    onClick={() => {
-                                                      setStatusUpdate(false);
-                                                      setSelectInput({
-                                                          group: "",
-                                                          item: "",
-                                                          index: "",
-                                                      })
-                                                      setValue(0);
-                                                    }}
-                                                  >
-                                                    <FaTimes className="w-4 h-4" />
-                                                  </button>
-                                                </div> :
-                                                <button>
-                                                  {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
-                                                </button>
-                                              }
-                                            </td>
-                                          ))}
-                                        </tr>
-                                      ))
-                                    )
-                  }
-                  {
-                    selectedDepartment === "" &&
-              <tr className="bg-[#9e8f8f]">
-                <td
-                  className="border border-gray-400 text-center px-2 py-1 font-bold"
-                  colSpan={1}
-                >
-                  Tổng cộng
-                </td>
-                {report['Tổng cộng-']?.map(
-                  (e, i) =>
-                    i % 7 === 0 && (
-                      <td
-                        key={i}
-                        colSpan={1}
-                        className="border border-gray-400 text-center font-bold px-2 py-1"
+              {data?.map((group, idx) =>
+                    group?.items?.map((item, iidx) => (
+                      <tr
+                        className={`${
+                              selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T3' && iidx === 9 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T4|Robot' && idx === 2 && iidx === 4 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : ''
+                        }`}
+                        key={`${idx}-${iidx}`}
                       >
-                        {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
-                      </td>
-                    ),
-                )}
-              </tr>
-                  }
+                        {iidx === 0 && (
+                          <td
+                            rowSpan={
+                              selectedDepartment === 'Bổ sung' ? 3 :
+                              selectedDepartment === 'T3' ? 10 :
+                              selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
+                              selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
+                              selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
+                              selectedDepartment === 'T5' ? 7 : 1
+                            }
+                            className="border border-gray-300 px-2 py-1"
+                          >
+                            {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'T1' : group.group}
+                          </td>
+                        )}
+                        {
+                          selectedDepartment !== "" &&
+                        <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
+                        }
+                        {report[`${group.group}-${item}`]?.map((e, i) => (
+                          <td
+                            key={i}
+                            className={`border border-gray-300 text-center px-2 py-1 ${i === 63 && 'font-[600]'}`}
+                            onDoubleClick={() => {
+                              
+                            }}
+                          >
+                            {
+                              user?.roleEditReport && statusUpdate && filterType === 'one' && selectInput.group === group.group && selectInput.item === item && selectInput.index === i ?
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  ref={inputRef}
+                                  className="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                                  type="text"
+                                  value={value}
+                                  onChange={(e) => {setValue(e.target.value)}}
+                                />
+                                <button
+                                  className="text-green-600 hover:text-green-800 transition-colors"
+                                  onClick={() => {}}
+                                >
+                                  <FaCheck className="w-4 h-4" />
+                                </button>
+                                <button
+                                  className="text-red-600 hover:text-red-800 transition-colors"
+                                  onClick={() => {
+                                    setStatusUpdate(false);
+                                    setSelectInput({
+                                        group: "",
+                                        item: "",
+                                        index: "",
+                                    })
+                                    setValue(0);
+                                  }}
+                                >
+                                  <FaTimes className="w-4 h-4" />
+                                </button>
+                              </div> :
+                              <button>
+                                {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
+                              </button>
+                            }
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
+              {
+                selectedDepartment === "" &&
+                <tr className="bg-[#9e8f8f]">
+                  <td
+                    className="border border-gray-400 text-center px-2 py-1 font-bold"
+                    colSpan={1}
+                  >
+                    Tổng cộng
+                  </td>
+                  {report['Tổng cộng-']?.map(
+                    (e, i) =>
+                      <td
+                          key={i}
+                          className="border border-gray-400 text-center font-bold px-2 py-1"
+                        >
+                          {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
+                        </td>
+                  )}
+                </tr>
+              }
             </tbody>
           </table>
         </div>

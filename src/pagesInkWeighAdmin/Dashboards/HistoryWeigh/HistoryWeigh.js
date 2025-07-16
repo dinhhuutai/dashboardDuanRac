@@ -84,7 +84,7 @@ function HistoryWeigh() {
 
   const formatWeight = (num) => {
     if (!num) return '0';
-    return `${Number(num).toFixed(2).toLocaleString('vi-VN')}`; // ví dụ: 4,001.4 g
+    return `${Number(num).toFixed(1).toLocaleString('vi-VN')}`; // ví dụ: 4,001.4 g
   };
 
 
