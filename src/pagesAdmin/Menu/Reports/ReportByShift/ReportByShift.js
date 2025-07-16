@@ -43,17 +43,10 @@ const ReportByShift = () => {
     { group: 'T5', items: ['TC T5'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
-    { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
     { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
+    { group: 'Pha màu', items: [''] },
   ]);
 
   const [data, setData] = useState([
@@ -64,17 +57,10 @@ const ReportByShift = () => {
     { group: 'T5', items: ['TC T5'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
-    { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
     { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
+    { group: 'Pha màu', items: [''] },
   ]);
 
   const tmp = useSelector(userSelector);
@@ -521,7 +507,7 @@ const ReportByShift = () => {
         const key = `${d.group}-${item}`;
         const data = report[key];
 
-        const values = data?.map((e) => (e === 0 ? '-' : e));
+        const values = data?.map((e) => (e === 0 ? '-' : e.toFixed(1)));
 
         if(selectedDepartment === '') {
           return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', ...values];

@@ -432,18 +432,10 @@ const Report = () => {
     { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
-    { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
     { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
-    { group: '', items: ['Cộng'] },
+    { group: 'Pha màu', items: [''] },
   ];
 
   const dataRange = [
@@ -454,17 +446,10 @@ const Report = () => {
     { group: 'Tổ 5', items: [''] },
     { group: 'Mẫu', items: [''] },
     { group: 'Canh hàng', items: [''] },
-    { group: 'Pha màu', items: [''] },
     { group: 'Chụp khuôn', items: [''] },
-    { group: 'Kế hoạch', items: [''] },
-    { group: 'Bán hàng', items: [''] },
-    { group: 'Chất lượng', items: [''] },
     { group: 'Kcs', items: [''] },
-    { group: 'Điều hành', items: [''] },
     { group: 'Sửa hàng', items: [''] },
-    { group: 'Vật tư', items: [''] },
-    { group: 'IT - Bảo trì', items: [''] },
-    { group: 'Văn phòng', items: [''] },
+    { group: 'Pha màu', items: [''] },
   ];
 
   const exportToExcel = () => {
@@ -606,18 +591,10 @@ const Report = () => {
       { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
       { group: 'Mẫu', items: ['M3A-3B'] },
       { group: 'Canh hàng', items: ['M1A'] },
-      { group: 'Pha màu', items: [''] },
       { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
       { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
       { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
-      { group: '', items: ['Cộng'] },
+      { group: 'Pha màu', items: [''] },
       { group: 'Tổng cộng', items: [''] },
     ];
 
@@ -627,7 +604,7 @@ const Report = () => {
         const key = `${d.group}-${item}`;
         const data = report[key];
 
-        const values = data?.map((e) => (e === 0 ? '-' : e)) || [];
+        const values = data?.map((e) => (e === 0 ? '-' : e.toFixed(1))) || [];
 
         return [idx === 0 ? d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
       }),
@@ -672,15 +649,15 @@ const Report = () => {
       { s: { r: 33, c: 0 }, e: { r: 39, c: 0 } },
 
       // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
-      { s: { r: 55, c: 0 }, e: { r: 55, c: 1 } },
-      { s: { r: 55, c: 2 }, e: { r: 55, c: 8 } },
-      { s: { r: 55, c: 9 }, e: { r: 55, c: 15 } },
-      { s: { r: 55, c: 16 }, e: { r: 55, c: 22 } },
-      { s: { r: 55, c: 23 }, e: { r: 55, c: 29 } },
-      { s: { r: 55, c: 30 }, e: { r: 55, c: 36 } },
-      { s: { r: 55, c: 37 }, e: { r: 55, c: 43 } },
-      { s: { r: 55, c: 44 }, e: { r: 55, c: 50 } },
-      { s: { r: 55, c: 51 }, e: { r: 55, c: 57 } },
+      { s: { r: 46, c: 0 }, e: { r: 46, c: 1 } },
+      { s: { r: 46, c: 2 }, e: { r: 46, c: 8 } },
+      { s: { r: 46, c: 9 }, e: { r: 46, c: 15 } },
+      { s: { r: 46, c: 16 }, e: { r: 46, c: 22 } },
+      { s: { r: 46, c: 23 }, e: { r: 46, c: 29 } },
+      { s: { r: 46, c: 30 }, e: { r: 46, c: 36 } },
+      { s: { r: 46, c: 37 }, e: { r: 46, c: 43 } },
+      { s: { r: 46, c: 44 }, e: { r: 46, c: 50 } },
+      { s: { r: 46, c: 51 }, e: { r: 46, c: 57 } },
     ];
 
     ws['!merges'].unshift({
@@ -884,17 +861,10 @@ const Report = () => {
       { group: 'Tổ 5', items: [''] },
       { group: 'Mẫu', items: [''] },
       { group: 'Canh hàng', items: [''] },
-      { group: 'Pha màu', items: [''] },
       { group: 'Chụp khuôn', items: [''] },
-      { group: 'Kế hoạch', items: [''] },
-      { group: 'Bán hàng', items: [''] },
-      { group: 'Chất lượng', items: [''] },
       { group: 'Kcs', items: [''] },
-      { group: 'Điều hành', items: [''] },
       { group: 'Sửa hàng', items: [''] },
-      { group: 'Vật tư', items: [''] },
-      { group: 'IT - Bảo trì', items: [''] },
-      { group: 'Văn phòng', items: [''] },
+      { group: 'Pha màu', items: [''] },
       { group: 'Tổng cộng', items: [''] },
     ];
 
@@ -919,7 +889,7 @@ const Report = () => {
       }`;
       const data = report[key];
 
-      const values = data?.map((e) => (e === 0 ? '-' : e));
+      const values = data?.map((e) => (e === 0 ? '-' : e.toFixed(1)));
 
       return [
         d.group,
