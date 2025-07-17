@@ -230,7 +230,13 @@ function FeedbackFlow() {
 
 {showSalaryModal && (
   <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-xl text-center shadow-xl max-w-sm w-full">
+      <div className="bg-white p-6 rounded-xl text-center shadow-xl max-w-sm w-full relative">
+        <button
+      onClick={() => setShowSalaryModal(false)}
+      className="absolute top-2 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
+    >
+      ✕
+    </button>
         <h2 className="text-lg font-bold mb-4">💰 Mức lương mong muốn của bạn?</h2>
         <form className="space-y-3 text-left text-sm text-gray-700">
           {salaryOptions.map((amount, index) => {
@@ -267,7 +273,6 @@ function FeedbackFlow() {
                       setSelectedSalary(amount);
                     }
                   }}
-                  disabled={!isSafe}
                   className={`accent-purple-600 ${!isSafe ? "cursor-pointer" : ""}`}
                 />
                 <span>{amount}</span>
