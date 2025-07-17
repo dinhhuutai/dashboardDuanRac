@@ -19,6 +19,7 @@ function FeedbackFlow() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [step, setStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -26,6 +27,11 @@ function FeedbackFlow() {
   const [contactInfo, setContactInfo] = useState({ name: "", department: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+
+  const [showSalaryModal, setShowSalaryModal] = useState(false);
+  const [selectedSalary, setSelectedSalary] = useState("");
+  const [jumpIndex, setJumpIndex] = useState(null); // để xác định radio đang nhảy
+  const salaryOptions = ["5tr", "15tr", "20tr", "50tr"];
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -103,6 +109,7 @@ function FeedbackFlow() {
         setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f5f5ff]">
@@ -198,7 +205,12 @@ function FeedbackFlow() {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 setSelectedCategory(item.suggestionCategorieId);
-                setStep(2);
+                setSelectedCategoryName(item.label);
+                if (item.label.toLowerCase().includes("lương")) {
+                  setShowSalaryModal(true);
+                } else {
+                  setStep(2);
+                }
               }}
               className="w-full flex items-center justify-start space-x-2 border border-gray-300 bg-white rounded-full px-4 py-2 hover:bg-purple-100 text-sm text-gray-800"
             >
@@ -216,6 +228,73 @@ function FeedbackFlow() {
   </motion.div>
 )}
 
+{showSalaryModal && (
+  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-xl text-center shadow-xl max-w-sm w-full">
+        <h2 className="text-lg font-bold mb-4">💰 Mức lương mong muốn của bạn?</h2>
+        <form className="space-y-3 text-left text-sm text-gray-700">
+          {salaryOptions.map((amount, index) => {
+            const isSafe = amount === "5tr";
+            const randomOffset = () => Math.floor(Math.random() * 100 - 50); // -50 -> +50
+
+            return (
+              <motion.label
+                key={index}
+                className="flex items-center space-x-2 relative"
+                animate={
+                  jumpIndex === index
+                    ? {
+                        x: randomOffset(),
+                        y: randomOffset(),
+                      }
+                    : { x: 0, y: 0 }
+                }
+                transition={{ type: "spring", stiffness: 300 }}
+                onMouseEnter={() => {
+                  if (!isSafe) setJumpIndex(index);
+                }}
+                onMouseLeave={() => {
+                  if (!isSafe) setJumpIndex(null);
+                }}
+              >
+                <input
+                  type="radio"
+                  name="salary"
+                  value={amount}
+                  checked={selectedSalary === amount}
+                  onChange={() => {
+                    if (isSafe) {
+                      setSelectedSalary(amount);
+                    }
+                  }}
+                  disabled={!isSafe}
+                  className={`accent-purple-600 ${!isSafe ? "cursor-pointer" : ""}`}
+                />
+                <span>{amount}</span>
+              </motion.label>
+            );
+          })}
+        </form>
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={() => {
+              setStep(2);
+              setShowSalaryModal(false);
+            }}
+            disabled={!selectedSalary}
+            className={`px-4 py-2 rounded-full text-white font-semibold ${
+              selectedSalary
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            Tiếp tục
+          </button>
+        </div>
+      </div>
+    </div>
+)}
+
 
         {/* Step 2: Feedback + Images */}
         {step === 2 && (
@@ -229,7 +308,7 @@ function FeedbackFlow() {
   >
     <h2 className="text-lg font-bold text-black mb-3 flex items-center justify-center">
       <FaPenNib className="text-purple-600 mr-2" />
-      Ghi ý kiến của bạn:
+      Ghi ý kiến của bạn{selectedCategoryName?.includes('Kh') ? '' : ` về ${selectedCategoryName}`}
     </h2>
 
     <textarea

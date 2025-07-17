@@ -701,17 +701,10 @@ const ReportTrash = () => {
     <option value="T5">Tổ 5</option>
     <option value="Mẫu">Mẫu</option>
     <option value="Canh hàng">Canh Hàng</option>
-    <option value="Pha màu">Pha Màu</option>
     <option value="Chụp khuôn">Chụp Khuôn</option>
-    <option value="Kế hoạch">Kế Hoạch</option>
-    <option value="Bán hàng">Bán Hàng</option>
-    <option value="Chất lượng">Chất Lượng</option>
     <option value="Kcs">KCS</option>
-    <option value="Điều hành">Điều Hành</option>
     <option value="Sửa hàng">Sửa Hàng</option>
-    <option value="Vật tư">Vật Tư</option>
-    <option value="IT - Bảo trì">IT - Bảo Trì</option>
-    <option value="Văn phòng">Văn Phòng</option>
+    <option value="Pha màu">Pha Màu</option>
   </select>
 </div>
 
