@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
 import { FaTrash } from 'react-icons/fa';
+import * as XLSX from "xlsx-js-style";
+import { format } from "date-fns";
+
 
 function History() {
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -16,6 +19,107 @@ function History() {
 
     const [departments, setDepartments] = useState([]);
     const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
+
+    const exportToExcel = () => {
+  const aoaData = [];
+
+  // 👉 Thêm tiêu đề
+  aoaData.push([`Kiểm tra phân loại ngày ${format(new Date(selectedDate), "dd/MM/yyyy")}`]);
+
+  // 👉 Thêm header
+  aoaData.push([
+    "STT", "Bộ phận", "Đơn vị", "Thời gian",
+    "Loại rác", "SL Thực tế", "Phân loại đúng",
+    "Ghi chú", "Người kiểm tra"
+  ]);
+
+  const merges = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } } // merge dòng tiêu đề (9 cột)
+  ];
+
+  let rowIndex = 2;
+
+  historyData.forEach((item, idx) => {
+    const groupSize = item.details.length;
+    item.details.forEach((detail, i) => {
+      aoaData.push([
+        i === 0 ? idx + 1 : "",
+        i === 0 ? item.departmentName : "",
+        i === 0 ? item.unitName : "",
+        i === 0 ? formatDateTime(item.checkTime) : "",
+        detail.trashName,
+        detail.quantity,
+        detail.isCorrectlyClassified ? "✅" : "❌",
+        i === 0 ? item.feedbackNote || "" : "",
+        i === 0 ? item.userName || "" : "",
+      ]);
+      rowIndex++;
+    });
+
+    const startRow = rowIndex - groupSize;
+    const endRow = rowIndex - 1;
+    const mergeCols = [0, 1, 2, 3, 7, 8];
+
+    mergeCols.forEach(col => {
+      merges.push({
+        s: { r: startRow, c: col },
+        e: { r: endRow, c: col }
+      });
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoaData);
+  ws["!merges"] = merges;
+
+  // 👉 Tự động chỉnh độ rộng cột
+  ws["!cols"] = aoaData[1].map((_, colIdx) => {
+    if (colIdx === 0) return { wch: 5 }; // STT nhỏ
+    const maxLength = Math.max(...aoaData.map(row => String(row[colIdx] || "").length));
+    return { wch: maxLength + 2 };
+  });
+
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+
+  // 👉 Áp dụng style cho từng ô
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+
+      if (!ws[cellAddress]) continue;
+
+      // Style chung cho tất cả các ô
+      ws[cellAddress].s = {
+        font: {
+          bold: R === 0 || R === 1,
+          sz: R === 0 ? 14 : 11,
+          color: { rgb: "000000" },
+        },
+        alignment: {
+          vertical: "center",
+          horizontal: "center",
+          wrapText: true,
+        },
+        fill: R === 1
+          ? { fgColor: { rgb: "FFFACD" } } // header: vàng nhạt
+          : R === 0
+          ? { fgColor: { rgb: "FFFFFF" } } // tiêu đề: trắng
+          : undefined,
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } },
+        },
+      };
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "LichSuPhanLoai");
+
+  XLSX.writeFile(wb, `LichSuPhanLoai_${selectedDate}.xlsx`);
+};
+
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -88,26 +192,36 @@ function History() {
       <div className="p-4 bg-white rounded-xl shadow space-y-4">
         <h1 className="text-xl font-semibold">🗂️ Lịch sử kiểm tra phân loại</h1>
 
-        <div className="flex flex-wrap gap-4 items-center">
-            <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="border px-3 py-2 rounded-md text-sm"
-            />
+        <div className="flex flex-wrap items-center justify-between">
+            <div className='flex gap-4'>
+                <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="border px-3 py-2 rounded-md text-sm"
+                />
 
-            <select
-                value={selectedDepartmentId}
-                onChange={(e) => setSelectedDepartmentId(e.target.value)}
-                className="border px-3 py-2 rounded-md text-sm"
+                <select
+                    value={selectedDepartmentId}
+                    onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                    className="border px-3 py-2 rounded-md text-sm"
+                >
+                    <option value="">Tất cả bộ phận</option>
+                    {departments.map((dept) => (
+                    <option key={dept.departmentID} value={dept.departmentID}>
+                        {dept.departmentName}
+                    </option>
+                    ))}
+                </select>
+            </div>
+
+            <button
+                onClick={exportToExcel}
+                className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
             >
-                <option value="">Tất cả bộ phận</option>
-                {departments.map((dept) => (
-                <option key={dept.departmentID} value={dept.departmentID}>
-                    {dept.departmentName}
-                </option>
-                ))}
-            </select>
+                📥 Xuất biểu mẫu
+            </button>
+
         </div>
 
 
