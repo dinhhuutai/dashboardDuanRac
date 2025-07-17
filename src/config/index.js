@@ -5,6 +5,7 @@ import routes from './routes';
 export const BASE_URL = 'https://api.thuanhunglongan.com';
 
 //export const BASE_URL_SERVER_THLA = 'http://10.84.40.34:5000';
+//export const BASE_URL_SERVER_THLA = 'http://10.84.40.34:5001'; // của thiết bị IOT
 //export const BASE_URL_SERVER_THLA = 'http://localhost:5000';
 export const BASE_URL_SERVER_THLA = 'https://api.noibo.thuanhunglongan.com';
 

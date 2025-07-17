@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { BASE_URL } from "~/config";
 import { FaSpinner } from "react-icons/fa";
+import ImageDetailModal from "~/components/ImageDetailModal"; // tùy theo path bạn lưu file modal
+
 
 function SuggestionList() {
   const [data, setData] = useState([]);
@@ -10,6 +12,10 @@ function SuggestionList() {
   const [filterDate, setFilterDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [filterCategory, setFilterCategory] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null); // <--- NEW
+
+  const [zoomedImage, setZoomedImage] = useState(null);
+const openImageModal = (url) => setZoomedImage(url);
 
   useEffect(() => {
     fetchCategories();
@@ -49,7 +55,17 @@ function SuggestionList() {
     }
   };
 
-  console.log(data);
+  const handleRowClick = async (item) => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
+      setSelectedItem({ ...item, images: res.data.data || [] });
+    } catch (err) {
+      console.error("Failed to fetch images", err);
+      setSelectedItem({ ...item, images: [] });
+    }
+  };
+
+  const closeModal = () => setSelectedItem(null);
 
   return (
     <div className="p-4">
@@ -65,7 +81,7 @@ function SuggestionList() {
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring focus:border-blue-500"
+              className="border border-gray-300 px-4 py-2 rounded-md"
             />
           </div>
 
@@ -74,7 +90,7 @@ function SuggestionList() {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring focus:border-blue-500"
+              className="border border-gray-300 px-4 py-2 rounded-md"
             >
               <option value="">Tất cả danh mục</option>
               {categories.map((cat) => (
@@ -111,29 +127,26 @@ function SuggestionList() {
                 {data.map((item, idx) => (
                   <tr
                     key={item.suggestionId}
-                    className={`${
+                    onClick={() => handleRowClick(item)}
+                    className={`cursor-pointer ${
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     } hover:bg-blue-100 transition`}
                   >
                     <td className="p-3 border text-center">{idx + 1}</td>
                     <td className="p-3 border">{item.categoryName}</td>
-                    <td
-                      className="p-3 border max-w-[300px] truncate text-gray-700"
-                      title={item.content}
-                    >
+                    <td className="p-3 border max-w-[300px] truncate" title={item.content}>
                       {item.content}
                     </td>
                     <td className="p-3 border text-gray-600">
-                        {(() => {
-  const d = new Date(item.created_at);
-  const year = d.getUTCFullYear();
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const hour = String(d.getUTCHours()).padStart(2, "0");
-  const minute = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${day}/${month}/${year} ${hour}:${minute}`;
-})()}
-
+                      {(() => {
+                        const d = new Date(item.created_at);
+                        const year = d.getUTCFullYear();
+                        const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+                        const day = String(d.getUTCDate()).padStart(2, "0");
+                        const hour = String(d.getUTCHours()).padStart(2, "0");
+                        const minute = String(d.getUTCMinutes()).padStart(2, "0");
+                        return `${day}/${month}/${year} ${hour}:${minute}`;
+                      })()}
                     </td>
                     <td className="p-3 border">{item.sender_name || "Ẩn danh"}</td>
                     <td className="p-3 border">{item.sender_department || "-"}</td>
@@ -145,6 +158,13 @@ function SuggestionList() {
           </div>
         )}
       </div>
+
+      {selectedItem && (
+  <ImageDetailModal selectedItem={selectedItem} closeModal={closeModal} />
+)}
+
+
+
     </div>
   );
 }
