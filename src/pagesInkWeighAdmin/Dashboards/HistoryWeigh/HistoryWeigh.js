@@ -167,9 +167,9 @@ function HistoryWeigh() {
       <th className="border border-gray-300 px-4 py-3">Mã cân</th>
       <th className="border border-gray-300 px-4 py-3">Nghiệp vụ</th>
       <th className="border border-gray-300 px-4 py-3">Mã HSKT</th>
-      <th className="border border-gray-300 px-4 py-3">Bộ phận</th>
-      <th className="border border-gray-300 px-4 py-3">Đơn vị</th>
-      <th className="border border-gray-300 px-4 py-3">Ca làm</th>
+      <th className="border border-gray-300 px-4 py-3">Tổ in</th>
+      <th className="border border-gray-300 px-4 py-3">Chuyền</th>
+      <th className="border border-gray-300 px-4 py-3">Số CT</th>
       <th className="border border-gray-300 px-4 py-3">Thời gian</th>
       <th className="border border-gray-300 px-4 py-3">Mã mực</th>
       <th className="border border-gray-300 px-4 py-3">Tên mực</th>
