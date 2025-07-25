@@ -882,7 +882,7 @@ const ReportByShift = () => {
                             }
                             className="border border-gray-300 px-2 py-1"
                           >
-                            {selectedDepartment === '' && group.group === 'Robot' ? 'T4' : group.group === 'Bổ sung' ? 'T1' : group.group}
+                            {group.group === 'Bổ sung' ? 'T1' : group.group}
                           </td>
                         )}
                         {
