@@ -48,26 +48,26 @@ function Sidebar() {
           <ul className="mt-[12px]">
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
                   <NavLink
-                    to={config.routes.adminInkWeighAnalytics}
+                    to={config.routes.adminInkWeighProductionOrder}
                     className={(nav) =>
                       nav.isActive
                         ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Tổng hợp
+                    Lệnh sản xuất
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
                   <NavLink
-                    to={config.routes.adminInkWeighReport}
+                    to={config.routes.adminInkWeighInkTransferCart}
                     className={(nav) =>
                       nav.isActive
                         ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    Báo cáo
+                    Xe cấp mực
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">

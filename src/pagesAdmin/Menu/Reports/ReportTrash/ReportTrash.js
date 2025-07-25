@@ -36,11 +36,13 @@ const ReportTrash = () => {
   const [endDate, setEndDate] = useState(new Date());
   
   const [dataTmp, setDataTmp] = useState([
-    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
     { group: 'T2', items: [''] },
-    { group: 'T3', items: ['TC T3'] },
-    { group: 'Robot', items: ['TC T4'] },
-    { group: 'T5', items: ['TC T5'] },
+    { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
+    { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+    { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },      
+    { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
+    { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Chụp khuôn', items: [''] },
@@ -50,11 +52,13 @@ const ReportTrash = () => {
   ]);
 
   const [data, setData] = useState([
-    { group: 'Bổ sung', items: ['TC TBS'] },
+    { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
     { group: 'T2', items: [''] },
-    { group: 'T3', items: ['TC T3'] },
-    { group: 'Robot', items: ['TC T4'] },
-    { group: 'T5', items: ['TC T5'] },
+    { group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] },
+    { group: 'T4A', items: ['M4A-4B', 'M5A-5B', 'M6A-6B', 'M7A-7B', 'M8A-8B', 'M9A-9B'] },
+    { group: 'T4B', items: ['M10A', 'M11A', 'M12A', 'M13A', 'M14A'] },      
+    { group: 'Robot', items: ['MRB1', 'MRB2', 'MRB3', 'RC T4', 'TC T4'] },
+    { group: 'T5', items: ['M10B', 'M11B', 'M12B', 'M13B', 'M14B', 'RC T5', 'TC T5'] },
     { group: 'Mẫu', items: ['M3A-3B'] },
     { group: 'Canh hàng', items: ['M1A'] },
     { group: 'Chụp khuôn', items: [''] },
@@ -516,12 +520,8 @@ const ReportTrash = () => {
         const data = report[key];
 
         const values = data?.map((e) => (e === 0 ? '-' : e.toFixed(1)));
-
-        if(selectedDepartment === '') {
-          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', ...values];
-        } else {
-          return [idx === 0 ? d.group === 'Robot' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
-        }
+        
+        return [idx === 0 ? d.group === 'T4A' && selectedDepartment !== '' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
 
       }),
     );
@@ -535,15 +535,9 @@ const ReportTrash = () => {
       }`,
     ];
 
-    const wsData = [title, selectedDepartment === '' ? headerRow1 : headerRow1DEtail, ...rows];
+    const wsData = [title, headerRow1DEtail, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Gộp ô (colSpan và rowSpan) trong header
-    ws['!merges'] = [
-
-      // Merge dòng 51 (sau khi offset thêm 1 dòng thành 52)
-      { s: { r: 54, c: 0 }, e: { r: 54, c: 1 } },
-    ];
 
     if(selectedDepartment === 'Bổ sung') {
       ws['!merges'] = [
@@ -561,19 +555,23 @@ const ReportTrash = () => {
       ws['!merges'] = [
         { s: { r: 2, c: 0 }, e: { r: 8, c: 0 } },
       ];
+    } else if(selectedDepartment === '') {
+      ws['!merges'] = [
+        { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } },
+        { s: { r: 6, c: 0 }, e: { r: 15, c: 0 } },
+        { s: { r: 16, c: 0 }, e: { r: 21, c: 0 } },
+        { s: { r: 22, c: 0 }, e: { r: 26, c: 0 } },
+        { s: { r: 27, c: 0 }, e: { r: 31, c: 0 } },
+        { s: { r: 32, c: 0 }, e: { r: 38, c: 0 } },
+        { s: { r: 45, c: 0 }, e: { r: 45, c: 1 } },
+      ];
     }
     
-    if(selectedDepartment === '') {
-      ws['!merges'].unshift({
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: 9 },
-      });
-    } else {
+    
       ws['!merges'].unshift({
         s: { r: 0, c: 0 },
         e: { r: 0, c: 10 },
       });
-    }
     // Style title row
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
     ws[titleCell].s = {
@@ -610,6 +608,69 @@ const ReportTrash = () => {
         };
       }
     }
+    
+        if(selectedDepartment === '') {
+          for (let col = 0; col <= 8; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: 4, c: col });
+            if (!ws[cellAddress]) continue;
+            
+            ws[cellAddress].s = {
+              ...ws[cellAddress].s,
+              fill: {
+                fgColor: { rgb: 'cfb8b8' },
+                },
+                font: {
+                  bold: true,
+                  color: { rgb: '000000' },
+                },
+              };
+            }
+            for (let col = 0; col <= 8; col++) {
+              const cellAddress = XLSX.utils.encode_cell({ r: 15, c: col });
+              if (!ws[cellAddress]) continue;
+              
+              ws[cellAddress].s = {
+                ...ws[cellAddress].s,
+                fill: {
+                  fgColor: { rgb: 'cfb8b8' },
+                },
+                font: {
+                  bold: true,
+                  color: { rgb: '000000' },
+                },
+              };
+            }
+            for (let col = 0; col <= 8; col++) {
+              const cellAddress = XLSX.utils.encode_cell({ r: 31, c: col });
+              if (!ws[cellAddress]) continue;
+              
+              ws[cellAddress].s = {
+                ...ws[cellAddress].s,
+                fill: {
+                  fgColor: { rgb: 'cfb8b8' },
+                },
+                font: {
+                  bold: true,
+                  color: { rgb: '000000' },
+                },
+              };
+            }
+            for (let col = 0; col <= 8; col++) {
+              const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
+              if (!ws[cellAddress]) continue;
+              
+              ws[cellAddress].s = {
+                ...ws[cellAddress].s,
+                fill: {
+                  fgColor: { rgb: 'cfb8b8' },
+                },
+                font: {
+                  bold: true,
+                  color: { rgb: '000000' },
+                },
+              };
+            }
+        }
 
     for (let col = 0; col <= 65; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
@@ -776,15 +837,7 @@ const ReportTrash = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {selectedDepartment === '' ? headers.map((header, idx) => (
-                      <th
-                        key={idx}
-                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
-                      >
-                        {header}
-                      </th>
-                    )) : 
-                    headersDetail.map((header, idx) => (
+                {headersDetail.map((header, idx) => (
                       <th
                         key={idx}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
@@ -800,22 +853,40 @@ const ReportTrash = () => {
                     group?.items?.map((item, iidx) => (
                       <tr
                         className={`${
-                              selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
+                              selectedDepartment !== '' ? 
+                              (selectedDepartment === 'Bổ sung' && iidx === 2 ? 'bg-[#cfb8b8]' :
                               selectedDepartment === 'T3' && iidx === 9 ? 'bg-[#cfb8b8]' :
                               selectedDepartment === 'T4|Robot' && idx === 2 && iidx === 4 ? 'bg-[#cfb8b8]' :
-                              selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : ''
+                              selectedDepartment === 'T5' && iidx === 6 ? 'bg-[#cfb8b8]' : '') :
+                              (
+                                  idx === 0 && iidx === 2 ? 'bg-[#cfb8b8]' :
+                                  idx === 2 && iidx === 9 ? 'bg-[#cfb8b8]' :
+                                  idx === 5 && iidx === 4 ? 'bg-[#cfb8b8]' :
+                                  idx === 6 && iidx === 6 ? 'bg-[#cfb8b8]' : ''
+                              )
                         }`}
                         key={`${idx}-${iidx}`}
                       >
                         {iidx === 0 && (
                           <td
                             rowSpan={
-                              selectedDepartment === 'Bổ sung' ? 3 :
-                              selectedDepartment === 'T3' ? 10 :
-                              selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
-                              selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
-                              selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
-                              selectedDepartment === 'T5' ? 7 : 1
+                              selectedDepartment !== '' ? 
+                                (
+                                  selectedDepartment === 'Bổ sung' ? 3 :
+                                  selectedDepartment === 'T3' ? 10 :
+                                  selectedDepartment === 'T4|Robot' && idx === 0 ? 6 :
+                                  selectedDepartment === 'T4|Robot' && idx === 1 ? 5 :
+                                  selectedDepartment === 'T4|Robot' && idx === 2 ? 5 :
+                                  selectedDepartment === 'T5' ? 7 : 1
+                                ) : 
+                                (
+                                  idx === 0 ? 3 :
+                                  idx === 2 ? 10 :
+                                  idx === 3 ? 6 :
+                                  idx === 4 ? 5 :
+                                  idx === 5 ? 5 :
+                                  idx === 6 ? 7 : 1
+                                )
                             }
                             className="border border-gray-300 px-2 py-1"
                           >
@@ -823,8 +894,7 @@ const ReportTrash = () => {
                           </td>
                         )}
                         {
-                          selectedDepartment !== "" &&
-                        <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
+                          <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
                         }
                         {report[`${group.group}-${item}`]?.map((e, i) => (
                           <td
@@ -879,7 +949,7 @@ const ReportTrash = () => {
                 <tr className="bg-[#9e8f8f]">
                   <td
                     className="border border-gray-400 text-center px-2 py-1 font-bold"
-                    colSpan={1}
+                    colSpan={2}
                   >
                     Tổng cộng
                   </td>

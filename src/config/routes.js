@@ -48,10 +48,13 @@ const routes = {
   adminTeamMemberCreate: '/admin/manage/teammember/create',
 
 
-  adminInkWeighAnalytics: '/admin/menu/dashboard/analytics/ink-weigh',
-  adminInkWeighReport: '/admin/menu/dashboard/report/ink-weigh',
-  adminInkWeighHistory: '/admin/menu/dashboard/history/ink-weigh',
-  adminInkWeighLogfile: '/admin/menu/dashboard/logfile/ink-weigh',
+  adminInkWeighAnalytics: '/admin/menu/dashboard/ink-weigh/analytics',
+  adminInkWeighReport: '/admin/menu/dashboard/ink-weigh/report',
+  
+  adminInkWeighProductionOrder: '/admin/menu/dashboard/ink-weigh/production-order',
+  adminInkWeighInkTransferCart: '/admin/menu/dashboard/ink-weigh/ink-transfer-cart',
+  adminInkWeighHistory: '/admin/menu/dashboard/ink-weigh/history',
+  adminInkWeighLogfile: '/admin/menu/dashboard/ink-weigh/logfile',
   
   adminFeedbackList: '/admin/manage/list-feedback',
   adminFeedbackAnalytics: '/admin/manage/analytics-feedback',

@@ -41,8 +41,11 @@ import ListBinClassCheck from '~/pagesAdmin/Menu/ClassChecks/ListBin';
 import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
 
 import AnalyticsInk from '~/pagesInkWeighAdmin/Dashboards/Analytics';
-import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
 import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
+
+import ProductionOrder from '~/pagesInkWeighAdmin/Dashboards/ProductionOrder';
+import InkTransferCart from '~/pagesInkWeighAdmin/Dashboards/InkTransferCart';
+import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
 import LogfileInk from '~/pagesInkWeighAdmin/Dashboards/Logfile';
 
 import FeedbackList from '~/pagesAdmin/Manage/Feedback/FeedbackList';
@@ -275,6 +278,17 @@ export const routesInkAdmin = [
   {
     path: config.routes.adminInkWeighReport,
     component: ReportInk,
+    login: true,
+  },
+
+  {
+    path: config.routes.adminInkWeighProductionOrder,
+    component: ProductionOrder,
+    login: true,
+  },
+  {
+    path: config.routes.adminInkWeighInkTransferCart,
+    component: InkTransferCart,
     login: true,
   },
   {
