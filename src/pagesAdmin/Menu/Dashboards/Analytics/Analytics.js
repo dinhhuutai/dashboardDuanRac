@@ -267,3 +267,128 @@ const WeightComparisonChart = ({ department1, department2 }) => {
 };
 
 export default Analytics;
+
+
+// // Dashboard.jsx
+// import React, { useState, useEffect } from 'react';
+// import {
+//   PieChart,
+//   Pie,
+//   Cell,
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   Tooltip,
+//   LineChart,
+//   Line,
+//   Legend,
+//   CartesianGrid,
+//   ResponsiveContainer,
+// } from 'recharts';
+// import axios from 'axios';
+
+// const COLORS = ['#4D44B5', '#6D5DD3', '#A3A0FB', '#C4C4C4', '#FF8C00', '#FF3D67', '#00C49F'];
+
+// const Dashboard = () => {
+//   const [projectStats, setProjectStats] = useState({});
+//   const [loByDept, setLoByDept] = useState([]);
+//   const [gapStats, setGapStats] = useState([]);
+//   const [trendData, setTrendData] = useState([]);
+//   const [projectStatus, setProjectStatus] = useState([]);
+
+//   useEffect(() => {
+//     // Mock data fetch or replace with actual API calls
+//     axios.get('/api/finance-dashboard').then(({ data }) => {
+//       setProjectStats(data.projectStats);
+//       setLoByDept(data.loByDept);
+//       setGapStats(data.gapStats);
+//       setTrendData(data.trendData);
+//       setProjectStatus(data.projectStatus);
+//     });
+//   }, []);
+
+//   return (
+//     <div className="p-6 bg-[#f6f8fa] min-h-screen">
+//       <h1 className="text-3xl font-bold text-center text-purple-800 mb-6">
+//         OTHER LEVEL'S FINANCE STATUS DASHBOARD
+//       </h1>
+
+//       {/* Top summary */}
+//       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+//         <SummaryCard title="Total Project's" value={projectStats.totalProjects || 0} />
+//         <SummaryCard title="C APEX" value={projectStats.capex || 0} />
+//         <SummaryCard title="Lockers" value={projectStats.lockers || 0} />
+//         <SummaryCard title="Popular" value={projectStats.popular || 0} />
+//         <SummaryCard title="Saving" value={projectStats.saving || 0} percentage={15} />
+//         <SummaryCard title="OPEX" value="61%" />
+//       </div>
+
+//       {/* Bar Chart LO by Department */}
+//       <div className="bg-white p-4 rounded-xl shadow mb-6">
+//         <h2 className="text-lg font-semibold text-center mb-2">LO Issued by Departments</h2>
+//         <ResponsiveContainer width="100%" height={300}>
+//           <BarChart data={loByDept}>
+//             <XAxis dataKey="name" />
+//             <YAxis />
+//             <Tooltip />
+//             <Bar dataKey="value" fill="#4D44B5" />
+//           </BarChart>
+//         </ResponsiveContainer>
+//       </div>
+
+//       {/* Gap Analysis Donuts */}
+//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+//         {gapStats.map((gap, index) => (
+//           <div key={index} className="bg-white p-4 rounded-xl shadow text-center">
+//             <h3 className="text-sm font-medium mb-1">GAP {index + 1}</h3>
+//             <div className="text-lg font-bold text-purple-600">{gap.percentage}%</div>
+//             <div className="text-xs text-gray-500">{gap.label}</div>
+//             <div className="text-sm text-red-500 font-semibold">{gap.value.toLocaleString()}</div>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Line chart: Target vs Actual */}
+//       <div className="bg-white p-4 rounded-xl shadow mb-6">
+//         <h2 className="text-lg font-semibold text-center mb-2">Total Targets vs Total Actuals</h2>
+//         <ResponsiveContainer width="100%" height={300}>
+//           <LineChart data={trendData}>
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis dataKey="month" />
+//             <YAxis />
+//             <Tooltip />
+//             <Legend />
+//             <Line type="monotone" dataKey="target" stroke="#8884d8" />
+//             <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
+//           </LineChart>
+//         </ResponsiveContainer>
+//       </div>
+
+//       {/* Project Status Timeline */}
+//       <div className="bg-white p-4 rounded-xl shadow mb-6">
+//         <h2 className="text-lg font-semibold text-center mb-2">Project Status Timeline</h2>
+//         <ResponsiveContainer width="100%" height={200}>
+//           <BarChart data={projectStatus}>
+//             <XAxis dataKey="label" />
+//             <YAxis />
+//             <Tooltip />
+//             <Bar dataKey="count" fill="#6D5DD3" />
+//           </BarChart>
+//         </ResponsiveContainer>
+//       </div>
+//     </div>
+//   );
+// };
+
+// const SummaryCard = ({ title, value, percentage }) => (
+//   <div className="bg-white shadow rounded-lg p-4 text-center">
+//     <div className="text-sm text-gray-500">{title}</div>
+//     <div className="text-2xl font-bold text-purple-700">{value.toLocaleString()}</div>
+//     {percentage !== undefined && (
+//       <div className="text-green-600 font-semibold text-xs">+{percentage}%</div>
+//     )}
+//   </div>
+// );
+
+// export default Dashboard;

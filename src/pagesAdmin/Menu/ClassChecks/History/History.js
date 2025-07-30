@@ -185,8 +185,6 @@ function History() {
         }
     };
 
-
-
   return (
     <div className="p-4">
       <div className="p-4 bg-white rounded-xl shadow space-y-4">

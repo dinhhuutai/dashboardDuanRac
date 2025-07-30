@@ -8,6 +8,10 @@ module.exports = {
         md: '0px 8px 12px #221a2d;',
       },
       keyframes: {
+        rotateBin: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
         infoBigSmall: {
           '0%': { transform: 'scale(.8)' },
           '30%': { transform: 'scale(.9)' },
@@ -82,8 +86,30 @@ module.exports = {
           '0%': { opacity: 0 },
           '100%': { opacity: 1 },
         },
+        superman: {
+          '0%, 100%': { transform: 'translateY(0) rotate(-10deg)' },
+          '50%': { transform: 'translateY(-20px) rotate(10deg)' },
+        },
+        windLeft: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-100vw)' },
+        },
+        windRight: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100vw)' },
+        },
+        meteor: {
+          '0%': { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+          '100%': { transform: 'translate(300px, 300px) rotate(360deg)', opacity: 0 },
+        },
       },
       animation: {
+        superman: 'superman 2s ease-in-out infinite',
+        'wind-left': 'windLeft 5s linear infinite',
+        'wind-right': 'windRight 5s linear infinite',
+        meteor: 'meteor 3s linear infinite',
+        'meteor-delay': 'meteor 4s linear infinite 1s',
+        binSpin: 'rotateBin 1.2s linear infinite',
         fade: 'fade 0.3s ease-in-out',
         infoBigSmall: 'infoBigSmall 1s ease-in-out infinite',
         downSlide: 'downSlide .2s ease-in-out forwards',

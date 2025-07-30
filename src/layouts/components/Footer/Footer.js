@@ -31,9 +31,9 @@ function Footer() {
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left - Contact Info */}
                 <div>
-                    <h2 className="text-[20px] font-serif font-semibold mb-4">Come &amp; Find Us</h2>
+                    <h2 className="text-[20px] font-serif font-semibold mb-4">Bạn có góp ý cho website?</h2>
                     <p className="text-lg font-semibold">Địa chỉ</p>
-                    <p className="mb-4 text-[12px]">Ấp Mới 2, Xã Mỹ Hạnh Nam, Huyện Đức Hoà, Tỉnh Long An, Việt Nam</p>
+                    <p className="mb-4 text-[12px]">Ấp Mới 2, Xã Mỹ Hạnh, Tỉnh Tây Ninh, Việt Nam</p>
 
                     <p className="text-lg font-semibold">Liên hệ</p>
                     <p className="text-[12px]">+84 336 470 664</p>
@@ -50,29 +50,29 @@ function Footer() {
 
                 {/* Right - Contact Form */}
                 <div>
-                    <h2 className="text-[20px] font-serif font-semibold mb-4">Leave us a message</h2>
+                    <h2 className="text-[20px] font-serif font-semibold mb-4">Hãy viết và gửi cho chúng tôi nhé!</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {error && <div className="text-red-500 text-sm">{error}</div>}
 
                         <div>
-                            <label className="text-[13px] font-medium text-red-600">* Name</label>
+                            <label className="text-[13px] font-medium text-red-600">* Tên</label>
                             <input
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 type="text"
-                                placeholder="Fill your name"
+                                placeholder="Nhập tên của bạn"
                                 className="w-full border border-gray-300 text-[13px] p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
                         </div>
                         <div>
                             <label className="text-[13px] font-medium text-red-600">* Phone</label>
                             <input
-                                name="phone"
+                                name="Điện thoại"
                                 value={formData.phone}
                                 onChange={handleChange}
                                 type="text"
-                                placeholder="Fill your phone number"
+                                placeholder="Nhập số điện thoại của bạn"
                                 className="w-full border border-gray-300 text-[13px] p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
                         </div>
@@ -83,17 +83,17 @@ function Footer() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 type="email"
-                                placeholder="Fill your email"
+                                placeholder="Nhập email của bạn"
                                 className="w-full border border-gray-300 text-[13px] p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
                         </div>
                         <div>
-                            <label className="text-[13px] font-medium">Message</label>
+                            <label className="text-[13px] font-medium">Tin nhắn</label>
                             <textarea
                                 name="message"
                                 value={formData.message}
                                 onChange={handleChange}
-                                placeholder="Message"
+                                placeholder="Tin nhắn"
                                 className="w-full border border-gray-300 p-2 rounded h-24 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             ></textarea>
                         </div>

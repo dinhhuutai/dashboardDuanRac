@@ -10,6 +10,7 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 import HandleGetCodeQr from '~/components/HandleGetCodeQR';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
+import { FaSpinner } from 'react-icons/fa';
 
 const ReportTrash = () => {
   const [loading, setLoading] = useState(true);
@@ -192,8 +193,6 @@ const ReportTrash = () => {
 
 
   useEffect(() => {
-    setLoading(true);
-
     // Gọi lần lượt từng API
     fetchTodayReport();
 
@@ -234,11 +233,12 @@ const ReportTrash = () => {
 
     }
 
-    setLoading(false);
   }, [dateOne, startDate, endDate, filterType, selectedDepartment]);
   
 
     const fetchTodayReport = async () => {
+
+      setLoading(true);
       try {
         const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
           params: {
@@ -439,6 +439,8 @@ const ReportTrash = () => {
       } catch (error) {
         setLoading(false);
         console.error('Lỗi khi tải dữ liệu: ', error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -730,12 +732,16 @@ const ReportTrash = () => {
 
   return (
     <div className="p-2">
+      
+{loading && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+    <div className="flex flex-col items-center gap-4">
+      <FaSpinner className="animate-spin text-blue-600 text-5xl" />
+      <span className="text-gray-700 text-lg font-medium">Đang tải dữ liệu...</span>
+    </div>
+  </div>
+)}
       <div className="p-2 space-y-6 bg-white rounded-[6px]">
-      {loading && (
-        <div className="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
-        </div>
-      )}
 
       <div className="p-4">
         <div className="flex justify-between">

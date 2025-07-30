@@ -1,170 +1,3 @@
-// import { useEffect, useState, useRef } from 'react';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { useNavigate } from 'react-router-dom';
-// import { userSelector } from '~/redux/selectors';
-// import weightSlice from '~/redux/slices/weightSlice';
-
-// function Home() {
-//   const tmp = useSelector(userSelector);
-//   const [user, setUser] = useState({});
-
-//   const navigate = useNavigate();
-//   const [index, setIndex] = useState(0);
-//   const [typedText, setTypedText] = useState('');
-//   let fullText = `CChào mừng ${tmp?.login?.currentUser?.fullName} đến hệ thống`;
-//   let characters = fullText.split('');
-//   const intervalRef = useRef(null); // <== Lưu interval để reset
-
-//   const dispatch = useDispatch();
-
-//   useEffect(() => {
-//     setUser(tmp?.login?.currentUser);
-//     fullText = `CChào mừng ${tmp?.login?.currentUser?.fullName} đến hệ thống`;
-//     characters = fullText.split('');
-//   }, [tmp]);
-
-//   useEffect(() => {
-//     let current = 0;
-//     setTypedText('');
-//     const typingInterval = setInterval(() => {
-//       if (current < characters.length - 1) {
-//         setTypedText((prev) => prev + characters[current]);
-//         current++;
-//       } else {
-//         clearInterval(typingInterval);
-//       }
-//     }, 100);
-//     return () => clearInterval(typingInterval);
-//   }, [index]);
-
-//   const data = [{ image: require('~/assets/imgs/bg-1.jpg') }, { image: require('~/assets/imgs/bg-2.jpg') }];
-
-//   const handleScanQR = () => {
-//     navigate('/scan');
-//   };
-
-//   const startAutoSlide = () => {
-//     clearInterval(intervalRef.current);
-//     intervalRef.current = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 5000); // 10 giây
-//   };
-
-//   useEffect(() => {
-//     startAutoSlide();
-//     return () => clearInterval(intervalRef.current);
-//   }, []);
-
-//   const handleSlider = (i) => {
-//     setIndex(i);
-//     startAutoSlide(); // Reset thời gian đếm lại từ đầu
-//   };
-
-//   const handleConnectBluetooth = async () => {
-//     try {
-//       console.log('Yêu cầu thiết bị...');
-//       const device = await navigator.bluetooth.requestDevice({
-//         filters: [{ name: 'ESP32_SCALE' }],
-//         optionalServices: ['0000ff00-0000-1000-8000-00805f9b34fb'],
-//       });
-
-//       console.log('Đang kết nối GATT...');
-//       const server = await device.gatt.connect();
-
-//       console.log('Đang lấy service...');
-//       const service = await server.getPrimaryService('0000ff00-0000-1000-8000-00805f9b34fb');
-
-//       console.log('Đang lấy characteristic...');
-//       const characteristic = await service.getCharacteristic('0000ff01-0000-1000-8000-00805f9b34fb');
-
-//       console.log('Bắt đầu nhận dữ liệu...');
-//       await characteristic.startNotifications();
-//       characteristic.addEventListener('characteristicvaluechanged', (event) => {
-//         const value = new TextDecoder().decode(event.target.value);
-//         dispatch(weightSlice.actions.setWeight(value));
-//       });
-
-//       alert('✅ Đã kết nối tới ESP32_SCALE');
-//     } catch (error) {
-//       console.error('Bluetooth Error:', error);
-//       alert('❌ Lỗi Bluetooth: ' + error.message);
-//     }
-//   };
-
-//   const handleCheckClassification = async () => {
-
-//   };
-
-//   return (
-//     <div className="overflow-hidden w-full flex justify-center">
-//       <div className="relative w-full h-[300px] md:h-[600px]">
-//         {data.map((e, i) => (
-//           <div
-//             key={i}
-//             className={`w-full h-full absolute transition-opacity duration-1000 ease-in-out ${
-//               index === i ? 'opacity-100 z-10' : 'opacity-0 z-0'
-//             }`}
-//           >
-//             <img className="w-full h-full object-cover" alt="slide" src={e.image} />
-//             <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-
-//             {index === i && (
-//               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-white space-y-4">
-//                 <h1 className="text-[14px] md:text-[24px] font-bold drop-shadow-md whitespace-nowrap">
-//                   {typedText}
-//                   <span className="animate-pulse">|</span>
-//                 </h1>
-
-//                 <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-//                   <button
-//                     onClick={handleScanQR}
-//                     className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition"
-//                   >
-//                     📷 Quét mã QR
-//                   </button>
-
-//                   <button
-//                     onClick={handleConnectBluetooth}
-//                     className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition"
-//                   >
-//                     Kết nối Bluetooth
-//                   </button>
-                  
-//                   {
-//                     user.role === 'admin' &&
-//                     <button
-//                       onClick={handleCheckClassification}
-//                       className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition"
-//                     >
-//                       Kiểm tra phân loại
-//                     </button>
-//                   }
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         ))}
-
-//         {/* Chấm điều hướng */}
-//         <div className="absolute z-10 flex bottom-5 gap-4 left-1/2 -translate-x-1/2">
-//           {data.map((_, i) => (
-//             <div
-//               key={i}
-//               onClick={() => handleSlider(i)}
-//               className={`h-3 w-3 rounded-full cursor-pointer transition ${
-//                 index === i ? 'bg-yellow-400 scale-110' : 'bg-gray-400'
-//               }`}
-//             ></div>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Home;
-
-
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -213,6 +46,9 @@ function Home() {
 
   const [finalConfirmModalOpen, setFinalConfirmModalOpen] = useState(false);
   
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+
   const showError = (msg) => {
     setErrorMessage(msg);
     setErrorModalOpen(true);
@@ -247,6 +83,13 @@ function Home() {
     { image: require('~/assets/imgs/bg-1.jpg') },
     { image: require('~/assets/imgs/bg-2.jpg') },
   ];
+
+  
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
+  };
 
   const handleScanQR = () => {
     navigate('/scan');
@@ -367,21 +210,34 @@ function Home() {
   };
 
   const handleFinalSubmit = async () => {
-    const payload = {
-      department: selectedDept,
-      unit: selectedUnit,
-      trashBins,
-      feedbackNote,
-      user: user.userID,
-    }
+    // const payload = {
+    //   department: selectedDept,
+    //   unit: selectedUnit,
+    //   trashBins,
+    //   feedbackNote,
+    //   user: user.userID,
+    // }
+
+    const formData = new FormData();
+
+  // Gửi danh sách hình ảnh (nếu có)
+  images.forEach((file) => {
+    formData.append("images", file); // key = 'images', giống multer.array('images')
+  });
+
+  // Gửi thông tin khác – cần JSON.stringify để giữ đúng cấu trúc
+  formData.append("department", JSON.stringify(selectedDept));
+  formData.append("unit", JSON.stringify(selectedUnit));
+  formData.append("trashBins", JSON.stringify(trashBins));
+  formData.append("feedbackNote", feedbackNote || '');
+  formData.append("user", user.userID);
     
     setIsLoadingClassification(true);
 
     try {
       const res = await fetch(`${BASE_URL}/submit-classification`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const data = await res.json();
@@ -389,6 +245,10 @@ function Home() {
       if (data.success) {
         setFinalConfirmModalOpen(false);
         showError('Lưu thành công');
+              setSelectedDept({});
+              setSelectedUnit({});
+              setFeedbackNote('');
+              setTrashBins([]);
       } else {
         showError('Lỗi: ' + data.message);
       }
@@ -607,7 +467,7 @@ function Home() {
         {trashBins.length === 0 ? (
           <p>Không có loại rác nào được cấu hình cho bộ phận và đơn vị này.</p>
         ) : (
-          <ul className="space-y-4 max-h-60 overflow-y-auto pr-2">
+          <ul className="space-y-4 max-h-80 overflow-y-auto pr-2">
             {trashBins.map((item, index) => {
               // Gán màu theo tên rác
               const normalizedTrashName = item.trashName?.normalize('NFC')?.trim();
@@ -634,29 +494,61 @@ function Home() {
                       <div className="text-base font-medium text-gray-800">
                         {item.trashName}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <strong>Số lượng theo quy định:</strong> {item.expectedQuantity}
-                      </div>
                       <div>
                         <label htmlFor={`actual-${index}`} className="block text-sm font-semibold mb-1">
                           Thùng hiện có:
                         </label>
-                        <input
-                          id={`actual-${index}`}
-                          type="number"
-                          min="0"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                          value={item.actualQuantity ?? ''}
-                          onChange={(e) => {
-                            const newValue = parseInt(e.target.value);
-                            const updatedBins = [...trashBins];
-                            updatedBins[index] = {
-                              ...updatedBins[index],
-                              actualQuantity: newValue
-                            };
-                            setTrashBins(updatedBins);
-                          }}
-                        />
+                        <div className="flex items-center gap-2">
+  <button
+    type="button"
+    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-100 border border-gray-300 text-lg font-bold text-gray-600 transition"
+    onClick={() => {
+      const updatedBins = [...trashBins];
+      const currentValue = updatedBins[index].actualQuantity || 0;
+      updatedBins[index] = {
+        ...updatedBins[index],
+        actualQuantity: Math.max(0, currentValue - 1),
+      };
+      setTrashBins(updatedBins);
+    }}
+  >
+    −
+  </button>
+
+  <input
+    id={`actual-${index}`}
+    type="number"
+    min="0"
+    className="w-16 text-center border border-gray-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+    value={item.actualQuantity ?? ''}
+    onChange={(e) => {
+      const newValue = Math.max(0, parseInt(e.target.value) || 0);
+      const updatedBins = [...trashBins];
+      updatedBins[index] = {
+        ...updatedBins[index],
+        actualQuantity: newValue,
+      };
+      setTrashBins(updatedBins);
+    }}
+  />
+
+  <button
+    type="button"
+    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-green-100 border border-gray-300 text-lg font-bold text-gray-600 transition"
+    onClick={() => {
+      const updatedBins = [...trashBins];
+      const currentValue = updatedBins[index].actualQuantity || 0;
+      updatedBins[index] = {
+        ...updatedBins[index],
+        actualQuantity: currentValue + 1,
+      };
+      setTrashBins(updatedBins);
+    }}
+  >
+    +
+  </button>
+</div>
+
                       </div>
                     </div>
                   </div>
@@ -696,7 +588,7 @@ function Home() {
               setIsLoadingClassification(true);
               const binsWithDefaultCheck = trashBins.map((item) => ({
                 ...item,
-                isCorrect: item.isCorrect ?? true, // chỉ gán nếu chưa có
+                isCorrect: null, // chỉ gán nếu chưa có
               }));
 
               setTrashBins(binsWithDefaultCheck);
@@ -731,7 +623,7 @@ function Home() {
         isOpen={isCheckModalOpen}
         //onRequestClose={() => setCheckModalOpen(false)}
         className="bg-white rounded-xl max-w-xl w-full p-6 mx-auto mt-20 shadow-lg outline-none"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[60]"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[30]"
       >
         <h2 className="text-xl font-bold mb-4">🧪 Xác nhận phân loại rác</h2>
 
@@ -820,15 +712,18 @@ function Home() {
             onClick={() => {
               setIsLoadingClassification(true);
               // Kiểm tra nếu mọi loại rác đều đã được đánh dấu
-              const allChecked = trashBins.every((item) => item.isCorrect !== undefined);
-              if (!allChecked) {
-                alert('Vui lòng xác nhận tất cả các loại rác!');
-                return;
-              }
+              const allChecked = trashBins.some((item) => item.isCorrect === null);
 
+              if (allChecked) {
+                showError('Vui lòng xác nhận tất cả các loại rác!');
+                
+              setIsLoadingClassification(false);
+              } else {
+                
               setCheckModalOpen(false);
               setInstructionModalOpen(true);
               setIsLoadingClassification(false);
+              }
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -977,9 +872,9 @@ function Home() {
               setFeedbackModalOpen(false);
               setSelectedDept({});
               setSelectedUnit({});
+              setFeedbackNote('');
               setTrashBins([]);
               setInstructionConfirmed(true);
-              setFeedbackNote('');
             }}
             className="flex px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
@@ -1062,6 +957,15 @@ function Home() {
               {feedbackNote.trim() !== '' ? feedbackNote : '(Không có ghi chú)'}
             </p>
           </div>
+
+          
+    {imagePreviews.length > 0 && (
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        {imagePreviews.map((url, i) => (
+          <img key={i} src={url} alt={`preview-${i}`} className="w-full h-24 object-cover rounded" />
+        ))}
+      </div>
+    )}
         </div>
 
         <div className="flex justify-between mt-6">
@@ -1074,6 +978,19 @@ function Home() {
           >
             Quay lại
           </button>
+
+          <div className="text-left">
+  <label className="block w-fit cursor-pointer text-sm text-purple-700 font-semibold bg-purple-100 hover:bg-purple-200 rounded-full px-4 py-2">
+    Chụp hình
+    <input
+      type="file"
+      multiple
+      accept="image/*"
+      onChange={handleFileChange}
+      className="hidden"
+    />
+  </label>
+</div>
 
           <button
             onClick={() => {

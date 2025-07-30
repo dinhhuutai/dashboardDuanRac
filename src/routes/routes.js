@@ -7,6 +7,7 @@ import User from '~/pages/User';
 import History from '~/pages/History';
 import Feedback from '~/pages/Feedback';
 import Feedback1 from '~/pages/Feedback1';
+import ExcelToPdf from '~/pages/Utils/ExcelToPdf';
 
 import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
 import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
@@ -97,6 +98,12 @@ export const routes = [
     path: config.routes.history,
     component: History,
     login: true,
+  },
+  {
+    path: config.routes.excelToPdf,
+    component: ExcelToPdf,
+    login: false,
+    isLogin: false,
   },
 ];
 

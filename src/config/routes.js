@@ -6,6 +6,7 @@ const routes = {
   history: '/history',
   feedback: '/feedback-1',
   feedback1: '/feedback',
+  excelToPdf: '/excelToPdf',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',

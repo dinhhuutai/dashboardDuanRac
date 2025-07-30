@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { motion } from "framer-motion";
 import { ImSpinner9 } from "react-icons/im";
 import { FiPackage } from "react-icons/fi"; // icon nhẹ nhàng phù hợp
+import { FaSpinner } from 'react-icons/fa';
 
 function ReportMaterials() {
   const [data, setData] = useState([]);
@@ -163,287 +164,122 @@ function ReportMaterials() {
     };
 
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
+  setIsLoading(true);
   const file = e.target.files[0];
   if (!file) return;
 
-  setIsLoading(true);
+  const readFileAsBinary = async (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (evt) => resolve(evt.target.result);
+      reader.onerror = reject;
+      reader.readAsBinaryString(file);
+    });
 
-    const typeMaterials = [
-        {
-            dep: 't1',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 't2',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 't3',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 't4',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 't5',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'tm',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'pm',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'ck',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'ch',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'ksc',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'sh',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-        {
-            dep: 'tb',
-            mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'],
-        },
-    ]
+  const typeMaterials = [
+    { dep: 't1', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 't2', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 't3', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 't4', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 't5', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'tm', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'pm', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'ck', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'ch', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'kcs', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'sh', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+    { dep: 'tb', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
+  ];
 
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    try {
-      const binaryStr = evt.target.result;
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-      setData(jsonData); // lưu tất cả data nếu muốn xem
-
-      let dataMaterialsTmp = {
-            t1: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            t2: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            t3: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            t4: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            t5: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            tm: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            pm: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            ck: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            ch: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            kcs: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            sh: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-            tb: {
-                vv: '',
-                mit: '',
-                mil: '',
-                ni: '',
-                nxl: '',
-                nck: '',
-                hc: '',
-                bk: '',
-                lck: '',
-                kb: '',
-            },
-        };
-      let filteredData;
-      let totalSoluong;
-
-      typeMaterials?.forEach((type) => {
-        type.mat?.map((m) => {
-            filteredData = jsonData.filter(
-                (row) =>
-                row["hanghoaten"] === (
-                    m === 'vv' ? 'Vải vụn' : ''
-                ) &&
-                row["chungloaiten"] === (
-                    m === 'vv' ? 'Nguyên liệu bao bì' : ''
-                ) &&
-                row["BoPhanTen"] === (
-                                        type.dep === 't1' ? 'TO 1' 
-                                        : type.dep === 't2' ? 'TO 2'
-                                        : type.dep === 't3' ? 'TO 3'
-                                        : type.dep === 't4' ? 'TO 4'
-                                        : type.dep === 't5' ? 'TO 5'
-                                        : type.dep === 'tm' ? 'TO MAU'
-                                        : type.dep === 'pm' ? ('PHA MAU' || 'THLA-KT-PM')
-                                        : type.dep === 'ck' ? 'CHUP KHUON'
-                                        : type.dep === 'ch' ? ''
-                                        : type.dep === 'kcs' ? 'THLA-TO KCS'
-                                        : type.dep === 'sh' ? ''
-                                        : type.dep === 'tb' ? '' : ''
-                                    )
-            );
-
-            totalSoluong = filteredData?.reduce((sum, row) => {
-                const value = parseFloat(row["Soluong"]);
-                return sum + (isNaN(value) ? 0 : value);
-            }, 0);
-
-            dataMaterialsTmp = {
-                ...dataMaterialsTmp,
-                [type.dep]: {
-                ...dataMaterialsTmp[type.dep],
-                [m]: totalSoluong || 0,
-                },
-            };
-            
-            console.log(dataMaterialsTmp)
-        })
-
-      })
-
-      // Cập nhật vào state dataMaterials
-      setDataMaterials(dataMaterialsTmp);
-
-    } catch (err) {
-      console.error("Lỗi đọc file:", err);
-    } finally {
-      setIsLoading(false);
-    }
+  const boPhanMap = {
+    t1: 'TO 1',
+    t2: 'TO 2',
+    t3: 'TO 3',
+    t4: 'TO 4',
+    t5: 'TO 5',
+    tm: 'TO MAU',
+    pm: ['PHA MAU', 'THLA-KT-PM'],
+    ck: 'CHUP KHUON',
+    ch: '',
+    kcs: 'THLA-TO KCS',
+    sh: '',
+    tb: ''
   };
 
-  reader.readAsBinaryString(file);
+  const nameMap = {
+    vv: { hanghoaten: 'Vải vụn', chungloaiten: 'Nguyên liệu bao bì' },
+    // Các vật liệu khác cần được thêm vào nếu muốn xử lý
+  };
+
+  try {
+    const binaryStr = await readFileAsBinary(file);
+    const workbook = XLSX.read(binaryStr, { type: "binary" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    setData(jsonData); // lưu tất cả data nếu muốn xem
+
+    let dataMaterialsTmp = {};
+
+    // Khởi tạo dữ liệu rỗng
+    for (const { dep, mat } of typeMaterials) {
+      dataMaterialsTmp[dep] = {};
+      for (const m of mat) {
+        dataMaterialsTmp[dep][m] = '';
+      }
+    }
+
+    // Bắt đầu xử lý theo thứ tự
+    for (const type of typeMaterials) {
+      const boPhanTen = boPhanMap[type.dep];
+
+      for (const m of type.mat) {
+        const { hanghoaten, chungloaiten } = nameMap[m] || {};
+        if (!hanghoaten || !chungloaiten || boPhanTen === undefined) continue;
+
+        const filteredData = jsonData.filter((row) => {
+          const matchBoPhan = Array.isArray(boPhanTen)
+            ? boPhanTen.includes(row.BoPhanTen)
+            : row.BoPhanTen === boPhanTen;
+
+          return (
+            row.hanghoaten === hanghoaten &&
+            row.chungloaiten === chungloaiten &&
+            matchBoPhan
+          );
+        });
+
+        const totalSoluong = filteredData.reduce((sum, row) => {
+          const value = parseFloat(row.Soluong);
+          return sum + (isNaN(value) ? 0 : value);
+        }, 0);
+
+        dataMaterialsTmp[type.dep][m] = totalSoluong || 0;
+      }
+    }
+
+    setDataMaterials(dataMaterialsTmp);
+    console.log(dataMaterialsTmp);
+  } catch (error) {
+    console.error("Lỗi xử lý file:", error);
+  } finally {
+    setIsLoading(false);
+  }
 };
     
 
   return (
     <div className="p-4">
       <div className="p-2 space-y-6 bg-white rounded-[6px]">
+      
       {isLoading && (
-        <div className="absolute inset-0 bg-white bg-opacity-70 z-50 flex items-center justify-center">
-          <ImSpinner9 className="animate-spin text-teal-600 text-5xl" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <FaSpinner className="animate-spin text-blue-600 text-5xl" />
+            <span className="text-gray-700 text-lg font-medium">Đang tải dữ liệu...</span>
+          </div>
         </div>
       )}
 
