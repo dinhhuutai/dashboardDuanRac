@@ -588,7 +588,7 @@ function Home() {
               setIsLoadingClassification(true);
               const binsWithDefaultCheck = trashBins.map((item) => ({
                 ...item,
-                isCorrect: null, // chỉ gán nếu chưa có
+                isCorrect: item?.isCorrect || true, // chỉ gán nếu chưa có
               }));
 
               setTrashBins(binsWithDefaultCheck);
