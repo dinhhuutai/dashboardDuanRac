@@ -249,6 +249,8 @@ function Home() {
               setSelectedUnit({});
               setFeedbackNote('');
               setTrashBins([]);
+              setImages();
+              setImagePreviews([]);
       } else {
         showError('Lỗi: ' + data.message);
       }
@@ -257,6 +259,12 @@ function Home() {
       showError('Lỗi kết nối đến server');
     } finally {
       setIsLoadingClassification(false);
+              setSelectedDept({});
+              setSelectedUnit({});
+              setFeedbackNote('');
+              setTrashBins([]);
+              setImages();
+              setImagePreviews([]);
     }
   }
 

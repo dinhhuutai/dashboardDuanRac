@@ -4,6 +4,8 @@ import { BASE_URL } from '~/config';
 import { FaTrash } from 'react-icons/fa';
 import * as XLSX from "xlsx-js-style";
 import { format } from "date-fns";
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 
 function History() {
@@ -20,105 +22,148 @@ function History() {
     const [departments, setDepartments] = useState([]);
     const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
 
-    const exportToExcel = () => {
-  const aoaData = [];
+    // State quản lý ảnh
+const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+const [imageModalOpen, setImageModalOpen] = useState(false);
+const [selectedItemImages, setSelectedItemImages] = useState([]); // Lưu danh sách ảnh đang xem
 
-  // 👉 Thêm tiêu đề
-  aoaData.push([`Kiểm tra phân loại ngày ${format(new Date(selectedDate), "dd/MM/yyyy")}`]);
+// Mở modal ảnh
+const handleOpenImageModal = (index, images) => {
+  setSelectedImageIndex(index);
+  setSelectedItemImages(images); // Gán danh sách ảnh tương ứng
+  setImageModalOpen(true);
+};
 
-  // 👉 Thêm header
-  aoaData.push([
+// Đóng modal ảnh
+const handleCloseImageModal = () => {
+  setSelectedImageIndex(null);
+  setImageModalOpen(false);
+  setSelectedItemImages([]);
+};
+
+// Chuyển ảnh trước
+const handlePrevImage = () => {
+  if (selectedImageIndex !== null && selectedItemImages.length > 0) {
+    setSelectedImageIndex(
+      (prevIndex) => (prevIndex - 1 + selectedItemImages.length) % selectedItemImages.length
+    );
+  }
+};
+
+// Chuyển ảnh sau
+const handleNextImage = () => {
+  if (selectedImageIndex !== null && selectedItemImages.length > 0) {
+    setSelectedImageIndex((prevIndex) => (prevIndex + 1) % selectedItemImages.length);
+  }
+};
+
+
+    const exportToExcel = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('LichSuPhanLoai');
+
+  worksheet.mergeCells('A1:J1');
+  worksheet.getCell('A1').value = `Kiểm tra phân loại ngày ${format(new Date(selectedDate), "dd/MM/yyyy")}`;
+  worksheet.getCell('A1').alignment = { horizontal: 'center' };
+  worksheet.getCell('A1').font = { size: 14, bold: true };
+
+  worksheet.addRow([
     "STT", "Bộ phận", "Đơn vị", "Thời gian",
     "Loại rác", "SL Thực tế", "Phân loại đúng",
-    "Ghi chú", "Người kiểm tra"
-  ]);
+    "Ghi chú", "Người kiểm tra", "Hình ảnh"
+  ]).eachCell(cell => {
+    cell.font = { bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFACD' } };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
 
-  const merges = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } } // merge dòng tiêu đề (9 cột)
-  ];
+  let currentRowIndex = 3;
 
-  let rowIndex = 2;
-
-  historyData.forEach((item, idx) => {
+  for (let idx = 0; idx < historyData.length; idx++) {
+    const item = historyData[idx];
     const groupSize = item.details.length;
-    item.details.forEach((detail, i) => {
-      aoaData.push([
-        i === 0 ? idx + 1 : "",
-        i === 0 ? item.departmentName : "",
-        i === 0 ? item.unitName : "",
-        i === 0 ? formatDateTime(item.checkTime) : "",
-        detail.trashName,
-        detail.quantity,
-        detail.isCorrectlyClassified ? "✅" : "❌",
-        i === 0 ? item.feedbackNote || "" : "",
-        i === 0 ? item.userName || "" : "",
-      ]);
-      rowIndex++;
-    });
 
-    const startRow = rowIndex - groupSize;
-    const endRow = rowIndex - 1;
-    const mergeCols = [0, 1, 2, 3, 7, 8];
+    for (let i = 0; i < groupSize; i++) {
+      const detail = item.details[i];
+      const row = worksheet.getRow(currentRowIndex);
+      row.height = 55;
 
-    mergeCols.forEach(col => {
-      merges.push({
-        s: { r: startRow, c: col },
-        e: { r: endRow, c: col }
+      row.getCell(1).value = i === 0 ? idx + 1 : '';
+      row.getCell(2).value = i === 0 ? item.departmentName : '';
+      row.getCell(3).value = i === 0 ? item.unitName : '';
+      row.getCell(4).value = i === 0 ? formatDateTime(item.checkTime) : '';
+      row.getCell(5).value = detail.trashName;
+      row.getCell(6).value = detail.quantity;
+      row.getCell(7).value = detail.isCorrectlyClassified ? "✅" : "❌";
+      row.getCell(8).value = i === 0 ? item.feedbackNote || "" : '';
+      row.getCell(9).value = i === 0 ? item.userName || "" : '';
+      row.getCell(10).value = i === 0 ? "" || "" : '';
+
+      // 👉 Chèn ảnh nếu là dòng đầu tiên
+      if (i === 0 && item.images?.length > 0) {
+        const images = item.images;
+        let offsetX = 0;
+        for (let imgIdx = 0; imgIdx < images.length; imgIdx++) {
+          const imageBuffer = await downloadImage(images[imgIdx]);
+          const imageId = workbook.addImage({
+            buffer: imageBuffer,
+            extension: 'jpeg',
+          });
+
+          worksheet.addImage(imageId, {
+            tl: { col: 9 + offsetX, row: currentRowIndex - 1 },
+            ext: { width: 100, height: 100 },
+            editAs: 'oneCell'
+          });
+
+          offsetX += 1;
+        }
+      }
+
+      row.eachCell(cell => {
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
       });
-    });
-  });
 
-  const ws = XLSX.utils.aoa_to_sheet(aoaData);
-  ws["!merges"] = merges;
-
-  // 👉 Tự động chỉnh độ rộng cột
-  ws["!cols"] = aoaData[1].map((_, colIdx) => {
-    if (colIdx === 0) return { wch: 5 }; // STT nhỏ
-    const maxLength = Math.max(...aoaData.map(row => String(row[colIdx] || "").length));
-    return { wch: maxLength + 2 };
-  });
-
-  const range = XLSX.utils.decode_range(ws["!ref"]);
-
-  // 👉 Áp dụng style cho từng ô
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-
-      if (!ws[cellAddress]) continue;
-
-      // Style chung cho tất cả các ô
-      ws[cellAddress].s = {
-        font: {
-          bold: R === 0 || R === 1,
-          sz: R === 0 ? 14 : 11,
-          color: { rgb: "000000" },
-        },
-        alignment: {
-          vertical: "center",
-          horizontal: "center",
-          wrapText: true,
-        },
-        fill: R === 1
-          ? { fgColor: { rgb: "FFFACD" } } // header: vàng nhạt
-          : R === 0
-          ? { fgColor: { rgb: "FFFFFF" } } // tiêu đề: trắng
-          : undefined,
-        border: {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } },
-        },
-      };
+      currentRowIndex++;
     }
+
+    // 👉 Merge các ô theo chiều dọc cho các cột: STT, Bộ phận, Đơn vị, Thời gian, Ghi chú, Người kiểm tra
+    const start = currentRowIndex - groupSize;
+    const end = currentRowIndex - 1;
+    [1, 2, 3, 4, 8, 9, 10].forEach(col => {
+      worksheet.mergeCells(start, col, end, col);
+    });
   }
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "LichSuPhanLoai");
+  worksheet.columns.forEach(col => {
+    col.width = 20;
+  });
 
-  XLSX.writeFile(wb, `LichSuPhanLoai_${selectedDate}.xlsx`);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `LichSuPhanLoai_${selectedDate}.xlsx`);
 };
+
+// 👉 Hàm tải ảnh từ URL thành buffer
+const downloadImage = async (url) => {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  return response.data;
+};
+
 
 
     const fetchData = async () => {
@@ -245,66 +290,116 @@ function History() {
                     <th className="px-3 py-2 border border-gray-300 rounded-tr-lg">Hành động</th>
                 </tr>
             </thead>
+            
             <tbody>
-                {historyData.map((item, idx) =>
-                item.details.map((detail, i) => (
-                    <tr
-                    key={`${idx}-${i}`}
-                    className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
-                    >
-                    {i === 0 && (
-                        <>
-                         <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 text-center font-medium">
-                            {idx + 1}
-                        </td>
-                        <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
-                            {item.departmentName}
-                        </td>
-                        <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
-                            {item.unitName}
-                        </td>
-                        <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle whitespace-nowrap">
-                            {formatDateTime(item.checkTime)}
-                        </td>
-                        </>
-                    )}
-                    <td className="px-3 py-2 border border-gray-200">{detail.trashName}</td>
-                    <td className="px-3 py-2 border border-gray-200 text-center">{detail.ruleQuantity}</td>
-                    <td className="px-3 py-2 border border-gray-200 text-center">{detail.quantity}</td>
-                    <td className="px-3 py-2 border border-gray-200 text-center">
-                        {detail.isCorrectlyClassified ? '✅' : '❌'}
-                    </td>
-                    {i === 0 && (
-                        <>
-                            <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
-                                {item.feedbackNote || '—'}
-                            </td>
-                            <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
-                                {item.userName || '—'}
-                            </td>
-                            <td
-                                rowSpan={item.details.length}
-                                className="px-3 py-2 border border-gray-200 text-center align-middle"
-                            >
-                                <button
-                                onClick={() => handleDeleteClick(item.checkID)}
-                                className="text-red-600 hover:text-red-800 text-base"
-                                title="Xoá"
-                                >
-                                <FaTrash />
-                                </button>
+  {historyData.map((item, idx) => (
+    <React.Fragment key={idx}>
+      {item.details.map((detail, i) => (
+        <tr
+          key={`${idx}-${i}`}
+          className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
+        >
+          {i === 0 && (
+            <>
+              <td rowSpan={(item.details.length || 0) + (item.images?.length > 0 ? 1 : 0)} className="px-3 py-2 border border-gray-200 text-center font-medium align-middle">
+                {idx + 1}
+              </td>
+              <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
+                {item.departmentName}
+              </td>
+              <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
+                {item.unitName}
+              </td>
+              <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle whitespace-nowrap">
+                {formatDateTime(item.checkTime)}
+              </td>
+            </>
+          )}
+          <td className="px-3 py-2 border border-gray-200">{detail.trashName}</td>
+          <td className="px-3 py-2 border border-gray-200 text-center">{detail.ruleQuantity}</td>
+          <td className="px-3 py-2 border border-gray-200 text-center">{detail.quantity}</td>
+          <td className="px-3 py-2 border border-gray-200 text-center">
+            {detail.isCorrectlyClassified ? '✅' : '❌'}
+          </td>
+          {i === 0 && (
+            <>
+              <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
+                {item.feedbackNote || '—'}
+              </td>
+              <td rowSpan={item.details.length} className="px-3 py-2 border border-gray-200 align-middle">
+                {item.userName || '—'}
+              </td>
+              <td
+                rowSpan={item.details.length}
+                className="px-3 py-2 border border-gray-200 text-center align-middle"
+              >
+                <button
+                  onClick={() => handleDeleteClick(item.checkID)}
+                  className="text-red-600 hover:text-red-800 text-base"
+                  title="Xoá"
+                >
+                  <FaTrash />
+                </button>
+              </td>
+            </>
+          )}
+        </tr>
+      ))}
 
-                            </td>
-                        </>
-                    )}
-                    </tr>
-                ))
-                )}
-            </tbody>
+      {/* Dòng hiển thị hình ảnh - STT bên trái, hình ảnh bên phải */}
+      {item.images?.length > 0 && (
+  <tr>
+    <td colSpan={1} className="px-3 py-2 border border-gray-200 text-center font-medium bg-gray-100">
+      Ảnh
+    </td>
+    <td colSpan={10} className="px-3 py-2 border border-gray-200 bg-gray-50">
+      <div className="flex flex-wrap gap-3">
+        {item.images.map((url, index) => (
+          <img
+            key={index}
+            src={url}
+            alt={`Ảnh ${index + 1}`}
+            className="w-24 h-24 object-cover rounded shadow border cursor-pointer hover:scale-105 transition"
+    onClick={() => handleOpenImageModal(index, item.images)}
+          />
+        ))}
+      </div>
+    </td>
+  </tr>
+)}
+
+    </React.Fragment>
+  ))}
+</tbody>
+
+
             </table>
           </div>
         )}
       </div>
+
+      {imageModalOpen && selectedItemImages.length > 0 && (
+  <div className="fixed inset-0 z-[99999] bg-black bg-opacity-60 flex items-center justify-center">
+    <div className="bg-white p-4 rounded shadow-lg max-w-[90%] max-h-[90%] w-full relative overflow-auto">
+      <img
+        src={selectedItemImages[selectedImageIndex]}
+        alt="Ảnh lớn"
+        className="w-[70%] h-auto mb-4 rounded"
+      />
+      <div className="flex justify-between">
+        <button onClick={handlePrevImage} className="px-4 py-2 bg-gray-200 rounded">Trước</button>
+        <button onClick={handleNextImage} className="px-4 py-2 bg-gray-200 rounded">Tiếp</button>
+      </div>
+      <button
+        onClick={handleCloseImageModal}
+        className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+)}
+
 
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
