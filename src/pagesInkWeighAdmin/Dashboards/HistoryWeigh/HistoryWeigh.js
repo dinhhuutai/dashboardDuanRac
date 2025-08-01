@@ -117,7 +117,7 @@ function HistoryWeigh() {
           <option value="CP">Cấp phát</option>
           <option value="TH">Thu hồi</option>
           <option value="CM">Cấp mực</option>
-          <option value="TV">Trả lại</option>
+          <option value="TV">Trả về</option>
           <option value="GC">Giao ca</option>
           <option value="CX">Chuyển xe</option>
         </select>
