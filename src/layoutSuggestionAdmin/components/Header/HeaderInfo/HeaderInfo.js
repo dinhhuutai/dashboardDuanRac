@@ -25,7 +25,6 @@ function HeaderInfo() {
       </div>
       <div className="ml-[10px] flex flex-col">
         <span className="text-[14px] font-[600] text-[#6C7278]">{user?.fullName}</span>
-        <span className="text-[12px] text-[#b8bec4]">VP People Manager</span>
       </div>
     </div>
   );
