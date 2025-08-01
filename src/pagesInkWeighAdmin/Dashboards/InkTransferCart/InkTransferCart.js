@@ -66,11 +66,11 @@ function InkTransferCart() {
             <tr className="bg-gray-100">
               <th className="border px-2 py-1">Xe (Cân)</th>
               <th className="border px-2 py-1">Mực nhận từ kho</th>
-              <th className="border px-2 py-1">Nhận bàn giao ca</th>
+              <th className="border px-2 py-1">Trả về kho</th>
               <th className="border px-2 py-1">Mực cấp</th>
               <th className="border px-2 py-1">Mực hoàn về</th>
-              <th className="border px-2 py-1">Chuyển ca sau</th>
-              <th className="border px-2 py-1">Trả về kho</th>
+              <th className="border px-2 py-1">Nhận bàn giao ca</th>
+              <th className="border px-2 py-1">Chuyển xe</th>
               <th className="border px-2 py-1">Mực sử dụng</th>
               <th className="border px-2 py-1">Hao hụt</th>
             </tr>
@@ -85,11 +85,11 @@ function InkTransferCart() {
                 <tr key={idx} className="hover:bg-gray-50">
                   <td className="border px-2 py-1">{row.scaleName || row.scaleCode}</td>
                   <td className="border px-2 py-1 text-right">{row.muc_nhan_tu_kho.toFixed(1)}</td>
-                  <td className="border px-2 py-1 text-right">{row.nhan_ban_giao_ca.toFixed(1)}</td>
+                  <td className="border px-2 py-1 text-right">{row.muc_tra_ve_kho.toFixed(1)}</td>
                   <td className="border px-2 py-1 text-right">{row.muc_cap_cho_chuyen.toFixed(1)}</td>
                   <td className="border px-2 py-1 text-right">{row.muc_chuyen_hoan_ve.toFixed(1)}</td>
+                  <td className="border px-2 py-1 text-right">{row.nhan_ban_giao_ca.toFixed(1)}</td>
                   <td className="border px-2 py-1 text-right">{row.muc_chuyen_ca_sau.toFixed(1)}</td>
-                  <td className="border px-2 py-1 text-right">{row.muc_tra_ve_kho.toFixed(1)}</td>
                   <td className="border px-2 py-1 text-right">{row.su_dung.toFixed(1)}</td>
                   <td className="border px-2 py-1 text-right font-bold text-red-600">{row.hao_hut.toFixed(1)}</td>
                 </tr>

@@ -198,7 +198,7 @@ function HistoryWeigh() {
                 {session.operationCode === 'CP' ? 'Cấp phát' :
                   session.operationCode === 'TH' ? 'Thu hồi' :
                   session.operationCode === 'CM' ? 'Cấp mực' :
-                  session.operationCode === 'TV' ? 'Trả lại' :
+                  session.operationCode === 'TV' ? 'Trả về' :
                   session.operationCode === 'GC' ? 'Giao ca' :
                   session.operationCode === 'CX' ? 'Chuyển xe' :
                   session.operationCode}
@@ -241,7 +241,7 @@ function HistoryWeigh() {
         {session.operationCode === 'CP' ? 'Cấp phát' :
          session.operationCode === 'TH' ? 'Thu hồi' :
          session.operationCode === 'CM' ? 'Cấp mực' :
-         session.operationCode === 'TV' ? 'Trả lời' :
+         session.operationCode === 'TV' ? 'Trả về' :
          session.operationCode === 'GC' ? 'Giao ca' :
          session.operationCode === 'CX' ? 'Chuyển xe' :
          session.operationCode}

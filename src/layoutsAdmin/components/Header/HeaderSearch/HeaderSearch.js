@@ -33,7 +33,7 @@ function HeaderSearch() {
                 user.operationType === 'canrac' ?
                 <></> :
                 <button
-                    onClick={() => navigate(config.routes.adminInkWeighAnalytics)}
+                    onClick={() => navigate(config.routes.adminInkWeighProductionOrder)}
                     className={`text-[13px] px-[22px] py-[6px] bg-[#0077b6] text-white rounded hover:bg-[#0096c7] transition-all`}
                 >
                     Cân mực
