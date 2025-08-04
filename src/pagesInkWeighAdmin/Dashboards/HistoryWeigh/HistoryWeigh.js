@@ -52,7 +52,7 @@ function HistoryWeigh() {
       setTotalWeight(sum);
 
       
-        // ✅ Trích xuất bộ phận và chuyền duy nhất
+        // Trích xuất bộ phận và chuyền duy nhất
         const uniqueDepartments = [...new Set(sessions.map(s => s.department).filter(Boolean))];
         const uniqueUnits = [...new Set(sessions.map(s => s.unit).filter(Boolean))];
         setDepartments(uniqueDepartments);
@@ -61,7 +61,7 @@ function HistoryWeigh() {
     } catch (err) {
       console.error('Lỗi khi lấy dữ liệu lịch sử:', err);
     } finally {
-      setIsLoading(false); // ✅ Dừng hiệu ứng loading
+      setIsLoading(false); // Dừng hiệu ứng loading
     }
   };
 

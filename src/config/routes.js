@@ -55,6 +55,8 @@ const routes = {
   adminInkWeighProductionOrder: '/admin/menu/dashboard/ink-weigh/production-order',
   adminInkWeighInkTransferCart: '/admin/menu/dashboard/ink-weigh/ink-transfer-cart',
   adminInkWeighHistory: '/admin/menu/dashboard/ink-weigh/history',
+  adminInkWeigCompare: '/admin/menu/dashboard/ink-weigh/compare',
+
   adminInkWeighLogfile: '/admin/menu/dashboard/ink-weigh/logfile',
   
   adminFeedbackList: '/admin/manage/list-feedback',
