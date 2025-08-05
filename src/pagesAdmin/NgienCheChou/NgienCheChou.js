@@ -305,14 +305,10 @@ const NgienCheChou = () => {
         setLoading(false);
         console.error('Lỗi khi tải dữ liệu: ', error.message);
       } finally {
-        setLoading(false);
       }
     };
 
-
     const fetchByMonthReport = async () => {
-
-      setLoading(true);
       try {
         let start, end;
 
@@ -753,7 +749,13 @@ const NgienCheChou = () => {
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
     <div className="flex flex-col items-center gap-4">
       <FaSpinner className="animate-spin text-blue-600 text-5xl" />
-      <span className="text-gray-700 text-lg font-medium">Đang tải dữ liệu...</span>
+      <span
+  className="animate-spin text-gray-700 text-lg font-medium"
+  style={{ animationDirection: 'reverse' }}
+>
+  Loading...
+</span>
+
     </div>
   </div>
 )}
