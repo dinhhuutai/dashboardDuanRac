@@ -68,6 +68,7 @@ const routes = {
   adminSuggestionCategoriList: '/admin/menu/suggestion/categori/list',
   adminSuggestionList: '/admin/menu/suggestion/create',
   
+  adminNgienCheChou: '/admin/Ngien-Che-chou',
 };
 
 export default routes;

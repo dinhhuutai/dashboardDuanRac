@@ -51,7 +51,8 @@ function CompareWeigh() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-xl space-y-6">
+    <div className="p-4">
+      <div className="p-4 space-y-6 bg-white rounded-[6px]">
       <h1 className="text-2xl font-bold">📊 So sánh Yêu cầu vs Thực tế xuất kho</h1>
 
       {/* Bộ lọc */}
@@ -130,6 +131,7 @@ function CompareWeigh() {
   </table>
 </div>
 
+    </div>
     </div>
   );
 }

@@ -102,8 +102,18 @@ module.exports = {
           '0%': { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
           '100%': { transform: 'translate(300px, 300px) rotate(360deg)', opacity: 0 },
         },
+        gradientMove: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        orbit: {
+          '0%': { transform: 'rotate(0deg) translateX(80px) rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg) translateX(80px) rotate(-360deg)' },
+        },
       },
       animation: {
+        gradientMove: 'gradientMove 6s ease infinite',
+        orbit: 'orbit 6s linear infinite',
         superman: 'superman 2s ease-in-out infinite',
         'wind-left': 'windLeft 5s linear infinite',
         'wind-right': 'windRight 5s linear infinite',

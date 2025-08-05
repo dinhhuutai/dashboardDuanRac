@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BsRocket,
   BsChevronDown,
@@ -36,6 +36,7 @@ function Sidebar() {
   const [downFeedback, setDownFeedback] = useState(false);
   const [downTrashTruck, setDownTrashTruck] = useState(false);
 
+    const navigate = useNavigate();
   
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
@@ -536,6 +537,46 @@ function Sidebar() {
           </ul>
         </li>
       </ul>
+
+      <div className="flex justify-center">
+  {(user.username === 'dinhhuutai' || user.username === 'thaonguyen') && (
+    <div className="relative inline-block">
+      {/* Sao băng bay qua */}
+      <div className="absolute -top-2 -left-2 w-20 h-20 animate-[spin_4s_linear_infinite]">
+        <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_10px_2px_white] blur-sm"></div>
+      </div>
+
+      {/* 🪐 Hành tinh quay */}
+      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-36 h-36 pointer-events-none">
+        <div className="w-full h-full animate-orbit relative">
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 text-xl">
+            🪐
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => navigate(config.routes.adminNgienCheChou)}
+        className="relative z-10 text-sm px-6 py-2 rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+                   bg-[length:300%_300%] animate-gradientMove
+                   hover:scale-105 transition-all text-white shadow-lg overflow-hidden"
+      >
+        <span className="relative z-10">Ngiên Chẻ Chou (màu galaxy)</span>
+
+        {/* Lấp lánh nền */}
+        <div className="absolute inset-0 bg-white opacity-10 mix-blend-overlay pointer-events-none animate-pulse"></div>
+
+        {/* Sao lấp lánh */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/3 w-1 h-1 bg-white rounded-full animate-ping"></div>
+          <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping delay-300"></div>
+          <div className="absolute bottom-1/3 left-1/4 w-1 h-1 bg-pink-300 rounded-full animate-ping delay-700"></div>
+        </div>
+      </button>
+    </div>
+  )}
+</div>
+
     </div>
   );
 }

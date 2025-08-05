@@ -21,6 +21,8 @@ import Section from '~/pagesAdmin/Menu/Applications/Section';
 import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
 import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
 
+import NgienCheChou from '~/pagesAdmin/NgienCheChou';
+
 import Report from '~/pagesAdmin/Menu/Reports/Report';
 import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
 import ReportByTrash from '~/pagesAdmin/Menu/Reports/ReportTrash';
@@ -274,6 +276,11 @@ export const routesAdmin = [
   {
     path: config.routes.adminClassCheckListBin,
     component: ListBinClassCheck,
+    login: true,
+  },
+  {
+    path: config.routes.adminNgienCheChou,
+    component: NgienCheChou,
     login: true,
   },
 ];

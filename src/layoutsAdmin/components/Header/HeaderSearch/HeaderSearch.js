@@ -18,7 +18,6 @@ function HeaderSearch() {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
 
-  console.log(user);
 
     return (
         <div className="flex items-center h-full gap-[8px]">
