@@ -288,6 +288,8 @@ function Home() {
                   <span className="animate-pulse">|</span>
                 </h1>
 
+{
+  user?.operationType !== 'canmuc' &&
                 <div className="flex flex-col md:flex-row justify-center items-center gap-4">
                   <button
                     onClick={handleScanQR}
@@ -327,6 +329,7 @@ function Home() {
                     </button>
                   )}
                 </div>
+}
               </div>
             )}
           </div>

@@ -26,7 +26,7 @@ function Header() {
       <nav className="hidden md:flex items-center gap-10">
         {user?.role === 'admin' && (
           <button
-            onClick={() => navigate(config.routes.adminAnalytics)}
+            onClick={() => user?.operationType === 'canmuc' ? navigate(config.routes.adminInkWeighHistory) : navigate(config.routes.adminAnalytics)}
             className="text-[13px] px-3 py-1.5 bg-[#f4253a] text-white rounded hover:bg-[#f4253ad8] transition"
           >
             Dashboard
@@ -102,10 +102,10 @@ function Header() {
           <div className="flex flex-col p-4 gap-4">
             {user?.role === 'admin' && (
               <button
-                onClick={() => {
-                  navigate(config.routes.adminAnalytics);
-                  setMenuOpen(false);
-                }}
+              onClick={() => {
+                user?.operationType === 'canmuc' ? navigate(config.routes.adminInkWeighHistory) : navigate(config.routes.adminAnalytics);
+                setMenuOpen(false);
+              }}
                 className="text-[13px] px-3 py-2 bg-[#f4253a] text-white rounded hover:bg-[#f4253ad8] transition"
               >
                 Dashboard
