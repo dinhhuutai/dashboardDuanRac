@@ -2,15 +2,28 @@ import HeaderLogo from "./HeaderLogo";
 import HeaderSearch from "./HeaderSearch";
 import HeaderNotice from "./HeaderNotice";
 import HeaderInfo from "./HeaderInfo";
+import { useSelector } from "react-redux";
+import { userSelector } from "~/redux/selectors";
+import { useEffect, useState } from "react";
 
 
 function Header({ toggleSidebar }) {
+    
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+  }, [tmp]);
+
+  console.log(user)
+
     return (
         <div className='shadow-lg shadow-indigo-500/10 h-full w-full flex'>
             <HeaderLogo onToggle={toggleSidebar} />
 
             <div className="flex-1 flex justify-between items-center px-[24px]">
-                <HeaderSearch />
+                {user?.operationType !== 'canmuc' && <HeaderSearch />}
                 <div className="md:flex items-center hidden">
                     <HeaderNotice />
                     <div className="w-[1.5px] h-[28px] bg-[#DEE2E6] mx-[20px]"></div>

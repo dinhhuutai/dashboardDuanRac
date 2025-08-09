@@ -55,6 +55,9 @@ function Login() {
 
         if (user?.operationType.trim().toLowerCase() === 'full') {
           navigate(config.routes.adminAnalytics);
+        } else if (user?.operationType.trim().toLowerCase() === 'canmuc' && user?.role === 'admin') {
+          console.log('123: canmuc');
+          navigate(config.routes.adminInkWeighHistory);
         } else {
           navigate(config.routes.home);
         }
@@ -78,7 +81,7 @@ function Login() {
       style={{ backgroundImage: `url(${bgLogin})` }}
     >
       <div className="bg-white bg-opacity-90 p-10 mx-[20px] rounded-2xl shadow-2xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">Đăng nhập Hệ thống Quản lý Rác thải</h1>
+        <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">Đăng nhập Hệ thống Nội Bộ</h1>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-green-800 font-semibold mb-1">Tên đăng nhập</label>
