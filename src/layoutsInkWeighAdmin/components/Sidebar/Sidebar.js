@@ -91,7 +91,7 @@ function Sidebar() {
                         : 'font-[400] py-[6px] px-[22px] block w-full'
                     }
                   >
-                    so sánh cân
+                    so sánh định mức
                   </NavLink>
                 </li>
                 <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
@@ -104,6 +104,18 @@ function Sidebar() {
                     }
                   >
                     Log file
+                  </NavLink>
+                </li>
+                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
+                  <NavLink
+                    to={config.routes.adminReportCartInk}
+                    className={(nav) =>
+                      nav.isActive
+                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
+                        : 'font-[400] py-[6px] px-[22px] block w-full'
+                    }
+                  >
+                    Báo cáo xe cân mực
                   </NavLink>
                 </li>
            </ul> 

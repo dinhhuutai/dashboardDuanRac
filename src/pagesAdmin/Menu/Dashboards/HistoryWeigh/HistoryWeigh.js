@@ -6,6 +6,7 @@ import { FaTrash, FaEdit } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
+import { FaSpinner } from 'react-icons/fa';
 
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -281,7 +282,19 @@ function HistoryWeigh() {
 
 
         {loading ? (
-          <div className="text-center text-blue-500">Đang tải dữ liệu...</div>
+          
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4">
+                <FaSpinner className="animate-spin text-blue-600 text-5xl" />
+                <span
+            className="animate-spin text-gray-700 text-lg font-medium"
+            style={{ animationDirection: 'reverse' }}
+          >
+            Loading...
+          </span>
+          
+              </div>
+            </div>
         ) : error ? (
           <div className="text-red-500">{error}</div>
         ) : (

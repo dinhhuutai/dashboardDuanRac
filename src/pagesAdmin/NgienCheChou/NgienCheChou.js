@@ -25,6 +25,7 @@ const NgienCheChou = () => {
   const [data2, setData2] = useState(0);
   const [data3, setData3] = useState(0);
   const [data4, setData4] = useState(0);
+  const [data5, setData5] = useState(0);
 
   const [dayWork, setDayWork] = useState(1);
 
@@ -292,6 +293,7 @@ const NgienCheChou = () => {
             tmp[key] = sumEvery7(tmp[key]);
           }
 
+          setData5((Number(tmp['Tổng cộng-'][8]) - Number(tmp['Tổng cộng-'][3])).toFixed(1));
           
           const [top1, top2, top3] = getTop3Keys(tmp);
           setMax1(top1);
@@ -314,7 +316,7 @@ const NgienCheChou = () => {
 
     const selectedDate = new Date(dateOne);
     start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1); // ngày đầu tháng
-    end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0); // ngày cuối tháng
+    end = new Date(selectedDate); // ngày chọn
 
     setStartDate(start);
     setEndDate(end);
@@ -797,7 +799,27 @@ const NgienCheChou = () => {
     </div>
         </div>
 
-<div class="bg-white p-4 rounded mx-auto mt-[10px]">
+        <div className='mt-[10px]'>
+          <div className="flex">
+            <span className="px-2 py-1 rounded-l text-sm font-semibold">
+              Tổng số rác thải không tính keo bàn: {`${data2}`}kg
+            </span>
+          </div>
+  
+          <div className="flex">
+            <span className="px-2 py-1 rounded-l text-sm font-semibold">
+              Tổng số rác thải trung bình ngày không tính keo bàn: {`${Number(data4).toFixed(1)}`}kg
+            </span>
+          </div>
+
+          <div className="flex">
+            <span className="px-2 py-1 rounded-l text-sm font-semibold">
+              Tổng số rác thải ngày {formatDateToVNString1(dateOne)} không tính keo bàn: {`${data5}`}kg
+            </span>
+          </div>
+        </div>
+
+<div class="bg-white p-4 rounded mx-auto mt-[4px]">
   <h2 class="text-center text-lg font-bold text-[#003366] mb-4">
     {`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}`}
   </h2>
