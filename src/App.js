@@ -34,8 +34,15 @@ function App() {
                 path={route.path}
                 element={
                   route.isLogin ? (
-                    user.login.currentUser ? (
-                      <Navigate to={config.routes.home} />
+  user.login.currentUser ? (
+    user.login.currentUser.operationType?.trim().toLowerCase() === 'canmuc' &&
+    user.login.currentUser.role?.trim().toLowerCase() === 'admin' ? (
+      <Navigate to={config.routes.adminInkWeighHistory} />
+    ) : user.login.currentUser.operationType?.trim().toLowerCase() === 'full' ? (
+      <Navigate to={config.routes.adminAnalytics} />
+    ) : (
+      <Navigate to={config.routes.home} />
+    )
                     ) : (
                       <route.component />
                     )

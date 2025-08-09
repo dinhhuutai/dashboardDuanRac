@@ -2,15 +2,27 @@ import { BsSearch, BsChevronDown } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
 import config from "~/config";
 
+import { useSelector } from "react-redux";
+import { userSelector } from "~/redux/selectors";
+import { useEffect, useState } from "react";
 
 
 function HeaderSearch() {
 
     const navigate = useNavigate();
+    
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  
+  useEffect(() => {
+    setUser(tmp?.login?.currentUser);
+  }, [tmp]);
 
     return (
         <div className="flex items-center h-full gap-[8px]">
-                <button
+          {user?.operationType !== 'canmuc' && 
+            <>
+              <button
                     onClick={() => navigate(config.routes.home)}
                     className="text-[13px] px-[22px] py-[6px] bg-[#6b6a6a] text-white rounded hover:bg-[#7e7f80] transition-all"
                 >
@@ -23,6 +35,9 @@ function HeaderSearch() {
   >
     Cân rác
   </button>
+            </>
+          }
+                
         </div>
     );
 }

@@ -16,14 +16,12 @@ function Header({ toggleSidebar }) {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
 
-  console.log(user)
-
     return (
         <div className='shadow-lg shadow-indigo-500/10 h-full w-full flex'>
             <HeaderLogo onToggle={toggleSidebar} />
 
             <div className="flex-1 flex justify-between items-center px-[24px]">
-                {user?.operationType !== 'canmuc' && <HeaderSearch />}
+                <HeaderSearch />
                 <div className="md:flex items-center hidden">
                     <HeaderNotice />
                     <div className="w-[1.5px] h-[28px] bg-[#DEE2E6] mx-[20px]"></div>

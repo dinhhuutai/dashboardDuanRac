@@ -56,7 +56,6 @@ function Login() {
         if (user?.operationType.trim().toLowerCase() === 'full') {
           navigate(config.routes.adminAnalytics);
         } else if (user?.operationType.trim().toLowerCase() === 'canmuc' && user?.role === 'admin') {
-          console.log('123: canmuc');
           navigate(config.routes.adminInkWeighHistory);
         } else {
           navigate(config.routes.home);
