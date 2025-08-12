@@ -204,7 +204,10 @@ const ReportTrash = () => {
   useEffect(() => {
 
     if(isRacDiXuLy === true) {
-      const dataTC = reportTmp['Tổng cộng-'].filter((_, index) => ![1, 6, 7].includes(index));
+      const dataTC = reportTmp['Tổng cộng-'].filter((_, index) => ![2, 7, 8].includes(index));
+      const sum = dataTC.reduce((total, num) => total + num, 0);
+
+      dataTC.push(sum);
 
       setReport({
         'Tổng cộng-': dataTC
@@ -451,7 +454,10 @@ const ReportTrash = () => {
           setReportTmp(tmp);
 
           if(isRacDiXuLy === true) {
-            const dataTC = tmp['Tổng cộng-'].filter((_, index) => ![1, 6, 7].includes(index));
+            const dataTC = tmp['Tổng cộng-'].filter((_, index) => ![2, 7, 8].includes(index));
+            const sum = dataTC.reduce((total, num) => total + num, 0);
+
+            dataTC.push(sum);
 
             setReport({
               'Tổng cộng-': dataTC
@@ -470,19 +476,6 @@ const ReportTrash = () => {
         setLoading(false);
       }
     };
-
-  const headers = [
-    'BP/Tổ',
-    'Giẻ lau dính mực thường',
-    'Giẻ lau dính mực lapa',
-    'Băng keo',
-    'Keo bàn thải',
-    'Mực in thải',
-    'Mực in lapa thải',
-    'Vụn logo',
-    'Lụa căng khung',
-    'Tổng',
-  ];
   
   const headersDetail = [
     'BP/Tổ',
@@ -505,6 +498,7 @@ const ReportTrash = () => {
     'Mực in thải',
     'Mực in lapa thải',
     'Vụn logo',
+    'Tổng',
   ];
 
 
