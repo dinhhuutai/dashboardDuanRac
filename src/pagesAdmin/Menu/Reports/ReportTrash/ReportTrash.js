@@ -35,6 +35,8 @@ const ReportTrash = () => {
     return yesterday;
   });
   const [endDate, setEndDate] = useState(new Date());
+  const [isRacDiXuLy, setIsRacDiXuLy] = useState(false);
+
   
   const [dataTmp, setDataTmp] = useState([
     { group: 'Bổ sung', items: ['M1B', 'M2A-2B', 'TC TBS'] },
@@ -196,6 +198,20 @@ const ReportTrash = () => {
     // Gọi lần lượt từng API
     fetchTodayReport();
 
+  }, [dateOne, startDate, endDate, filterType ]);
+  
+  
+  useEffect(() => {
+
+    if(isRacDiXuLy === true) {
+      const dataTC = reportTmp['Tổng cộng-'].filter((_, index) => ![1, 6, 7].includes(index));
+
+      setReport({
+        'Tổng cộng-': dataTC
+      });
+
+      return;
+    }
     
 
     const prefixes = selectedDepartment.includes('|')
@@ -233,7 +249,7 @@ const ReportTrash = () => {
 
     }
 
-  }, [dateOne, startDate, endDate, filterType, selectedDepartment]);
+  }, [selectedDepartment, isRacDiXuLy]);
   
 
     const fetchTodayReport = async () => {
@@ -432,8 +448,19 @@ const ReportTrash = () => {
           for (const key in tmp) {
             tmp[key] = sumEvery7(tmp[key]);
           }
-          setReport(tmp);
           setReportTmp(tmp);
+
+          if(isRacDiXuLy === true) {
+            const dataTC = tmp['Tổng cộng-'].filter((_, index) => ![1, 6, 7].includes(index));
+
+            setReport({
+              'Tổng cộng-': dataTC
+            });
+
+            return;
+          } else {
+            setReport(tmp);
+          }
 
         }  
       } catch (error) {
@@ -469,6 +496,15 @@ const ReportTrash = () => {
     'Vụn logo',
     'Lụa căng khung',
     'Tổng',
+  ];
+
+  const headersDetailRXL = [
+    'Giẻ lau dính mực thường',
+    'Giẻ lau dính mực lapa',
+    'Keo bàn thải',
+    'Mực in thải',
+    'Mực in lapa thải',
+    'Vụn logo',
   ];
 
 
@@ -753,6 +789,7 @@ const ReportTrash = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
+            disabled={isRacDiXuLy}
             onClick={exportToExcel}
             className="mb-4 px-4 py-0 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -781,6 +818,18 @@ const ReportTrash = () => {
     <option value="Pha màu">Pha Màu</option>
   </select>
 </div>
+
+
+  {/* Checkbox Rác đi xử lý */}
+  <label className="mt-2 inline-flex items-center">
+    <input
+      type="checkbox"
+      checked={isRacDiXuLy}
+      onChange={(e) => setIsRacDiXuLy(e.target.checked)}
+      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+    />
+    <span className="ml-2 text-sm text-gray-700">Rác đi xử lý</span>
+  </label>
 
           <div className="flex gap-[10px]">
             {filterType === 'one' && (
@@ -850,7 +899,15 @@ const ReportTrash = () => {
           <table className="min-w-full border border-collapse border-gray-400 text-sm">
             <thead>
               <tr>
-                {headersDetail.map((header, idx) => (
+                {!isRacDiXuLy ? headersDetail.map((header, idx) => (
+                      <th
+                        key={idx}
+                        className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
+                      >
+                        {header}
+                      </th>
+                    )) :
+                    headersDetailRXL.map((header, idx) => (
                       <th
                         key={idx}
                         className="border border-gray-400 px-2 py-1 text-center bg-gray-200"
@@ -880,7 +937,7 @@ const ReportTrash = () => {
                         }`}
                         key={`${idx}-${iidx}`}
                       >
-                        {iidx === 0 && (
+                        {!isRacDiXuLy && iidx === 0 && (
                           <td
                             rowSpan={
                               selectedDepartment !== '' ? 
@@ -907,6 +964,7 @@ const ReportTrash = () => {
                           </td>
                         )}
                         {
+                          !isRacDiXuLy && 
                           <td className={`border border-gray-300 px-2 py-1 ${idx === 21 && 'font-[600]'}`}>{item}</td>
                         }
                         {report[`${group.group}-${item}`]?.map((e, i) => (
@@ -959,18 +1017,21 @@ const ReportTrash = () => {
                   )}
               {
                 selectedDepartment === "" &&
-                <tr className="bg-[#9e8f8f]">
+                <tr className={`${isRacDiXuLy ? '' : 'bg-[#9e8f8f]'}`}>
+                  {
+                    !isRacDiXuLy && 
                   <td
                     className="border border-gray-400 text-center px-2 py-1 font-bold"
                     colSpan={2}
                   >
                     Tổng cộng
                   </td>
+                  }
                   {report['Tổng cộng-']?.map(
                     (e, i) =>
                       <td
                           key={i}
-                          className="border border-gray-400 text-center font-bold px-2 py-1"
+                          className={`border border-gray-400 text-center font-bold px-2 py-1`}
                         >
                           {e === 0 ? '-' : parseFloat(e?.toFixed(1))}
                         </td>
