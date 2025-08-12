@@ -86,28 +86,6 @@ const ReportTrash = () => {
     );
   };
 
-  function groupSumWithZeros(arr) {
-    const result = [...arr];
-    for (let i = 0; i < arr.length - 1; i += 7) {
-      const sum =
-        (arr[i] || 0) +
-        (arr[i + 1] || 0) +
-        (arr[i + 2] || 0) +
-        (arr[i + 3] || 0) +
-        (arr[i + 4] || 0) +
-        (arr[i + 5] || 0) +
-        (arr[i + 6] || 0);
-      result[i] = sum;
-      result[i + 1] = 0;
-      result[i + 2] = 0;
-      result[i + 3] = 0;
-      result[i + 4] = 0;
-      result[i + 5] = 0;
-      result[i + 6] = 0;
-    }
-    return result;
-  }
-
   function formatDateToVNString(date) {
     const vnOffset = 7 * 60; // phút
     const localTime = new Date(date.getTime() + vnOffset * 60 * 1000);
@@ -138,61 +116,18 @@ const ReportTrash = () => {
     return `${day}-${month}-${year}`;
   }
 
-  function sumFirstSixElements(arr) {
-    const sum = arr.slice(0, 56).reduce((total, val) => total + val, 0);
-    const newArr = [...arr];
-    newArr.splice(56, 0, sum, 0, 0, 0, 0, 0, 0); // Chèn sum vào vị trí thứ 6
-    return newArr;
-  }
-
   function sumEvery7(arr) {
     const result = [];
+    const chunkSize = 7;
+    const len = arr.length;
 
-    for (let i = 0; i < arr.length; i += 7) {
-        let sum = 0;
-        for (let j = i; j < i + 7; j++) {
-            if(i !== arr.length - 1) {
-                sum += arr[j];
-            }
-        }
-        result.push(sum);
+    for (let i = 0; i < len - 1; i += chunkSize) {
+      result.push(arr.slice(i, i + chunkSize).reduce((sum, val) => sum + (val || 0), 0));
     }
-
-    result.push(arr[arr.length - 1]);
+    result.push(arr[len - 1]);
     result.splice(8, 2);
     return result;
-}
-
-  // console.log(report);
-
-  // useEffect(() => {
-
-  //   const prefixes = selectedDepartment.includes('|')
-  //     ? selectedDepartment.split('|')
-  //     : [selectedDepartment];
-
-  //     const filtered = Object.entries(reportTmp)
-  //   .filter(([key]) => prefixes.some(prefixe => key.startsWith(prefixe)))
-  //   .reduce((obj, [key, value]) => {
-  //     obj[key] = value;
-  //     return obj;
-  //   }, {});
-
-  //   setReport(filtered);
-
-  //   if(selectedDepartment === '') {
-  //     setData(dataTmp);
-  //   } else {
-  //     const selected = dataTmp.filter(item => item.group === selectedDepartment);
-
-  //     setData(selected);
-  //     if(selectedDepartment === 'T3') {
-  //       setData([{ group: 'T3', items: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'RC T3', 'TC T3'] }])
-  //     }
-  //   }
-
-  // }, [selectedDepartment])
-
+  }
 
   useEffect(() => {
     // Gọi lần lượt từng API
@@ -256,7 +191,6 @@ const ReportTrash = () => {
   
 
     const fetchTodayReport = async () => {
-
       setLoading(true);
       try {
         const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
@@ -268,184 +202,81 @@ const ReportTrash = () => {
         });
 
         if (res.data.status === 'success') {
-          let tmp = {
-            ['T3-M1']: res.data.data.find((entry) => entry.u === 'Chuyền 1')?.value || [...Array(64).fill(0)],
-            ['T3-M2']: res.data.data.find((entry) => entry.u === 'Chuyền 2')?.value || [...Array(64).fill(0)],
-            ['T3-M3']: res.data.data.find((entry) => entry.u === 'Chuyền 3')?.value || [...Array(64).fill(0)],
-            ['T3-M4']: res.data.data.find((entry) => entry.u === 'Chuyền 4')?.value || [...Array(64).fill(0)],
-            ['T3-M5']: res.data.data.find((entry) => entry.u === 'Chuyền 5')?.value || [...Array(64).fill(0)],
-            ['T3-M6']: res.data.data.find((entry) => entry.u === 'Chuyền 6')?.value || [...Array(64).fill(0)],
-            ['T3-M7']: res.data.data.find((entry) => entry.u === 'Chuyền 7')?.value || [...Array(64).fill(0)],
-            ['T3-M8']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
-            ['T3-RC T3']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 3')?.value || [
-              ...Array(64).fill(0),
-            ],
-            ['T3-TC T3']: [...Array(64).fill(0)],
-            ['T4A-M4A-4B']: res.data.data.find((entry) => entry.u === 'Chuyền 4A-4B')?.value || [...Array(64).fill(0)],
-            ['T4A-M5A-5B']: res.data.data.find((entry) => entry.u === 'Chuyền 5A-5B')?.value || [...Array(64).fill(0)],
-            ['T4A-M6A-6B']: res.data.data.find((entry) => entry.u === 'Chuyền 6A-6B')?.value || [...Array(64).fill(0)],
-            ['T4A-M7A-7B']: res.data.data.find((entry) => entry.u === 'Chuyền 7A-7B')?.value || [...Array(64).fill(0)],
-            ['T4A-M8A-8B']: res.data.data.find((entry) => entry.u === 'Chuyền 8A-8B')?.value || [...Array(64).fill(0)],
-            ['T4A-M9A-9B']: res.data.data.find((entry) => entry.u === 'Chuyền 9A-9B')?.value || [...Array(64).fill(0)],
-            ['T4B-M10A']: res.data.data.find((entry) => entry.u === 'Chuyền 10A')?.value || [...Array(64).fill(0)],
-            ['T4B-M11A']: res.data.data.find((entry) => entry.u === 'Chuyền 11A')?.value || [...Array(64).fill(0)],
-            ['T4B-M12A']: res.data.data.find((entry) => entry.u === 'Chuyền 12A')?.value || [...Array(64).fill(0)],
-            ['T4B-M13A']: res.data.data.find((entry) => entry.u === 'Chuyền 13A')?.value || [...Array(64).fill(0)],
-            ['T4B-M14A']: res.data.data.find((entry) => entry.u === 'Chuyền 14A')?.value || [...Array(64).fill(0)],
-            ['Robot-MRB1']: res.data.data.find((entry) => entry.u === 'Chuyền RB1')?.value || [...Array(64).fill(0)],
-            ['Robot-MRB2']: res.data.data.find((entry) => entry.u === 'Chuyền RB2')?.value || [...Array(64).fill(0)],
-            ['Robot-MRB3']: res.data.data.find((entry) => entry.u === 'Chuyền RB3')?.value || [...Array(64).fill(0)],
-            ['Robot-RC T4']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 4')
-              ?.value || [...Array(64).fill(0)],
-            ['Robot-TC T4']: [...Array(64).fill(0)],
-            ['T5-M10B']: res.data.data.find((entry) => entry.u === 'Chuyền 10B')?.value || [...Array(64).fill(0)],
-            ['T5-M11B']: res.data.data.find((entry) => entry.u === 'Chuyền 11B')?.value || [...Array(64).fill(0)],
-            ['T5-M12B']: res.data.data.find((entry) => entry.u === 'Chuyền 12B')?.value || [...Array(64).fill(0)],
-            ['T5-M13B']: res.data.data.find((entry) => entry.u === 'Chuyền 13B')?.value || [...Array(64).fill(0)],
-            ['T5-M14B']: res.data.data.find((entry) => entry.u === 'Chuyền 14B')?.value || [...Array(64).fill(0)],
-            ['T5-RC T5']: res.data.data.find((entry) => entry.u === 'Rác thải chung' && entry.d === 'Tổ 5')?.value || [
-              ...Array(64).fill(0),
-            ],
-            ['T5-TC T5']: [...Array(64).fill(0)],
-            ['Bổ sung-M1B']: res.data.data.find((entry) => entry.u === 'Chuyền 1B')?.value || [...Array(64).fill(0)],
-            ['Bổ sung-M2A-2B']: res.data.data.find((entry) => entry.u === 'Chuyền 2A-2B')?.value || [
-              ...Array(64).fill(0),
-            ],
-            ['Bổ sung-TC TBS']: [...Array(64).fill(0)],
-            ['Mẫu-M3A-3B']: res.data.data.find((entry) => entry.u === 'Chuyền 3A-3B')?.value || [...Array(64).fill(0)],
-            ['Canh hàng-M1A']: res.data.data.find((entry) => entry.u === 'Chuyền 1A')?.value || [...Array(64).fill(0)],
-            ['Pha màu-']: res.data.data.find((entry) => entry.d === 'Pha màu')?.value || [...Array(64).fill(0)],
-            ['Chụp khuôn-']: res.data.data.find((entry) => entry.d === 'Chụp khung')?.value || [...Array(64).fill(0)],
-            ['Kế hoạch-']: res.data.data.find((entry) => entry.d === 'Kế hoạch')?.value || [...Array(64).fill(0)],
-            ['Logo-']: res.data.data.find((entry) => entry.d === 'Tổ logo')?.value || [...Array(64).fill(0)],
-            ['Bán hàng-']: res.data.data.find((entry) => entry.d === 'Bán hàng')?.value || [...Array(64).fill(0)],
-            ['Chất lượng-']: res.data.data.find((entry) => entry.d === 'Chất lượng')?.value || [...Array(64).fill(0)],
-            ['Kcs-']: res.data.data.find((entry) => entry.d === 'Kcs')?.value || [...Array(64).fill(0)],
-            ['Điều hành-']: res.data.data.find((entry) => entry.d === 'Điều hành')?.value || [...Array(64).fill(0)],
-            ['Ép-']: res.data.data.find((entry) => entry.d === 'Tổ ép')?.value || [...Array(64).fill(0)],
-            ['Sửa hàng-']: res.data.data.find((entry) => entry.d === 'Tổ sửa hàng')?.value || [...Array(64).fill(0)],
-            ['Vật tư-']: res.data.data.find((entry) => entry.d === 'Vật tư')?.value || [...Array(64).fill(0)],
-            ['IT - Bảo trì-']: res.data.data.find((entry) => entry.d === 'IT - Bảo trì')?.value || [
-              ...Array(64).fill(0),
-            ],
-            ['Văn phòng-']: res.data.data.find((entry) => entry.d === 'Văn phòng')?.value || [...Array(64).fill(0)],
-            ['-Cộng']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
-            ['Tổng cộng-']: res.data.data.find((entry) => entry.u === 'Chuyền 8')?.value || [...Array(64).fill(0)],
-          };
-          
-          tmp['T2-'] = sumArrays(
-            tmp['Logo-'],
-            tmp['Ép-'],
-          );
-          
-          tmp['T3-TC T3'] = sumArrays(
-            tmp['T3-M1'],
-            tmp['T3-M2'],
-            tmp['T3-M3'],
-            tmp['T3-M4'],
-            tmp['T3-M5'],
-            tmp['T3-M6'],
-            tmp['T3-M7'],
-            tmp['T3-M8'],
-            tmp['T3-RC T3'],
-          );
-          
-          tmp['Robot-TC T4'] = sumArrays(
-            tmp['T4A-M4A-4B'],
-            tmp['T4A-M5A-5B'],
-            tmp['T4A-M6A-6B'],
-            tmp['T4A-M7A-7B'],
-            tmp['T4A-M8A-8B'],
-            tmp['T4A-M9A-9B'],
-            tmp['T4B-M10A'],
-            tmp['T4B-M11A'],
-            tmp['T4B-M12A'],
-            tmp['T4B-M13A'],
-            tmp['T4B-M14A'],
-            tmp['Robot-MRB1'],
-            tmp['Robot-MRB2'],
-            tmp['Robot-MRB3'],
-            tmp['Robot-RC T4'],
-          );
-          tmp['T5-TC T5'] = sumArrays(
-            tmp['T5-M10B'],
-            tmp['T5-M11B'],
-            tmp['T5-M12B'],
-            tmp['T5-M13B'],
-            tmp['T5-M14B'],
-            tmp['T5-RC T5'],
-          );
-          tmp['Bổ sung-TC TBS'] = sumArrays(tmp['Bổ sung-M1B'], tmp['Bổ sung-M2A-2B']);
+          const defaultArray = () => Array(64).fill(0);
 
-          tmp['-Cộng'] = sumArrays(
-            tmp['Mẫu-M3A-3B'],
-            tmp['Canh hàng-M1A'],
-            tmp['Pha màu-'],
-            tmp['Chụp khuôn-'],
-            tmp['Kế hoạch-'],
-            tmp['Logo-'],
-            tmp['Bán hàng-'],
-            tmp['Chất lượng-'],
-            tmp['Kcs-'],
-            tmp['Điều hành-'],
-            tmp['Ép-'],
-            tmp['Sửa hàng-'],
-            tmp['Vật tư-'],
-            tmp['IT - Bảo trì-'],
-            tmp['Văn phòng-'],
-          );
+  // Tạo map key => value để tra cứu nhanh
+  const dataMap = new Map();
+  res.data.data.forEach(entry => {
+    const keyU = entry.u ? `u:${entry.u}` : null;
+    const keyD = entry.d ? `d:${entry.d}` : null;
+    if (keyU) dataMap.set(keyU, entry.value);
+    if (keyD) dataMap.set(keyD, entry.value);
+  });
 
-          tmp['Tổng cộng-'] = sumArrays(
-            tmp['T3-TC T3'],
-            tmp['Robot-TC T4'],
-            tmp['T5-TC T5'],
-            tmp['Bổ sung-TC TBS'],
-            tmp['-Cộng'],
-          );
-        //   tmp['Tổng cộng-'] = groupSumWithZeros(tmp['Tổng cộng-']);
+  // Hàm lấy dữ liệu nhanh
+  const getValue = (u, d) => {
+    if (u && dataMap.has(`u:${u}`)) return dataMap.get(`u:${u}`);
+    if (d && dataMap.has(`d:${d}`)) return dataMap.get(`d:${d}`);
+    return defaultArray();
+  };
 
-        //   if (filterType === 'range') {
-        //     tmp['T3-TC T3'] = groupSumWithZeros(tmp['T3-TC T3']);
-        //     tmp['Robot-TC T4'] = groupSumWithZeros(tmp['Robot-TC T4']);
-        //     tmp['T5-TC T5'] = groupSumWithZeros(tmp['T5-TC T5']);
-        //     tmp['Bổ sung-TC TBS'] = groupSumWithZeros(tmp['Bổ sung-TC TBS']);
-        //     tmp['Mẫu-M3A-3B'] = groupSumWithZeros(tmp['Mẫu-M3A-3B']);
-        //     tmp['Canh hàng-M1A'] = groupSumWithZeros(tmp['Canh hàng-M1A']);
-        //     tmp['Pha màu-'] = groupSumWithZeros(tmp['Pha màu-']);
-        //     tmp['Chụp khuôn-'] = groupSumWithZeros(tmp['Chụp khuôn-']);
-        //     tmp['Kế hoạch-'] = groupSumWithZeros(tmp['Kế hoạch-']);
-        //     tmp['Logo-'] = groupSumWithZeros(tmp['Logo-']);
-        //     tmp['Bán hàng-'] = groupSumWithZeros(tmp['Bán hàng-']);
-        //     tmp['Chất lượng-'] = groupSumWithZeros(tmp['Chất lượng-']);
-        //     tmp['Kcs-'] = groupSumWithZeros(tmp['Kcs-']);
-        //     tmp['Điều hành-'] = groupSumWithZeros(tmp['Điều hành-']);
-        //     tmp['Ép-'] = groupSumWithZeros(tmp['Ép-']);
-        //     tmp['Sửa hàng-'] = groupSumWithZeros(tmp['Sửa hàng-']);
-        //     tmp['Vật tư-'] = groupSumWithZeros(tmp['Vật tư-']);
-        //     tmp['IT - Bảo trì-'] = groupSumWithZeros(tmp['IT - Bảo trì-']);
-        //     tmp['Văn phòng-'] = groupSumWithZeros(tmp['Văn phòng-']);
+  let tmp = {
+    ['T3-M1']: getValue('Chuyền 1'),
+    ['T3-M2']: getValue('Chuyền 2'),
+    ['T3-M3']: getValue('Chuyền 3'),
+    ['T3-M4']: getValue('Chuyền 4'),
+    ['T3-M5']: getValue('Chuyền 5'),
+    ['T3-M6']: getValue('Chuyền 6'),
+    ['T3-M7']: getValue('Chuyền 7'),
+    ['T3-M8']: getValue('Chuyền 8'),
+    ['T3-RC T3']: getValue('Rác thải chung', 'Tổ 3'),
+    ['T3-TC T3']: defaultArray(),
+    ['T4A-M4A-4B']: getValue('Chuyền 4A-4B'),
+    ['T4A-M5A-5B']: getValue('Chuyền 5A-5B'),
+    ['T4A-M6A-6B']: getValue('Chuyền 6A-6B'),
+    ['T4A-M7A-7B']: getValue('Chuyền 7A-7B'),
+    ['T4A-M8A-8B']: getValue('Chuyền 8A-8B'),
+    ['T4A-M9A-9B']: getValue('Chuyền 9A-9B'),
+    ['T4B-M10A']: getValue('Chuyền 10A'),
+    ['T4B-M11A']: getValue('Chuyền 11A'),
+    ['T4B-M12A']: getValue('Chuyền 12A'),
+    ['T4B-M13A']: getValue('Chuyền 13A'),
+    ['T4B-M14A']: getValue('Chuyền 14A'),
+    ['Robot-MRB1']: getValue('Chuyền RB1'),
+    ['Robot-MRB2']: getValue('Chuyền RB2'),
+    ['Robot-MRB3']: getValue('Chuyền RB3'),
+    ['Robot-RC T4']: getValue('Rác thải chung', 'Tổ 4'),
+    ['Robot-TC T4']: defaultArray(),
+    ['T5-M10B']: getValue('Chuyền 10B'),
+    ['T5-M11B']: getValue('Chuyền 11B'),
+    ['T5-M12B']: getValue('Chuyền 12B'),
+    ['T5-M13B']: getValue('Chuyền 13B'),
+    ['T5-M14B']: getValue('Chuyền 14B'),
+    ['T5-RC T5']: getValue('Rác thải chung', 'Tổ 5'),
+    ['T5-TC T5']: defaultArray(),
+    ['Bổ sung-M1B']: getValue('Chuyền 1B'),
+    ['Bổ sung-M2A-2B']: getValue('Chuyền 2A-2B'),
+    ['Bổ sung-TC TBS']: defaultArray(),
+    ['Mẫu-M3A-3B']: getValue('Chuyền 3A-3B'),
+    ['Canh hàng-M1A']: getValue('Chuyền 1A'),
+    ['Pha màu-']: getValue(null, 'Pha màu'),
+    ['Chụp khuôn-']: getValue(null, 'Chụp khung'),
+    ['Logo-']: getValue(null, 'Tổ logo'),
+    ['Kcs-']: getValue(null, 'Kcs'),
+    ['Ép-']: getValue(null, 'Tổ ép'),
+    ['Sửa hàng-']: getValue(null, 'Tổ sửa hàng'),
+    ['-Cộng']: defaultArray(),
+    ['Tổng cộng-']: defaultArray(),
+  };
 
-        //     tmp['T3-TC T3'] = sumFirstSixElements(tmp['T3-TC T3']);
-        //     tmp['Robot-TC T4'] = sumFirstSixElements(tmp['Robot-TC T4']);
-        //     tmp['T5-TC T5'] = sumFirstSixElements(tmp['T5-TC T5']);
-        //     tmp['Bổ sung-TC TBS'] = sumFirstSixElements(tmp['Bổ sung-TC TBS']);
-        //     tmp['Mẫu-M3A-3B'] = sumFirstSixElements(tmp['Mẫu-M3A-3B']);
-        //     tmp['Canh hàng-M1A'] = sumFirstSixElements(tmp['Canh hàng-M1A']);
-        //     tmp['Pha màu-'] = sumFirstSixElements(tmp['Pha màu-']);
-        //     tmp['Chụp khuôn-'] = sumFirstSixElements(tmp['Chụp khuôn-']);
-        //     tmp['Kế hoạch-'] = sumFirstSixElements(tmp['Kế hoạch-']);
-        //     tmp['Logo-'] = sumFirstSixElements(tmp['Logo-']);
-        //     tmp['Bán hàng-'] = sumFirstSixElements(tmp['Bán hàng-']);
-        //     tmp['Chất lượng-'] = sumFirstSixElements(tmp['Chất lượng-']);
-        //     tmp['Kcs-'] = sumFirstSixElements(tmp['Kcs-']);
-        //     tmp['Điều hành-'] = sumFirstSixElements(tmp['Điều hành-']);
-        //     tmp['Ép-'] = sumFirstSixElements(tmp['Ép-']);
-        //     tmp['Sửa hàng-'] = sumFirstSixElements(tmp['Sửa hàng-']);
-        //     tmp['Vật tư-'] = sumFirstSixElements(tmp['Vật tư-']);
-        //     tmp['IT - Bảo trì-'] = sumFirstSixElements(tmp['IT - Bảo trì-']);
-        //     tmp['Văn phòng-'] = sumFirstSixElements(tmp['Văn phòng-']);
-        //     tmp['Tổng cộng-'] = sumFirstSixElements(tmp['Tổng cộng-']);
-        //   }
+  // Các phép cộng giữ nguyên
+  tmp['T2-'] = sumArrays(tmp['Logo-'], tmp['Ép-']);
+  tmp['T3-TC T3'] = sumArrays(tmp['T3-M1'], tmp['T3-M2'], tmp['T3-M3'], tmp['T3-M4'], tmp['T3-M5'], tmp['T3-M6'], tmp['T3-M7'], tmp['T3-M8'], tmp['T3-RC T3']);
+  tmp['Robot-TC T4'] = sumArrays(tmp['T4A-M4A-4B'], tmp['T4A-M5A-5B'], tmp['T4A-M6A-6B'], tmp['T4A-M7A-7B'], tmp['T4A-M8A-8B'], tmp['T4A-M9A-9B'], tmp['T4B-M10A'], tmp['T4B-M11A'], tmp['T4B-M12A'], tmp['T4B-M13A'], tmp['T4B-M14A'], tmp['Robot-MRB1'], tmp['Robot-MRB2'], tmp['Robot-MRB3'], tmp['Robot-RC T4']);
+  tmp['T5-TC T5'] = sumArrays(tmp['T5-M10B'], tmp['T5-M11B'], tmp['T5-M12B'], tmp['T5-M13B'], tmp['T5-M14B'], tmp['T5-RC T5']);
+  tmp['Bổ sung-TC TBS'] = sumArrays(tmp['Bổ sung-M1B'], tmp['Bổ sung-M2A-2B']);
+  tmp['-Cộng'] = sumArrays(tmp['Mẫu-M3A-3B'], tmp['Canh hàng-M1A'], tmp['Pha màu-'], tmp['Chụp khuôn-'], tmp['Logo-'], tmp['Kcs-'], tmp['Ép-'], tmp['Sửa hàng-']);
+  tmp['Tổng cộng-'] = sumArrays(tmp['T3-TC T3'], tmp['Robot-TC T4'], tmp['T5-TC T5'], tmp['Bổ sung-TC TBS'], tmp['-Cộng']);
 
         
           for (const key in tmp) {
@@ -462,8 +293,6 @@ const ReportTrash = () => {
             setReport({
               'Tổng cộng-': dataTC
             });
-
-            return;
           } else {
             setReport(tmp);
           }
