@@ -5,6 +5,8 @@ import {
   Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { BASE_URL_SERVER_THLA } from '~/config';
+import * as XLSX from "xlsx-js-style";
+import { saveAs } from "file-saver";
 
 function CompareWeigh() {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -64,6 +66,115 @@ function CompareWeigh() {
     return rawData;
   };
 
+  const exportExcel = () => {
+  const title = `📊 So sánh Yêu cầu vs Thực tế xuất kho từ ${fromDate} đến ${toDate}`;
+  const wsData = [];
+
+  // Tiêu đề
+  wsData.push([title]);
+  wsData.push([]);
+  wsData.push(["Lệnh SX", "Mã mực", "Yêu cầu (g)", "Thực tế (g)", "Chênh lệch (g)"]);
+
+  // Merge tiêu đề
+  const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+  let currentRow = 3;
+
+  // Group theo Lệnh SX để xen kẽ màu
+  let grouped = {};
+  displayedData().forEach((item) => {
+    if (!grouped[item.lenhsx]) grouped[item.lenhsx] = [];
+    grouped[item.lenhsx].push(item);
+  });
+
+  Object.entries(grouped).forEach(([lenhsx, rows]) => {
+    rows.forEach((row) => {
+      wsData.push([
+        lenhsx,
+        row.inkcode,
+        row.kehoach,
+        row.thucte,
+        row.thucte - row.kehoach,
+      ]);
+      currentRow++;
+    });
+  });
+
+  // Tạo sheet
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws["!merges"] = merges;
+  ws["!cols"] = [
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+  ];
+
+  // Style
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  let currentGroupColor = false;
+  let lastLenh = "";
+
+  for (let R = 0; R <= range.e.r; ++R) {
+    const firstCellValue = ws[XLSX.utils.encode_cell({ r: R, c: 0 })]?.v;
+
+    // Đổi màu xen kẽ mỗi khi sang Lệnh SX mới
+    if (firstCellValue && R > 2 && firstCellValue !== lastLenh) {
+      currentGroupColor = !currentGroupColor;
+      lastLenh = firstCellValue;
+    }
+
+    for (let C = 0; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellRef]) continue;
+
+      if (R === 0) {
+        // Tiêu đề lớn
+        ws[cellRef].s = {
+          font: { bold: true, sz: 16 },
+          alignment: { horizontal: "center", vertical: "center" },
+        };
+      } else if (R === 2) {
+        // Header cột
+        ws[cellRef].s = {
+          font: { bold: true },
+          fill: { fgColor: { rgb: "DDDDDD" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          border: {
+            top: { style: "thin" },
+            bottom: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+          },
+        };
+      } else {
+        const isNumberCol = C >= 2;
+        ws[cellRef].s = {
+          fill: currentGroupColor ? { fgColor: { rgb: "F9F9F9" } } : undefined,
+          alignment: { horizontal: isNumberCol ? "right" : "center", vertical: "center" },
+          border: {
+            top: { style: "thin" },
+            bottom: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+          },
+          numFmt: isNumberCol ? "#,##0" : undefined,
+        };
+      }
+    }
+  }
+
+  // Xuất file
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "So sánh");
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  saveAs(
+    new Blob([excelBuffer], { type: "application/octet-stream" }),
+    `So_sanh_can_muc_${fromDate}_den_${toDate}.xlsx`
+  );
+};
+
+
   return (
     <div className="p-4">
       <div className="p-4 space-y-6 bg-white rounded-[6px]">
@@ -100,7 +211,16 @@ function CompareWeigh() {
               Chỉ hiện mực chênh lệch &gt; 30g
             </label>
           </div>
+
+          
+  <button
+    onClick={exportExcel}
+    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mt-2"
+  >
+    📥 Xuất Excel
+  </button>
         </div>
+        
 
         {/* Biểu đồ */}
         <div className="relative h-[400px] w-full">

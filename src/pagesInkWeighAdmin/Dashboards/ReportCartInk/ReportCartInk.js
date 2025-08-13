@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import * as XLSX from 'xlsx-js-style';
+import { saveAs } from 'file-saver';
 import { BASE_URL_SERVER_THLA } from '~/config';
 
 function ReportCartInk() {
@@ -32,12 +34,101 @@ function ReportCartInk() {
     acc[key].push(item);
     return acc;
   }, {});
-  
-  const formatDate = (isoDateStr) => {
-    if (!isoDateStr) return '';
-    const date = new Date(isoDateStr);
-    return date.toLocaleDateString('vi-VN'); // ví dụ: 27/06/2025
-  };
+
+  const exportExcel = () => {
+  const title = `📦 Báo cáo Xe mực từ ${from} đến ${to}`;
+  const wsData = [];
+  const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+
+  wsData.push([title]);
+  wsData.push([]);
+  wsData.push(["#", "Tên mực", "Chuyền", "Ngày giờ cân", "Nghiệp vụ", "Khối lượng (g)"]);
+
+  let currentRow = 3;
+  Object.entries(groupedData).forEach(([vehicleName, records]) => {
+    wsData.push([`Xe mực: ${vehicleName}`]);
+    merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 5 } });
+    currentRow++;
+
+    records.forEach((r, i) => {
+      wsData.push([
+        i + 1,
+        r.inkName,
+        r.lineName,
+        dayjs(r.createdAt).subtract(7, 'hour').format('DD/MM/YYYY HH:mm'),
+        r.operationCode === 'TV' ? 'Trả' : 'Cấp mực',
+        r.weight,
+      ]);
+      currentRow++;
+    });
+
+    wsData.push([]);
+    currentRow++;
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws["!merges"] = merges;
+  ws["!cols"] = [
+    { wch: 5 },
+    { wch: 25 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 18 },
+  ];
+
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  for (let R = 0; R <= range.e.r; ++R) {
+    const isTitle = R === 0;
+    const isHeader = R === 2;
+    const isVehicleRow = ws[XLSX.utils.encode_cell({ r: R, c: 0 })]?.v?.toString().startsWith("Xe mực:");
+    const isOddRow = R % 2 === 1;
+
+    for (let C = 0; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellRef]) continue;
+
+      const isNumberCol = C === 5;
+
+      let style = {
+        alignment: { horizontal: isNumberCol ? "right" : "center", vertical: "center" },
+        font: { name: "Calibri", sz: 11 },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } },
+        }
+      };
+
+      if (isTitle) {
+        style.font = { bold: true, sz: 16, name: "Calibri" };
+        style.alignment = { horizontal: "center", vertical: "center" };
+      } else if (isHeader) {
+        style.font.bold = true;
+        style.fill = { fgColor: { rgb: "DDDDDD" } };
+      } else if (isVehicleRow) {
+        style.font.bold = true;
+        style.fill = { fgColor: { rgb: "FFF2CC" } };
+        style.alignment = { horizontal: "left", vertical: "center" };
+      } else {
+        style.fill = isOddRow ? { fgColor: { rgb: "F9F9F9" } } : undefined;
+      }
+
+      if (isNumberCol && !isHeader && !isVehicleRow && !isTitle) {
+        style.numFmt = "#,##0.0";
+      }
+
+      ws[cellRef].s = style;
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Báo cáo Xe mực");
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `Bao_cao_Xe_muc_${from}_den_${to}.xlsx`);
+};
+
 
   return (
     <div className="p-6 max-w-screen-xl mx-auto">
@@ -60,6 +151,12 @@ function ReportCartInk() {
             className="border border-gray-300 rounded px-3 py-2 mt-1 text-sm shadow-sm"
           />
         </div>
+        <button
+          onClick={exportExcel}
+          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+        >
+          📥 Xuất Excel
+        </button>
       </div>
 
       {loading ? (
@@ -67,21 +164,19 @@ function ReportCartInk() {
       ) : (
         Object.entries(groupedData).map(([vehicleName, records], idx) => {
           const summary = records.reduce(
-  (acc, r) => {
-    if (!acc.inks[r.inkName]) acc.inks[r.inkName] = 0;
-
-    if (r.operationCode === 'CM') {
-      acc.inks[r.inkName] += r.weight;
-      acc.total += r.weight;
-    } else if (r.operationCode === 'TV') {
-      acc.inks[r.inkName] -= r.weight;
-      acc.total -= r.weight;
-    }
-
-    return acc;
-  },
-  { inks: {}, total: 0 }
-);
+            (acc, r) => {
+              if (!acc.inks[r.inkName]) acc.inks[r.inkName] = 0;
+              if (r.operationCode === 'CM') {
+                acc.inks[r.inkName] += r.weight;
+                acc.total += r.weight;
+              } else if (r.operationCode === 'TV') {
+                acc.inks[r.inkName] -= r.weight;
+                acc.total -= r.weight;
+              }
+              return acc;
+            },
+            { inks: {}, total: 0 }
+          );
 
           return (
             <div
@@ -92,26 +187,12 @@ function ReportCartInk() {
                 Xe mực: {vehicleName}
               </h2>
 
-              <div className="mb-3 text-sm text-gray-700">
-                {/* <strong className="block mb-1">🎨 Mực sử dụng:</strong>
-                <div className="flex flex-wrap gap-3">
-                  {Object.entries(summary.inks).map(([name, weight]) => (
-                    <span
-                      key={name}
-                      className="bg-gray-100 px-3 py-1 rounded-full text-sm shadow-sm"
-                    >
-                      {name}: <strong>{weight.toFixed(1)} g</strong>
-                    </span>
-                  ))}
-                </div> */}
-
-                <div className="mt-2 text-base">
-                  <strong>Tổng mực sử dụng:</strong>{' '}
-                  <span className="text-red-600 font-bold">{summary.total.toFixed(1)} g</span>
-                </div>
+              <div className="mt-2 text-base">
+                <strong>Tổng mực sử dụng:</strong>{' '}
+                <span className="text-red-600 font-bold">{summary.total.toFixed(1)} g</span>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto mt-3">
                 <table className="w-full text-sm border border-gray-300 shadow-sm">
                   <thead>
                     <tr className="bg-gray-200 text-gray-700">

@@ -457,7 +457,6 @@ const ReportTrash = () => {
     'Tổng',
   ];
 
-
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
 

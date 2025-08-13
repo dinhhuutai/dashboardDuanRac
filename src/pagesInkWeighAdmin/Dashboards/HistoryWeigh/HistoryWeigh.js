@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL, BASE_URL_SERVER_THLA } from '../../../config';
+import * as XLSX from "xlsx-js-style";
+import { saveAs } from "file-saver";
 
 const PAGE_SIZE = 10;
 
@@ -87,12 +89,165 @@ function HistoryWeigh() {
     return `${Number(num).toFixed(1).toLocaleString('vi-VN')}`; // ví dụ: 4,001.4 g
   };
 
+  const exportToExcel = () => {
+  const excelData = [
+    [
+      "STT", "Mã cân", "Nghiệp vụ", "Mã HSKT", "Tổ in", "Chuyền", "Số CT", "Thời gian",
+      "Mã mực", "Tên mực", "Khối lượng (g)", "NSX", "Người nhận"
+    ]
+  ];
 
+  // Gộp dữ liệu theo session
+  data.forEach((session, sIdx) => {
+    if (Array.isArray(session.items) && session.items.length > 0) {
+      session.items.forEach((item, iIdx) => {
+        excelData.push([
+          iIdx === 0 ? sIdx + 1 : "",
+          iIdx === 0 ? session.scaleCode : "",
+          iIdx === 0
+            ? (session.operationCode === "CP" ? "Cấp phát" :
+               session.operationCode === "TH" ? "Thu hồi" :
+               session.operationCode === "CM" ? "Cấp mực" :
+               session.operationCode === "TV" ? "Trả về" :
+               session.operationCode === "GC" ? "Giao ca" :
+               session.operationCode === "CX" ? "Chuyển xe" : session.operationCode)
+            : "",
+          iIdx === 0 ? session.hsktId || "" : "",
+          iIdx === 0 ? session.department?.replace(/^T/, "Tổ ") : "",
+          iIdx === 0 ? session.unit : "",
+          iIdx === 0 ? session.workShift : "",
+          iIdx === 0
+            ? `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`
+            : "",
+          item.inkCode,
+          item.inkName,
+          formatWeight(item.weight),
+          formatDate(item.productionDate),
+          iIdx === 0 ? session.receivedBy : ""
+        ]);
+      });
+    } else {
+      excelData.push([
+        sIdx + 1,
+        session.scaleCode,
+        (session.operationCode === "CP" ? "Cấp phát" :
+         session.operationCode === "TH" ? "Thu hồi" :
+         session.operationCode === "CM" ? "Cấp mực" :
+         session.operationCode === "TV" ? "Trả về" :
+         session.operationCode === "GC" ? "Giao ca" :
+         session.operationCode === "CX" ? "Chuyển xe" : session.operationCode),
+        session.hsktId || "",
+        session.department?.replace(/^T/, "Tổ "),
+        session.unit,
+        session.workShift,
+        `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`,
+        "(Không có mục mực nào)",
+        "",
+        "",
+        "",
+        session.receivedBy || ""
+      ]);
+    }
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+  // Merge ô cho các cột thông tin chung
+  let currentRow = 1;
+  data.forEach(session => {
+    const rowCount = Array.isArray(session.items) && session.items.length > 0 ? session.items.length : 1;
+    if (rowCount > 1) {
+      for (let col = 0; col <= 7; col++) {
+        ws["!merges"] = ws["!merges"] || [];
+        ws["!merges"].push({
+          s: { r: currentRow, c: col },
+          e: { r: currentRow + rowCount - 1, c: col }
+        });
+      }
+      ws["!merges"].push({
+        s: { r: currentRow, c: 12 },
+        e: { r: currentRow + rowCount - 1, c: 12 }
+      });
+    }
+    currentRow += rowCount;
+  });
+
+  // Style chung
+  const borderStyle = {
+    top: { style: "thin", color: { rgb: "000000" } },
+    bottom: { style: "thin", color: { rgb: "000000" } },
+    left: { style: "thin", color: { rgb: "000000" } },
+    right: { style: "thin", color: { rgb: "000000" } }
+  };
+
+  const headerStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" } },
+    fill: { fgColor: { rgb: "4F81BD" } },
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+    border: borderStyle
+  };
+
+  // Tạo màu xen kẽ cho từng nhóm
+  const whiteFill = { fgColor: { rgb: "FFFFFF" } };
+  const grayFill = { fgColor: { rgb: "F2F2F2" } };
+
+  // Áp dụng style
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  let sessionIndex = -1;
+  let currentSessionRows = [];
+  let rowCounter = 1; // bỏ header
+
+  data.forEach(session => {
+    sessionIndex++;
+    const rowCount = Array.isArray(session.items) && session.items.length > 0 ? session.items.length : 1;
+    const fillColor = sessionIndex % 2 === 0 ? whiteFill : grayFill;
+
+    for (let r = rowCounter; r < rowCounter + rowCount; r++) {
+      for (let c = 0; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) continue;
+        ws[cellRef].s = {
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+          border: borderStyle,
+          fill: fillColor
+        };
+      }
+    }
+    rowCounter += rowCount;
+  });
+
+  // Style cho header
+  for (let C = 0; C <= range.e.c; C++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (ws[cellRef]) ws[cellRef].s = headerStyle;
+  }
+
+  // Độ rộng cột
+  ws["!cols"] = [
+    { wch: 5 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
+    { wch: 10 }, { wch: 10 }, { wch: 25 }, { wch: 12 }, { wch: 20 },
+    { wch: 15 }, { wch: 12 }, { wch: 15 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Lịch sử cân mực");
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(blob, `lich_su_can_muc_${filters.date}.xlsx`);
+};
 
   return (
     <div className="p-4">
       <div className="p-4 space-y-6 bg-white rounded-[6px]">
-      <h1 className="text-2xl font-bold mb-4">📜 Lịch sử cân mực</h1>
+      <div className="flex justify-between items-center mb-4">
+  <h1 className="text-2xl font-bold">📜 Lịch sử cân mực</h1>
+  <button
+    onClick={exportToExcel}
+    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+  >
+    Xuất Excel
+  </button>
+</div>
 
       {/* Tổng quan */}
       <div className="mb-4 text-sm text-gray-800">
@@ -120,16 +275,6 @@ function HistoryWeigh() {
           <option value="TV">Trả về</option>
           <option value="GC">Giao ca</option>
           <option value="CX">Chuyển xe</option>
-        </select>
-        <select
-          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-          value={filters.shift}
-          onChange={(e) => handleFilterChange('shift', e.target.value)}
-        >
-          <option value="">Chọn ca làm việc</option>
-          <option value="C1">Ca 1</option>
-          <option value="C2">Ca 2</option>
-          <option value="C3">Ca 3</option>
         </select>
         <select
           className="border border-gray-300 rounded-lg px-3 py-2 w-full"
