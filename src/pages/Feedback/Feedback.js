@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
 import bg from '~/assets/imgs/cong.jpg';
+import http from '~/api/http';
 
 function Feedback() {
     const [images, setImages] = useState([]); // mảng ảnh
@@ -23,7 +24,7 @@ const [previewUrls, setPreviewUrls] = useState([]); // mảng URL preview
 
   try {
     setIsSending(true);
-    await axios.post(`${BASE_URL}/api/feedbacks`, formData);
+    await http.post(`${BASE_URL}/api/feedbacks`, formData);
     setContent('');
     setImages([]);
     setPreviewUrls([]);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
 import { FaCheckCircle } from 'react-icons/fa';
+import http from '~/api/http';
 
 const TeamMemberCreate = () => {
   const [name, setName] = useState('');
@@ -21,7 +22,7 @@ const TeamMemberCreate = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${BASE_URL}/api/team-members`, {
+      await http.post(`${BASE_URL}/api/team-members`, {
         name,
         userID: parseInt(userID),
       });

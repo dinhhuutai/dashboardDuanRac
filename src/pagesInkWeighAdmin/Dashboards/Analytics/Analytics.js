@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL_SERVER_THLA } from '~/config';
 import { FaSpinner } from 'react-icons/fa';
+import http from '~/api/http';
 
 const formatDate = (date) => date.toISOString().slice(0, 10);
 
@@ -19,10 +20,10 @@ const Analytics = () => {
       try {
         const params = from && to ? { from, to } : {};
         if (tab === 'hskt') {
-          const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/by-hskt`, { params });
+          const res = await http.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/by-hskt`, { params });
           setHsktData(res.data);
         } else {
-          const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/by-truck`, { params });
+          const res = await http.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/by-truck`, { params });
           setTruckData(res.data);
         }
       } catch (err) {

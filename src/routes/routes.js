@@ -1,6 +1,7 @@
 import config from '~/config';
 
 import Home from '~/pages/Home';
+import HomeMain from '~/pages/HomeMain';
 import Login from '~/pages/Login';
 import Scan from '~/pages/Scan';
 import User from '~/pages/User';
@@ -71,6 +72,12 @@ export const routes = [
     path: config.routes.home,
     component: Home,
     login: true,
+  },
+  {
+    path: config.routes.homeMain,
+    component: HomeMain,
+    login: true,
+    isLogin: true,
   },
   {
     path: config.routes.login,

@@ -5,6 +5,7 @@ import noticeAdminSlice from './slices/noticeAdminSlice';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import weightSlice from './slices/weightSlice';
+import userModulesReducer from "./slices/userModulesSlice"; 
 
 const persistConfig = {
   key: 'root',
@@ -18,6 +19,7 @@ const store = configureStore({
     auth: persistedReducer,
     noticeAdmin: noticeAdminSlice.reducer,
     weight: weightSlice.reducer,
+    userModules: userModulesReducer,  
   },
 });
 

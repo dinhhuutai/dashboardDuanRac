@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaCheckCircle, FaUndoAlt } from "react-icons/fa";
 import { BASE_URL } from "~/config";
+import http from '~/api/http';
 
 function WeighTruck() {
   const [trashTypes, setTrashTypes] = useState([]);
@@ -49,7 +50,7 @@ const [truckToReload, setTruckToReload] = useState(null);
     setAssigning(true);
     try {
       // Gửi dữ liệu về server
-      await axios.post(`${BASE_URL}/assign-weight`, {
+      await http.post(`${BASE_URL}/assign-weight`, {
         truckCode: truck.truckCode,
         weightKg: totalWeight,
         recordIDs: selectedRecords.map(r => r.weighingRecordID),
@@ -70,7 +71,7 @@ const [truckToReload, setTruckToReload] = useState(null);
   if (!truckToReload) return;
 
   try {
-    await axios.put(`${BASE_URL}/garbage-trucks/${truckToReload.truckCode}/reload`);
+    await http.put(`${BASE_URL}/garbage-trucks/${truckToReload.truckCode}/reload`);
 
     // Reload lại dữ liệu
     if (selectedTrashTypes.length > 0) {

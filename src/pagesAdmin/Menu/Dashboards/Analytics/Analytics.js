@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   PieChart,
   Pie,
@@ -15,9 +15,12 @@ import {
   Line,
   CartesianGrid,
 } from 'recharts';
+import { BsSpeedometer2, BsBarChart, BsTrophy, BsTrash, BsPeople } from 'react-icons/bs';
 
 import { BASE_URL } from '~/config/index';
+import http from '~/api/http';
 
+// Danh sách phòng ban để chọn so sánh
 const departmentsList = [
   'Điều hành',
   'Chất lượng',
@@ -40,15 +43,143 @@ const departmentsList = [
   'Pha màu',
 ];
 
+// palette mềm hiện đại
+const COLORS = ['#22c55e', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#3b82f6', '#eab308'];
+
+const formatDayOfWeek = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('vi-VN', { weekday: 'short' });
+};
+
+const StatCard = ({ icon: Icon, label, value, accent }) => (
+  <div
+    className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm hover:shadow-md transition"
+    role="group"
+  >
+    <div
+      className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-10"
+      style={{ background: `radial-gradient(closest-side, ${accent} 40%, transparent)` }}
+    />
+    <div className="p-5 flex items-center gap-4">
+      <div className="grid place-items-center h-11 w-11 rounded-xl" style={{ background: `${accent}1a`, color: accent }}>
+        <Icon size={20} />
+      </div>
+      <div>
+        <div className="text-slate-500 text-[13px]">{label}</div>
+        <div className="text-xl font-semibold text-slate-800">{value}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonCard = () => (
+  <div className="rounded-2xl bg-white/80 backdrop-blur border border-slate-200 p-5 animate-pulse">
+    <div className="h-4 w-24 bg-slate-200 rounded mb-3"></div>
+    <div className="h-6 w-16 bg-slate-200 rounded"></div>
+  </div>
+);
+
+const SectionCard = ({ title, children, className = '' }) => (
+  <div className={`bg-white/80 backdrop-blur rounded-2xl border border-slate-200 shadow-sm ${className}`}>
+    <div className="px-5 pt-5">
+      <h2 className="text-lg font-semibold text-slate-800 text-center md:text-left">{title}</h2>
+    </div>
+    <div className="p-5">{children}</div>
+  </div>
+);
+
+const CustomTooltip = ({ active, payload, label, unit }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm text-[12px]">
+      {label && <div className="font-medium text-slate-700 mb-1">{label}</div>}
+      {payload.map((p, idx) => (
+        <div key={idx} className="flex items-center gap-2">
+          <span
+            className="inline-block h-2.5 w-2.5 rounded"
+            style={{ background: p.color || p.payload?.fill || '#64748b' }}
+          />
+          <span className="text-slate-600">{p.name}:</span>
+          <span className="font-medium text-slate-800">
+            {Number(p.value).toLocaleString('vi-VN')}
+            {unit ? ` ${unit}` : ''}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const WeightComparisonChart = ({ department1, department2 }) => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const go = async () => {
+      if (!department1 || !department2) return;
+      setLoading(true);
+      try {
+        const res = await http.get(`${BASE_URL}/trash-weighings/compare-weight-by-department`, {
+          params: { department1, department2 },
+        });
+        const formatted = (res.data?.chartData || []).map((item) => ({
+          date: formatDayOfWeek(item.date),
+          [department1]: parseFloat(item[department1]) || 0,
+          [department2]: parseFloat(item[department2]) || 0,
+        }));
+        setChartData(formatted);
+      } catch (e) {
+        setChartData([]);
+        console.error('Lỗi biểu đồ so sánh:', e?.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    go();
+  }, [department1, department2]);
+
+  return (
+    <div className="h-72 md:h-80">
+      {loading ? (
+        <div className="h-full w-full grid place-items-center">
+          <div className="animate-spin h-8 w-8 border-2 border-slate-300 border-t-emerald-500 rounded-full" />
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <defs>
+              <linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.2} />
+              </linearGradient>
+              <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.2} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="date" stroke="#64748b" />
+            <YAxis unit=" kg" stroke="#64748b" />
+            <Tooltip content={<CustomTooltip unit="kg" />} />
+            <Legend />
+            <Line type="monotone" dataKey={department1} stroke="url(#gradA)" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey={department2} stroke="url(#gradB)" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+};
+
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
 
   const [todayStats, setTodayStats] = useState({
-    totalWeighings: 38,
-    totalWeight: 542.3,
-    mostActiveDepartment: 'Tổ 3',
-    mostCommonTrashType: 'Băng keo',
-    totalAccounts: 27,
+    totalWeighings: 0,
+    totalWeight: 0,
+    mostActiveDepartment: '-',
+    mostCommonTrashType: '-',
+    totalAccounts: 0,
   });
 
   const [departmentData, setDepartmentData] = useState([]);
@@ -58,157 +189,174 @@ const Analytics = () => {
   const [selectedDep2, setSelectedDep2] = useState('Tổ 4');
 
   useEffect(() => {
-    setLoading(true);
-
-    const fetchTodayStats = async () => {
+    const fetchAll = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`${BASE_URL}/api/statistics/today`);
-        if (res.data.status === 'success') {
-          setTodayStats(res.data.data);
-        }
-      } catch (error) {
-        console.error('Lỗi khi tải dữ liệu hôm nay:', error.message);
+        const [todayRes, depRes, trashRes] = await Promise.all([
+          axios.get(`${BASE_URL}/api/statistics/today`),
+          axios.get(`${BASE_URL}/api/statistics/weight-by-department`),
+          axios.get(`${BASE_URL}/api/statistics/today-percentage`),
+        ]);
+
+        if (todayRes.data?.status === 'success') setTodayStats(todayRes.data.data);
+        if (depRes.data?.status === 'success') setDepartmentData(depRes.data.data || []);
+        if (trashRes.data?.status === 'success') setTrashTypeData(trashRes.data.data || []);
+      } catch (e) {
+        console.error('Lỗi lấy dữ liệu:', e?.message);
+      } finally {
+        setLoading(false);
       }
     };
-
-    const fetchDepartmentData = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-department`);
-        if (res.data.status === 'success') {
-          setDepartmentData(res.data.data);
-        }
-      } catch (error) {
-        console.error('Lỗi khi tải dữ liệu phòng ban:', error.message);
-      }
-    };
-
-    const fetchTrashTypeData = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/api/statistics/today-percentage`);
-        if (res.data.status === 'success') {
-          setTrashTypeData(res.data.data);
-        }
-      } catch (error) {
-        console.error('Lỗi khi tải dữ liệu loại rác:', error.message);
-      }
-    };
-
-    fetchTodayStats();
-    fetchDepartmentData();
-    fetchTrashTypeData();
-
-    setLoading(false);
+    fetchAll();
   }, []);
 
-  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c', '#d0ed57', '#0088FE'];
+  const donutTotal = useMemo(
+    () => trashTypeData.reduce((sum, d) => sum + Number(d.value || 0), 0),
+    [trashTypeData]
+  );
 
   return (
     <div className="relative">
       {loading && (
-        <div className="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+        <div className="fixed inset-0 bg-white/70 backdrop-blur-sm grid place-items-center z-50">
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
         </div>
       )}
 
-      <div className="p-4 pb-[60px] bg-gray-100 min-h-screen">
-        <h1 className="text-2xl font-bold mb-4 text-center">📈 Thống kê cân rác hôm nay</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white shadow p-4 rounded-lg text-center">
-            <div className="text-[16px] font-semibold text-gray-600">Lượt cân</div>
-            <div className="text-2xl font-bold text-blue-600">{todayStats.totalWeighings}</div>
-          </div>
-          <div className="bg-white shadow p-4 rounded-lg text-center">
-            <div className="text-[16px] font-semibold text-gray-600">Tổng (kg)</div>
-            <div className="text-2xl font-bold text-green-600">{parseFloat(todayStats?.totalWeight?.toFixed(1))}</div>
-          </div>
-          <div className="bg-white shadow p-4 rounded-lg text-center">
-            <div className="text-[16px] font-semibold text-gray-600">Bộ phận nhiều nhất</div>
-            <div className="text-xl font-bold text-purple-600">{todayStats.mostActiveDepartment}</div>
-          </div>
-          <div className="bg-white shadow p-4 rounded-lg text-center">
-            <div className="text-[16px] font-semibold text-gray-600">Loại rác nhiều nhất</div>
-            <div className="text-xl font-bold text-pink-600">{todayStats.mostCommonTrashType}</div>
-          </div>
-          <div className="bg-white shadow p-4 rounded-lg text-center">
-            <div className="text-[16px] font-semibold text-gray-600">Tài khoản</div>
-            <div className="text-2xl font-bold text-gray-800">{todayStats.totalAccounts}</div>
-          </div>
-        </div>
-
-        {/* Biểu đồ Line so sánh khối lượng 2 bộ phận */}
-        <div className="mt-8">
-          <div className="w-full h-96 p-4 bg-white rounded-xl shadow flex flex-col">
-            <h2 className="text-xl font-bold text-center mb-2 h-12">
-              So sánh khối lượng rác: {selectedDep1} vs {selectedDep2}
-            </h2>
-            <div className="flex flex-wrap gap-4 items-center justify-center mb-4">
-              <select
-                value={selectedDep1}
-                onChange={(e) => setSelectedDep1(e.target.value)}
-                className="border border-gray-300 rounded p-2"
-              >
-                <option value="">Chọn tổ 1</option>
-                {departmentsList.map((dep) => (
-                  <option key={dep} value={dep}>
-                    {dep}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={selectedDep2}
-                onChange={(e) => setSelectedDep2(e.target.value)}
-                className="border border-gray-300 rounded p-2"
-              >
-                <option value="">Chọn tổ 2</option>
-                {departmentsList.map((dep) => (
-                  <option key={dep} value={dep}>
-                    {dep}
-                  </option>
-                ))}
-              </select>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        {/* Header title */}
+        <div className="px-4 md:px-6 pt-6">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-2xl border border-emerald-200/40 bg-gradient-to-r from-emerald-50 to-cyan-50 p-4 md:p-5 text-center shadow-sm">
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800">📈 Thống kê cân rác hôm nay</h1>
             </div>
-
-            <WeightComparisonChart department1={selectedDep1} department2={selectedDep2} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-[35px]">
-          <div className="bg-white shadow rounded-lg p-4">
-            <h2 className="text-lg font-semibold mb-2 text-center">Khối lượng theo bộ phận</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={departmentData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="weight" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Stat cards */}
+        <div className="px-4 md:px-6 mt-5">
+          <div className="mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              <>
+                <StatCard icon={BsSpeedometer2} label="Lượt cân" value={todayStats.totalWeighings} accent="#3b82f6" />
+                <StatCard
+                  icon={BsBarChart}              // <-- đã sửa: thay BsScale bằng BsBarChart
+                  label="Tổng (kg)"
+                  value={Number(todayStats.totalWeight || 0).toFixed(1)}
+                  accent="#22c55e"
+                />
+                <StatCard
+                  icon={BsTrophy}
+                  label="Bộ phận nhiều nhất"
+                  value={todayStats.mostActiveDepartment}
+                  accent="#8b5cf6"
+                />
+                <StatCard icon={BsTrash} label="Loại rác nhiều nhất" value={todayStats.mostCommonTrashType} accent="#f59e0b" />
+                <StatCard icon={BsPeople} label="Tài khoản" value={todayStats.totalAccounts} accent="#06b6d4" />
+              </>
+            )}
           </div>
+        </div>
 
-          <div className="bg-white shadow rounded-lg p-4">
-            <h2 className="text-lg font-semibold mb-2 text-center">Tỉ lệ loại rác hôm nay</h2>
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={trashTypeData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+        {/* Line compare */}
+        <div className="px-4 md:px-6 mt-6">
+          <div className="mx-auto max-w-7xl">
+            <SectionCard title={`So sánh khối lượng rác: ${selectedDep1} vs ${selectedDep2}`} className="p-0">
+              <div className="px-5 pb-2 flex flex-wrap items-center justify-center gap-3">
+                <select
+                  value={selectedDep1}
+                  onChange={(e) => setSelectedDep1(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  {trashTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {departmentsList.map((dep) => (
+                    <option key={dep} value={dep}>
+                      {dep}
+                    </option>
                   ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+                </select>
+                <select
+                  value={selectedDep2}
+                  onChange={(e) => setSelectedDep2(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {departmentsList.map((dep) => (
+                    <option key={dep} value={dep}>
+                      {dep}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <WeightComparisonChart department1={selectedDep1} department2={selectedDep2} />
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* Bar + Donut */}
+        <div className="px-4 md:px-6 mt-6 pb-14">
+          <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SectionCard title="Khối lượng theo bộ phận">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={departmentData}>
+                    <defs>
+                      <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" stroke="#64748b" />
+                    <YAxis stroke="#64748b" />
+                    <Tooltip content={<CustomTooltip unit="kg" />} />
+                    <Legend />
+                    <Bar dataKey="weight" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Tỉ lệ loại rác hôm nay">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={trashTypeData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={110}
+                      paddingAngle={3}
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {trashTypeData.map((entry, idx) => (
+                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* tổng giữa donut */}
+              <div className="mt-3 text-center">
+                <div className="inline-flex items-baseline gap-1 rounded-full border border-slate-200 px-3 py-1 bg-white">
+                  <span className="text-slate-500 text-sm">Tổng lượt</span>
+                  <span className="font-semibold text-slate-800">{donutTotal.toLocaleString('vi-VN')}</span>
+                </div>
+              </div>
+            </SectionCard>
           </div>
         </div>
       </div>
@@ -216,179 +364,4 @@ const Analytics = () => {
   );
 };
 
-const formatDayOfWeek = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('vi-VN', { weekday: 'short' }); // => "Th 2", "Th 3"
-};
-
-const WeightComparisonChart = ({ department1, department2 }) => {
-  const [chartData, setChartData] = useState([]);
-
-  useEffect(() => {
-    const fetchChartData = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/trash-weighings/compare-weight-by-department`, {
-          params: { department1, department2 },
-        });
-
-        // Format lại ngày và số liệu
-        const formattedData = res.data.chartData.map((item) => ({
-          date: formatDayOfWeek(item.date),
-          [department1]: parseFloat(item[department1]),
-          [department2]: parseFloat(item[department2]),
-        }));
-
-        setChartData(formattedData);
-      } catch (err) {
-        console.error('Lỗi lấy dữ liệu biểu đồ:', err);
-      }
-    };
-
-    if (department1 && department2) {
-      fetchChartData();
-    }
-  }, [department1, department2]);
-
-  return (
-    <div className="flex-1">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis unit=" kg" />
-          <Tooltip formatter={(value) => `${parseFloat(value).toFixed(1)} kg`} />
-          <Legend />
-          <Line type="monotone" dataKey={department1} stroke="#8884d8" strokeWidth={2} />
-          <Line type="monotone" dataKey={department2} stroke="#82ca9d" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
-
 export default Analytics;
-
-
-// // Dashboard.jsx
-// import React, { useState, useEffect } from 'react';
-// import {
-//   PieChart,
-//   Pie,
-//   Cell,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   LineChart,
-//   Line,
-//   Legend,
-//   CartesianGrid,
-//   ResponsiveContainer,
-// } from 'recharts';
-// import axios from 'axios';
-
-// const COLORS = ['#4D44B5', '#6D5DD3', '#A3A0FB', '#C4C4C4', '#FF8C00', '#FF3D67', '#00C49F'];
-
-// const Dashboard = () => {
-//   const [projectStats, setProjectStats] = useState({});
-//   const [loByDept, setLoByDept] = useState([]);
-//   const [gapStats, setGapStats] = useState([]);
-//   const [trendData, setTrendData] = useState([]);
-//   const [projectStatus, setProjectStatus] = useState([]);
-
-//   useEffect(() => {
-//     // Mock data fetch or replace with actual API calls
-//     axios.get('/api/finance-dashboard').then(({ data }) => {
-//       setProjectStats(data.projectStats);
-//       setLoByDept(data.loByDept);
-//       setGapStats(data.gapStats);
-//       setTrendData(data.trendData);
-//       setProjectStatus(data.projectStatus);
-//     });
-//   }, []);
-
-//   return (
-//     <div className="p-6 bg-[#f6f8fa] min-h-screen">
-//       <h1 className="text-3xl font-bold text-center text-purple-800 mb-6">
-//         OTHER LEVEL'S FINANCE STATUS DASHBOARD
-//       </h1>
-
-//       {/* Top summary */}
-//       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-//         <SummaryCard title="Total Project's" value={projectStats.totalProjects || 0} />
-//         <SummaryCard title="C APEX" value={projectStats.capex || 0} />
-//         <SummaryCard title="Lockers" value={projectStats.lockers || 0} />
-//         <SummaryCard title="Popular" value={projectStats.popular || 0} />
-//         <SummaryCard title="Saving" value={projectStats.saving || 0} percentage={15} />
-//         <SummaryCard title="OPEX" value="61%" />
-//       </div>
-
-//       {/* Bar Chart LO by Department */}
-//       <div className="bg-white p-4 rounded-xl shadow mb-6">
-//         <h2 className="text-lg font-semibold text-center mb-2">LO Issued by Departments</h2>
-//         <ResponsiveContainer width="100%" height={300}>
-//           <BarChart data={loByDept}>
-//             <XAxis dataKey="name" />
-//             <YAxis />
-//             <Tooltip />
-//             <Bar dataKey="value" fill="#4D44B5" />
-//           </BarChart>
-//         </ResponsiveContainer>
-//       </div>
-
-//       {/* Gap Analysis Donuts */}
-//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-//         {gapStats.map((gap, index) => (
-//           <div key={index} className="bg-white p-4 rounded-xl shadow text-center">
-//             <h3 className="text-sm font-medium mb-1">GAP {index + 1}</h3>
-//             <div className="text-lg font-bold text-purple-600">{gap.percentage}%</div>
-//             <div className="text-xs text-gray-500">{gap.label}</div>
-//             <div className="text-sm text-red-500 font-semibold">{gap.value.toLocaleString()}</div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Line chart: Target vs Actual */}
-//       <div className="bg-white p-4 rounded-xl shadow mb-6">
-//         <h2 className="text-lg font-semibold text-center mb-2">Total Targets vs Total Actuals</h2>
-//         <ResponsiveContainer width="100%" height={300}>
-//           <LineChart data={trendData}>
-//             <CartesianGrid strokeDasharray="3 3" />
-//             <XAxis dataKey="month" />
-//             <YAxis />
-//             <Tooltip />
-//             <Legend />
-//             <Line type="monotone" dataKey="target" stroke="#8884d8" />
-//             <Line type="monotone" dataKey="actual" stroke="#82ca9d" />
-//           </LineChart>
-//         </ResponsiveContainer>
-//       </div>
-
-//       {/* Project Status Timeline */}
-//       <div className="bg-white p-4 rounded-xl shadow mb-6">
-//         <h2 className="text-lg font-semibold text-center mb-2">Project Status Timeline</h2>
-//         <ResponsiveContainer width="100%" height={200}>
-//           <BarChart data={projectStatus}>
-//             <XAxis dataKey="label" />
-//             <YAxis />
-//             <Tooltip />
-//             <Bar dataKey="count" fill="#6D5DD3" />
-//           </BarChart>
-//         </ResponsiveContainer>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const SummaryCard = ({ title, value, percentage }) => (
-//   <div className="bg-white shadow rounded-lg p-4 text-center">
-//     <div className="text-sm text-gray-500">{title}</div>
-//     <div className="text-2xl font-bold text-purple-700">{value.toLocaleString()}</div>
-//     {percentage !== undefined && (
-//       <div className="text-green-600 font-semibold text-xs">+{percentage}%</div>
-//     )}
-//   </div>
-// );
-
-// export default Dashboard;

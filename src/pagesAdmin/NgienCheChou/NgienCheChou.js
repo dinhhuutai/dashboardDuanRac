@@ -10,6 +10,7 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 import { FaSpinner } from 'react-icons/fa';
+import http from '~/api/http';
 
 const NgienCheChou = () => {
   const [loading, setLoading] = useState(true);
@@ -146,7 +147,7 @@ const NgienCheChou = () => {
 
       setLoading(true);
       try {
-        const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
+        const res = http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
           params: {
             startDate: formatDateToVNString(dateOne),
             endDate: formatDateToVNString(dateOne),
@@ -321,7 +322,7 @@ const NgienCheChou = () => {
     setStartDate(start);
     setEndDate(end);
 
-        const res = await axios.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
+        const res = http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
           params: {
             startDate: formatDateToVNString(start),
             endDate: formatDateToVNString(end),
@@ -532,216 +533,151 @@ const NgienCheChou = () => {
   ];
 
 
-  const exportToExcel = () => {
-    const wb = XLSX.utils.book_new();
+  // helper hiển thị tên nhóm giống UI
+const groupLabel = (g) => (g === 'Bổ sung' ? 'Tổ 1' : g === 'Robot' ? 'Tổ 4' : g.replace('T', 'Tổ '));
 
-    // Header dòng 1 (gồm colSpan và rowSpan)
-    const headerRow1 = [
-    'BP/Tổ',
-    'Giẻ lau dính mực thường',
-    'Giẻ lau dính mực lapa',
-    'Băng keo',
-    'Keo bàn thải',
-    'Mực in thải',
-    'Mực in lapa thải',
-    'Vụn logo',
-    'Lụa căng khung',
-    'Tổng',
-    ];
-    const headerRow1DEtail = [
-    'BP/Tổ',
-    'Chuyền',
-    'Giẻ lau dính mực thường',
-    'Giẻ lau dính mực lapa',
-    'Băng keo',
-    'Keo bàn thải',
-    'Mực in thải',
-    'Mực in lapa thải',
-    'Vụn logo',
-    'Lụa căng khung',
-    'Tổng',
-    ];
+const exportAllToExcel = () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([]);
+  const COLS = headersDetail.length; // = 10
+  const merges = [];
+  const enc = (r, c) => XLSX.utils.encode_cell({ r, c });
 
-    let dataExcel = [
-            ...data,
-            { group: 'Tổng cộng', items: [''] },
-      ];
+  // merge helper
+  const pushMerge = (r1, c1, r2, c2) => merges.push({ s: { r: r1, c: c1 }, e: { r: r2, c: c2 } });
 
-    // Dữ liệu bảng
-    const rows = dataExcel.flatMap((d) =>
-      d.items.map((item, idx) => {
-        const key = `${d.group}-${item}`;
-        const data = report[key];
+  // === Title chung
+  let row = 0;
+  const mainTitle = [`BÁO CÁO RÁC THẢI (xuất: ${formatDateToVNString1(new Date())})`];
+  XLSX.utils.sheet_add_aoa(ws, [mainTitle], { origin: { r: row, c: 0 } });
+  pushMerge(row, 0, row, COLS - 1);
+  ws[enc(row, 0)].s = {
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    font: { bold: true, sz: 16, color: { rgb: '0F172A' } },
+  };
+  row += 2; // khoảng trống
 
-        const values = data?.map((e) => (e === 0 ? '-' : e.toFixed(1)));
-        
-        return [idx === 0 ? d.group === 'T4A' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group : '', item, ...values];
-
-      }),
-    );
-
-    const today = new Date().toLocaleDateString('vi-VN');
-    const title = [
-      `BẢNG THEO DÕI RÁC THẢI THEO LOẠI RÁC NGÀY
-        ${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}
-      `,
-    ];
-
-    const wsData = [title, headerRow1DEtail, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    
-    
-      ws['!merges'].unshift({
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: 10 },
-      });
-    // Style title row
-    const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
-    ws[titleCell].s = {
-      alignment: {
-        horizontal: 'center',
-        vertical: 'center',
-      },
-      font: {
-        bold: true,
-        sz: 16,
-        color: { rgb: '000000' },
-      },
+  // === Writer 1 section (tiêu đề + header + dữ liệu + tổng)
+  const writeSection = (title, source) => {
+    // Section title
+    XLSX.utils.sheet_add_aoa(ws, [[title]], { origin: { r: row, c: 0 } });
+    pushMerge(row, 0, row, COLS - 1);
+    ws[enc(row, 0)].s = {
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+      font: { bold: true, sz: 13, color: { rgb: '003366' } },
     };
+    row += 1;
 
-    // Style toàn bộ sheet: border cho tất cả ô
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!ws[cellAddress]) continue;
+    // Header
+    XLSX.utils.sheet_add_aoa(ws, [headersDetail], { origin: { r: row, c: 0 } });
+    for (let c = 0; c < COLS; c++) {
+      const addr = enc(row, c);
+      ws[addr].s = {
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '003366' } },
+        border: {
+          top: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          left: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          bottom: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          right: { style: 'thin', color: { rgb: 'D1D5DB' } },
+        },
+      };
+    }
+    const headerRow = row;
+    row += 1;
 
-        ws[cellAddress].s = {
+    // Data rows (y như UI)
+    const bodyRows = [];
+    data.forEach((d) => {
+      d.items.forEach((item) => {
+        const key = `${d.group}-${item}`;
+        const vals = (source[key] || Array(9).fill(0)).map((e) => (e === 0 ? '-' : Number(e.toFixed(1))));
+        bodyRows.push([groupLabel(d.group), ...vals]);
+      });
+    });
+    XLSX.utils.sheet_add_aoa(ws, bodyRows, { origin: { r: row, c: 0 } });
+
+    const startDataRow = row;
+    const endDataRow = row + bodyRows.length - 1;
+
+    // style data range
+    for (let R = startDataRow; R <= endDataRow; R++) {
+      for (let C = 0; C < COLS; C++) {
+        const addr = enc(R, C);
+        const v = ws[addr]?.v;
+        if (!ws[addr]) continue;
+        ws[addr].s = {
+          ...(ws[addr].s || {}),
+          alignment: { vertical: 'center', horizontal: C === 0 ? 'left' : 'center', wrapText: true },
           border: {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } },
-          },
-          alignment: {
-            vertical: 'center',
-            horizontal: 'center',
-            wrapText: true,
+            top: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            right: { style: 'thin', color: { rgb: 'E5E7EB' } },
           },
         };
+        if (C > 0 && typeof v === 'number') ws[addr].z = '0.0'; // 1 số thập phân
       }
     }
-    
-          for (let col = 0; col <= 8; col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: 4, c: col });
-            if (!ws[cellAddress]) continue;
-            
-            ws[cellAddress].s = {
-              ...ws[cellAddress].s,
-              fill: {
-                fgColor: { rgb: 'cfb8b8' },
-                },
-                font: {
-                  bold: true,
-                  color: { rgb: '000000' },
-                },
-              };
-            }
-            for (let col = 0; col <= 8; col++) {
-              const cellAddress = XLSX.utils.encode_cell({ r: 15, c: col });
-              if (!ws[cellAddress]) continue;
-              
-              ws[cellAddress].s = {
-                ...ws[cellAddress].s,
-                fill: {
-                  fgColor: { rgb: 'cfb8b8' },
-                },
-                font: {
-                  bold: true,
-                  color: { rgb: '000000' },
-                },
-              };
-            }
-            for (let col = 0; col <= 8; col++) {
-              const cellAddress = XLSX.utils.encode_cell({ r: 31, c: col });
-              if (!ws[cellAddress]) continue;
-              
-              ws[cellAddress].s = {
-                ...ws[cellAddress].s,
-                fill: {
-                  fgColor: { rgb: 'cfb8b8' },
-                },
-                font: {
-                  bold: true,
-                  color: { rgb: '000000' },
-                },
-              };
-            }
-            for (let col = 0; col <= 8; col++) {
-              const cellAddress = XLSX.utils.encode_cell({ r: 38, c: col });
-              if (!ws[cellAddress]) continue;
-              
-              ws[cellAddress].s = {
-                ...ws[cellAddress].s,
-                fill: {
-                  fgColor: { rgb: 'cfb8b8' },
-                },
-                font: {
-                  bold: true,
-                  color: { rgb: '000000' },
-                },
-              };
-            }
 
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
-      if (!ws[cellAddress]) continue;
+    // Tổng cộng
+    const total = (source['Tổng cộng-'] || Array(9).fill(0)).map((e) => (e === 0 ? '-' : Number(e.toFixed(1))));
+    const totalRow = endDataRow + 1;
+    XLSX.utils.sheet_add_aoa(ws, [['Tổng cộng', ...total]], { origin: { r: totalRow, c: 0 } });
 
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'e5e7eb' },
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
+    for (let c = 0; c < COLS; c++) {
+      const addr = enc(totalRow, c);
+      ws[addr].s = {
+        ...(ws[addr].s || {}),
+        fill: { fgColor: { rgb: 'FFF2CC' } },
+        font: { bold: true },
+        alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'center', wrapText: true },
+        border: {
+          top: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          left: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          bottom: { style: 'thin', color: { rgb: 'D1D5DB' } },
+          right: { style: 'thin', color: { rgb: 'D1D5DB' } },
         },
       };
+      const v = ws[addr]?.v;
+      if (c > 0 && typeof v === 'number') ws[addr].z = '0.0';
     }
 
-    // Tô màu và đậm dòng "Tổng cộng"
-    const lastRowIndex = wsData.length - 1;
-    for (let col = 0; col <= 65; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: lastRowIndex, c: col });
-      if (!ws[cellAddress]) continue;
-
-      ws[cellAddress].s = {
-        ...ws[cellAddress].s,
-        fill: {
-          fgColor: { rgb: 'FFF3CD' }, // màu vàng nhạt
-        },
-        font: {
-          bold: true,
-          color: { rgb: '000000' },
-        },
-      };
-    }
-
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `
-        ${formatDateToVNString2(startDate)} - ${formatDateToVNString2(endDate)}
-      `,
-    );
-
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(
-      new Blob([wbout], { type: 'application/octet-stream' }),
-      `BẢNG THEO DÕI RÁC THẢI THEO LOẠI RÁC NGÀY ${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)}
-      .xlsx`,
-    );
+    row = totalRow + 2; // chừa 1 dòng trống
   };
+
+  // Section 1: Từ đầu tháng -> ngày chọn
+  writeSection(
+    `I. CHI TIẾT TỪ ĐẦU THÁNG TỚI NGÀY CHỌN (${formatDateToVNString1(startDate)} - ${formatDateToVNString1(endDate)})`,
+    reportByMonth
+  );
+
+  // Section 2: Trong ngày
+  writeSection(
+    `II. TRONG NGÀY (${formatDateToVNString1(dateOne)})`,
+    report
+  );
+
+  // cột
+  ws['!cols'] = [
+    { wch: 16 },
+    { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
+    { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 16 },
+    { wch: 12 },
+  ];
+
+  ws['!merges'] = merges;
+  XLSX.utils.book_append_sheet(wb, ws, 'BaoCao');
+
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveAs(
+    new Blob([wbout], { type: 'application/octet-stream' }),
+    `BaoCao_RacThai_${formatDateToVNString2(startDate)}-${formatDateToVNString2(endDate)}.xlsx`
+  );
+};
+
+
 
 
   return (
@@ -766,12 +702,12 @@ const NgienCheChou = () => {
       <div className="p-4">
         <div className="flex justify-between">
           <button
-            disabled={true}
-            onClick={exportToExcel}
-            className="mb-4 px-4 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Xuất Excel
-          </button>
+  onClick={exportAllToExcel}   // <<< gọi hàm mới
+  className="mb-4 px-4 text-[14px] bg-blue-600 text-white rounded hover:bg-blue-700"
+>
+  Xuất Excel
+</button>
+
 
           <div className="flex gap-[10px]">
               <div className="mb-2">

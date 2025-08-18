@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
-import * as XLSX from "xlsx-js-style";
-import { BASE_URL } from "~/config";
-import { FaSpinner } from "react-icons/fa";
-import ImageDetailModal from "~/components/ImageDetailModal";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { BASE_URL } from "~/config";
+import { FaSpinner } from "react-icons/fa";
+import { FiDownload } from "react-icons/fi";
+import ImageDetailModal from "~/components/ImageDetailModal";
+import http from '~/api/http';
 
 function SuggestionList() {
   const [data, setData] = useState([]);
@@ -16,20 +17,13 @@ function SuggestionList() {
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    fetchSuggestions();
-  }, [filterDate, filterCategory]);
+  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => { fetchSuggestions(); }, [filterDate, filterCategory]);
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/suggestions/categories`);
-      if (res.data.success) {
-        setCategories(res.data.data);
-      }
+      const res = await http.get(`${BASE_URL}/api/suggestions/categories`);
+      if (res.data.success) setCategories(res.data.data);
     } catch (err) {
       console.error("Error loading categories", err);
     }
@@ -38,15 +32,10 @@ function SuggestionList() {
   const fetchSuggestions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/suggestions`, {
-        params: {
-          date: filterDate,
-          categoryId: filterCategory,
-        },
+      const res = await http.get(`${BASE_URL}/api/suggestions`, {
+        params: { date: filterDate, categoryId: filterCategory },
       });
-      if (res.data.success) {
-        setData(res.data.data);
-      }
+      if (res.data.success) setData(res.data.data);
     } catch (err) {
       console.error("Error fetching suggestions", err);
     } finally {
@@ -56,7 +45,7 @@ function SuggestionList() {
 
   const handleRowClick = async (item) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
+      const res = await http.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
       setSelectedItem({ ...item, images: res.data.data || [] });
     } catch (err) {
       console.error("Failed to fetch images", err);
@@ -66,340 +55,210 @@ function SuggestionList() {
 
   const closeModal = () => setSelectedItem(null);
 
-  // ---------------------- EXPORT EXCEL ------------------------
-//   const exportToExcel = async () => {
-//   const headerStyle = {
-//     font: { bold: true, color: { rgb: "FFFFFF" } },
-//     fill: { fgColor: { rgb: "4F81BD" } },
-//     border: {
-//       top: { style: "thin", color: { rgb: "000000" } },
-//       bottom: { style: "thin", color: { rgb: "000000" } },
-//       left: { style: "thin", color: { rgb: "000000" } },
-//       right: { style: "thin", color: { rgb: "000000" } },
-//     },
-//     alignment: { horizontal: "center", vertical: "center", wrapText: true },
-//   };
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Góp ý CNV");
 
-//   const getRowStyle = (index) => ({
-//     fill: {
-//       fgColor: { rgb: index % 2 === 0 ? "FFFFFF" : "F2F2F2" },
-//     },
-//     border: {
-//       top: { style: "thin", color: { rgb: "AAAAAA" } },
-//       bottom: { style: "thin", color: { rgb: "AAAAAA" } },
-//       left: { style: "thin", color: { rgb: "AAAAAA" } },
-//       right: { style: "thin", color: { rgb: "AAAAAA" } },
-//     },
-//     alignment: { horizontal: "left", vertical: "center", wrapText: true },
-//   });
+    // Title
+    worksheet.mergeCells("A1:I1");
+    const titleCell = worksheet.getCell("A1");
+    titleCell.value = `Góp ý của CNV ngày ${format(new Date(filterDate), "dd-MM-yyyy")}`;
+    titleCell.font = { size: 16, bold: true, color: { argb: "FF333333" } };
+    titleCell.alignment = { vertical: "middle", horizontal: "center" };
+    worksheet.getRow(1).height = 30;
 
-//   // Gọi API lấy ảnh cho tất cả item
-//   const dataWithImages = await Promise.all(
-//     data.map(async (item) => {
-//       try {
-//         const res = await axios.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
-//         return { ...item, images: res.data.data || [] };
-//       } catch (error) {
-//         return { ...item, images: [] };
-//       }
-//     })
-//   );
-
-//   const worksheetData = [
-//     [
-//       {
-//         v: `Góp ý của CNV ngày  ${format(new Date(filterDate), "dd/MM/yyyy")}`,
-//         s: {
-//           font: { bold: true, sz: 14 },
-//           alignment: { horizontal: "center", vertical: "center" },
-//         },
-//       },
-//     ],
-//     [
-//       { v: "STT", s: headerStyle },
-//       { v: "Danh mục", s: headerStyle },
-//       { v: "Nội dung", s: headerStyle },
-//       { v: "Ngày gửi", s: headerStyle },
-//       { v: "Người gửi", s: headerStyle },
-//       { v: "Bộ phận", s: headerStyle },
-//       { v: "SĐT", s: headerStyle },
-//       { v: "Link ảnh", s: headerStyle },
-//     ],
-//     ...dataWithImages.map((item, idx) => {
-//       const allImageLinks = (item.images || [])
-//   .map(img => img.image_url)
-//   .join("\n");
-//  // chỉ lấy ảnh đầu
-//       const rowStyle = getRowStyle(idx);
-//       return [
-//         { v: idx + 1, s: rowStyle },
-//         { v: item.categoryName, s: rowStyle },
-//         { v: item.content, s: rowStyle },
-//         { v: formatDateTime(item.created_at), s: rowStyle },
-//         { v: item.sender_name || "Ẩn danh", s: rowStyle },
-//         { v: item.sender_department || "-", s: rowStyle },
-//         { v: item.sender_phone || "-", s: rowStyle },
-//         {
-//           v: allImageLinks,
-//           s: { ...rowStyle, font: { color: { rgb: "0563C1" }, underline: true } },
-//           l: allImageLinks ? { Target: allImageLinks, Tooltip: "Xem ảnh" } : undefined,
-//         },
-//       ];
-//     }),
-//   ];
-
-//   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-//   worksheet["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
-//   worksheet["!rows"] = [{ hpt: 24 }];
-//   worksheet["!cols"] = [
-//     { wch: 5 },   // STT
-//     { wch: 20 },  // Danh mục
-//     { wch: 50 },  // Nội dung
-//     { wch: 18 },  // Ngày gửi
-//     { wch: 20 },  // Người gửi
-//     { wch: 20 },  // Bộ phận
-//     { wch: 18 },  // SĐT
-//     { wch: 30 },  // Link ảnh
-//   ];
-
-//   const workbook = XLSX.utils.book_new();
-//   XLSX.utils.book_append_sheet(workbook, worksheet, "Gop y CNV");
-//   XLSX.writeFile(workbook, `Gop_y_CNV_${filterDate}.xlsx`);
-// };
-
-const exportToExcel = async () => {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Góp ý CNV");
-
-  // 👉 Thêm dòng tiêu đề chính (row 0)
-  worksheet.mergeCells("A1:I1"); // Gộp từ A đến I
-  const titleCell = worksheet.getCell("A1");
-  titleCell.value = `Góp ý của CNV ngày ${format(new Date(filterDate), "dd-MM-yyyy")}`;
-  titleCell.font = { size: 16, bold: true, color: { argb: "FF333333" } };
-  titleCell.alignment = { vertical: "middle", horizontal: "center" };
-  worksheet.getRow(1).height = 30;
-
-  // 👉 Header ở row 2
-  const header = [
-    "STT",
-    "Danh mục",
-    "Nội dung",
-    "Ngày gửi",
-    "Người gửi",
-    "Bộ phận",
-    "SĐT",
-    "Ảnh",
-    "Link ảnh"
-  ];
-  worksheet.addRow(header);
-
-  // 👉 Style cho header (row 2)
-  const headerRow = worksheet.getRow(2);
-  headerRow.height = 30;
-  headerRow.eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF007ACC" },
-    };
-    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-    cell.border = {
-      top: { style: "thin" },
-      left: { style: "thin" },
-      bottom: { style: "thin" },
-      right: { style: "thin" }
-    };
-  });
-
-  // 👉 Đặt độ rộng cột
-  const columnWidths = [6, 20, 50, 18, 20, 20, 15, 15, 40];
-  worksheet.columns.forEach((col, i) => {
-    col.width = columnWidths[i];
-  });
-
-  // 👉 Lấy data kèm ảnh
-  const fullData = await Promise.all(
-    data.map(async (item) => {
-      try {
-        const res = await axios.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
-        return { ...item, images: res.data.data || [] };
-      } catch (e) {
-        return { ...item, images: [] };
-      }
-    })
-  );
-
-  // 👉 Ghi dữ liệu từ row 3 trở đi
-  for (let i = 0; i < fullData.length; i++) {
-    const item = fullData[i];
-    const rowIndex = i + 3; // row 1 = tiêu đề, row 2 = header
-
-    const firstImageUrl = item.images?.[0]?.image_url || "";
-
-    // Thêm dòng mới
-    const row = worksheet.addRow([
-      i + 1,
-      item.categoryName,
-      item.content,
-      formatDateTime(item.created_at),
-      item.sender_name || "Ẩn danh",
-      item.sender_department || "-",
-      item.sender_phone || "-",
-      "", // Placeholder ảnh
-      firstImageUrl,
-    ]);
-
-    row.height = 90;
-    row.alignment = { vertical: "middle" };
-
-    row.eachCell((cell) => {
+    // Header
+    const header = ["STT","Danh mục","Nội dung","Ngày gửi","Người gửi","Bộ phận","SĐT","Ảnh","Link ảnh"];
+    worksheet.addRow(header);
+    const headerRow = worksheet.getRow(2);
+    headerRow.height = 30;
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A8A" } };
       cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-
-      if (i % 2 !== 0) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF3F3F3" }, // Màu xám nhạt
-        };
-      }
+      cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
     });
 
-    // 👉 Nếu có ảnh, chèn vào ô H
-    if (firstImageUrl) {
-      try {
-        const res = await fetch(firstImageUrl);
-        const blob = await res.blob();
-        const buffer = await blob.arrayBuffer();
+    // Col widths
+    const columnWidths = [6, 20, 50, 18, 20, 20, 15, 15, 40];
+    worksheet.columns.forEach((col, i) => { col.width = columnWidths[i]; });
 
-        const imageId = workbook.addImage({
-          buffer,
-          extension: "jpeg",
-        });
+    // Fetch images per row
+    const fullData = await Promise.all(
+      data.map(async (item) => {
+        try {
+          const res = await http.get(`${BASE_URL}/api/suggestions/${item.suggestionId}/images`);
+          return { ...item, images: res.data.data || [] };
+        } catch {
+          return { ...item, images: [] };
+        }
+      })
+    );
 
-        worksheet.addImage(imageId, {
-          tl: { col: 7, row: rowIndex - 1 }, // H là col 7 (index bắt đầu từ 0)
-          ext: { width: 90, height: 90 },
-        });
-      } catch (err) {
-        console.warn("Không thể tải ảnh:", err);
+    // Rows
+    for (let i = 0; i < fullData.length; i++) {
+      const item = fullData[i];
+      const rowIndex = i + 3;
+      const firstImageUrl = item.images?.[0]?.image_url || "";
+
+      const row = worksheet.addRow([
+        i + 1,
+        item.categoryName,
+        item.content,
+        formatDateTime(item.created_at),
+        item.sender_name || "Ẩn danh",
+        item.sender_department || "-",
+        item.sender_phone || "-",
+        "", // image placeholder
+        firstImageUrl,
+      ]);
+      row.height = 90;
+      row.eachCell((cell) => {
+        cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+        cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        if (i % 2) cell.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FFF6F7FB" } };
+      });
+
+      if (firstImageUrl) {
+        try {
+          const res = await http.get(firstImageUrl, { responseType: "arraybuffer" });
+          const imageId = workbook.addImage({ buffer: res.data, extension: "jpeg" });
+          worksheet.addImage(imageId, { tl: { col: 7, row: rowIndex - 1 }, ext: { width: 90, height: 90 } });
+        } catch (e) {
+          console.warn("Không thể tải ảnh:", e);
+        }
       }
     }
-  }
 
-  // 👉 Ghi file
-  const buf = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buf]), `Gop_y_CNV_${filterDate}.xlsx`);
-};
+    const buf = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buf]), `Gop_y_CNV_${filterDate}.xlsx`);
+  };
 
-    const formatDateTime = (datetimeStr) => {
-        const [date, time] = datetimeStr.split('T');
-        const [year, month, day] = date.split('-');
-        const [hour, minute] = time.split(':');
-        return `${day}-${month}-${year} ${hour}:${minute}`;
-    };
+  const formatDateTime = (datetimeStr) => {
+    const [date, time] = datetimeStr.split('T');
+    const [year, month, day] = date.split('-');
+    const [hour, minute] = time.split(':');
+    return `${day}-${month}-${year} ${hour}:${minute}`;
+  };
 
   return (
-    <div className="p-4">
-      <div className="p-6 space-y-6 bg-white rounded-xl">
-        <div className="border-b pb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-800">📬 Danh sách góp ý của CNV</h1>
-          <button
-            onClick={exportToExcel}
-            className="bg-green-600 hover:bg-green-700 text-[14px] text-white px-2 py-1 rounded shadow"
-          >
-            📥 Xuất Excel
-          </button>
+    <div className="p-4 sm:p-6">
+      <div className="mx-auto max-w-[1300px] space-y-5">
+        <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-col gap-4 border-b border-slate-200/60 p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">
+                📬 Danh sách góp ý của CNV
+              </h1>
+              <button
+                onClick={exportToExcel}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              >
+                <FiDownload className="text-base" />
+                Xuất Excel
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-slate-600 mb-1">Ngày gửi</label>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-slate-600 mb-1">Danh mục</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                >
+                  <option value="">Tất cả danh mục</option>
+                  {categories.map((cat) => (
+                    <option key={cat.suggestionCategorieId} value={cat.suggestionCategorieId}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-0 sm:p-5">
+            <div className="relative overflow-hidden rounded-xl border border-slate-200">
+              {/* Loading overlay */}
+              {loading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                  <div className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow">
+                    <FaSpinner className="animate-spin text-indigo-600 text-xl" />
+                    <span className="text-sm text-slate-700">Đang tải dữ liệu...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Table */}
+              {data.length === 0 ? (
+                <div className="p-10 text-center text-slate-500">
+                  Không có góp ý nào phù hợp.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-[900px] w-full text-sm">
+                    <thead className="sticky top-0 z-10 bg-slate-50">
+                      <tr className="text-[12px] uppercase tracking-wide text-slate-600">
+                        {["#","Danh mục","Nội dung","Ngày gửi","Người gửi","Bộ phận","SĐT"].map((h, i) => (
+                          <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.map((item, idx) => (
+                        <tr
+                          key={item.suggestionId}
+                          onClick={() => handleRowClick(item)}
+                          className={`cursor-pointer transition-colors ${
+                            idx % 2 === 0 ? "bg-white" : "bg-slate-50/60"
+                          } hover:bg-indigo-50`}
+                        >
+                          <td className="px-3 py-2 align-top">{idx + 1}</td>
+                          <td className="px-3 py-2 align-top">
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-[2px] text-[12px] font-medium text-slate-700 ring-1 ring-slate-200">
+                              {item.categoryName}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 align-top max-w-[460px]">
+                            <span className="block truncate" title={item.content}>{item.content}</span>
+                          </td>
+                          <td className="px-3 py-2 align-top text-slate-600 font-mono">
+                            {(() => {
+                              const d = new Date(item.created_at);
+                              const year = d.getUTCFullYear();
+                              const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+                              const day = String(d.getUTCDate()).padStart(2, "0");
+                              const hour = String(d.getUTCHours()).padStart(2, "0");
+                              const minute = String(d.getUTCMinutes()).padStart(2, "0");
+                              return `${day}/${month}/${year} ${hour}:${minute}`;
+                            })()}
+                          </td>
+                          <td className="px-3 py-2 align-top">{item.sender_name || "Ẩn danh"}</td>
+                          <td className="px-3 py-2 align-top">{item.sender_department || "-"}</td>
+                          <td className="px-3 py-2 align-top font-mono">{item.sender_phone || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
-        <div className="flex flex-wrap gap-4">
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-600 mb-1">Ngày gửi</label>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="border border-gray-300 px-4 py-2 rounded-md"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-600 mb-1">Danh mục</label>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 px-4 py-2 rounded-md"
-            >
-              <option value="">Tất cả danh mục</option>
-              {categories.map((cat) => (
-                <option key={cat.suggestionCategorieId} value={cat.suggestionCategorieId}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center py-16 text-blue-600 text-lg gap-2">
-            <FaSpinner className="animate-spin text-2xl" />
-            <span>Đang tải dữ liệu...</span>
-          </div>
-        ) : data.length === 0 ? (
-          <p className="text-center text-gray-500 italic py-10">Không có góp ý nào phù hợp.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full text-sm text-left">
-              <thead>
-                <tr className="bg-blue-50 text-gray-700 text-sm">
-                  <th className="p-3 border">#</th>
-                  <th className="p-3 border">Danh mục</th>
-                  <th className="p-3 border">Nội dung</th>
-                  <th className="p-3 border">Ngày gửi</th>
-                  <th className="p-3 border">Người gửi</th>
-                  <th className="p-3 border">Bộ phận</th>
-                  <th className="p-3 border">SĐT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((item, idx) => (
-                  <tr
-                    key={item.suggestionId}
-                    onClick={() => handleRowClick(item)}
-                    className={`cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-100 transition`}
-                  >
-                    <td className="p-3 border text-center">{idx + 1}</td>
-                    <td className="p-3 border">{item.categoryName}</td>
-                    <td className="p-3 border max-w-[300px] truncate" title={item.content}>
-                      {item.content}
-                    </td>
-                    <td className="p-3 border text-gray-600">
-                      {(() => {
-                        const d = new Date(item.created_at);
-                        const year = d.getUTCFullYear();
-                        const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-                        const day = String(d.getUTCDate()).padStart(2, "0");
-                        const hour = String(d.getUTCHours()).padStart(2, "0");
-                        const minute = String(d.getUTCMinutes()).padStart(2, "0");
-                        return `${day}/${month}/${year} ${hour}:${minute}`;
-                      })()}
-                    </td>
-                    <td className="p-3 border">{item.sender_name || "Ẩn danh"}</td>
-                    <td className="p-3 border">{item.sender_department || "-"}</td>
-                    <td className="p-3 border">{item.sender_phone || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
       {selectedItem && (

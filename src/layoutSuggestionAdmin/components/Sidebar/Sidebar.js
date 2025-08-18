@@ -1,10 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import {
-  BsMailbox,
-  BsChevronDown
-} from 'react-icons/bs';
-import { HiOutlineUserGroup } from 'react-icons/hi';
-import { useEffect, useState } from 'react';
+import { BsMailbox, BsChevronDown } from 'react-icons/bs';
+import { useEffect, useMemo, useState } from 'react';
 import config from '~/config';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
@@ -12,10 +8,8 @@ import { userSelector } from '~/redux/selectors';
 function Sidebar() {
   const [downSuggest, setDownSuggest] = useState(true);
 
-  
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
-  
   useEffect(() => {
     setUser(tmp?.login?.currentUser);
   }, [tmp]);
@@ -24,87 +18,146 @@ function Sidebar() {
     key !== 'suggest' && setDownSuggest(false);
   };
 
-  
+  // class cho NavLink con (hiển thị modern + trạng thái active)
+  const linkClass = useMemo(
+    () =>
+      ({ isActive }) =>
+        [
+          'relative block w-full rounded-lg px-3 py-2 text-sm transition-colors',
+          'hover:bg-indigo-50 hover:text-indigo-700',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500/40',
+          isActive
+            ? 'bg-indigo-50 text-indigo-700 font-semibold ring-1 ring-inset ring-indigo-200'
+            : 'text-slate-700',
+        ].join(' '),
+    []
+  );
+
+  // height submenu (mượt, không bị cắt)
+  const submenuMaxH = downSuggest ? 800 : 0;
 
   return (
-    <div className="hover:scrollbar-admin-sidebar w-full h-full shadow-lg shadow-indigo-500/50 overflow-y-auto scrollbar-admin-sidebar-none group/parent">
-      <ul className="px-[24px] pt-[12px] pb-[22px] mr-[4px] group-hover/parent:mr-[0px]">
-        <li>
-          <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">menu</span>
-          <ul className="mt-[12px]">
-            <div>
-              <li
-                onClick={() => {
-                  hiddenItem('suggest');
-                  setDownSuggest((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsMailbox />
-                </div>
-                <span
-                  className={`${
-                    downSuggest ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Hòm thư
-                </span>
-                <div
-                  className={`${
-                    downSuggest ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downSuggest ? 'animate-downSlide1' : 'animate-upSlide1'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminSuggestionList}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Góp ý của CNV
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminSuggestionCategoriList}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Danh mục góp ý
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminSuggestionCategoriCreate}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Thêm danh mục
-                  </NavLink>
-                </li>
-              </ul>
+    <aside
+      className="
+        relative z-30
+        w-full md:w-[260px] shrink-0
+        h-full md:h-screen
+        overflow-y-auto
+        bg-gradient-to-b from-white to-slate-50
+        border-r border-slate-200 shadow-sm
+      "
+    >
+      <div className="p-4">
+        {/* HEADER */}
+        <div className="mb-2">
+          <span className="block text-[11px] tracking-wider uppercase text-slate-500 font-semibold">
+            Menu
+          </span>
+        </div>
+
+        {/* CARD CONTAINER (không overflow-hidden để tránh che submenu) */}
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 shadow-sm">
+          {/* GROUP: Hòm thư */}
+          <button
+            type="button"
+            aria-expanded={downSuggest}
+            onClick={() => {
+              hiddenItem('suggest');
+              setDownSuggest((prev) => !prev);
+            }}
+            className="
+              group flex w-full items-center gap-3
+              px-3 py-2 text-left
+              hover:bg-slate-50 transition-colors
+              focus:outline-none focus:ring-2 focus:ring-indigo-500/30
+            "
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 group-hover:text-indigo-700">
+              <BsMailbox />
             </div>
-          </ul>
-        </li>
-      </ul>
-    </div>
+            <span
+              className={[
+                'flex-1 text-[13px] capitalize transition-colors',
+                downSuggest ? 'font-semibold text-slate-900' : 'text-slate-700',
+              ].join(' ')}
+            >
+              Hòm thư
+            </span>
+            <div
+              className={[
+                'text-slate-400 transition-transform duration-200',
+                downSuggest ? 'rotate-180' : 'rotate-0',
+              ].join(' ')}
+            >
+              <BsChevronDown />
+            </div>
+          </button>
+
+          {/* SUBMENU (dùng max-height + overflow-hidden để animate, không bị cắt) */}
+          <div
+            className="
+              border-t border-slate-200/70
+              transition-[max-height] duration-300 ease-in-out
+              overflow-hidden
+            "
+            style={{ maxHeight: submenuMaxH }}
+          >
+            <ul className="relative pl-4 py-3 before:absolute before:left-2 before:top-0 before:bottom-0 before:w-[2px] before:bg-slate-200/70">
+              {/* Item 1 */}
+              <li className="mb-1 pl-4">
+                <NavLink to={config.routes.adminSuggestionList} className={linkClass}>
+                  {({ isActive }) => (
+                    <span className="flex items-center">
+                      <span
+                        className={[
+                          'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r',
+                          isActive ? 'bg-indigo-500' : 'bg-transparent',
+                        ].join(' ')}
+                      />
+                      <span>Góp ý của CNV</span>
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+
+              {/* Item 2 */}
+              <li className="mb-1 pl-4">
+                <NavLink to={config.routes.adminSuggestionCategoriList} className={linkClass}>
+                  {({ isActive }) => (
+                    <span className="flex items-center">
+                      <span
+                        className={[
+                          'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r',
+                          isActive ? 'bg-indigo-500' : 'bg-transparent',
+                        ].join(' ')}
+                      />
+                      <span>Danh mục góp ý</span>
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+
+              {/* Item 3 */}
+              <li className="pl-4">
+                <NavLink to={config.routes.adminSuggestionCategoriCreate} className={linkClass}>
+                  {({ isActive }) => (
+                    <span className="flex items-center">
+                      <span
+                        className={[
+                          'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r',
+                          isActive ? 'bg-indigo-500' : 'bg-transparent',
+                        ].join(' ')}
+                      />
+                      <span>Thêm danh mục</span>
+                    </span>
+                  )}
+                </NavLink>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </aside>
   );
 }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
+import http from '~/api/http';
 
 function FeedbackList() {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -26,7 +27,7 @@ function FeedbackList() {
   const fetchFeedbacks = async (date) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/feedbacks?date=${date}`);
+      const res = await http.get(`${BASE_URL}/api/feedbacks?date=${date}`);
       setFeedbacks(res.data);
     } catch (err) {
       console.error('Lỗi khi lấy góp ý:', err);

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
 import { FaTrash, FaEdit } from 'react-icons/fa';
+import http from '~/api/http';
 
 function UserList() {
   const [users, setUsers] = useState([]);
@@ -13,7 +14,7 @@ function UserList() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/users/get`);
+      const res = await http.get(`${BASE_URL}/users/get`);
       setUsers(res.data);
     } catch (error) {
       console.error('❌ Lỗi khi lấy danh sách:', error);
@@ -40,7 +41,7 @@ function UserList() {
     if (!selectedUser) return;
     setLoading(true);
     try {
-      await axios.delete(`${BASE_URL}/users/delete/${selectedUser.userID}`);
+      await http.delete(`${BASE_URL}/users/delete/${selectedUser.userID}`);
       await fetchUsers();
     } catch (error) {
       console.error('❌ Lỗi khi xóa:', error);
@@ -59,7 +60,7 @@ function UserList() {
   const handleEditSubmit = async () => {
     setLoading(true);
     try {
-      await axios.put(`${BASE_URL}/users/update/${editFormData.userID}`, editFormData);
+      await http.put(`${BASE_URL}/users/update/${editFormData.userID}`, editFormData);
       await fetchUsers();
       setEditModalOpen(false);
     } catch (error) {

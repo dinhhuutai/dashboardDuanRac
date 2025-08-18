@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "~/config/index";
+import http from '~/api/http';
 
 export default async function HandleGetCodeQr(selectInput) {
     
@@ -73,7 +74,7 @@ export default async function HandleGetCodeQr(selectInput) {
 
     
     try {
-        const res = await axios.get(`${BASE_URL}/trashbins/get-id-by-names?departmentName=${encodeURIComponent(departmentName)}&unitName=${encodeURIComponent(unitName)}&trashName=${encodeURIComponent(trashName)}`);
+        const res = await http.get(`${BASE_URL}/trashbins/get-id-by-names?departmentName=${encodeURIComponent(departmentName)}&unitName=${encodeURIComponent(unitName)}&trashName=${encodeURIComponent(trashName)}`);
 
         return {trashBinCode: res.data.trashBinCode, workShift}; // chứa departmentID, unitID, trashTypeID, trashBinID
     } catch (err) {

@@ -3,6 +3,7 @@ import axios from "axios";
 import { BsCartDashFill } from "react-icons/bs";
 import { FaTrashAlt, FaEdit, FaSpinner } from "react-icons/fa";
 import { BASE_URL } from "~/config";
+import http from '~/api/http';
 
 function TrashTruckList() {
   const [trucks, setTrucks] = useState([]);
@@ -18,7 +19,7 @@ function TrashTruckList() {
 
   const fetchTrucks = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/garbage-trucks`);
+      const res = await http.get(`${BASE_URL}/garbage-trucks`);
       setTrucks(res.data);
     } catch (err) {
       setError("Lỗi khi tải danh sách xe rác.");
@@ -31,7 +32,7 @@ function TrashTruckList() {
   useEffect(() => {
     const fetchTrashTypes = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/trash-types`);
+        const res = await http.get(`${BASE_URL}/trash-types`);
         setTrashTypes(res.data);
       } catch (err) {
         console.error("Lỗi khi tải danh sách loại rác", err);
@@ -53,7 +54,7 @@ function TrashTruckList() {
   const handleDelete = async () => {
   setDeleting(true);
   try {
-    await axios.delete(`${BASE_URL}/garbage-trucks/${truckToDelete.garbageTruckID}`);
+    await http.delete(`${BASE_URL}/garbage-trucks/${truckToDelete.garbageTruckID}`);
     setTrucks((prev) =>
       prev.filter((t) => t.garbageTruckID !== truckToDelete.garbageTruckID)
     );
@@ -80,7 +81,7 @@ function TrashTruckList() {
       trashTypeIDs: editForm.trashTypeIDs || [], // mảng các ID
     };
 
-    await axios.put(`${BASE_URL}/garbage-trucks/${editForm.garbageTruckID}`, updatedData);
+    await http.put(`${BASE_URL}/garbage-trucks/${editForm.garbageTruckID}`, updatedData);
     fetchTrucks();
     setEditForm(null);
   } catch (err) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
+import http from '~/api/http';
 
 function ExcelToPdfConverter() {
   const [files, setFiles] = useState(null);
@@ -19,7 +20,7 @@ function ExcelToPdfConverter() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${BASE_URL}/api/convert/excel-pdf`, formData, {
+      const res = await http.post(`${BASE_URL}/api/convert/excel-pdf`, formData, {
         responseType: 'blob',
         headers: { 'Content-Type': 'multipart/form-data' },
       });

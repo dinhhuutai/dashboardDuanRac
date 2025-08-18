@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from '~/config';
 import { FaTrash, FaSpinner } from 'react-icons/fa';
+import http from '~/api/http';
 
 function TeamMemberList() {
   const [users, setUsers] = useState([]);
@@ -30,7 +31,7 @@ function TeamMemberList() {
     if (!confirmingDeleteID) return;
     setLoadingDeleteID(confirmingDeleteID);
     try {
-      await axios.delete(`${BASE_URL}/api/team-members/${confirmingDeleteID}`);
+      await http.delete(`${BASE_URL}/api/team-members/${confirmingDeleteID}`);
       setTeamMembers((prev) => prev.filter((m) => m.teamMemberID !== confirmingDeleteID));
     } catch (error) {
       console.error('Lỗi xoá team member:', error);

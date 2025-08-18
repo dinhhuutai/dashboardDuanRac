@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "~/config";
 import { BsCartPlusFill } from "react-icons/bs";
+import http from '~/api/http';
 
 function TrashTruckCreate() {
   const [form, setForm] = useState({
@@ -17,7 +18,7 @@ function TrashTruckCreate() {
   useEffect(() => {
     const fetchTrashTypes = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/trash-types`);
+        const res = await http.get(`${BASE_URL}/trash-types`);
         setTrashTypes(res.data);
       } catch (err) {
         console.error("Lỗi khi tải danh sách loại rác", err);
@@ -48,7 +49,7 @@ function TrashTruckCreate() {
     setMessage("");
 
     try {
-      const res = await axios.post(`${BASE_URL}/garbage-trucks`, {
+      const res = await http.post(`${BASE_URL}/garbage-trucks`, {
         truckName: form.truckName,
         truckCode: form.truckCode,
         trashTypeIDs: form.trashTypeIDs,

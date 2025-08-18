@@ -26,7 +26,7 @@ function ProtectedRouteAdmin() {
     }
 
     return (
-        user.login.currentUser && user.login.currentUser?.role === 'admin' ? <Outlet /> : <Navigate to={config.routes.home} />
+        user.login.currentUser && user.login.currentUser?.role === 'admin' ? <Outlet /> : <Navigate to={config.routes.homeMain} />
     );
 }
 

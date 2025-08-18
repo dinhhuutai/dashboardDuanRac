@@ -1,115 +1,131 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { routes, routesAdmin, routesInkAdmin, routesSuggest } from './routes';
-import DefaultLayout from './layouts/DefaultLayout';
-import config from './config';
-import DefaultLayoutAdmin from './layoutsAdmin/DefaultLayoutAdmin';
-import DefaultLayoutAdminInk from './layoutsInkWeighAdmin/DefaultLayoutAdmin';
-import DefaultLayoutAdminSuggest from './layoutSuggestionAdmin/DefaultLayoutAdmin';
-import ProtecteRouterLogin from './routing/ProtecteRouterLogin';
-import ProtectedRouteAdmin from './routing/ProtectedRouteAdmin';
-import { useSelector } from 'react-redux';
-import { userSelector } from './redux/selectors';
-import { useEffect, useState } from 'react';
-import ProtectedRouteAdminInk from './routing/ProtectedRouteAdminInk';
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { routes, routesAdmin, routesInkAdmin, routesSuggest } from "./routes";
+
+import DefaultLayout from "./layouts/DefaultLayout";
+import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
+import DefaultLayoutAdminInk from "./layoutsInkWeighAdmin/DefaultLayoutAdmin";
+import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmin";
+
+import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
+import { useSelector } from "react-redux";
+import { userSelector } from "./redux/selectors";
+import { useEffect, useState } from "react";
+import Login from "~/pages/Login";
+import config from "./config";
+
+// NEW: guard theo module
+import RequireModule from "./routing/RequireModule";
 
 function App() {
-  
-    const tmp = useSelector(userSelector);
-    const [user, setUser] = useState(tmp);
-    
-    
-    useEffect(() => {
-        setUser(tmp)
-    }, [tmp])
-
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState(tmp);
+  useEffect(() => { setUser(tmp); }, [tmp]);
 
   return (
     <Router>
       <Routes>
-        {routes.map((route, index) => {
-          return (
-            <Route element={route.login && <ProtecteRouterLogin />}>
+        {/* Login */}
+        <Route
+          path={config.routes.login}
+          element={
+            user?.login?.currentUser
+              ? <Navigate to={config.routes.homeMain} replace />
+              : <Login />
+          }
+        />
+
+        {/* Public / Logged-in routes (mặc định) */}
+        {routes.map((route, index) => (
+          <Route element={route.login && <ProtecteRouterLogin />} key={index}>
+            <Route
+              path={route.path}
+              element={
+                route.isLogin
+                  ? <route.component />
+                  : !route.isLogin && !route.login
+                    ? <route.component />
+                    : (
+                      <DefaultLayout>
+                        <route.component />
+                      </DefaultLayout>
+                    )
+              }
+            />
+          </Route>
+        ))}
+
+        {/* ====== ADMIN CÂN RÁC (module waste-weigh, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="waste-weigh"
+              fallbackName="Quản lý cân rác"   // nếu cần, đúng chính tả bạn lưu
+              needRoles={["admin"]}
+            />
+          }
+        >
+          <Route path="/admin" element={<Navigate to={config.routes.adminAnalytics} />} />
+          <Route path="/admin">
+            {routesAdmin.map((route, index) => (
               <Route
                 key={index}
-                path={route.path}
+                path={route.addId ? `${route.path}/:id` : route.path}
                 element={
-                  route.isLogin ? (
-  user.login.currentUser ? (
-    user.login.currentUser.operationType?.trim().toLowerCase() === 'canmuc' &&
-    user.login.currentUser.role?.trim().toLowerCase() === 'admin' ? (
-      <Navigate to={config.routes.adminInkWeighHistory} />
-    ) : user.login.currentUser.operationType?.trim().toLowerCase() === 'full' ? (
-      <Navigate to={config.routes.adminAnalytics} />
-    ) : (
-      <Navigate to={config.routes.home} />
-    )
-                    ) : (
-                      <route.component />
-                    )
-                  ) : !route.isLogin && !route.login ? (
+                  <DefaultLayoutAdmin>
                     <route.component />
-                  ) : (
-                    <DefaultLayout>
-                      <route.component />
-                    </DefaultLayout>
-                  )
+                  </DefaultLayoutAdmin>
                 }
               />
-            </Route>
-          );
-        })}
-
-        <Route path="/admin" element={<Navigate to={config.routes.adminAnalytics} />} />
-
-        <Route path="/admin">
-          {routesAdmin.map((route, index) => {
-            return (
-              <Route element={route.login && <ProtectedRouteAdmin />}>
-                <Route
-                  key={index}
-                  path={route.addId ? `${route.path}/:id` : route.path}
-                  element={
-                    <DefaultLayoutAdmin>
-                      <route.component />
-                    </DefaultLayoutAdmin>
-                  }
-                />
-              </Route>
-            );
-          })}
+            ))}
+          </Route>
         </Route>
-        
-          {routesInkAdmin.map((route, index) => {
-            return (
-              <Route element={route.login && <ProtectedRouteAdminInk />}>
-                <Route
-                  key={index}
-                  path={route.addId ? `${route.path}/:id` : route.path}
-                  element={
-                    <DefaultLayoutAdminInk>
-                      <route.component />
-                    </DefaultLayoutAdminInk>
-                  }
-                />
-              </Route>
-            );
-          })}
-          
-          {routesSuggest.map((route, index) => {
-            return (
-              <Route element={route.login && <ProtectedRouteAdminInk />}>
-                <Route
-                  key={index}
-                  path={route.addId ? `${route.path}/:id` : route.path}
-                  element={
-                    <DefaultLayoutAdminSuggest>
-                      <route.component />
-                    </DefaultLayoutAdminSuggest>
-                  }
-                />
-              </Route>
-            );
-          })}
+
+        {/* ====== ADMIN CÂN MỰC (module ink-weigh, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="ink-weigh"
+              fallbackName="Quản lý cân mực"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesInkAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminInk>
+                  <route.component />
+                </DefaultLayoutAdminInk>
+              }
+            />
+          ))}
+        </Route>
+
+        {/* ====== ADMIN HÒM THƯ GÓP Ý (module suggest-box, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="suggest-box"
+              fallbackName="Hòm thư góp ý"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesSuggest.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminSuggest>
+                  <route.component />
+                </DefaultLayoutAdminSuggest>
+              }
+            />
+          ))}
+        </Route>
       </Routes>
     </Router>
   );

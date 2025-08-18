@@ -3,6 +3,7 @@ import axios from 'axios';
 import { BASE_URL } from '~/config/index';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
+import http from '~/api/http';
 
 function UserCreate() {
   const [formData, setFormData] = useState({
@@ -73,7 +74,7 @@ function UserCreate() {
 
 
     try {
-      await axios.post(`${BASE_URL}/user`, formData);
+      await http.post(`${BASE_URL}/user`, formData);
       setMessage('✅ Tạo tài khoản thành công!');
       setFormData({
         fullName: '',

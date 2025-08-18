@@ -2,582 +2,290 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BsRocket,
   BsChevronDown,
-  BsWindowFullscreen,
-  BsBoxes,
-  BsQrCodeScan,
   BsFileEarmarkBarGraph,
   BsTrash2,
-  BsJournalAlbum,
+  BsQrCodeScan,
   BsPerson,
-  BsColumnsGap,
-  BsPersonPlus,
-  BsBarChartLine,
   BsClipboardCheck,
-  BsChatDots,
   BsCart2,
 } from 'react-icons/bs';
-import { HiOutlineUserGroup } from 'react-icons/hi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import config from '~/config';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 
 function Sidebar() {
+  const navigate = useNavigate();
+
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
+
+  // mở/đóng từng nhóm
   const [downDashboard, setDownDashboard] = useState(true);
   const [downReport, setDownReport] = useState(false);
   const [downClassCheck, setDownClassCheck] = useState(false);
-  const [downPage, setDownPage] = useState(false);
-  const [downApplication, setDownApplication] = useState(false);
-
   const [downQrcode, setDownQrcode] = useState(false);
   const [downUser, setDownUser] = useState(false);
   const [downWaste, setDownWaste] = useState(false);
-  const [downTeamMember, setDownTeamMember] = useState(false);
-  const [downFeedback, setDownFeedback] = useState(false);
   const [downTrashTruck, setDownTrashTruck] = useState(false);
-
-    const navigate = useNavigate();
-  
-  const tmp = useSelector(userSelector);
-  const [user, setUser] = useState({});
-  
-  useEffect(() => {
-    setUser(tmp?.login?.currentUser);
-  }, [tmp]);
 
   const hiddenItem = (key) => {
     key !== 'dashboard' && setDownDashboard(false);
     key !== 'report' && setDownReport(false);
     key !== 'classCheck' && setDownClassCheck(false);
-    key !== 'page' && setDownPage(false);
-    key !== 'application' && setDownApplication(false);
     key !== 'qrcode' && setDownQrcode(false);
     key !== 'user' && setDownUser(false);
     key !== 'waste' && setDownWaste(false);
-    key !== 'teamMember' && setDownTeamMember(false);
-    key !== 'feedback' && setDownFeedback(false);
     key !== 'trashTrush' && setDownTrashTruck(false);
   };
 
-  
+  const linkClass = ({ isActive }) =>
+    [
+      'group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
+      isActive
+        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+        : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50',
+    ].join(' ');
+
+  const Section = ({ title, icon: Icon, open, onToggle, children }) => (
+    <div className="mb-1">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-50 transition"
+        aria-expanded={open}
+      >
+        <span className="grid place-items-center w-[34px] h-[34px] rounded-lg bg-slate-100 text-slate-700">
+          <Icon size={18} />
+        </span>
+        <span className={`flex-1 text-[13px] ${open ? 'font-semibold' : ''}`}>{title}</span>
+        <span
+          className={`text-[12px] text-slate-500 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`}
+        >
+          <BsChevronDown />
+        </span>
+      </button>
+
+      <div
+        className={`overflow-hidden pl-[14px] pr-[10px] border-l border-slate-200/60 ml-[18px] transition-[max-height] duration-300 ${
+          open ? 'max-h-96' : 'max-h-0'
+        }`}
+      >
+        <ul className="py-1.5 space-y-1">{children}</ul>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="hover:scrollbar-admin-sidebar w-full h-full shadow-lg shadow-indigo-500/50 overflow-y-auto scrollbar-admin-sidebar-none group/parent">
-      <ul className="px-[24px] pt-[12px] pb-[22px] mr-[4px] group-hover/parent:mr-[0px]">
-        <li>
-          <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">menu</span>
-          <ul className="mt-[12px]">
-            <div>
-              <li
-                onClick={() => {
-                  hiddenItem('dashboard');
-                  setDownDashboard((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsRocket />
-                </div>
-                <span
-                  className={`${
-                    downDashboard ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Tổng Hợp
-                </span>
-                <div
-                  className={`${
-                    downDashboard ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downDashboard ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminAnalytics}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Tổng quan
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminHistoryWeigh}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Lịch sử cân
-                  </NavLink>
-                </li>
-                {/* <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminUnscannedQR}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Theo dõi cân
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminWeighTruck}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Khối lượng xe
-                  </NavLink>
-                </li> */}
-              </ul>
-            </div>
-            
-            <div>
-              <li
-                onClick={() => {
-                  hiddenItem('report');
-                  setDownReport((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsFileEarmarkBarGraph />
-                </div>
-                <span
-                  className={`${
-                    downReport ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Báo cáo
-                </span>
-                <div
-                  className={`${
-                    downReport ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downReport ? 'animate-downSlide2' : 'animate-upSlide2'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReport}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    chi tiết
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReportByShift}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    theo ca làm
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReportByTrash}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    theo loại rác
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReportMaterials}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    vật tư
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <li
-                onClick={() => {
-                  hiddenItem('classCheck');
-                  setDownClassCheck((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsClipboardCheck />
-                </div>
-                <span
-                  className={`${
-                    downClassCheck ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Kiểm Tra Phân Loại
-                </span>
-                <div
-                  className={`${
-                    downClassCheck ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downClassCheck ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminClassCheckHistory}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Lịch Sử
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminClassCheckListBin}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    DS Thùng Rác
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-          </ul>
-        </li>
-
-        <li className="mt-[12px]">
-          <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">Manage</span>
-          <ul className="mt-[12px]">
-            {
-              
-            <div className="mt-[6px]">
-              <li
-                onClick={() => {
-                  hiddenItem('trashTrush');
-                  setDownTrashTruck((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsCart2 />
-                </div>
-                <span
-                  className={`${
-                    downTrashTruck ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Xe đựng rác
-                </span>
-                <div
-                  className={`${
-                    downTrashTruck ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downTrashTruck ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminTrashTruck}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Danh sách xe
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminTrashTruckCreate}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Thêm xe
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-            }
-            {
-              user?.managerQRcode &&
-            <div>
-              <li
-                onClick={() => {
-                  hiddenItem('qrcode');
-                  setDownQrcode((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsQrCodeScan />
-                </div>
-                <span
-                  className={`${
-                    downQrcode ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  QR Code
-                </span>
-                <div
-                  className={`${
-                    downQrcode ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downQrcode ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminQrcode}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    List
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminQrcodeCreate}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Create
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-            }
-            {
-              user?.managerUser &&
-            <div className="mt-[6px]">
-              <li
-                onClick={() => {
-                  hiddenItem('user');
-                  setDownUser((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsPerson />
-                </div>
-                <span
-                  className={`${
-                    downUser ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  User
-                </span>
-                <div
-                  className={`${
-                    downUser ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downUser ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminUser}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    List
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminUserCreate}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Create
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-            }
-            {
-              user?.managerTrash &&
-            <div className="mt-[6px]">
-              <li
-                onClick={() => {
-                  hiddenItem('waste');
-                  setDownWaste((prev) => !prev);
-                }}
-                className="flex items-center py-[8px] rounded-[4px] cursor-pointer hover:bg-[#E0F3FF] group"
-              >
-                <div className="text-[#999797] group-hover:text-[#333] text-[20px] w-[34px] flex justify-center">
-                  <BsTrash2 />
-                </div>
-                <span
-                  className={`${
-                    downWaste ? 'text-[13px] flex-1 ml-[6px] font-[600]' : 'text-[13px] flex-1 ml-[6px]'
-                  } capitalize`}
-                >
-                  Trash Type
-                </span>
-                <div
-                  className={`${
-                    downWaste ? 'rotate-[180deg]' : 'rotate-[0deg]'
-                  } ease-linear duration-[.2s] text-[#999797] group-hover:text-[#333] text-[12px] mr-[10px]`}
-                >
-                  <BsChevronDown />
-                </div>
-              </li>
-              <ul
-                className={`${
-                  downWaste ? 'animate-downSlide' : 'animate-upSlide'
-                } overflow-hidden pl-[28px] pt-[4px] relative before:content-[""] before:left-[16px] before:absolute before:w-[2px] before:h-full before:bg-[#c0cfd8]`}
-              >
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminTrashType}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    List
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminTrashTypeCreate}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Create
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
-            }
-          </ul>
-        </li>
-      </ul>
-
-      <div className="flex justify-center">
-  {(user.username === 'dinhhuutai' || user.username === 'thaonguyen') && (
-    <div className="relative inline-block">
-      {/* Sao băng bay qua */}
-      <div className="absolute -top-2 -left-2 w-20 h-20 animate-[spin_4s_linear_infinite]">
-        <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_10px_2px_white] blur-sm"></div>
-      </div>
-
-      {/* 🪐 Hành tinh quay */}
-      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-36 h-36 pointer-events-none">
-        <div className="w-full h-full animate-orbit relative">
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 text-xl">
-            🪐
+    <aside
+      className="
+        h-full w-full overflow-y-auto
+        bg-gradient-to-b from-white/90 to-white/70 backdrop-blur
+        border-r border-slate-200
+        shadow-[0_10px_30px_-15px_rgba(2,6,23,0.08)]
+      "
+    >
+      <div className="px-3 py-3">
+        {/* ===== Menu ===== */}
+        <div className="px-1 pt-2 pb-3">
+          <div className="uppercase text-emerald-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
+            Menu
           </div>
+
+          {/* Tổng hợp */}
+          <Section
+            title="Tổng hợp"
+            icon={BsRocket}
+            open={downDashboard}
+            onToggle={() => {
+              hiddenItem('dashboard');
+              setDownDashboard((v) => !v);
+            }}
+          >
+            <li>
+              <NavLink to={config.routes.adminAnalytics} className={linkClass}>
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-emerald-500 opacity-0 group-[.active]:opacity-100"></span>
+                Tổng quan
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminHistoryWeigh} className={linkClass}>
+                Lịch sử cân
+              </NavLink>
+            </li>
+          </Section>
+
+          {/* Báo cáo */}
+          <Section
+            title="Báo cáo"
+            icon={BsFileEarmarkBarGraph}
+            open={downReport}
+            onToggle={() => {
+              hiddenItem('report');
+              setDownReport((v) => !v);
+            }}
+          >
+            <li>
+              <NavLink to={config.routes.adminReport} className={linkClass}>
+                Chi tiết
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminReportByShift} className={linkClass}>
+                Theo ca làm
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminReportByTrash} className={linkClass}>
+                Theo loại rác
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminReportMaterials} className={linkClass}>
+                Vật tư
+              </NavLink>
+            </li>
+          </Section>
+
+          {/* Kiểm tra phân loại */}
+          <Section
+            title="Kiểm tra phân loại"
+            icon={BsClipboardCheck}
+            open={downClassCheck}
+            onToggle={() => {
+              hiddenItem('classCheck');
+              setDownClassCheck((v) => !v);
+            }}
+          >
+            <li>
+              <NavLink to={config.routes.adminClassCheckHistory} className={linkClass}>
+                Lịch sử
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminClassCheckListBin} className={linkClass}>
+                DS thùng rác
+              </NavLink>
+            </li>
+          </Section>
         </div>
+
+        {/* ===== Manage ===== */}
+        <div className="px-1 pt-3">
+          <div className="uppercase text-emerald-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
+            Manage
+          </div>
+
+          {/* Xe đựng rác */}
+          <Section
+            title="Xe đựng rác"
+            icon={BsCart2}
+            open={downTrashTruck}
+            onToggle={() => {
+              hiddenItem('trashTrush');
+              setDownTrashTruck((v) => !v);
+            }}
+          >
+            <li>
+              <NavLink to={config.routes.adminTrashTruck} className={linkClass}>
+                Danh sách xe
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminTrashTruckCreate} className={linkClass}>
+                Thêm xe
+              </NavLink>
+            </li>
+          </Section>
+
+          {/* QR Code (phân quyền) */}
+          {user?.managerQRcode && (
+            <Section
+              title="QR Code"
+              icon={BsQrCodeScan}
+              open={downQrcode}
+              onToggle={() => {
+                hiddenItem('qrcode');
+                setDownQrcode((v) => !v);
+              }}
+            >
+              <li>
+                <NavLink to={config.routes.adminQrcode} className={linkClass}>
+                  List
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={config.routes.adminQrcodeCreate} className={linkClass}>
+                  Create
+                </NavLink>
+              </li>
+            </Section>
+          )}
+
+          {/* User (phân quyền) */}
+          {user?.managerUser && (
+            <Section
+              title="User"
+              icon={BsPerson}
+              open={downUser}
+              onToggle={() => {
+                hiddenItem('user');
+                setDownUser((v) => !v);
+              }}
+            >
+              <li>
+                <NavLink to={config.routes.adminUser} className={linkClass}>
+                  List
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={config.routes.adminUserCreate} className={linkClass}>
+                  Create
+                </NavLink>
+              </li>
+            </Section>
+          )}
+
+          {/* Trash Type (phân quyền) */}
+          {user?.managerTrash && (
+            <Section
+              title="Trash Type"
+              icon={BsTrash2}
+              open={downWaste}
+              onToggle={() => {
+                hiddenItem('waste');
+                setDownWaste((v) => !v);
+              }}
+            >
+              <li>
+                <NavLink to={config.routes.adminTrashType} className={linkClass}>
+                  List
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={config.routes.adminTrashTypeCreate} className={linkClass}>
+                  Create
+                </NavLink>
+              </li>
+            </Section>
+          )}
+        </div>
+
+        {/* ===== CTA vui vui (giữ nguyên điều kiện) ===== */}
+        {(user?.username === 'dinhhuutai' || user?.username === 'thaonguyen') && (
+          <div className="pt-3 pb-2 px-1 flex justify-center">
+            <button
+              onClick={() => navigate(config.routes.adminNgienCheChou)}
+              className="text-sm px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+                         text-white shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
+            >
+              Ngiên Chẻ Chou (màu galaxy)
+            </button>
+          </div>
+        )}
       </div>
-
-      <button
-        onClick={() => navigate(config.routes.adminNgienCheChou)}
-        className="relative z-10 text-sm px-6 py-2 rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
-                   bg-[length:300%_300%] animate-gradientMove
-                   hover:scale-105 transition-all text-white shadow-lg overflow-hidden"
-      >
-        <span className="relative z-10">Ngiên Chẻ Chou (màu galaxy)</span>
-
-        {/* Lấp lánh nền */}
-        <div className="absolute inset-0 bg-white opacity-10 mix-blend-overlay pointer-events-none animate-pulse"></div>
-
-        {/* Sao lấp lánh */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/3 w-1 h-1 bg-white rounded-full animate-ping"></div>
-          <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping delay-300"></div>
-          <div className="absolute bottom-1/3 left-1/4 w-1 h-1 bg-pink-300 rounded-full animate-ping delay-700"></div>
-        </div>
-      </button>
-    </div>
-  )}
-</div>
-
-    </div>
+    </aside>
   );
 }
 

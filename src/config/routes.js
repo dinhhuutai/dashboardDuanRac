@@ -1,12 +1,13 @@
 const routes = {
   login: '/login',
   scan: '/scan',
-  home: '/',
+  home: '/trash',
   user: '/user',
   history: '/history',
   feedback: '/feedback-1',
   feedback1: '/feedback',
   excelToPdf: '/excelToPdf',
+  homeMain: '/',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',

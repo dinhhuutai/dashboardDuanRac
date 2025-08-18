@@ -1,126 +1,138 @@
 import { NavLink } from 'react-router-dom';
 import {
-  BsRocket,
   BsChevronDown,
-  BsWindowFullscreen,
-  BsBoxes,
+  BsRocket,
   BsQrCodeScan,
-  BsMusicNoteList,
-  BsTrash2,
   BsJournalAlbum,
-  BsPerson,
-  BsColumnsGap,
-  BsPersonPlus,
-  BsBarChartLine,
   BsClipboardCheck,
+  BsBarChartLine,
 } from 'react-icons/bs';
-import { HiOutlineUserGroup } from 'react-icons/hi';
 import { useState } from 'react';
 import config from '~/config';
 
 function Sidebar() {
-  const [downDashboard, setDownDashboard] = useState(true);
-  const [downClassCheck, setDownClassCheck] = useState(false);
-  const [downPage, setDownPage] = useState(false);
-  const [downApplication, setDownApplication] = useState(false);
+  const [openOperate, setOpenOperate] = useState(true);     // Vận hành
+  const [openMonitor, setOpenMonitor] = useState(false);    // Theo dõi
+  const [openReport, setOpenReport] = useState(false);      // Báo cáo/Đối chiếu
 
-  const [downQrcode, setDownQrcode] = useState(false);
-  const [downUser, setDownUser] = useState(false);
-  const [downWaste, setDownWaste] = useState(false);
-  const [downTeamMember, setDownTeamMember] = useState(false);
-
-  const hiddenItem = (key) => {
-    key !== 'dashboard' && setDownDashboard(false);
-    key !== 'classCheck' && setDownClassCheck(false);
-    key !== 'page' && setDownPage(false);
-    key !== 'application' && setDownApplication(false);
-    key !== 'qrcode' && setDownQrcode(false);
-    key !== 'user' && setDownUser(false);
-    key !== 'waste' && setDownWaste(false);
-    key !== 'teamMember' && setDownTeamMember(false);
+  const onlyOpen = (key) => {
+    setOpenOperate(key === 'operate');
+    setOpenMonitor(key === 'monitor');
+    setOpenReport(key === 'report');
   };
 
+  const baseItem =
+    'flex items-center gap-3 w-full rounded-md px-3 py-2 text-[13px] transition-colors';
+  const activeItem =
+    'text-[#3F6AD8] bg-[#EAF3FF] font-medium ring-1 ring-[#3F6AD8]/20 border-l-4 border-[#3F6AD8]';
+  const inactiveItem =
+    'text-slate-600 hover:text-[#3F6AD8] hover:bg-[#EAF3FF]';
+
+  const linkClass = (nav) =>
+    `${baseItem} ${nav.isActive ? activeItem : inactiveItem}`;
+
+  const SectionHeader = ({ title, isOpen, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={isOpen}
+      className="w-full flex items-center justify-between text-[12px] font-semibold uppercase tracking-wide
+                 text-slate-700 bg-gradient-to-r from-slate-50 to-white
+                 px-3 py-2 rounded-md ring-1 ring-slate-200/60 hover:ring-[#3F6AD8]/30"
+    >
+      <span>{title}</span>
+      <BsChevronDown
+        className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+      />
+    </button>
+  );
+
+  const SectionCard = ({ children }) => (
+    <div className="mt-2 space-y-1">
+      {children}
+    </div>
+  );
+
   return (
-    <div className="hover:scrollbar-admin-sidebar w-full h-full shadow-lg shadow-indigo-500/50 overflow-y-auto scrollbar-admin-sidebar-none group/parent">
-      <ul className="px-[24px] pt-[12px] pb-[22px] mr-[4px] group-hover/parent:mr-[0px]">
-        <li>
-          <span className="uppercase text-[#3F69D6] text-[12px] font-[700]">Pha Màu</span>
-          <ul className="mt-[12px]">
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminInkWeighProductionOrder}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Lệnh sản xuất
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminInkWeighInkTransferCart}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Xe cấp mực
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminInkWeighHistory}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Lịch sử lấy mực
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminInkWeigCompare}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    so sánh định mức
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminInkWeighLogfile}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Log file
-                  </NavLink>
-                </li>
-                <li className="hover:text-[#3F6AD8] text-[13px] mt-[4px] capitalize rounded-[4px] hover:bg-[#E0F3FF] cursor-pointer">
-                  <NavLink
-                    to={config.routes.adminReportCartInk}
-                    className={(nav) =>
-                      nav.isActive
-                        ? 'font-[600] text-[#3F6AD8] py-[6px] px-[22px] block w-full'
-                        : 'font-[400] py-[6px] px-[22px] block w-full'
-                    }
-                  >
-                    Báo cáo xe cân mực
-                  </NavLink>
-                </li>
-           </ul> 
-        </li>
-      </ul>
+    <div className="w-full h-full overflow-y-auto scrollbar-admin-sidebar scrollbar-admin-sidebar-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+      <div className="px-4 pt-3 pb-5">
+        {/* Module label */}
+        <div className="mb-3">
+          <span className="uppercase text-[#3F69D6] text-[11px] font-bold">Pha màu</span>
+        </div>
+
+        {/* ===== Nhóm: Vận hành ===== */}
+        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+          <SectionHeader
+            title="Vận hành"
+            isOpen={openOperate}
+            onClick={() => (openOperate ? onlyOpen('') : onlyOpen('operate'))}
+          />
+          {openOperate && (
+            <SectionCard>
+              <NavLink to={config.routes.adminInkWeighProductionOrder} className={linkClass}>
+                <BsRocket className="text-[16px]" />
+                <span>Lệnh sản xuất</span>
+              </NavLink>
+
+              <NavLink to={config.routes.adminInkWeighInkTransferCart} className={linkClass}>
+                <BsQrCodeScan className="text-[16px]" />
+                <span>Xe cấp mực</span>
+              </NavLink>
+            </SectionCard>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+        {/* ===== Nhóm: Theo dõi ===== */}
+        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+          <SectionHeader
+            title="Theo dõi"
+            isOpen={openMonitor}
+            onClick={() => (openMonitor ? onlyOpen('') : onlyOpen('monitor'))}
+          />
+          {openMonitor && (
+            <SectionCard>
+              <NavLink to={config.routes.adminInkWeighHistory} className={linkClass}>
+                <BsJournalAlbum className="text-[16px]" />
+                <span>Lịch sử lấy mực</span>
+              </NavLink>
+
+              <NavLink to={config.routes.adminInkWeighLogfile} className={linkClass}>
+                <BsJournalAlbum className="text-[16px]" />
+                <span>Log file</span>
+              </NavLink>
+            </SectionCard>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+        {/* ===== Nhóm: Đối chiếu & Báo cáo ===== */}
+        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+          <SectionHeader
+            title="Đối chiếu & Báo cáo"
+            isOpen={openReport}
+            onClick={() => (openReport ? onlyOpen('') : onlyOpen('report'))}
+          />
+          {openReport && (
+            <SectionCard>
+              <NavLink to={config.routes.adminInkWeigCompare} className={linkClass}>
+                <BsClipboardCheck className="text-[16px]" />
+                <span>So sánh định mức</span>
+              </NavLink>
+
+              <NavLink to={config.routes.adminReportCartInk} className={linkClass}>
+                <BsBarChartLine className="text-[16px]" />
+                <span>Báo cáo xe cân mực</span>
+              </NavLink>
+            </SectionCard>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
