@@ -147,7 +147,7 @@ const NgienCheChou = () => {
 
       setLoading(true);
       try {
-        const res = http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
+        const res = await http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
           params: {
             startDate: formatDateToVNString(dateOne),
             endDate: formatDateToVNString(dateOne),
@@ -322,7 +322,7 @@ const NgienCheChou = () => {
     setStartDate(start);
     setEndDate(end);
 
-        const res = http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
+        const res = await http.get(`${BASE_URL}/api/statistics/weight-by-unit`, {
           params: {
             startDate: formatDateToVNString(start),
             endDate: formatDateToVNString(end),
@@ -688,8 +688,7 @@ const exportAllToExcel = () => {
     <div className="flex flex-col items-center gap-4">
       <FaSpinner className="animate-spin text-blue-600 text-5xl" />
       <span
-  className="animate-spin text-gray-700 text-lg font-medium"
-  style={{ animationDirection: 'reverse' }}
+  className="text-gray-700 text-lg font-medium"
 >
   Loading...
 </span>

@@ -310,7 +310,7 @@ const formatTime = (value) => {
               <div className="rounded-xl border border-slate-200/70 p-3">
                 <div className="text-[11px] uppercase text-slate-500">Tổng khối lượng (tất cả)</div>
                 <div className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  {isMetaLoading && <FiLoader className="animate-spin text-indigo-600" />} {round1(formatWeight(totalWeight)).toFixed(2)} kg
+                  {isMetaLoading && <FiLoader className="animate-spin text-indigo-600" />} {round1(totalWeight).toFixed(2)} kg
                 </div>
               </div>
             </div>
@@ -409,45 +409,60 @@ const formatTime = (value) => {
                         Array.isArray(session.items) && session.items.length > 0 ? (
                           session.items.map((item, iIdx) => (
                             <tr
-                              key={`row-${sIdx}-${iIdx}`}
-                              className={`transition-colors ${sIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'} hover:bg-slate-100`}
-                            >
-                              {iIdx === 0 && (
-                                <>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>{sIdx + 1}</td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>{session?.scaleCode}</td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>
-                                    {session.operationCode === 'CP' ? 'Cấp phát'
-                                      : session.operationCode === 'TH' ? 'Thu hồi'
-                                      : session.operationCode === 'CM' ? 'Cấp mực'
-                                      : session.operationCode === 'TV' ? 'Trả về'
-                                      : session.operationCode === 'GC' ? 'Giao ca'
-                                      : session.operationCode === 'CX' ? 'Chuyển xe'
-                                      : session.operationCode}
-                                  </td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>{session?.hsktId}</td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>
-                                    {session.department?.replace(/^T/, 'Tổ ')}
-                                  </td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>{session.unit}</td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>{session.workShift}</td>
-                                  <td className="px-3 py-2 align-top" rowSpan={session.items.length}>
-                                    {formatTime(session.startTime)} {formatDate(session.weighStartDate)}
-                                    <span className="px-2">—</span>
-                                    {formatTime(session.endTime)} {formatDate(session.weighEndDate)}
-                                  </td>
-                                </>
-                              )}
-                              <td className="px-3 py-2">{item.inkCode}</td>
-                              <td className="px-3 py-2">{item.inkName}</td>
-                              <td className="px-3 py-2 text-right font-medium">{round1(formatWeight(item.weight)).toFixed(2)}</td>
-                              <td className="px-3 py-2">{formatDate(item.productionDate)}</td>
-                              {iIdx === 0 && (
-                                <td className="px-3 py-2 align-top" rowSpan={session.items.length}>
-                                  {session.receivedBy}
-                                </td>
-                              )}
-                            </tr>
+  key={`row-${sIdx}-${iIdx}`}
+  className={`transition-colors ${
+    sIdx % 2 === 0 ? 'bg-white' : 'bg-slate-100'
+  } hover:bg-slate-200 border-b border-slate-300`}
+>
+  {iIdx === 0 && (
+    <>
+      <td className="px-3 py-2 align-middle font-semibold" rowSpan={session.items.length}>
+        {sIdx + 1}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session?.scaleCode}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session.operationCode === 'CP' ? 'Cấp phát'
+          : session.operationCode === 'TH' ? 'Thu hồi'
+          : session.operationCode === 'CM' ? 'Cấp mực'
+          : session.operationCode === 'TV' ? 'Trả về'
+          : session.operationCode === 'GC' ? 'Giao ca'
+          : session.operationCode === 'CX' ? 'Chuyển xe'
+          : session.operationCode}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session?.hsktId}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session.department?.replace(/^T/, 'Tổ ')}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session.unit}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {session.workShift}
+      </td>
+      <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+        {formatTime(session.startTime)} {formatDate(session.weighStartDate)}
+        <span className="px-2">—</span>
+        {formatTime(session.endTime)} {formatDate(session.weighEndDate)}
+      </td>
+    </>
+  )}
+  <td className="px-3 py-2 align-middle">{item.inkCode}</td>
+  <td className="px-3 py-2 align-middle">{item.inkName}</td>
+  <td className="px-3 py-2 text-right font-medium align-middle">
+    {round1(item.weight).toFixed(2)}
+  </td>
+  <td className="px-3 py-2 align-middle">{formatDate(item.productionDate)}</td>
+  {iIdx === 0 && (
+    <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
+      {session.receivedBy}
+    </td>
+  )}
+</tr>
+
                           ))
                         ) : (
                           <tr key={`row-${sIdx}-0`} className={`transition-colors ${sIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'} hover:bg-slate-100`}>

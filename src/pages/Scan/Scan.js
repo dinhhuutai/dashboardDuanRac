@@ -7,6 +7,7 @@ import { FaSpinner } from 'react-icons/fa';
 import { BASE_URL } from '~/config/index';
 import mqtt from 'mqtt';
 import http from '~/api/http';
+import axios from 'axios';
 
 const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
 const MQTT_TOPIC = 'thla/canrac';
@@ -64,8 +65,8 @@ function Scan() {
 
   useEffect(() => {
   if (user?.userID) {
-    http
-      .get(`/api/team-members`, { params: { userID: user.userID } })
+    axios
+      .get(`${BASE_URL}/api/team-members`, { params: { userID: user.userID } })
       .then((res) => {
         const data = res.data || [];
         setTeamMembers(data);
@@ -198,10 +199,10 @@ function Scan() {
     };
 
     try {
-      const res = await http.post("/trash-weighings", payload);
+      const res = await axios.post(`${BASE_URL}/trash-weighings`, payload);
 
-      if (res.ok) {
-        const result = await res.json();
+      if (res.status === 200) {
+        const result = await res.data;
         const savedPayload = { ...payload, id: result.id, d: jsonData?.d, u: jsonData?.u, t: jsonData?.t };
         setConfirmedData(savedPayload);
         setReviewModalVisible(true);
@@ -230,7 +231,7 @@ function Scan() {
     }
 
     try {
-      const res = await http.get("/trash-weighings/check", {
+      const res = await axios.get(`${BASE_URL}/trash-weighings/check`, {
         params: {
           trashBinCode: jsonData?.id,
           workShift,
@@ -238,7 +239,7 @@ function Scan() {
         }
       });
 
-      return await res.json();
+      return await res.data;
     } catch (error) {
       console.error('❌ Lỗi kiểm tra cân:', error);
       return null;
@@ -671,7 +672,7 @@ function Scan() {
                     setIsSaving(true);
                     const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
                     try {
-                      const res = await http.put(`/trash-weighings/${confirmedData.id}`, {
+                      const res = await axios.put(`${BASE_URL}/trash-weighings/${confirmedData.id}`, {
                         ...confirmedData,
                         updatedAt: nowUTC7.toISOString(),
                         updatedBy: user.userID

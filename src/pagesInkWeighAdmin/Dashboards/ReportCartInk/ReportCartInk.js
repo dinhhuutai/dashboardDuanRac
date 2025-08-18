@@ -223,7 +223,7 @@ function ReportCartInk() {
                       <div className="text-sm">
                         <span className="mr-2 text-slate-600">Tổng mực sử dụng:</span>
                         <span className="inline-flex items-center rounded-md bg-rose-50 px-2.5 py-1 text-[12px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">
-                          {round1(nfmt(summary.total)).toFixed(2)} kg
+                          {round1(summary.total).toFixed(2)} kg
                         </span>
                       </div>
                     </div>
@@ -238,7 +238,7 @@ function ReportCartInk() {
                           >
                             <span className="truncate max-w-[220px]">{ink}</span>
                             <span className={`font-semibold ${val < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                              {round1(nfmt(val)).toFixed(2)} kg
+                              {round1(val).toFixed(2)} kg
                             </span>
                           </span>
                         ))}
@@ -281,7 +281,7 @@ function ReportCartInk() {
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-3 py-2 text-right font-medium">{round1(nfmt(r.weight)).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right font-medium">{round1(r.weight).toFixed(2)}</td>
                               </tr>
                             ))}
                           </tbody>
