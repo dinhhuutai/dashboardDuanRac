@@ -235,7 +235,7 @@ function InkTransferCart() {
                   <div className="rounded-xl border border-slate-200/70 p-3">
                     <div className="text-[11px] uppercase text-slate-500">Mực sử dụng</div>
                     <div className="text-lg font-semibold text-slate-900">
-                      {fmt(totalSuDung)} g
+                      {fmt(totalSuDung)} kg
                     </div>
                   </div>
                   <div className="rounded-xl border border-slate-200/70 p-3">
@@ -245,16 +245,16 @@ function InkTransferCart() {
                         totalHaoHut > 0 ? "text-rose-600" : totalHaoHut < 0 ? "text-emerald-600" : "text-slate-900"
                       }`}
                     >
-                      {fmt(totalHaoHut)} g
+                      {fmt(totalHaoHut)} kg
                     </div>
                   </div>
                   <div className="rounded-xl border border-slate-200/70 p-3">
                     <div className="text-[11px] uppercase text-slate-500">Mực nhận từ kho</div>
-                    <div className="text-lg font-semibold text-slate-900">{fmt(totalNhanKho)} g</div>
+                    <div className="text-lg font-semibold text-slate-900">{fmt(totalNhanKho)} kg</div>
                   </div>
                   <div className="rounded-xl border border-slate-200/70 p-3">
                     <div className="text-[11px] uppercase text-slate-500">Mực trả về kho</div>
-                    <div className="text-lg font-semibold text-slate-900">{fmt(totalTraKho)} g</div>
+                    <div className="text-lg font-semibold text-slate-900">{fmt(totalTraKho)} kg</div>
                   </div>
                 </div>
 

@@ -52,7 +52,7 @@ function ProductionOrder() {
     // Tiêu đề
     wsData.push([title]);
     wsData.push([]);
-    wsData.push(["HSKT", "Mã mực", "Tên mực", "Mực cấp (g)", "Mực hoàn (g)", "Mực sử dụng (g)"]);
+    wsData.push(["HSKT", "Mã mực", "Tên mực", "Mực cấp (kg)", "Mực hoàn (kg)", "Mực sử dụng (kg)"]);
 
     const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
     let currentRow = 3;
@@ -68,16 +68,31 @@ function ProductionOrder() {
       groupColors[hsktId] = groupColor;
 
       items.forEach((row) => {
-        wsData.push([hsktId, row.inkCode, row.inkName, row.cap, row.hoan, row.su_dung]);
-        currentRow++;
-      });
+  wsData.push([
+    hsktId,
+    row.inkCode,
+    row.inkName,
+    round1(row.cap).toFixed(2),      // đổi sang kg
+    round1(row.hoan).toFixed(2),     // đổi sang kg
+    round1(row.su_dung).toFixed(2),  // đổi sang kg
+  ]);
+  currentRow++;
+});
 
       if (items.length > 1) {
         merges.push({ s: { r: startRow, c: 0 }, e: { r: currentRow - 1, c: 0 } });
       }
 
-      wsData.push(["Tổng", `(${items.length} mã mực)`, "", tongCap, tongHoan, tongSuDung]);
-      currentRow++;
+      wsData.push([
+  "Tổng",
+  `(${items.length} mã mực)`,
+  "",
+  round1(tongCap).toFixed(2),        // đổi sang kg
+  round1(tongHoan).toFixed(2),
+  round1(tongSuDung).toFixed(2),
+]);
+
+currentRow++;
     });
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
