@@ -24,7 +24,7 @@ function QRScanTracking() {
           }
         });
 
-        const json = await res.json();
+        const json = await res.data;
 
         // Kết hợp trashBinCode + trashName
         const processedList = (json.groupedScannedList || []).map(item => {
@@ -57,7 +57,7 @@ function QRScanTracking() {
       try {
         const res = await http.get("/trash-weighings/longest-unscanned");
 
-        const json = await res.json();
+        const json = await res.data;
 
         setLongestUnscanned(json.fullList || []);
       } catch (err) {

@@ -84,8 +84,8 @@ function FeedbackFlow() {
 
     try {
       const res = await http.post("/api/suggestions/submit", formData);
-      
-      const data = await res.json();
+
+      const data = await res.data;
       if (data.success) {
         setStep(5);
       } else {

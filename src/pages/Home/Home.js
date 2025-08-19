@@ -201,7 +201,7 @@ function Home() {
     try {
       const res = await http.post("/submit-classification", formData);
 
-      const data = await res.json();
+      const data = await res.data;
       if (data.success) {
         setFinalConfirmModalOpen(false);
         showError('Lưu thành công');
@@ -379,7 +379,7 @@ function Home() {
         isOpen={isErrorModalOpen}
         onRequestClose={() => setErrorModalOpen(false)}
         className="bg-white/95 backdrop-blur-md rounded-2xl max-w-sm w-full p-6 mx-auto mt-20 shadow-xl outline-none border border-white/60 text-center"
-        overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-[53]"
+        overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-[5333]"
       >
         <h3 className="text-lg font-semibold mb-2 text-slate-800">Thông báo</h3>
         <p className="mb-5 text-slate-700">{errorMessage}</p>
