@@ -13,6 +13,9 @@ const PAGE_SIZE_ALL = 100000;
 function HistoryWeigh() {
   const todayStr = new Date().toISOString().split('T')[0];
 
+  // thêm state mới
+const [allData, setAllData] = useState([]);
+
   const [filters, setFilters] = useState({
     date: todayStr || '',
     shift: '',
@@ -86,6 +89,8 @@ const fetchMeta = async () => {
 
     // ===== Tổng toàn bộ (KHÔNG theo trang) =====
     const allSessions = totalsRes.data?.items || [];
+    setAllData(allSessions); // <= giữ toàn bộ sessions (mọi trang) để export
+
     setTotalSessions(allSessions.length);
 
     let sum = 0;
@@ -150,131 +155,142 @@ const formatTime = (value) => {
 
   // =================== EXPORT EXCEL (giữ nguyên logic, dùng data của TRANG hiện tại cho bảng; nếu muốn all -> thay data bằng allSessions trong fetchMeta) ===================
   const exportToExcel = () => {
-    const excelData = [[
-      'STT', 'Mã cân', 'Nghiệp vụ', 'Mã HSKT', 'Tổ in', 'Chuyền',
-      'Số CT', 'Thời gian', 'Mã mực', 'Tên mực', 'Khối lượng (g)', 'NSX', 'Người nhận',
-    ]];
+  // Dùng toàn bộ dữ liệu đã cache từ fetchMeta; nếu chưa có thì fallback về trang hiện tại
+  const source = (allData && allData.length) ? allData : data;
 
-    data.forEach((session, sIdx) => {
-      if (Array.isArray(session.items) && session.items.length > 0) {
-        session.items.forEach((item, iIdx) => {
-          excelData.push([
-            iIdx === 0 ? sIdx + 1 : '',
-            iIdx === 0 ? session.scaleCode : '',
-            iIdx === 0
-              ? (session.operationCode === 'CP' ? 'Cấp phát'
-                : session.operationCode === 'TH' ? 'Thu hồi'
-                : session.operationCode === 'CM' ? 'Cấp mực'
-                : session.operationCode === 'TV' ? 'Trả về'
-                : session.operationCode === 'GC' ? 'Giao ca'
-                : session.operationCode === 'CX' ? 'Chuyển xe'
-                : session.operationCode)
-              : '',
-            iIdx === 0 ? (session.hsktId || '') : '',
-            iIdx === 0 ? (session.department?.replace(/^T/, 'Tổ ') || '') : '',
-            iIdx === 0 ? (session.unit || '') : '',
-            iIdx === 0 ? (session.workShift || '') : '',
-            iIdx === 0
-              ? `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`
-              : '',
-            item.inkCode,
-            item.inkName,
-            Number(item.weight || 0),
-            formatDate(item.productionDate),
-            iIdx === 0 ? (session.receivedBy || '') : '',
-          ]);
-        });
-      } else {
+  const excelData = [[
+    'STT', 'Mã cân', 'Nghiệp vụ', 'Mã HSKT', 'Tổ in', 'Chuyền',
+    'Số CT', 'Thời gian', 'Mã mực', 'Tên mực', 'Khối lượng (kg)', 'NSX', 'Người nhận',
+  ]];
+
+  // helper dùng lại: đổi gram -> kilogram, 1 chữ số thập phân
+  const toKg1 = (g) => Math.round(((Number(g) || 0) / 1000) * 10) / 10;
+
+  source.forEach((session, sIdx) => {
+    if (Array.isArray(session.items) && session.items.length > 0) {
+      session.items.forEach((item, iIdx) => {
         excelData.push([
-          sIdx + 1,
-          session.scaleCode,
-          (session.operationCode === 'CP' ? 'Cấp phát'
-            : session.operationCode === 'TH' ? 'Thu hồi'
-            : session.operationCode === 'CM' ? 'Cấp mực'
-            : session.operationCode === 'TV' ? 'Trả về'
-            : session.operationCode === 'GC' ? 'Giao ca'
-            : session.operationCode === 'CX' ? 'Chuyển xe'
-            : session.operationCode),
-          session.hsktId || '',
-          session.department?.replace(/^T/, 'Tổ ') || '',
-          session.unit || '',
-          session.workShift || '',
-          `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`,
-          '(Không có mục mực nào)', '', '', '', session.receivedBy || '',
+          iIdx === 0 ? sIdx + 1 : '',
+          iIdx === 0 ? session.scaleCode : '',
+          iIdx === 0
+            ? (session.operationCode === 'CP' ? 'Cấp phát'
+              : session.operationCode === 'TH' ? 'Thu hồi'
+              : session.operationCode === 'CM' ? 'Cấp mực'
+              : session.operationCode === 'TV' ? 'Trả về'
+              : session.operationCode === 'GC' ? 'Giao ca'
+              : session.operationCode === 'CX' ? 'Chuyển xe'
+              : session.operationCode)
+            : '',
+          iIdx === 0 ? (session.hsktId || '') : '',
+          iIdx === 0 ? (session.department?.replace(/^T/, 'Tổ ') || '') : '',
+          iIdx === 0 ? (session.unit || '') : '',
+          iIdx === 0 ? (session.workShift || '') : '',
+          iIdx === 0
+            ? `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`
+            : '',
+          item.inkCode,
+          item.inkName,
+          // ==> xuất kg
+          toKg1(item.weight),
+          formatDate(item.productionDate),
+          iIdx === 0 ? (session.receivedBy || '') : '',
         ]);
-      }
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-    // merge theo nhóm
-    let currentRow = 1;
-    data.forEach(session => {
-      const rowCount = (Array.isArray(session.items) && session.items.length > 0) ? session.items.length : 1;
-      if (rowCount > 1) {
-        for (let c = 0; c <= 7; c++) {
-          ws['!merges'] = ws['!merges'] || [];
-          ws['!merges'].push({ s: { r: currentRow, c }, e: { r: currentRow + rowCount - 1, c } });
-        }
-        ws['!merges'].push({ s: { r: currentRow, c: 12 }, e: { r: currentRow + rowCount - 1, c: 12 } });
-      }
-      currentRow += rowCount;
-    });
-
-    const border = {
-      top: { style: 'thin', color: { rgb: 'CBD5E1' } },
-      bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
-      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
-      right: { style: 'thin', color: { rgb: 'CBD5E1' } },
-    };
-    const headerStyle = {
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      fill: { fgColor: { rgb: '003366' } },
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      border,
-    };
-
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let c = 0; c <= range.e.c; c++) {
-      const cell = XLSX.utils.encode_cell({ r: 0, c });
-      if (ws[cell]) ws[cell].s = headerStyle;
+      });
+    } else {
+      excelData.push([
+        sIdx + 1,
+        session.scaleCode,
+        (session.operationCode === 'CP' ? 'Cấp phát'
+          : session.operationCode === 'TH' ? 'Thu hồi'
+          : session.operationCode === 'CM' ? 'Cấp mực'
+          : session.operationCode === 'TV' ? 'Trả về'
+          : session.operationCode === 'GC' ? 'Giao ca'
+          : session.operationCode === 'CX' ? 'Chuyển xe'
+          : session.operationCode),
+        session.hsktId || '',
+        session.department?.replace(/^T/, 'Tổ ') || '',
+        session.unit || '',
+        session.workShift || '',
+        `${formatTime(session.startTime)} ${formatDate(session.weighStartDate)} - ${formatTime(session.endTime)} ${formatDate(session.weighEndDate)}`,
+        '(Không có mục mực nào)', '', '', '', session.receivedBy || '',
+      ]);
     }
+  });
 
-    // zebra theo nhóm
-    let groupIndex = 0;
-    let rowPtr = 1;
-    data.forEach(session => {
-      const rows = (session.items && session.items.length) ? session.items.length : 1;
-      const fill = { fgColor: { rgb: groupIndex % 2 === 0 ? 'FFFFFF' : 'F8FAFC' } };
-      for (let r = rowPtr; r < rowPtr + rows; r++) {
-        for (let c = 0; c <= range.e.c; c++) {
-          const addr = XLSX.utils.encode_cell({ r, c });
-          if (!ws[addr]) continue;
-          const isNumber = c === 10; // cột Khối lượng
-          ws[addr].s = {
-            ...(ws[addr].s || {}),
-            fill,
-            border,
-            alignment: { horizontal: isNumber ? 'right' : 'center', vertical: 'center', wrapText: true },
-            numFmt: isNumber ? '#,##0.0' : undefined,
-          };
-        }
+  const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+  // merge theo nhóm (cho 8 cột đầu và cột cuối "Người nhận")
+  let currentRow = 1;
+  source.forEach(session => {
+    const rowCount = (Array.isArray(session.items) && session.items.length > 0) ? session.items.length : 1;
+    if (rowCount > 1) {
+      for (let c = 0; c <= 7; c++) {
+        ws['!merges'] = ws['!merges'] || [];
+        ws['!merges'].push({ s: { r: currentRow, c }, e: { r: currentRow + rowCount - 1, c } });
       }
-      rowPtr += rows;
-      groupIndex++;
-    });
+      ws['!merges'].push({ s: { r: currentRow, c: 12 }, e: { r: currentRow + rowCount - 1, c: 12 } });
+    }
+    currentRow += rowCount;
+  });
 
-    ws['!cols'] = [
-      { wch: 6 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 10 },
-      { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 14 }, { wch: 22 },
-      { wch: 16 }, { wch: 12 }, { wch: 16 },
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Lịch sử cân mực');
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf], { type: 'application/octet-stream' }), `lich_su_can_muc_${filters.date}.xlsx`);
+  const border = {
+    top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right: { style: 'thin', color: { rgb: 'CBD5E1' } },
   };
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '003366' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border,
+  };
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  // style header
+  for (let c = 0; c <= range.e.c; c++) {
+    const cell = XLSX.utils.encode_cell({ r: 0, c });
+    if (ws[cell]) ws[cell].s = headerStyle;
+  }
+
+  // zebra theo nhóm + định dạng số cho cột khối lượng (kg)
+  let groupIndex = 0;
+  let rowPtr = 1;
+  source.forEach(session => {
+    const rows = (session.items && session.items.length) ? session.items.length : 1;
+    const fill = { fgColor: { rgb: groupIndex % 2 === 0 ? 'FFFFFF' : 'F8FAFC' } };
+    for (let r = rowPtr; r < rowPtr + rows; r++) {
+      for (let c = 0; c <= range.e.c; c++) {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        if (!ws[addr]) continue;
+        const isKgCol = c === 10; // "Khối lượng (kg)" ở cột index 10
+        ws[addr].s = {
+          ...(ws[addr].s || {}),
+          fill,
+          border,
+          alignment: { horizontal: isKgCol ? 'right' : 'center', vertical: 'center', wrapText: true },
+          numFmt: isKgCol ? '#,##0.0' : undefined,
+        };
+      }
+    }
+    rowPtr += rows;
+    groupIndex++;
+  });
+
+  ws['!cols'] = [
+    { wch: 6 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 10 },
+    { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 14 }, { wch: 22 },
+    { wch: 16 }, { wch: 12 }, { wch: 16 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Lịch sử cân mực');
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveAs(new Blob([buf], { type: 'application/octet-stream' }),
+    `lich_su_can_muc_${filters.date}.xlsx`
+  );
+};
+
 
   
   function round1(num) {
