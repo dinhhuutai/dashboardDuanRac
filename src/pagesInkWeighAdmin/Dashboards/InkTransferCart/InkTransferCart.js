@@ -70,32 +70,37 @@ function InkTransferCart() {
     ]);
 
     // Dòng dữ liệu
-    data.forEach((row) => {
-      wsData.push([
-        row.scaleName || row.scaleCode,
-        row.muc_nhan_tu_kho,
-        row.muc_tra_ve_kho,
-        row.muc_cap_cho_chuyen,
-        row.muc_chuyen_hoan_ve,
-        row.nhan_ban_giao_ca,
-        row.muc_chuyen_ca_sau,
-        row.su_dung,
-        row.hao_hut,
-      ]);
-    });
+    // Hàm đổi gram -> kg (2 số thập phân)
+const toKg = (v) => v != null ? (v / 1000).toFixed(2) : "0.00";
+
+data.forEach((row) => {
+  wsData.push([
+    row.scaleName || row.scaleCode,
+    toKg(row.muc_nhan_tu_kho),
+    toKg(row.muc_tra_ve_kho),
+    toKg(row.muc_cap_cho_chuyen),
+    toKg(row.muc_chuyen_hoan_ve),
+    toKg(row.nhan_ban_giao_ca),
+    toKg(row.muc_chuyen_ca_sau),
+    toKg(row.su_dung),
+    toKg(row.hao_hut),
+  ]);
+});
+
 
     // Dòng tổng
     wsData.push([
-      "Tổng cộng",
-      totalNhanKho,
-      totalTraKho,
-      totalCap,
-      totalHoan,
-      totalNhanBG,
-      totalChuyenXe,
-      totalSuDung,
-      totalHaoHut,
-    ]);
+  "Tổng cộng",
+  toKg(totalNhanKho),
+  toKg(totalTraKho),
+  toKg(totalCap),
+  toKg(totalHoan),
+  toKg(totalNhanBG),
+  toKg(totalChuyenXe),
+  toKg(totalSuDung),
+  toKg(totalHaoHut),
+]);
+
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
@@ -145,7 +150,7 @@ function InkTransferCart() {
               left: { style: "thin", color: { rgb: "E5E7EB" } },
               right: { style: "thin", color: { rgb: "E5E7EB" } },
             },
-            numFmt: isNumberCol ? "#,##0.0" : undefined,
+            numFmt: isNumberCol ? "#,##0.00" : undefined,
           };
         } else {
           const zebra = R % 2 === 1 ? "FFFFFF" : "F9FAFB";

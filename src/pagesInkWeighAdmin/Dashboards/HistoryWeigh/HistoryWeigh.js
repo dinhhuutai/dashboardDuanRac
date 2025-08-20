@@ -294,7 +294,7 @@ const formatTime = (value) => {
 
   
   function round1(num) {
-  return Math.round((num / 1000) * 10) / 10;
+  return num / 1000;
 }
 
   // =================== UI ===================
@@ -407,7 +407,7 @@ const formatTime = (value) => {
                 <table className="min-w-[1200px] w-full text-sm">
                   <thead className="bg-slate-50 sticky top-0 z-10">
                     <tr className="text-[12px] uppercase tracking-wide text-slate-600">
-                      {['STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian','Mã mực','Tên mực','Khối lượng (kg)','NSX','Người nhận'].map((h, i) => (
+                      {['STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian','Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)','NSX','Người nhận'].map((h, i) => (
                         <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
                       ))}
                     </tr>
@@ -470,6 +470,9 @@ const formatTime = (value) => {
   <td className="px-3 py-2 align-middle">{item.inkName}</td>
   <td className="px-3 py-2 text-right font-medium align-middle">
     {round1(item.weight).toFixed(2)}
+  </td>
+  <td className="px-3 py-2 text-right font-medium align-middle">
+    {item.weight}
   </td>
   <td className="px-3 py-2 align-middle">{formatDate(item.productionDate)}</td>
   {iIdx === 0 && (
