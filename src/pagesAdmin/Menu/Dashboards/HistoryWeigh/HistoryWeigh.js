@@ -377,7 +377,7 @@ function HistoryWeigh() {
                     <td className={`px-2 py-2 text-right font-semibold ${invalid ? 'text-white' : 'text-slate-900'}`}>
                       {Number(item.weightKg || 0).toFixed(1)}
                     </td>
-                    {user?.actionHistoryWeigh && (
+                    {user?.userID === 3 && (
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-3 justify-center">
                           <button
