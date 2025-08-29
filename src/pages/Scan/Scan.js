@@ -79,15 +79,32 @@ function Scan() {
 }, [user]);
 
 
-  const initScanner = () => {
+  const initScanner = async () => {
+    setLoading(true);
     if (!videoRef.current) return;
     qrScannerRef.current = new QrScanner(
       videoRef.current,
-      (result) => {
+      async (result) => {
         try {
           const decodedStr = decodeURIComponent(result.data);
           const parsed = JSON.parse(decodedStr);
-          setJsonData(parsed);
+
+          if(parsed?.id && !parsed?.d) {
+            //Lấy api có thông tin của QR
+            const res = await axios.get(`${BASE_URL}/api/trash-bins/${parsed.id}/details`);
+
+            const jsonDataTmp = {
+              id: res?.data.data.trashBinCode,
+              d: res?.data.data.departmentName,
+              u: res?.data.data.unitName,
+              t: res?.data.data.trashName,
+            }
+            
+            setJsonData(jsonDataTmp);
+
+          } else {
+            setJsonData(parsed);
+          }
 
           if (user?.role === 'admin') {
             setResultVisible(true);
@@ -127,7 +144,10 @@ function Scan() {
         mediaStreamRef.current = videoRef.current.srcObject;
       })
       .catch((err) => console.error('Không thể khởi động camera:', err));
-  };
+  
+    setLoading(false);
+  
+    };
 
   // mount/unmount
   useEffect(() => {
@@ -431,7 +451,7 @@ function Scan() {
               </div>
 
               <div className="text-sm">
-                <label className="font-semibold block mb-1">👤 Tên người cân:</label>
+                <label className="font-semibold block mb-1">Ghi chú:</label>
                 <input
                   type="text"
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400 outline-none"
@@ -555,7 +575,7 @@ function Scan() {
                   <span className="px-2 py-1 rounded-full text-xs bg-rose-100 text-rose-700 border border-rose-200">Tem không để ngày</span>
                 )}
               </p>
-              <p><strong>Người cân:</strong> {confirmedData.userName}</p>
+              <p><strong>Ghi chú:</strong> {confirmedData.userName}</p>
             </div>
 
             <div className="flex justify-between pt-2">
@@ -651,7 +671,7 @@ function Scan() {
               </div>
 
               <div className="text-sm">
-                <label className="block mb-1 font-semibold">👤 Người cân:</label>
+                <label className="block mb-1 font-semibold">Ghi chú:</label>
                 <input
                   type="text"
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400 outline-none"

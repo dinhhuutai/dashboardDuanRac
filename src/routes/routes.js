@@ -41,6 +41,9 @@ import TrashTypeUpdate from '~/pagesAdmin/Manage/TrashType/Update';
 import TeamMemberList from '~/pagesAdmin/Manage/TeamMember/List';
 import TeamMemberCreate from '~/pagesAdmin/Manage/TeamMember/Create';
 
+import SortUnitByDepartment from '~/pagesAdmin/Manage/Utils/SortUnitByDepartment';
+import SettingTable from '~/pagesAdmin/Manage/Utils/SettingTable';
+
 import ListBinClassCheck from '~/pagesAdmin/Menu/ClassChecks/ListBin';
 import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
 
@@ -287,6 +290,18 @@ export const routesAdmin = [
     component: ListBinClassCheck,
     login: true,
   },
+  
+  {
+    path: config.routes.adminSortUnitByDepartment,
+    component: SortUnitByDepartment,
+    login: true,
+  },
+  {
+    path: config.routes.adminSettingTable,
+    component: SettingTable,
+    login: true,
+  },
+
   {
     path: config.routes.adminNgienCheChou,
     component: NgienCheChou,

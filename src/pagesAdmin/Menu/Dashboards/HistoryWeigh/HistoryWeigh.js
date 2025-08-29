@@ -337,7 +337,7 @@ function HistoryWeigh() {
                 <th className="px-2 py-3">Thời gian cân</th>
                 <th className="px-2 py-3">Ngày đổ</th>
                 <th className="px-2 py-3">Ca</th>
-                <th className="px-2 py-3">Người cân</th>
+                <th className="px-2 py-3">Ghi chú</th>
                 <th className="px-2 py-3 text-right">Khối lượng</th>
                 {user?.actionHistoryWeigh && <th className="px-2 py-3">Thao tác</th>}
               </tr>

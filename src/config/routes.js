@@ -49,6 +49,9 @@ const routes = {
   adminTeamMember: '/admin/manage/teammember/list',
   adminTeamMemberCreate: '/admin/manage/teammember/create',
 
+  adminSortUnitByDepartment : '/admin/manage/utils/sort-unit-by-department',
+  adminSettingTable : '/admin/manage/utils/setting-table',
+
 
   adminInkWeighAnalytics: '/admin/menu/dashboard/ink-weigh/analytics',
   adminInkWeighReport: '/admin/menu/dashboard/ink-weigh/report',

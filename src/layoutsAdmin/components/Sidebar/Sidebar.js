@@ -8,6 +8,7 @@ import {
   BsPerson,
   BsClipboardCheck,
   BsCart2,
+  BsGear,
 } from 'react-icons/bs';
 import { useEffect, useState, useMemo } from 'react';
 import config from '~/config';
@@ -29,6 +30,7 @@ function Sidebar() {
   const [downUser, setDownUser] = useState(false);
   const [downWaste, setDownWaste] = useState(false);
   const [downTrashTruck, setDownTrashTruck] = useState(false);
+  const [downUtils, setDownUtils] = useState(false);
 
   const hiddenItem = (key) => {
     key !== 'dashboard' && setDownDashboard(false);
@@ -38,6 +40,7 @@ function Sidebar() {
     key !== 'user' && setDownUser(false);
     key !== 'waste' && setDownWaste(false);
     key !== 'trashTrush' && setDownTrashTruck(false);
+    key !== 'utils' && setDownUtils(false);
   };
 
   const linkClass = ({ isActive }) =>
@@ -200,7 +203,7 @@ function Sidebar() {
           </Section>
 
           {/* QR Code (phân quyền) */}
-          {user?.managerQRcode && (
+          {user?.userID === 1 && (
             <Section
               title="QR Code"
               icon={BsQrCodeScan}
@@ -266,6 +269,31 @@ function Sidebar() {
               <li>
                 <NavLink to={config.routes.adminTrashTypeCreate} className={linkClass}>
                   Create
+                </NavLink>
+              </li>
+            </Section>
+          )}
+
+          
+          {/* Utils */}
+          {(user?.userID === 1 || user?.userID === 3) && (
+            <Section
+              title="Tiện ích"
+              icon={BsGear}
+              open={downUtils}
+              onToggle={() => {
+                hiddenItem('utils');
+                setDownUtils((v) => !v);
+              }}
+            >
+              <li>
+                <NavLink to={config.routes.adminSortUnitByDepartment} className={linkClass}>
+                  Sắp xếp chuyền theo tổ
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to={config.routes.adminSettingTable} className={linkClass}>
+                  Cài đặt bảng
                 </NavLink>
               </li>
             </Section>
