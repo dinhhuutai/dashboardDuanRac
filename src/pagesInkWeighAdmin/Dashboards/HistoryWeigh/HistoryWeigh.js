@@ -43,7 +43,8 @@ function HistoryWeigh() {
 
   // === State cho sửa item ===
   const [editMap, setEditMap] = useState({});
-  const [formMap, setFormMap] = useState({}); // { [itemId]: { inkName, weight2 } }
+  // { [itemId]: { inkCode, inkName, weight2 } } – weight2 là KG trong form
+  const [formMap, setFormMap] = useState({});
 
   useEffect(() => {
     fetchPage();
@@ -137,9 +138,6 @@ function HistoryWeigh() {
     const mm = String(isUTCStamp ? d.getUTCMinutes() : d.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
   };
-
-  const formatWeight = (num) =>
-    Number(num ?? 0).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   const exportToExcel = () => {
     const source = (allData && allData.length) ? allData : data;
@@ -278,12 +276,14 @@ function HistoryWeigh() {
   // ==== Handlers sửa item ====
   const startEdit = (item) => {
     const id = item.weighingSessionItemId;
+    const kgForForm = (item?.weight2 != null ? item.weight2 : item.weight) / 1000;
     setEditMap(m => ({ ...m, [id]: true }));
     setFormMap(f => ({
       ...f,
       [id]: {
+        inkCode: item.inkCode || '',
         inkName: item.inkName || '',
-        weight2: item.weight2 ?? ''
+        weight2: Number.isFinite(kgForForm) ? kgForForm : ''
       }
     }));
   };
@@ -295,82 +295,83 @@ function HistoryWeigh() {
   const changeForm = (id, field, value) => {
     setFormMap(f => ({
       ...f,
-      [id]: { ...(f[id] || { inkName: '', weight2: '' }), [field]: value }
+      [id]: { ...(f[id] || { inkCode: '', inkName: '', weight2: '' }), [field]: value }
     }));
   };
 
   const saveEdit = async (sessionId, item) => {
-  const id = item.weighingSessionItemId;
-  const draft = formMap[id] || {};
+    const id = item.weighingSessionItemId;
+    const draft = formMap[id] || {};
 
-  // Người dùng nhập KG -> convert sang GRAM để lưu
-  const weight2Kg = draft.weight2 === '' ? null : Number(draft.weight2);
-  const weight2Gr = weight2Kg == null || Number.isNaN(weight2Kg)
-    ? null
-    : Math.round(weight2Kg * 1000);
+    // Người dùng nhập KG -> convert sang GRAM để lưu
+    const weight2Kg = draft.weight2 === '' ? null : Number(draft.weight2);
+    const weight2Gr = weight2Kg == null || Number.isNaN(weight2Kg)
+      ? null
+      : Math.max(0, Math.round(weight2Kg * 1000)); // không âm
 
-  const payload = {
-    inkName: (draft.inkName ?? item.inkName) || '',
-    weight2: weight2Gr, // gửi gram lên server
+    const payload = {
+      inkCode: (draft.inkCode ?? item.inkCode) || '',
+      inkName: (draft.inkName ?? item.inkName) || '',
+      weight2: weight2Gr, // gửi gram lên server
+    };
+
+    try {
+      await axios.put(`${BASE_URL_SERVER_THLA}/api/ink-weighing/items/${id}`, payload);
+
+      // Cập nhật ngay UI: weight hiển thị (g) = COALESCE(weight2, weight)
+      const newDisplayWeight = (weight2Gr ?? item.weight); // gram
+
+      setData(prev => prev.map(s =>
+        s.weighingSessionId === sessionId
+          ? {
+              ...s,
+              items: s.items.map(it =>
+                it.weighingSessionItemId === id
+                  ? {
+                      ...it,
+                      inkCode: payload.inkCode,
+                      inkName: payload.inkName,
+                      weight2: weight2Gr,
+                      weight: newDisplayWeight,
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : it
+              )
+            }
+          : s
+      ));
+
+      setAllData(prev => prev.map(s =>
+        s.weighingSessionId === sessionId
+          ? {
+              ...s,
+              items: s.items.map(it =>
+                it.weighingSessionItemId === id
+                  ? {
+                      ...it,
+                      inkCode: payload.inkCode,
+                      inkName: payload.inkName,
+                      weight2: weight2Gr,
+                      weight: newDisplayWeight,
+                      updatedAt: new Date().toISOString(),
+                    }
+                  : it
+              )
+            }
+          : s
+      ));
+
+      setEditMap(m => ({ ...m, [id]: false }));
+
+      // Refetch để đồng bộ hoàn toàn với backend (tổng khối lượng, export,...)
+      await fetchPage();
+      await fetchMeta();
+
+    } catch (e) {
+      console.error('Lỗi lưu item:', e);
+      alert('Lưu thất bại');
+    }
   };
-
-  try {
-    await axios.put(`${BASE_URL_SERVER_THLA}/api/ink-weighing/items/${id}`, payload);
-
-    // Cập nhật ngay UI: weight hiển thị (g) = COALESCE(weight2, weight)
-    // -> nếu có weight2 mới thì set cả weight2 & weight để cột kg/g hiển thị đúng.
-    const newDisplayWeight = (weight2Gr ?? item.weight); // gram
-
-    setData(prev => prev.map(s =>
-      s.weighingSessionId === sessionId
-        ? {
-            ...s,
-            items: s.items.map(it =>
-              it.weighingSessionItemId === id
-                ? {
-                    ...it,
-                    inkName: payload.inkName,
-                    weight2: weight2Gr,
-                    weight: newDisplayWeight,
-                    updatedAt: new Date().toISOString(),
-                  }
-                : it
-            )
-          }
-        : s
-    ));
-
-    setAllData(prev => prev.map(s =>
-      s.weighingSessionId === sessionId
-        ? {
-            ...s,
-            items: s.items.map(it =>
-              it.weighingSessionItemId === id
-                ? {
-                    ...it,
-                    inkName: payload.inkName,
-                    weight2: weight2Gr,
-                    weight: newDisplayWeight,
-                    updatedAt: new Date().toISOString(),
-                  }
-                : it
-            )
-          }
-        : s
-    ));
-
-    setEditMap(m => ({ ...m, [id]: false }));
-
-    // Refetch để đồng bộ hoàn toàn với backend (tổng khối lượng, export,...)
-    await fetchPage();
-    await fetchMeta();
-
-  } catch (e) {
-    console.error('Lỗi lưu item:', e);
-    alert('Lưu thất bại');
-  }
-};
-
 
   return (
     <div className="p-4 sm:p-6">
@@ -482,7 +483,7 @@ function HistoryWeigh() {
                     <tr className="text-[12px] uppercase tracking-wide text-slate-600">
                       {[
                         'STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian',
-                        'Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)','NSX',
+                        'Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)',
                         'Thao tác','Đã sửa?','Người nhận'
                       ].map((h, i) => (
                         <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
@@ -546,8 +547,21 @@ function HistoryWeigh() {
                                   </>
                                 )}
 
-                                <td className="px-3 py-2 align-middle">{item.inkCode}</td>
+                                {/* Mã mực (editable) */}
+                                <td className="px-3 py-2 align-middle">
+                                  {isEditing ? (
+                                    <input
+                                      value={form.inkCode ?? ''}
+                                      onChange={(e)=>changeForm(id,'inkCode',e.target.value)}
+                                      className="w-36 rounded border border-slate-300 px-2 py-1 text-sm"
+                                      placeholder="Mã mực"
+                                    />
+                                  ) : (
+                                    item.inkCode
+                                  )}
+                                </td>
 
+                                {/* Tên mực (editable) */}
                                 <td className="px-3 py-2 align-middle">
                                   {isEditing ? (
                                     <input
@@ -561,30 +575,31 @@ function HistoryWeigh() {
                                   )}
                                 </td>
 
+                                {/* Khối lượng (kg) (editable) */}
                                 <td className="px-3 py-2 text-right font-medium align-middle">
-                                  
                                   {isEditing ? (
                                     <input
                                       type="number"
-                                      step="1"
+                                      step="0.001"
                                       inputMode="decimal"
                                       value={form.weight2 ?? ''}
                                       onChange={(e)=>changeForm(id,'weight2',e.target.value)}
                                       className="w-28 rounded border border-slate-300 px-2 py-1 text-sm text-right"
-                                      placeholder="kg"
+                                      placeholder={`${(item.weight/1000).toFixed(2)} kg`}
                                     />
                                   ) : (
                                     <span className="tabular-nums">
-                                      {round1(item.weight).toFixed(2)}
+                                      {(item.weight/1000).toFixed(2)}
                                     </span>
                                   )}
                                 </td>
+
+                                {/* Khối lượng (g) */}
                                 <td className="px-3 py-2 text-right font-medium align-middle">
                                   {item.weight}
                                 </td>
-                                <td className="px-3 py-2 align-middle">{formatDate(item.productionDate)}</td>
 
-                                {/* Sửa tên (nút / lưu / huỷ) */}
+                                {/* Thao tác */}
                                 <td className="px-3 py-2 align-middle">
                                   {isEditing ? (
                                     <div className="flex items-center gap-2">
@@ -605,7 +620,7 @@ function HistoryWeigh() {
                                     <button
                                       onClick={()=>startEdit(item)}
                                       className="inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                                      title="Sửa tên & khối lượng (g2)"
+                                      title="Sửa mã, tên & khối lượng (kg)"
                                     >
                                       <FiEdit2 /> Sửa
                                     </button>
