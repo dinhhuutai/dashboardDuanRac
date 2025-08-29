@@ -300,35 +300,77 @@ function HistoryWeigh() {
   };
 
   const saveEdit = async (sessionId, item) => {
-    const id = item.weighingSessionItemId;
-    const draft = formMap[id] || {};
-    const payload = {
-      inkName: (draft.inkName ?? item.inkName) || '',
-      weight2: draft.weight2 === '' ? null : Number(draft.weight2)
-    };
+  const id = item.weighingSessionItemId;
+  const draft = formMap[id] || {};
 
-    try {
-      await axios.put(`${BASE_URL_SERVER_THLA}/api/ink-weighing/items/${id}`, payload);
+  // Người dùng nhập KG -> convert sang GRAM để lưu
+  const weight2Kg = draft.weight2 === '' ? null : Number(draft.weight2);
+  const weight2Gr = weight2Kg == null || Number.isNaN(weight2Kg)
+    ? null
+    : Math.round(weight2Kg * 1000);
 
-      // cập nhật ngay trên bảng hiện tại
-      setData(prev => prev.map(s =>
-        s.weighingSessionId === sessionId
-          ? { ...s, items: s.items.map(it => it.weighingSessionItemId === id ? { ...it, ...payload } : it) }
-          : s
-      ));
-      // sync allData (cho export) nếu có
-      setAllData(prev => prev.map(s =>
-        s.weighingSessionId === sessionId
-          ? { ...s, items: s.items.map(it => it.weighingSessionItemId === id ? { ...it, ...payload } : it) }
-          : s
-      ));
-
-      setEditMap(m => ({ ...m, [id]: false }));
-    } catch (e) {
-      console.error('Lỗi lưu item:', e);
-      alert('Lưu thất bại');
-    }
+  const payload = {
+    inkName: (draft.inkName ?? item.inkName) || '',
+    weight2: weight2Gr, // gửi gram lên server
   };
+
+  try {
+    await axios.put(`${BASE_URL_SERVER_THLA}/api/ink-weighing/items/${id}`, payload);
+
+    // Cập nhật ngay UI: weight hiển thị (g) = COALESCE(weight2, weight)
+    // -> nếu có weight2 mới thì set cả weight2 & weight để cột kg/g hiển thị đúng.
+    const newDisplayWeight = (weight2Gr ?? item.weight); // gram
+
+    setData(prev => prev.map(s =>
+      s.weighingSessionId === sessionId
+        ? {
+            ...s,
+            items: s.items.map(it =>
+              it.weighingSessionItemId === id
+                ? {
+                    ...it,
+                    inkName: payload.inkName,
+                    weight2: weight2Gr,
+                    weight: newDisplayWeight,
+                    updatedAt: new Date().toISOString(),
+                  }
+                : it
+            )
+          }
+        : s
+    ));
+
+    setAllData(prev => prev.map(s =>
+      s.weighingSessionId === sessionId
+        ? {
+            ...s,
+            items: s.items.map(it =>
+              it.weighingSessionItemId === id
+                ? {
+                    ...it,
+                    inkName: payload.inkName,
+                    weight2: weight2Gr,
+                    weight: newDisplayWeight,
+                    updatedAt: new Date().toISOString(),
+                  }
+                : it
+            )
+          }
+        : s
+    ));
+
+    setEditMap(m => ({ ...m, [id]: false }));
+
+    // Refetch để đồng bộ hoàn toàn với backend (tổng khối lượng, export,...)
+    await fetchPage();
+    await fetchMeta();
+
+  } catch (e) {
+    console.error('Lỗi lưu item:', e);
+    alert('Lưu thất bại');
+  }
+};
+
 
   return (
     <div className="p-4 sm:p-6">
@@ -441,7 +483,7 @@ function HistoryWeigh() {
                       {[
                         'STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian',
                         'Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)','NSX',
-                        'Sửa tên','Đã sửa?','Người nhận'
+                        'Thao tác','Đã sửa?','Người nhận'
                       ].map((h, i) => (
                         <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
                       ))}
