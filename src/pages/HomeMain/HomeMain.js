@@ -401,6 +401,7 @@ function HomeMain() {
                 <NavIcon active={view === "home"} title="Home" onClick={() => setView("home")}>
                   <FiHome />
                 </NavIcon>
+
                 <NavIcon
                   active={view === "modules"}
                   title="Quản lý Modules"
@@ -408,6 +409,7 @@ function HomeMain() {
                 >
                   <FiGrid />
                 </NavIcon>
+                
                 <NavIcon
                   active={view === "access"}
                   title="Phân quyền"

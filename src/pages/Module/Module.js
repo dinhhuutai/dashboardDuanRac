@@ -65,7 +65,14 @@ function Module() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", icon: "FiGrid", description: "" });
+  const [form, setForm] = useState({
+  name: "",
+  moduleKey: "",      // NEW
+  icon: "FiGrid",
+  description: ""
+});
+
+
   const [saving, setSaving] = useState(false);
 
   const [delId, setDelId] = useState(null);
@@ -108,60 +115,81 @@ function Module() {
   useEffect(() => { fetchData(); }, [q, page]);
 
   const openCreate = () => {
-    setEditing(null);
-    setForm({ name: "", icon: "FiGrid", description: "" });
-    setIconQuery("");
-    setModalOpen(true);
-  };
+  setEditing(null);
+  setForm({ name: "", moduleKey: "", icon: "FiGrid", description: "" });
+  setIconQuery("");
+  setModalOpen(true);
+};
 
-  const openEdit = (row) => {
-    setEditing(row);
-    setForm({
-      name: row.name || "",
-      icon: row.icon || "FiGrid",
-      description: row.description || "",
-    });
-    setIconQuery("");
-    setModalOpen(true);
-  };
+const openEdit = (row) => {
+  setEditing(row);
+  setForm({
+    name: row.name || "",
+    moduleKey: row.moduleKey || "",  // NEW
+    icon: row.icon || "FiGrid",
+    description: row.description || "",
+  });
+  setIconQuery("");
+  setModalOpen(true);
+};
+
+
 
   const save = async () => {
-    if (!form.name.trim()) {
-      setMsg({ type: "error", text: "Tên module là bắt buộc." });
-      return;
-    }
-    try {
-      setSaving(true);
-      const payload = { ...form }; // name, icon (string/URL), description
-      if (editing) {
-        const res = await http.put(`${BASE_URL}/api/modules/${editing.moduleId}`, payload);
-        if (res.data?.success) {
-          setMsg({ type: "success", text: "Đã cập nhật module." });
-          setModalOpen(false);
-          fetchData();
-        } else {
-          setMsg({ type: "error", text: res.data?.message || "Cập nhật thất bại." });
-        }
+  if (!form.name.trim()) {
+    setMsg({ type: "error", text: "Tên module là bắt buộc." });
+    return;
+  }
+  // chuẩn hóa moduleKey: slug [a-z0-9-]
+  const normalizedKey = (form.moduleKey || form.name || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  if (!/^[a-z0-9-]{2,64}$/.test(normalizedKey)) {
+    setMsg({ type: "error", text: "Key không hợp lệ (chỉ [a-z0-9-], 2-64 ký tự)." });
+    return;
+  }
+
+  try {
+    setSaving(true);
+    const payload = { ...form, moduleKey: normalizedKey };
+
+    if (editing) {
+      const res = await http.put(`${BASE_URL}/api/modules/${editing.moduleId}`, payload);
+      if (res.data?.success) {
+        setMsg({ type: "success", text: "Đã cập nhật module." });
+        setModalOpen(false);
+        fetchData();
       } else {
-        const res = await http.post(`${BASE_URL}/api/modules`, payload);
-        if (res.data?.success) {
-          setMsg({ type: "success", text: "Đã tạo module." });
-          setModalOpen(false);
-          setPage(1);
-          fetchData();
-        } else {
-          setMsg({ type: "error", text: res.data?.message || "Tạo thất bại." });
-        }
+        setMsg({ type: "error", text: res.data?.message || "Cập nhật thất bại." });
       }
-    } catch (e) {
-      setMsg({
-        type: "error",
-        text: e?.response?.status === 409 ? "Tên module đã tồn tại." : "Lỗi kết nối máy chủ.",
-      });
-    } finally {
-      setSaving(false);
+    } else {
+      const res = await http.post(`${BASE_URL}/api/modules`, payload);
+      if (res.data?.success) {
+        setMsg({ type: "success", text: "Đã tạo module." });
+        setModalOpen(false);
+        setPage(1);
+        fetchData();
+      } else {
+        setMsg({ type: "error", text: res.data?.message || "Tạo thất bại." });
+      }
     }
-  };
+  } catch (e) {
+    setMsg({
+      type: "error",
+      text:
+        e?.response?.status === 409
+          ? "Tên hoặc Key module đã tồn tại."
+          : "Lỗi kết nối máy chủ.",
+    });
+  } finally {
+    setSaving(false);
+  }
+};
+
+
 
   const doDelete = async () => {
     if (!delId) return;
@@ -219,6 +247,7 @@ function Module() {
               <tr className="text-left text-xs uppercase text-slate-500">
                 <th className="px-3 py-2">ID</th>
                 <th className="px-3 py-2">Tên module</th>
+                <th className="px-3 py-2">Key</th>
                 <th className="px-3 py-2">Icon</th>
                 <th className="px-3 py-2">Mô tả</th>
                 <th className="px-3 py-2 w-40">Thao tác</th>
@@ -234,6 +263,12 @@ function Module() {
                   <tr key={r.moduleId} className="bg-white/80 ring-1 ring-slate-200">
                     <td className="px-3 py-2 align-top">{r.moduleId}</td>
                     <td className="px-3 py-2 align-top font-medium text-slate-800">{r.name}</td>
+                    <td className="px-3 py-2 align-top">
+  <code className="text-xs bg-slate-50 px-1.5 py-0.5 rounded ring-1 ring-slate-200">
+    {r.moduleKey}
+  </code>
+</td>
+
                     <td className="px-3 py-2 align-top">
                       <div className="inline-flex items-center gap-2 rounded-lg bg-white px-2.5 py-1 ring-1 ring-slate-200">
                         <IconOrImg icon={r.icon} />
@@ -311,6 +346,25 @@ function Module() {
               placeholder="vd: Quản lý công việc"
             />
           </div>
+
+          <div>
+  <label className="text-sm font-medium text-slate-700">
+    Key (duy nhất) <span className="text-red-500">*</span>
+  </label>
+  <input
+    value={form.moduleKey}
+    onChange={(e) =>
+      setForm((p) => ({ ...p, moduleKey: e.target.value }))
+    }
+    className="mt-1 w-full rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+    placeholder="vd: trash-weigh, ink-weigh, suggestion-box…"
+  />
+  <p className="mt-1 text-xs text-slate-500">
+    Dùng chữ thường, số, dấu gạch ngang. Ví dụ: <b>ink-weigh</b>, <b>trash-weigh</b>.
+  </p>
+</div>
+
+
 
           {/* Icon Picker (Combobox) */}
           <div>

@@ -23,6 +23,7 @@ import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
 import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
 
 import NgienCheChou from '~/pagesAdmin/NgienCheChou';
+import ExportQr from '~/pagesAdmin/ExportQr';
 
 import Report from '~/pagesAdmin/Menu/Reports/Report';
 import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
@@ -305,6 +306,12 @@ export const routesAdmin = [
   {
     path: config.routes.adminNgienCheChou,
     component: NgienCheChou,
+    login: true,
+  },
+
+  {
+    path: config.routes.adminExportQR,
+    component: ExportQr,
     login: true,
   },
 ];

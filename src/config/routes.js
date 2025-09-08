@@ -74,7 +74,8 @@ const routes = {
   adminSuggestionCategoriList: '/admin/menu/suggestion/categori/list',
   adminSuggestionList: '/admin/menu/suggestion/create',
   
-  adminNgienCheChou: '/admin/Ngien-Che-chou',
+  adminNgienCheChou: '/admin/trash/Ngien-Che-chou',
+  adminExportQR: '/admin/trash/export-qr',
 };
 
 export default routes;

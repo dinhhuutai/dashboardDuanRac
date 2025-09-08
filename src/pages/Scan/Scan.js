@@ -63,20 +63,20 @@ function Scan() {
   useEffect(() => { setUser(tmp?.login?.currentUser); }, [tmp]);
   useEffect(() => { setKhoiLuong(weightScale?.weight); }, [weightScale]);
 
-  useEffect(() => {
-  if (user?.userID) {
-    axios
-      .get(`${BASE_URL}/api/team-members`, { params: { userID: user.userID } })
-      .then((res) => {
-        const data = res.data || [];
-        setTeamMembers(data);
-        if (data.length === 0) {
-          setTenNguoiCan(user?.fullName);
-        }
-      })
-      .catch(() => setTeamMembers([]));
-  }
-}, [user]);
+  // useEffect(() => {
+  //   if (user?.userID) {
+  //     axios
+  //       .get(`${BASE_URL}/api/team-members`, { params: { userID: user.userID } })
+  //       .then((res) => {
+  //         const data = res.data || [];
+  //         setTeamMembers(data);
+  //         if (data.length === 0) {
+  //           setTenNguoiCan(user?.fullName);
+  //         }
+  //       })
+  //       .catch(() => setTeamMembers([]));
+  //   }
+  // }, [user]);
 
 
   const initScanner = async () => {

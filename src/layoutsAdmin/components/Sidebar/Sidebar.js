@@ -293,7 +293,7 @@ function Sidebar() {
               </li>
               <li>
                 <NavLink to={config.routes.adminSettingTable} className={linkClass}>
-                  Cài đặt bảng
+                  Phân chia tổ
                 </NavLink>
               </li>
             </Section>
@@ -301,7 +301,7 @@ function Sidebar() {
         </div>
 
         {/* ===== CTA vui vui (giữ nguyên điều kiện) ===== */}
-        {(user?.username === 'dinhhuutai' || user?.username === 'thaonguyen') && (
+        {(user?.userID === 1 || user?.userID === 3) && (
           <div className="pt-3 pb-2 px-1 flex justify-center">
             <button
               onClick={() => navigate(config.routes.adminNgienCheChou)}
@@ -309,6 +309,17 @@ function Sidebar() {
                          text-white shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
             >
               Ngiên Chẻ Chou (màu galaxy)
+            </button>
+          </div>
+        )}
+
+        {(user?.userID === 1 || user?.userID === 3) && (
+          <div className="pt-3 pb-2 px-1 flex justify-center">
+            <button
+              onClick={() => navigate(config.routes.adminExportQR)}
+              className="text-sm px-5 py-2 rounded-xl shadow-lg hover:shadow-xl transition-transform hover:scale-[1.02]"
+            >
+              QrCode xuất excel
             </button>
           </div>
         )}

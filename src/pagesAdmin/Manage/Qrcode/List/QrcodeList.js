@@ -21,6 +21,9 @@ function QrcodeList() {
   const [unitId, setUnitId] = useState("");
   const [trashTypeId, setTrashTypeId] = useState("");
 
+  // NEW: Trạng thái (active | deleted | all)
+  const [status, setStatus] = useState("active");
+
   // Lookup lists
   const [departments, setDepartments] = useState([]);
   const [units, setUnits] = useState([]);
@@ -39,19 +42,17 @@ function QrcodeList() {
   const [deletingId, setDeletingId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // NEW: Restore modal
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoringId, setRestoringId] = useState(null);
+  const [restoring, setRestoring] = useState(false);
+
   // Image Lightbox
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imageModalUrl, setImageModalUrl] = useState("");
 
-  const openImage = (url) => {
-    if (!url) return;
-    setImageModalUrl(url);
-    setImageModalOpen(true);
-  };
-  const closeImage = () => {
-    setImageModalOpen(false);
-    setImageModalUrl("");
-  };
+  const openImage = (url) => { if (url) { setImageModalUrl(url); setImageModalOpen(true); } };
+  const closeImage = () => { setImageModalOpen(false); setImageModalUrl(""); };
 
   // Load lookups
   useEffect(() => {
@@ -84,14 +85,15 @@ function QrcodeList() {
     })();
   }, [departmentId]);
 
-  // Fetch list
+  // Fetch list (đổi endpoint sang /api/trash-bins có status)
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await http.get(`${BASE_URL}/api/trash-bins/active`, {
+      const res = await http.get(`${BASE_URL}/api/trash-bins`, {
         params: {
           page,
           pageSize,
+          status, // active | deleted | all
           q: q || undefined,
           departmentId: departmentId || undefined,
           unitId: unitId || undefined,
@@ -104,9 +106,7 @@ function QrcodeList() {
       setTotalPages(p?.totalPages || 1);
     } catch (err) {
       console.error("Lỗi tải danh sách:", err);
-      setRows([]);
-      setTotal(0);
-      setTotalPages(1);
+      setRows([]); setTotal(0); setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ function QrcodeList() {
 
   useEffect(() => {
     fetchList();
-  }, [page, pageSize, q, departmentId, unitId, trashTypeId]);
+  }, [page, pageSize, q, departmentId, unitId, trashTypeId, status]);
 
   // Search submit
   const onSubmitSearch = (e) => {
@@ -129,6 +129,7 @@ function QrcodeList() {
     setTrashTypeId("");
     setQ("");
     setQInput("");
+    setStatus("active");
     setPage(1);
   };
 
@@ -161,10 +162,7 @@ function QrcodeList() {
   };
 
   // Delete
-  const openDelete = (id) => {
-    setDeletingId(id);
-    setConfirmOpen(true);
-  };
+  const openDelete = (id) => { setDeletingId(id); setConfirmOpen(true); };
 
   const confirmDelete = async () => {
     if (!deletingId) return;
@@ -184,15 +182,34 @@ function QrcodeList() {
     }
   };
 
+  // NEW: Restore
+  const openRestore = (id) => { setRestoringId(id); setRestoreOpen(true); };
+
+  const confirmRestore = async () => {
+    if (!restoringId) return;
+    setRestoring(true);
+    try {
+      await http.patch(`${BASE_URL}/api/trash-bins/${restoringId}/restore`);
+      setRestoreOpen(false);
+      setRestoringId(null);
+      const remain = rows.length - 1;
+      if (remain <= 0 && page > 1) setPage((p) => p - 1);
+      else await fetchList();
+    } catch (err) {
+      console.error("Lỗi khôi phục:", err);
+      alert("Không thể khôi phục. Vui lòng thử lại.");
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   // Pagination helpers
   const canPrev = page > 1;
   const canNext = page < totalPages;
 
   const gotoPrev = () => { if (canPrev) setPage((p) => p - 1); };
   const gotoNext = () => { if (canNext) setPage((p) => p + 1); };
-  const jumpTo = (p) => {
-    if (p >= 1 && p <= totalPages && p !== page) setPage(p);
-  };
+  const jumpTo = (p) => { if (p >= 1 && p <= totalPages && p !== page) setPage(p); };
 
   // Hiển thị số trang rút gọn
   const compactPageItems = useMemo(() => {
@@ -215,7 +232,7 @@ function QrcodeList() {
 
   return (
     <div className="bg-gradient-to-br from-[#FFEBEE] via-[#E3F2FD] to-[#E8F5E9] overflow-hidden p-4">
-      <div className="relative z-[9999999] w-full bg-white rounded-2xl shadow-xl px-6 md:px-8 py-8 space-y-6 border border-gray-100">
+      <div className="relative z-[99] w-full bg-white rounded-2xl shadow-xl px-6 md:px-8 py-8 space-y-6 border border-gray-100">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -292,6 +309,18 @@ function QrcodeList() {
             ))}
           </select>
 
+          {/* NEW: Trạng thái */}
+          <select
+            value={status}
+            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            className="h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-800
+                       focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-500 shadow-sm min-w-[160px]"
+          >
+            <option value="active">Đang hoạt động</option>
+            <option value="deleted">Đã xoá</option>
+            <option value="all">Tất cả</option>
+          </select>
+
           <button
             onClick={clearFilters}
             className="h-10 px-3 rounded-lg bg-slate-100 text-slate-700 text-sm hover:bg-slate-200"
@@ -329,7 +358,7 @@ function QrcodeList() {
 
         {/* Table */}
         <div className="mt-2 overflow-auto rounded-xl ring-1 ring-slate-200">
-          <table className="w-full text-sm min-w-[820px]">
+          <table className="w-full text-sm min-w-[900px]">
             <thead className="sticky top-0 z-10">
               <tr className="bg-slate-50/95 backdrop-blur text-[13px] text-slate-700">
                 <th className="px-3 py-2 border border-slate-200 first:rounded-tl-xl font-semibold">STT</th>
@@ -338,65 +367,93 @@ function QrcodeList() {
                 <th className="px-3 py-2 border border-slate-200 font-semibold">Bộ phận</th>
                 <th className="px-3 py-2 border border-slate-200 font-semibold">Đơn vị</th>
                 <th className="px-3 py-2 border border-slate-200 font-semibold">Loại rác</th>
+                <th className="px-3 py-2 border border-slate-200 font-semibold">Trạng thái</th>
                 <th className="px-3 py-2 border border-slate-200 last:rounded-tr-xl font-semibold">Hành động</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500 italic">Đang tải dữ liệu...</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500 italic">Đang tải dữ liệu...</td></tr>
               ) : tableRows.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-600">Không có dữ liệu.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-600">Không có dữ liệu.</td></tr>
               ) : (
-                tableRows.map((r, idx) => (
-                  <tr key={r.trashBinID}
-                      className={idx % 2 === 0 ? "bg-white hover:bg-slate-50" : "bg-slate-50 hover:bg-slate-100/70"}>
-                    <td className="px-3 py-2 border border-slate-200 text-center font-medium">
-                      {(page - 1) * pageSize + idx + 1}
-                    </td>
+                tableRows.map((r, idx) => {
+                  const inactive = r.isActive === false || r.isActive === 0;
+                  return (
+                    <tr key={r.trashBinID}
+                        className={idx % 2 === 0 ? "bg-white hover:bg-slate-50" : "bg-slate-50 hover:bg-slate-100/70"}>
+                      <td className="px-3 py-2 border border-slate-200 text-center font-medium">
+                        {(page - 1) * pageSize + idx + 1}
+                      </td>
 
-                    {/* Ô ảnh: tăng kích thước & tránh bị cắt, có click mở lightbox */}
-                    <td className="px-3 py-2 border border-slate-200">
-                      <div className="flex items-center justify-center">
-                        {r.qrLink ? (
-                          <img
-                            src={r.qrLink}
-                            alt={r.trashBinCode || `QR-${r.trashBinID}`}
-                            className="w-20 h-20 object-contain rounded-lg shadow-sm ring-1 ring-slate-200 cursor-zoom-in bg-white"
-                            onClick={() => openImage(r.qrLink)}
-                            onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/80x80?text=QR"; }}
-                          />
+                      {/* QR */}
+                      <td className="px-3 py-2 border border-slate-200">
+                        <div className="flex items-center justify-center">
+                          {r.qrLink ? (
+                            <img
+                              src={r.qrLink}
+                              alt={r.trashBinCode || `QR-${r.trashBinID}`}
+                              className="w-20 h-20 object-contain rounded-lg shadow-sm ring-1 ring-slate-200 cursor-zoom-in bg-white"
+                              onClick={() => openImage(r.qrLink)}
+                              onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/80x80?text=QR"; }}
+                            />
+                          ) : (
+                            <div className="w-20 h-20 rounded-lg bg-slate-100 grid place-items-center text-slate-400">
+                              N/A
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-2 border border-slate-200 font-semibold">{r.trashBinCode || "—"}</td>
+                      <td className="px-3 py-2 border border-slate-200">{r.departmentName || "—"}</td>
+                      <td className="px-3 py-2 border border-slate-200">{r.unitName || "—"}</td>
+                      <td className="px-3 py-2 border border-slate-200">{r.trashName || "—"}</td>
+                      <td className="px-3 py-2 border border-slate-200">
+                        {inactive ? (
+                          <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-200">
+                            Đã xoá
+                          </span>
                         ) : (
-                          <div className="w-20 h-20 rounded-lg bg-slate-100 grid place-items-center text-slate-400">
-                            N/A
-                          </div>
+                          <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                            Hoạt động
+                          </span>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="px-3 py-2 border border-slate-200 font-semibold">{r.trashBinCode || "—"}</td>
-                    <td className="px-3 py-2 border border-slate-200">{r.departmentName || "—"}</td>
-                    <td className="px-3 py-2 border border-slate-200">{r.unitName || "—"}</td>
-                    <td className="px-3 py-2 border border-slate-200">{r.trashName || "—"}</td>
-                    <td className="px-3 py-2 border border-slate-200">
-                      <div className="flex items-center gap-2 justify-center">
-                        <button
-                          onClick={() => openEdit(r)}
-                          className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 ring-1 ring-transparent hover:ring-blue-200"
-                          title="Sửa"
-                        >
-                          <FaEdit /> <span className="hidden md:inline">Sửa</span>
-                        </button>
-                        <button
-                          onClick={() => openDelete(r.trashBinID)}
-                          className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-rose-600 hover:text-rose-700 hover:bg-rose-50 ring-1 ring-transparent hover:ring-rose-200"
-                          title="Xoá"
-                        >
-                          <FaTrash /> <span className="hidden md:inline">Xoá</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      <td className="px-3 py-2 border border-slate-200">
+                        <div className="flex items-center gap-2 justify-center">
+                          {inactive ? (
+                            <button
+                              onClick={() => openRestore(r.trashBinID)}
+                              className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 ring-1 ring-transparent hover:ring-emerald-200"
+                              title="Khôi phục"
+                            >
+                              ↺ <span className="hidden md:inline">Khôi phục</span>
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => openEdit(r)}
+                                className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 ring-1 ring-transparent hover:ring-blue-200"
+                                title="Sửa"
+                              >
+                                <FaEdit /> <span className="hidden md:inline">Sửa</span>
+                              </button>
+                              <button
+                                onClick={() => openDelete(r.trashBinID)}
+                                className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-rose-600 hover:text-rose-700 hover:bg-rose-50 ring-1 ring-transparent hover:ring-rose-200"
+                                title="Xoá"
+                              >
+                                <FaTrash /> <span className="hidden md:inline">Xoá</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -543,16 +600,39 @@ function QrcodeList() {
           </div>
         )}
 
+        {/* NEW: Modal Xác nhận khôi phục */}
+        {restoreOpen && (
+          <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm grid place-items-center p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl ring-1 ring-slate-200 p-6 text-center space-y-4">
+              <h3 className="text-lg font-semibold text-slate-800">Khôi phục QR</h3>
+              <p className="text-slate-600">Xác nhận khôi phục QR đã xoá?</p>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => { setRestoreOpen(false); setRestoringId(null); }}
+                  className="h-10 px-4 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800"
+                  disabled={restoring}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmRestore}
+                  className="h-10 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={restoring}
+                >
+                  {restoring ? "Đang khôi phục..." : "Khôi phục"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* LIGHTBOX Xem ảnh lớn */}
         {imageModalOpen && (
           <div
             className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={closeImage}
           >
-            <div
-              className="relative w-full max-w-5xl"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
               <img
                 src={imageModalUrl}
                 alt="QR lớn"

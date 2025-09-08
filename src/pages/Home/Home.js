@@ -262,14 +262,14 @@ function Home() {
                 📷 Quét mã QR
               </button>
 
-              <button
+              {/* <button
                 onClick={handleConnectBluetooth}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-sky-600 to-blue-600
                            text-white font-semibold shadow-lg shadow-sky-600/30
                            hover:from-sky-700 hover:to-blue-700 active:scale-[.98] transition"
               >
                 Kết nối Bluetooth
-              </button>
+              </button> */}
 
               {user?.role === 'admin' && (
                 <button
