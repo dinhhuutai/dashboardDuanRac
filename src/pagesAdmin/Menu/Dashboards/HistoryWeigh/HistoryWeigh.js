@@ -618,7 +618,7 @@ function HistoryWeigh() {
                   setIsSaving(true);
                   const nowUTC7 = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
                   try {
-                    const res = await http.put(`/trash-weighings/${confirmedData.weighingID}`, {
+                    const res = await http.put(`${BASE_URL}/trash-weighings/${confirmedData.weighingID}`, {
                       ...confirmedData,
                       workShift: isWorkShift ? confirmedData.workShift : null,
                       workDate: isWorkDate ? confirmedData.workDate : null,
