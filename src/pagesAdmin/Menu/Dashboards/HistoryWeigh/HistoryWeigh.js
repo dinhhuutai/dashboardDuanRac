@@ -377,7 +377,7 @@ function HistoryWeigh() {
                     <td className={`px-2 py-2 text-right font-semibold ${invalid ? 'text-white' : 'text-slate-900'}`}>
                       {Number(item.weightKg || 0).toFixed(1)}
                     </td>
-                    {user?.userID === 3 && (
+                    {(user?.userID === 3 || user?.userID === 1) && (
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-3 justify-center">
                           <button
@@ -620,21 +620,22 @@ function HistoryWeigh() {
                   try {
                     const res = await http.put(`${BASE_URL}/trash-weighings/${confirmedData.weighingID}`, {
                       ...confirmedData,
-                      workShift: isWorkShift ? confirmedData.workShift : null,
+                      workShift: isWorkShift ? confirmedData.workShift || 'ca1' : null,
                       workDate: isWorkDate ? confirmedData.workDate : null,
                       updatedAt: nowUTC7.toISOString(),
                       updatedBy: user.userID
                     });
 
-
-                    if (res.ok) {
+                    if (res.status === 200) {
                       setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu cân rác thành công!' });
                       await fetchHistory();
                     } else {
-                      const err = await res.text();
+
+                      const err = await res.data;
                       setMessageModal({ type: 'error', message: `❌ Lỗi: ${err}` });
                     }
-                  } catch {
+                  } catch (err) {
+                    console.log(err)
                     setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
                   } finally {
                     setEditModalVisible(false);
