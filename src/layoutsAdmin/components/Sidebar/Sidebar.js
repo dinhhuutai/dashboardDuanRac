@@ -227,7 +227,7 @@ function Sidebar() {
           )}
 
           {/* User (phân quyền) */}
-          {user?.managerUser && (
+          {user?.userID === 1 && (
             <Section
               title="User"
               icon={BsPerson}

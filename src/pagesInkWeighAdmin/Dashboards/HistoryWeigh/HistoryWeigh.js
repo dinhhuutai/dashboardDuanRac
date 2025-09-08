@@ -13,6 +13,8 @@ import {
   FiX,
   FiCheck
 } from 'react-icons/fi';
+import { userSelector } from '~/redux/selectors';
+import { useSelector } from 'react-redux';
 
 const PAGE_SIZE = 10;
 const PAGE_SIZE_ALL = 100000;
@@ -28,6 +30,12 @@ function HistoryWeigh() {
     unit: '',
     operation: '',
   });
+  
+    const tmp = useSelector(userSelector);
+    const [user, setUser] = useState({});
+    useEffect(() => {
+      setUser(tmp?.login?.currentUser);
+    }, [tmp]);
 
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -383,6 +391,22 @@ function HistoryWeigh() {
     }
   };
 
+  
+// ngay trước phần <table ...> thêm các biến tiện dụng:
+const SHOW_ACTIONS = (user?.username !== 'thla@cm');
+
+const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)'];
+if (SHOW_ACTIONS) {
+  ITEM_HEADERS.push('Thao tác','Đã sửa?');
+}
+// Header đầy đủ
+const TABLE_HEADERS = [
+  'STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian',
+  ...ITEM_HEADERS,
+  'Người nhận'
+];
+
+
   return (
     <div className="p-4 sm:p-6">
       <div className="mx-auto max-w-[1300px] space-y-5">
@@ -494,16 +518,13 @@ function HistoryWeigh() {
               <div className="overflow-x-auto">
                 <table className="min-w-[1400px] w-full text-sm">
                   <thead className="bg-slate-50 sticky top-0 z-10">
-                    <tr className="text-[12px] uppercase tracking-wide text-slate-600">
-                      {[
-                        'STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian',
-                        'Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)',
-                        'Thao tác','Đã sửa?','Người nhận'
-                      ].map((h, i) => (
-                        <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
+  <tr className="text-[12px] uppercase tracking-wide text-slate-600">
+    {TABLE_HEADERS.map((h, i) => (
+      <th key={i} className="border-b border-slate-200 px-3 py-2 text-left">{h}</th>
+    ))}
+  </tr>
+</thead>
+
 
                   <tbody>
                     {data.length === 0 ? (
@@ -617,47 +638,51 @@ function HistoryWeigh() {
                                 </td>
 
                                 {/* Thao tác */}
-                                <td className="px-3 py-2 align-middle">
-                                  {isEditing ? (
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        onClick={()=>saveEdit(session.weighingSessionId, item)}
-                                        disabled={!!savingMap[id]}
-                                        className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs
-                                          ${savingMap[id] ? 'bg-emerald-400 text-white opacity-70 cursor-not-allowed' : 'bg-emerald-600 text-white'}`}
-                                      >
-                                        {savingMap[id] ? <FiLoader className="animate-spin" /> : <FiSave />}
-                                        {savingMap[id] ? 'Đang lưu...' : 'Lưu'}
-                                      </button>
-                                      <button
-                                        onClick={()=>cancelEdit(id)}
-                                        disabled={!!savingMap[id]}
-                                        className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs
-                                          ${savingMap[id] ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-200 text-slate-700'}`}
-                                      >
-                                        <FiX /> Huỷ
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={()=>startEdit(item)}
-                                      disabled={isAnySaving}
-                                      className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs
-                                        ${isAnySaving ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                                      title="Sửa mã, tên & khối lượng (kg)"
-                                    >
-                                      <FiEdit2 /> Sửa
-                                    </button>
-                                  )}
-                                </td>
+                                {SHOW_ACTIONS && (
+  <td className="px-3 py-2 align-middle">
+    {isEditing ? (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={()=>saveEdit(session.weighingSessionId, item)}
+          disabled={!!savingMap[id]}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs
+            ${savingMap[id] ? 'bg-emerald-400 text-white opacity-70 cursor-not-allowed' : 'bg-emerald-600 text-white'}`}
+        >
+          {savingMap[id] ? <FiLoader className="animate-spin" /> : <FiSave />}
+          {savingMap[id] ? 'Đang lưu...' : 'Lưu'}
+        </button>
+        <button
+          onClick={()=>cancelEdit(id)}
+          disabled={!!savingMap[id]}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs
+            ${savingMap[id] ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-200 text-slate-700'}`}
+        >
+          <FiX /> Huỷ
+        </button>
+      </div>
+    ) : (
+      <button
+        onClick={()=>startEdit(item)}
+        disabled={isAnySaving}
+        className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs
+          ${isAnySaving ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+        title="Sửa mã, tên & khối lượng (kg)"
+      >
+        <FiEdit2 /> Sửa
+      </button>
+    )}
+  </td>
+)}
 
                                 {/* Đã sửa? */}
-                                <td className="px-3 py-2 align-middle text-center">
-                                  {item.weight2 == null
-                                    ? <FiX className="text-red-500 inline" title="Chưa chỉnh sửa" />
-                                    : <FiCheck className="text-emerald-600 inline" title="Đã chỉnh sửa" />
-                                  }
-                                </td>
+                                {SHOW_ACTIONS && (
+  <td className="px-3 py-2 align-middle text-center">
+    {item.weight2 == null
+      ? <FiX className="text-red-500 inline" title="Chưa chỉnh sửa" />
+      : <FiCheck className="text-emerald-600 inline" title="Đã chỉnh sửa" />
+    }
+  </td>
+)}
 
                                 {/* Người nhận (rowSpan theo session) */}
                                 {iIdx === 0 && (
@@ -691,7 +716,7 @@ function HistoryWeigh() {
                               {formatTime(session.endTime)} {formatDate(session.weighEndDate)}
                             </td>
                             {/* Không có item => gộp 8 cột item-level */}
-                            <td className="px-3 py-2 italic text-slate-400" colSpan={8}>(Không có mục mực nào)</td>
+                            <td className="px-3 py-2 italic text-slate-400" colSpan={ITEM_HEADERS.length}>(Không có mục mực nào)</td>
                             <td className="px-3 py-2">{session.receivedBy}</td>
                           </tr>
                         )
