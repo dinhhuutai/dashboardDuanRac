@@ -7,10 +7,17 @@ import {
   BsClipboardCheck,
   BsBarChartLine,
 } from 'react-icons/bs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import config from '~/config';
+import { userSelector } from '~/redux/selectors';
+import { useSelector } from 'react-redux';
 
 function Sidebar() {
+  
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState({});
+  useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
+
   const [openOperate, setOpenOperate] = useState(true);     // Vận hành
   const [openMonitor, setOpenMonitor] = useState(false);    // Theo dõi
   const [openReport, setOpenReport] = useState(false);      // Báo cáo/Đối chiếu
@@ -62,26 +69,29 @@ function Sidebar() {
         </div>
 
         {/* ===== Nhóm: Vận hành ===== */}
-        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
-          <SectionHeader
-            title="Vận hành"
-            isOpen={openOperate}
-            onClick={() => (openOperate ? onlyOpen('') : onlyOpen('operate'))}
-          />
-          {openOperate && (
-            <SectionCard>
-              <NavLink to={config.routes.adminInkWeighProductionOrder} className={linkClass}>
-                <BsRocket className="text-[16px]" />
-                <span>Lệnh sản xuất</span>
-              </NavLink>
+        {
+          user.username !== 'testcanmuc' && 
+          <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+            <SectionHeader
+              title="Vận hành"
+              isOpen={openOperate}
+              onClick={() => (openOperate ? onlyOpen('') : onlyOpen('operate'))}
+            />
+            {openOperate && (
+              <SectionCard>
+                <NavLink to={config.routes.adminInkWeighProductionOrder} className={linkClass}>
+                  <BsRocket className="text-[16px]" />
+                  <span>Lệnh sản xuất</span>
+                </NavLink>
 
-              <NavLink to={config.routes.adminInkWeighInkTransferCart} className={linkClass}>
-                <BsQrCodeScan className="text-[16px]" />
-                <span>Xe cấp mực</span>
-              </NavLink>
-            </SectionCard>
-          )}
-        </div>
+                <NavLink to={config.routes.adminInkWeighInkTransferCart} className={linkClass}>
+                  <BsQrCodeScan className="text-[16px]" />
+                  <span>Xe cấp mực</span>
+                </NavLink>
+              </SectionCard>
+            )}
+          </div>
+        }
 
         {/* Divider */}
         <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
@@ -112,7 +122,9 @@ function Sidebar() {
         <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
         {/* ===== Nhóm: Đối chiếu & Báo cáo ===== */}
-        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+        {
+          user.username !== 'testcanmuc' && 
+          <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
           <SectionHeader
             title="Đối chiếu & Báo cáo"
             isOpen={openReport}
@@ -132,6 +144,7 @@ function Sidebar() {
             </SectionCard>
           )}
         </div>
+        }
       </div>
     </div>
   );

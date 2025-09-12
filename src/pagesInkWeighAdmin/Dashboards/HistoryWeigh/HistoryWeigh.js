@@ -57,19 +57,21 @@ function HistoryWeigh() {
   const isAnySaving = useMemo(() => Object.values(savingMap).some(Boolean), [savingMap]);
 
   useEffect(() => {
+    if (!user.username) return;
     fetchPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, currentPage]);
+  }, [filters, currentPage, user]);
 
   useEffect(() => {
+    if (!user.username) return;
     fetchMeta();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, user]);
 
   const fetchPage = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/history`, {
+      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/ink-weighing/${user.username !== 'testcanmuc' ? 'history' : 'history-test'}`, {
         params: { ...filters, page: currentPage, pageSize: PAGE_SIZE },
       });
       const sessions = res.data.items || [];
@@ -91,7 +93,7 @@ function HistoryWeigh() {
   const fetchMeta = async () => {
     setIsMetaLoading(true);
     try {
-      const url = `${BASE_URL_SERVER_THLA}/api/ink-weighing/history`;
+      const url = `${BASE_URL_SERVER_THLA}/api/ink-weighing/${user.username !== 'testcanmuc' ? 'history' : 'history-test'}`;
       const [totalsRes, depRes, unitRes] = await Promise.all([
         axios.get(url, { params: buildParams([]) }),
         axios.get(url, { params: buildParams(['department']) }),
@@ -393,9 +395,9 @@ function HistoryWeigh() {
 
   
 // ngay trước phần <table ...> thêm các biến tiện dụng:
-const SHOW_ACTIONS = (user?.username !== 'thla@cm');
+const SHOW_ACTIONS = (user?.username !== 'thla@cm' && user?.username !== 'testcanmuc');
 
-const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)'];
+const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)', 'PJ Name', 'PJ weight'];
 if (SHOW_ACTIONS) {
   ITEM_HEADERS.push('Thao tác','Đã sửa?');
 }
@@ -635,6 +637,16 @@ const TABLE_HEADERS = [
                                 {/* Khối lượng (g) */}
                                 <td className="px-3 py-2 text-right font-medium align-middle">
                                   {item.weight}
+                                </td>
+                                
+                                {/* Khối lượng (g) */}
+                                <td className="px-3 py-2 text-right font-medium align-middle">
+                                  {item.pjName}
+                                </td>
+                                
+                                {/* Khối lượng (g) */}
+                                <td className="px-3 py-2 text-right font-medium align-middle">
+                                  {item.pjWeight}
                                 </td>
 
                                 {/* Thao tác */}

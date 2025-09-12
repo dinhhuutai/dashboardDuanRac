@@ -4,8 +4,17 @@ import { BASE_URL_SERVER_THLA } from '~/config';
 import { FaFileAlt } from 'react-icons/fa';
 import { FiLoader, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import http from '~/api/http';
+import { userSelector } from '~/redux/selectors';
+import { useSelector } from 'react-redux';
 
 function Logfile() {
+  
+    const tmp = useSelector(userSelector);
+    const [user, setUser] = useState({});
+    useEffect(() => {
+      setUser(tmp?.login?.currentUser);
+    }, [tmp]);
+
   const today = new Date();
   const localToday = today.toLocaleDateString('en-CA'); // yyyy-mm-dd theo local time
 
@@ -17,14 +26,15 @@ function Logfile() {
   const pageSize = 10;
 
   useEffect(() => {
+    if (!user.username) return;
     fetchLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to]);
+  }, [from, to, user]);
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/logfile`, {
+      const res = await axios.get(`${BASE_URL_SERVER_THLA}/api/${user.username !== 'testcanmuc' ? 'logfile' : 'logfile-test'}`, {
         params: { from, to },
       });
       setLogs(res.data || []);

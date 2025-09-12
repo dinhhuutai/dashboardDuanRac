@@ -272,7 +272,7 @@ function HomeMain() {
     } else if (m.name === 'Quản lý cân rác' && role === 'admin') {
       rou = config.routes.adminAnalytics
     } else if (m.name === 'Quản lý cân mực' && role === 'admin') {
-        rou = config.routes.adminInkWeighProductionOrder
+        rou = config.routes.adminInkWeighHistory
     } else if (m.name === 'Hòm thư góp ý' && role === 'user') {
         rou = config.routes.feedback1
     } else if (m.name === 'Hòm thư góp ý' && role === 'admin') {
