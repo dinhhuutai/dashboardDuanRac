@@ -6,7 +6,7 @@ import coverPhoto from '~/assets/imgs/coverPhoto.png';
 import config from '~/config';
 import { userSelector } from '~/redux/selectors';
 import authSlice from '~/redux/slices/authSlice';
-import http, { setAccessToken } from '~/api/http';
+import http from '~/api/http';
 
 function User() {
   const tmp = useSelector(userSelector);
@@ -33,7 +33,6 @@ function User() {
   try {
     await http.post('/auth/logout'); // thu hồi refresh ở server + clear cookie
   } catch {}
-  setAccessToken(null); 
     dispatch(authSlice.actions.logoutSuccess());
     navigate(config.routes.login);
   };

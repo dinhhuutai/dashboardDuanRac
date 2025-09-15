@@ -15,7 +15,7 @@ import authSlice from "~/redux/slices/authSlice";
 
 import Module from "../Module";
 import UserModuleAccess from "../UserModuleAccess";
-import http, { setAccessToken } from '~/api/http';
+import http from '~/api/http';
 
 /* ---------- Helpers ---------- */
 const Field = ({ label, hint, children }) => (
@@ -240,7 +240,6 @@ function HomeMain() {
     try {
         await http.post('/auth/logout'); // thu hồi refresh ở server + clear cookie
     } catch {}
-    setAccessToken(null); 
 
     dispatch(authSlice.actions.logoutSuccess());
     navigate(config.routes.login);

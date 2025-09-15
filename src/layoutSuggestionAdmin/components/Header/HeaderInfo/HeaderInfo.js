@@ -6,7 +6,7 @@ import avatar from "~/assets/imgs/favorite-5.jpg";
 import { userSelector } from "~/redux/selectors";
 import authSlice from "~/redux/slices/authSlice";
 import config from "~/config";
-import http, { setAccessToken } from '~/api/http';
+import http from '~/api/http';
 
 function HeaderInfo() {
   const tmp = useSelector(userSelector);
@@ -38,8 +38,7 @@ function HeaderInfo() {
   const handleLogout = async () => {
   try {
     await http.post('/auth/logout'); // thu hồi refresh ở server + clear cookie
-  } catch {}
-  setAccessToken(null); 
+  } catch {} 
     dispatch(authSlice.actions.logoutSuccess());
     navigate(config.routes.login);
   };

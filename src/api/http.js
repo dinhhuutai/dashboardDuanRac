@@ -1,94 +1,102 @@
 // src/api/http.js
 import axios from "axios";
 import { BASE_URL } from "~/config";
+import store from "~/redux/store";
+import authSlice from "~/redux/slices/authSlice";
 
-let accessToken = null;                 // token trong RAM
-let onUnauthorized = null;              // callback khi hết hạn & refresh fail
-let isRefreshing = false;               // trạng thái refresh
-let pendingQueue = [];                  // hàng đợi các request chờ refresh
-
-export const setAccessToken = (t) => { accessToken = t || null; };
-export const getAccessToken = () => accessToken;
-export const setOnUnauthorized = (fn) => { onUnauthorized = typeof fn === "function" ? fn : null; };
+// Sửa path này cho khớp backend của bạn:
+// - Nếu BE: app.use('/auth', ...)  => "/auth/refresh"
+// - Nếu BE: app.use('/api', ...) + router.post('/auth/refresh') => "/api/auth/refresh"
+const REFRESH_PATH = "/auth/refresh";
 
 const http = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // gửi cookie refresh_token tới /auth/refresh
-  // headers: { 'Content-Type': 'application/json' } // KHÔNG set cứng, để axios tự set theo payload (JSON/FormData)
+  withCredentials: true, // gửi cookie refreshToken
 });
 
-// === REQUEST: gắn Authorization nếu có token ===
+// Lấy accessToken trực tiếp từ Redux
+function selectAccessToken() {
+  try {
+    return store.getState()?.auth?.login?.accessToken || null;
+  } catch {
+    return null;
+  }
+}
+
+// Lấy accessToken từ nhiều shape response khác nhau
+function pickAccessToken(res) {
+  return (
+    res?.data?.accessToken ||
+    res?.data?.data?.accessToken ||
+    res?.data?.token ||
+    res?.data?.data?.token ||
+    null
+  );
+}
+
+function isAuthPath(url = "") {
+  // Không auto-refresh cho request /login hoặc chính /auth/refresh
+  return url.includes("/login") || url.includes(REFRESH_PATH);
+}
+
+// === REQUEST: gắn Authorization từ Redux nếu có ===
 http.interceptors.request.use((config) => {
-  if (accessToken) {
+  const token = selectAccessToken();
+
+  if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${accessToken}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
-
-// === Hàm gọi refresh token (dùng cookie) ===
-async function doRefresh() {
-  const res = await axios.post(`${BASE_URL}/auth/refresh`, null, { withCredentials: true });
-  const newToken = res?.data?.data?.accessToken;
-  if (!newToken) throw new Error("refresh failed");
-  setAccessToken(newToken);
-  return newToken;
-}
 
 // === RESPONSE: tự động refresh khi 401 ===
 http.interceptors.response.use(
   (r) => r,
   async (error) => {
+    // Network/CORS error không có response → ném về cho caller
+    if (!error?.response) return Promise.reject(error);
+
     const original = error.config || {};
-    const status = error?.response?.status;
+    const status = error.response.status;
 
-    // Không phải 401 → trả về lỗi như bình thường
-    if (status !== 401) return Promise.reject(error);
+    // Không xử lý refresh cho status khác 401 hoặc cho chính login/refresh
+    if (status !== 401 || isAuthPath(original?.url)) {
+      return Promise.reject(error);
+    }
 
-    // Tránh lặp vô hạn
+    // Tránh vòng lặp: chỉ retry 1 lần
     if (original._retry) {
-      // Đã retry rồi vẫn 401 → coi như failed
-      if (onUnauthorized) onUnauthorized();
+      // refresh đã thử mà vẫn 401 → logout
+      store.dispatch(authSlice.actions.logoutSuccess());
       return Promise.reject(error);
     }
     original._retry = true;
 
-    // Nếu đang refresh → chờ refresh xong rồi retry request
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        pendingQueue.push({ resolve, reject });
-      })
-      .then((token) => {
-        original.headers = original.headers || {};
-        original.headers.Authorization = `Bearer ${token}`;
-        return http(original);
-      })
-      .catch((err) => Promise.reject(err));
-    }
-
-    // Chưa refresh → bắt đầu refresh
-    isRefreshing = true;
     try {
-      const newToken = await doRefresh();
+      // Gọi refresh bằng axios gốc (không dùng instance có interceptor)
+      const res = await axios.post(`${BASE_URL}${REFRESH_PATH}`, null, {
+        withCredentials: true,
+      });
 
-      // giải phóng hàng đợi: thành công
-      pendingQueue.forEach(({ resolve }) => resolve(newToken));
-      pendingQueue = [];
+      const newToken = pickAccessToken(res);
+      if (!newToken) {
+        // Không có token mới → coi như fail
+        store.dispatch(authSlice.actions.logoutSuccess());
+        return Promise.reject(new Error("Refresh failed: missing accessToken"));
+      }
 
-      // retry request gốc
+      // Cập nhật token mới vào Redux để mọi request sau dùng được
+      store.dispatch(authSlice.actions.refreshToken(newToken));
+
+      // Gắn token mới và retry request gốc
       original.headers = original.headers || {};
       original.headers.Authorization = `Bearer ${newToken}`;
       return http(original);
     } catch (e) {
-      // giải phóng hàng đợi: thất bại
-      pendingQueue.forEach(({ reject }) => reject(e));
-      pendingQueue = [];
-
-      // gọi callback logout nếu có
-      if (onUnauthorized) onUnauthorized();
+      // Refresh thất bại → logout
+      store.dispatch(authSlice.actions.logoutSuccess());
       return Promise.reject(e);
-    } finally {
-      isRefreshing = false;
     }
   }
 );

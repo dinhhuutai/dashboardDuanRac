@@ -14,6 +14,11 @@ import { useEffect, useState, useMemo } from 'react';
 import config from '~/config';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
+import { useFeatureAllowed } from '~/hooks/useFeatuureGuard';
+
+const MODULEID = 1;
+
+//const VIEW_PAGE_ANALYTIC = useFeatureAllowed(MODULEID, 'cr_xemtrangtongquan');
 
 function Sidebar() {
   const navigate = useNavigate();

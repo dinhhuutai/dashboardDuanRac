@@ -8,7 +8,7 @@ import DefaultLayoutAdminInk from "./layoutsInkWeighAdmin/DefaultLayoutAdmin";
 import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmin";
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { userSelector } from "./redux/selectors";
 import { useEffect, useState } from "react";
 import Login from "~/pages/Login";
@@ -16,11 +16,27 @@ import config from "./config";
 
 // NEW: guard theo module
 import RequireModule from "./routing/RequireModule";
+import { reloadPermissions } from "./redux/slices/authSlice";
 
 function App() {
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState(tmp);
   useEffect(() => { setUser(tmp); }, [tmp]);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const onFocus = () => dispatch(reloadPermissions());
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') dispatch(reloadPermissions());
+    });
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [dispatch]);
+
 
   return (
     <Router>

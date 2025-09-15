@@ -4,6 +4,13 @@ module.exports = {
   content: ['./public/**/*.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      borderRadius: {
+        xl2: "1.25rem",
+      },
+      boxShadow: {
+        soft: "0 10px 30px rgba(15,23,42,0.06)",
+        "soft-hover": "0 20px 50px rgba(15,23,42,0.10)",
+      },
       boxShadow: {
         md: '0px 8px 12px #221a2d;',
       },

@@ -397,7 +397,7 @@ function HistoryWeigh() {
 // ngay trước phần <table ...> thêm các biến tiện dụng:
 const SHOW_ACTIONS = (user?.username !== 'thla@cm' && user?.username !== 'testcanmuc');
 
-const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)', 'PJ Name', 'PJ weight'];
+const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)', 'PJ Name', 'PJ weight (g)'];
 if (SHOW_ACTIONS) {
   ITEM_HEADERS.push('Thao tác','Đã sửa?');
 }
@@ -553,7 +553,7 @@ const TABLE_HEADERS = [
                                       {sIdx + 1}
                                     </td>
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
-                                      {session?.scaleCode}
+                                      {session?.weighingSessionId}
                                     </td>
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
                                       {session.operationCode === 'CP' ? 'Cấp phát'

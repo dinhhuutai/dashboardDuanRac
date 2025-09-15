@@ -16,7 +16,7 @@ import config from "~/config";
 import logoTHLA from "~/assets/imgs/logoAdmin.png";
 import bgNeumo from "~/assets/imgs/bg-neumo.webp";
 
-import http, { setAccessToken } from "~/api/http"; // ⬅️ dùng axios instance + in-memory token
+import http from "~/api/http"; // ⬅️ dùng axios instance + in-memory token
 import { fetchUserModules } from "~/redux/slices/userModulesSlice";
 
 const bg = "#e9eef6";
@@ -54,17 +54,14 @@ export default function Login() {
       // ⬇️ Gọi đúng endpoint backend mới: /auth/login
       const res = await http.post("/login", { username, password });
       if (res?.data?.success) {
-        const { accessToken, user } = res.data.data || {};
-
-        // ⬇️ LƯU accessToken vào bộ nhớ tạm (in-memory) cho axios interceptor
-        setAccessToken(accessToken);
+        const { accessToken, user, permissions } = res.data.data || {};
 
         // Ghi nhớ username nếu user tick
         if (rememberMe) localStorage.setItem("rememberUsername", username);
         else localStorage.removeItem("rememberUsername");
 
         // Cập nhật Redux (KHÔNG lưu refresh/access vào localStorage nữa)
-        dispatch(authSlice.actions.loginSuccess({ user, accessToken }));
+        dispatch(authSlice.actions.loginSuccess({ user, accessToken, permissions }));
 
         if (user?.userID) {
           dispatch(fetchUserModules(user.userID));
