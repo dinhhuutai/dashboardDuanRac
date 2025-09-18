@@ -1,11 +1,14 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { routes, routesAdmin, routesInkAdmin, routesSuggest } from "./routes";
+import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest } from "./routes";
 
-import DefaultLayout from "./layouts/DefaultLayout";
+import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
 import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
 import DefaultLayoutAdminInk from "./layoutsInkWeighAdmin/DefaultLayoutAdmin";
 import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmin";
+
+import DefaultLayoutLunchOrder from "./layoutsLunchOrder/DefaultLayout";
+import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutAdmin';
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -61,10 +64,14 @@ function App() {
                   ? <route.component />
                   : !route.isLogin && !route.login
                     ? <route.component />
-                    : (
-                      <DefaultLayout>
+                    : route.module === 'datcom' ? (
+                      <DefaultLayoutLunchOrder>
                         <route.component />
-                      </DefaultLayout>
+                      </DefaultLayoutLunchOrder>
+                    ) : (
+                      <DefaultLayoutTrashWeight>
+                        <route.component />
+                      </DefaultLayoutTrashWeight>
                     )
               }
             />
@@ -138,6 +145,30 @@ function App() {
                 <DefaultLayoutAdminSuggest>
                   <route.component />
                 </DefaultLayoutAdminSuggest>
+              }
+            />
+          ))}
+        </Route>
+        
+
+        {/* ====== ADMIN ĐẶT CƠM (module lunch-order, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="lunch-order"
+              fallbackName="Đặt cơm"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesLunchOrderAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminLunchOrder>
+                  <route.component />
+                </DefaultLayoutAdminLunchOrder>
               }
             />
           ))}

@@ -7,8 +7,13 @@ import { format } from 'date-fns';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import http from '~/api/http';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 function History() {
+
+  const EXPORT_EXCEL_HISTORY_CHECKCLASS = useFeatureAllowed(MODULEID.CANRAC, 'cr_thaotacxuatexcelLSKTPL');
+
   const [selectedDate, setSelectedDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -265,17 +270,20 @@ function History() {
             </select>
           </div>
 
-          <button
-            onClick={exportToExcel}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg
-                       bg-emerald-600 text-white text-sm font-medium
-                       shadow-sm ring-1 ring-emerald-600/20
-                       hover:bg-emerald-700 hover:shadow
-                       active:bg-emerald-800
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
-          >
-            📥 Xuất biểu mẫu
-          </button>
+          {
+            EXPORT_EXCEL_HISTORY_CHECKCLASS &&
+              <button
+                onClick={exportToExcel}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg
+                          bg-emerald-600 text-white text-sm font-medium
+                          shadow-sm ring-1 ring-emerald-600/20
+                          hover:bg-emerald-700 hover:shadow
+                          active:bg-emerald-800
+                          focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+              >
+                📥 Xuất biểu mẫu
+              </button>
+          }   
         </div>
 
         {isLoading ? (

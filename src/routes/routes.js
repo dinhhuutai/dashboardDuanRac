@@ -71,6 +71,21 @@ import SuggestionList from '~/pagesSuggestionAdmin/Menu/Suggestion/SuggestionLis
 import SuggestionCategoriList from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriList';
 import SuggestionCategoriCreate from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriCreate';
 
+
+import LunchOrder from '~/pagesLunchOrder/LunchOrder';
+import LunchOrderProxy from '~/pagesLunchOrder/LunchOrderProxy';
+import LunchOrderHistoryUser from '~/pagesLunchOrder/History';
+
+import LunchOrderDashboard from '~/pagesLunchOrderAdmin/Dashboard';
+import LunchOrderWeeklyMenu from '~/pagesLunchOrderAdmin/WeeklyMenu';
+import LunchOrderFood from '~/pagesLunchOrderAdmin/Food';
+import LunchOrderDepartment from '~/pagesLunchOrderAdmin/Department';
+import LunchOrderAssignUserDept from '~/pagesLunchOrderAdmin/AssignUserDept';
+import LunchOrderNotOrder from '~/pagesLunchOrderAdmin/NotOrder';
+import LunchOrderHistory from '~/pagesLunchOrderAdmin/History';
+import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
+
+
 export const routes = [
   {
     path: config.routes.home,
@@ -122,6 +137,26 @@ export const routes = [
     login: false,
     isLogin: false,
   },
+
+  {
+    path: config.routes.lunchOrder,
+    component: LunchOrder,
+    login: true,
+    module: 'datcom',
+  },
+  {
+    path: config.routes.lunchOrderHistory,
+    component: LunchOrderHistoryUser,
+    login: true,
+    module: 'datcom',
+  },
+  {
+    path: config.routes.lunchOrderProxy,
+    component: LunchOrderProxy,
+    login: true,
+    module: 'datcom',
+  },
+
 ];
 
 export const routesAdmin = [
@@ -374,6 +409,51 @@ export const routesSuggest = [
   {
     path: config.routes.adminSuggestionCategoriCreate,
     component: SuggestionCategoriCreate,
+    login: true,
+  },
+]
+
+
+export const routesLunchOrderAdmin = [
+  {
+    path: config.routes.adminLunchOrderDashboard,
+    component: LunchOrderDashboard,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderWeeklyMenu,
+    component: LunchOrderWeeklyMenu,
+    login: true,
+  },
+
+  {
+    path: config.routes.adminLunchOrderFood,
+    component: LunchOrderFood,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderDepartment,
+    component: LunchOrderDepartment,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderAssignUserDept,
+    component: LunchOrderAssignUserDept,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderNotOrder,
+    component: LunchOrderNotOrder,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderHistory,
+    component: LunchOrderHistory,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderReport,
+    component: LunchOrderReport,
     login: true,
   },
 ]

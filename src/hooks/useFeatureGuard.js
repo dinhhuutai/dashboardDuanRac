@@ -8,3 +8,5 @@ export function useFeatureAllowed(moduleId, code) {
     return !!f?.effectiveAllowed;
   });
 }
+
+

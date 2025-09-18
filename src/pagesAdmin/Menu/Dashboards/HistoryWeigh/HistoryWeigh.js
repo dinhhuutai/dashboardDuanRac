@@ -10,7 +10,16 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import http from '~/api/http';
 
+import MODULEID from '~/contants/modules';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+
+
 function HistoryWeigh() {
+
+  const UPDATE_HISTORY = useFeatureAllowed(MODULEID.CANRAC, 'cr_thaotacsualichsucan');
+  const DELETE_HISTORY = useFeatureAllowed(MODULEID.CANRAC, 'cr_thaotacxoalichsucan');
+  const EXPORT_EXCEL_HISTORY = useFeatureAllowed(MODULEID.CANRAC, 'cr_thaotacxuatexcelLSC');
+
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -312,12 +321,15 @@ function HistoryWeigh() {
             >
               ↻ Tải lại
             </button>
-            <button
-              onClick={exportToExcel}
-              className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
-            >
-              📤 Xuất Excel
-            </button>
+            {
+              EXPORT_EXCEL_HISTORY &&
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
+              >
+                📤 Xuất Excel
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -339,7 +351,7 @@ function HistoryWeigh() {
                 <th className="px-2 py-3">Ca</th>
                 <th className="px-2 py-3">Ghi chú</th>
                 <th className="px-2 py-3 text-right">Khối lượng</th>
-                {user?.actionHistoryWeigh && <th className="px-2 py-3">Thao tác</th>}
+                {(UPDATE_HISTORY || DELETE_HISTORY) && <th className="px-2 py-3">Thao tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -377,31 +389,38 @@ function HistoryWeigh() {
                     <td className={`px-2 py-2 text-right font-semibold ${invalid ? 'text-white' : 'text-slate-900'}`}>
                       {Number(item.weightKg || 0).toFixed(1)}
                     </td>
-                    {(user?.userID === 3 || user?.userID === 1) && (
+                    {
+                      (UPDATE_HISTORY || DELETE_HISTORY) &&
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-3 justify-center">
-                          <button
-                            onClick={() => {
-                              setConfirmedData(item);
-                              setIsWorkDate(!!item.workDate);
-                              setIsWorkShift(!!item.workShift);
-                              setEditModalVisible(true);
-                            }}
-                            className={`${invalid ? 'text-white' : 'text-blue-600 hover:text-blue-800'}`}
-                            title="Chỉnh sửa"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => setDeleteItem(item)}
-                            className={`${invalid ? 'text-white' : 'text-rose-600 hover:text-rose-700'}`}
-                            title="Xóa"
-                          >
-                            <FaTrash />
-                          </button>
+                          {
+                            UPDATE_HISTORY &&
+                            <button
+                              onClick={() => {
+                                setConfirmedData(item);
+                                setIsWorkDate(!!item.workDate);
+                                setIsWorkShift(!!item.workShift);
+                                setEditModalVisible(true);
+                              }}
+                              className={`${invalid ? 'text-white' : 'text-blue-600 hover:text-blue-800'}`}
+                              title="Chỉnh sửa"
+                            >
+                              <FaEdit />
+                            </button>
+                          }
+                          {
+                            DELETE_HISTORY &&
+                            <button
+                              onClick={() => setDeleteItem(item)}
+                              className={`${invalid ? 'text-white' : 'text-rose-600 hover:text-rose-700'}`}
+                              title="Xóa"
+                            >
+                              <FaTrash />
+                            </button>
+                          }
                         </div>
                       </td>
-                    )}
+                    }
                   </tr>
                 );
               })}

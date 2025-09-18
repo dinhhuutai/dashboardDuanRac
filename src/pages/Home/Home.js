@@ -8,11 +8,17 @@ import axios from 'axios';
 import { BASE_URL } from '~/config';
 import { format } from 'date-fns';
 import http from '~/api/http';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 
 Modal.setAppElement('#root');
 
 function Home() {
+
+  const FEATURE_SCAN_QR = useFeatureAllowed(MODULEID.CANRAC, 'cr_nghiepvucanrac');
+  const FEATURE_CHECK_CLASS = useFeatureAllowed(MODULEID.CANRAC, 'cr_nghiepvukiemtraphanloai');
+
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   const navigate = useNavigate();
@@ -251,16 +257,19 @@ function Home() {
           </p>
 
           {/* 3 nút hành động (giữ nguyên logic onClick) */}
-          {user?.operationType !== 'canmuc' && (
+          
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <button
-                onClick={handleScanQR}
-                className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500
-                           text-white font-semibold shadow-lg shadow-amber-500/30
-                           hover:from-amber-600 hover:to-yellow-600 active:scale-[.98] transition"
-              >
-                📷 Quét mã QR
-              </button>
+              {
+                FEATURE_SCAN_QR &&
+                <button
+                  onClick={handleScanQR}
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500
+                            text-white font-semibold shadow-lg shadow-amber-500/30
+                            hover:from-amber-600 hover:to-yellow-600 active:scale-[.98] transition"
+                >
+                  📷 Quét mã QR
+                </button>
+              }
 
               {/* <button
                 onClick={handleConnectBluetooth}
@@ -271,7 +280,8 @@ function Home() {
                 Kết nối Bluetooth
               </button> */}
 
-              {user?.role === 'admin' && (
+              {
+                FEATURE_CHECK_CLASS &&
                 <button
                   onClick={handleCheckClassification}
                   className="min-w-[190px] px-6 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600
@@ -288,9 +298,8 @@ function Home() {
                     'Kiểm tra phân loại'
                   )}
                 </button>
-              )}
+              }
             </div>
-          )}
         </div>
       </div>
     </div>

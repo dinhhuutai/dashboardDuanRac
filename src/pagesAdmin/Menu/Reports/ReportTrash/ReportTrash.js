@@ -11,6 +11,8 @@ import HandleGetCodeQr from '~/components/HandleGetCodeQR';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
 import http from '~/api/http';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 // ---------- UI helpers ----------
 const cx = (...cls) => cls.filter(Boolean).join(' ');
@@ -26,6 +28,9 @@ const SectionTitle = ({ children }) => (
 );
 
 const ReportTrash = () => {
+
+  const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'xuatexceltrangbaocao');
+
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
   const [reportTmp, setReportTmp] = useState([]);
@@ -519,17 +524,20 @@ const ReportTrash = () => {
         <Card className="p-4 md:p-5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex items-center gap-2">
-              <button
-                disabled={isRacDiXuLy}
-                onClick={exportToExcel}
-                className={cx(
-                  'px-4 py-2 text-sm rounded-lg text-white shadow-sm active:scale-[.98]',
-                  'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                )}
-              >
-                📤 Xuất Excel
-              </button>
+              {
+                EXPORT_EXCEL_REPORT &&
+                <button
+                  disabled={isRacDiXuLy}
+                  onClick={exportToExcel}
+                  className={cx(
+                    'px-4 py-2 text-sm rounded-lg text-white shadow-sm active:scale-[.98]',
+                    'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                  )}
+                >
+                  📤 Xuất Excel
+                </button>
+              }
 
               {/* Segment 1 ngày / nhiều ngày */}
               <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">

@@ -11,9 +11,19 @@ import { useEffect, useState } from 'react';
 import config from '~/config';
 import { userSelector } from '~/redux/selectors';
 import { useSelector } from 'react-redux';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 function Sidebar() {
+
+  const VIEW_PAGE_PRODUCTION_ORDER = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtranglenhsanxuat');
+  const VIEW_PAGE_INK_CART = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtrangxecapmuc');
+  const VIEW_PAGE_HISTORY_WEIGHT = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtranglichsucanmuc');
+  const VIEW_PAGE_LOG_FILE = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtranglogfile');
+  const VIEW_PAGE_COMPARE_WEIGHT = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtrangsosanhdinhmuc');
+  const VIEW_PAGE_REPORT_CART_INK = useFeatureAllowed(MODULEID.CANMUC, 'cm_xemtrangbaocaoxecanmuc');
   
+
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
@@ -70,7 +80,7 @@ function Sidebar() {
 
         {/* ===== Nhóm: Vận hành ===== */}
         {
-          user.username !== 'testcanmuc' && 
+          (VIEW_PAGE_PRODUCTION_ORDER || VIEW_PAGE_INK_CART) && 
           <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
             <SectionHeader
               title="Vận hành"
@@ -79,51 +89,72 @@ function Sidebar() {
             />
             {openOperate && (
               <SectionCard>
-                <NavLink to={config.routes.adminInkWeighProductionOrder} className={linkClass}>
-                  <BsRocket className="text-[16px]" />
-                  <span>Lệnh sản xuất</span>
-                </NavLink>
+                {
+                  VIEW_PAGE_PRODUCTION_ORDER &&
+                  <NavLink to={config.routes.adminInkWeighProductionOrder} className={linkClass}>
+                    <BsRocket className="text-[16px]" />
+                    <span>Lệnh sản xuất</span>
+                  </NavLink>
+                }
 
-                <NavLink to={config.routes.adminInkWeighInkTransferCart} className={linkClass}>
-                  <BsQrCodeScan className="text-[16px]" />
-                  <span>Xe cấp mực</span>
-                </NavLink>
+                {
+                  VIEW_PAGE_INK_CART &&
+                  <NavLink to={config.routes.adminInkWeighInkTransferCart} className={linkClass}>
+                    <BsQrCodeScan className="text-[16px]" />
+                    <span>Xe cấp mực</span>
+                  </NavLink>
+                }
               </SectionCard>
             )}
           </div>
         }
 
         {/* Divider */}
-        <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        {
+          (VIEW_PAGE_PRODUCTION_ORDER || VIEW_PAGE_INK_CART) &&
+          <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        }
 
         {/* ===== Nhóm: Theo dõi ===== */}
-        <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
-          <SectionHeader
-            title="Theo dõi"
-            isOpen={openMonitor}
-            onClick={() => (openMonitor ? onlyOpen('') : onlyOpen('monitor'))}
-          />
-          {openMonitor && (
-            <SectionCard>
-              <NavLink to={config.routes.adminInkWeighHistory} className={linkClass}>
-                <BsJournalAlbum className="text-[16px]" />
-                <span>Lịch sử lấy mực</span>
-              </NavLink>
+        {
+          (VIEW_PAGE_HISTORY_WEIGHT || VIEW_PAGE_LOG_FILE) &&
+          <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
+            <SectionHeader
+              title="Theo dõi"
+              isOpen={openMonitor}
+              onClick={() => (openMonitor ? onlyOpen('') : onlyOpen('monitor'))}
+            />
+            {openMonitor && (
+              <SectionCard>
+                {
+                  VIEW_PAGE_HISTORY_WEIGHT &&
+                  <NavLink to={config.routes.adminInkWeighHistory} className={linkClass}>
+                    <BsJournalAlbum className="text-[16px]" />
+                    <span>Lịch sử lấy mực</span>
+                  </NavLink>
+                }
 
-              <NavLink to={config.routes.adminInkWeighLogfile} className={linkClass}>
-                <BsJournalAlbum className="text-[16px]" />
-                <span>Log file</span>
-              </NavLink>
-            </SectionCard>
-          )}
-        </div>
+                {
+                  VIEW_PAGE_LOG_FILE &&
+                  <NavLink to={config.routes.adminInkWeighLogfile} className={linkClass}>
+                    <BsJournalAlbum className="text-[16px]" />
+                    <span>Log file</span>
+                  </NavLink>
+                }
+              </SectionCard>
+            )}
+          </div>
+        }
 
         {/* Divider */}
-        <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        {
+          (VIEW_PAGE_HISTORY_WEIGHT || VIEW_PAGE_LOG_FILE) &&
+          <div className="my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        }
 
         {/* ===== Nhóm: Đối chiếu & Báo cáo ===== */}
         {
-          user.username !== 'testcanmuc' && 
+          (VIEW_PAGE_COMPARE_WEIGHT || VIEW_PAGE_REPORT_CART_INK) && 
           <div className="rounded-lg p-3 bg-white ring-1 ring-slate-200/60 shadow-sm">
           <SectionHeader
             title="Đối chiếu & Báo cáo"
@@ -132,15 +163,21 @@ function Sidebar() {
           />
           {openReport && (
             <SectionCard>
-              <NavLink to={config.routes.adminInkWeigCompare} className={linkClass}>
-                <BsClipboardCheck className="text-[16px]" />
-                <span>So sánh định mức</span>
-              </NavLink>
+              {
+                VIEW_PAGE_COMPARE_WEIGHT &&
+                <NavLink to={config.routes.adminInkWeigCompare} className={linkClass}>
+                  <BsClipboardCheck className="text-[16px]" />
+                  <span>So sánh định mức</span>
+                </NavLink>
+              }
 
-              <NavLink to={config.routes.adminReportCartInk} className={linkClass}>
-                <BsBarChartLine className="text-[16px]" />
-                <span>Báo cáo xe cân mực</span>
-              </NavLink>
+              {
+                VIEW_PAGE_REPORT_CART_INK &&
+                <NavLink to={config.routes.adminReportCartInk} className={linkClass}>
+                  <BsBarChartLine className="text-[16px]" />
+                  <span>Báo cáo xe cân mực</span>
+                </NavLink>
+              }
             </SectionCard>
           )}
         </div>

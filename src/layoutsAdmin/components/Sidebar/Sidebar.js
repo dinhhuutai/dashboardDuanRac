@@ -14,15 +14,28 @@ import { useEffect, useState, useMemo } from 'react';
 import config from '~/config';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
-import { useFeatureAllowed } from '~/hooks/useFeatuureGuard';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 
-const MODULEID = 1;
-
-//const VIEW_PAGE_ANALYTIC = useFeatureAllowed(MODULEID, 'cr_xemtrangtongquan');
+import MODULEID from '~/contants/modules';
 
 function Sidebar() {
   const navigate = useNavigate();
 
+  const VIEW_PAGE_ANALYTIC = useFeatureAllowed(MODULEID.CANRAC, 'cr_xemtrangtongquan');
+  const VIEW_PAGE_HiSTORY = useFeatureAllowed(MODULEID.CANRAC, 'cr_xemtranglichsucan');
+  const VIEW_PAGE_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xembaocao');
+  const VIEW_PAGE_ISSUE = useFeatureAllowed(MODULEID.CANRAC, 'cr_kexuatvattu');
+  const VIEW_PAGE_CHECKCLASS = useFeatureAllowed(MODULEID.CANRAC, 'cr_xemlichsukiemtraphanloai');
+  
+  const ACTION_MANAGE = useFeatureAllowed(MODULEID.CANRAC, 'cr_cacchucnangomanage');
+  const ACTION_SECTION_TRASHTRUCK = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlymucxedungrac');
+  const ACTION_SECTION_QRCODE = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlymucQrCode');
+  const ACTION_SECTION_USER = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlymucuser');
+  const ACTION_SECTION_UTIL = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlymuctienich');
+  
+  const ACTION_PAGE_QRCODE_EXPORT_EXCEL = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlyxuatexcelQRcode');
+  const ACTION_PAGE_NOTIFY_TRASH = useFeatureAllowed(MODULEID.CANRAC, 'cr_quanlytrangthongbaoracthai');
+  
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
@@ -111,50 +124,67 @@ function Sidebar() {
               setDownDashboard((v) => !v);
             }}
           >
-            <li>
-              <NavLink to={config.routes.adminAnalytics} className={linkClass}>
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-emerald-500 opacity-0 group-[.active]:opacity-100"></span>
-                Tổng quan
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={config.routes.adminHistoryWeigh} className={linkClass}>
-                Lịch sử cân
-              </NavLink>
-            </li>
+            {
+              VIEW_PAGE_ANALYTIC &&
+              <li>
+                <NavLink to={config.routes.adminAnalytics} className={linkClass}>
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-emerald-500 opacity-0 group-[.active]:opacity-100"></span>
+                  Tổng quan
+                </NavLink>
+              </li>
+            }
+            {
+              VIEW_PAGE_HiSTORY &&
+              <li>
+                <NavLink to={config.routes.adminHistoryWeigh} className={linkClass}>
+                  Lịch sử cân
+                </NavLink>
+              </li>
+            }
           </Section>
 
           {/* Báo cáo */}
-          <Section
-            title="Báo cáo"
-            icon={BsFileEarmarkBarGraph}
-            open={downReport}
-            onToggle={() => {
-              hiddenItem('report');
-              setDownReport((v) => !v);
-            }}
-          >
-            <li>
-              <NavLink to={config.routes.adminReport} className={linkClass}>
-                Chi tiết
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={config.routes.adminReportByShift} className={linkClass}>
-                Theo ca làm
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={config.routes.adminReportByTrash} className={linkClass}>
-                Theo loại rác
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={config.routes.adminReportMaterials} className={linkClass}>
-                Vật tư
-              </NavLink>
-            </li>
-          </Section>
+          {
+            (VIEW_PAGE_REPORT || VIEW_PAGE_ISSUE) &&
+            <Section
+              title="Báo cáo"
+              icon={BsFileEarmarkBarGraph}
+              open={downReport}
+              onToggle={() => {
+                hiddenItem('report');
+                setDownReport((v) => !v);
+              }}
+            >
+              {
+                VIEW_PAGE_REPORT &&
+                <>
+                  <li>
+                    <NavLink to={config.routes.adminReport} className={linkClass}>
+                      Chi tiết
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to={config.routes.adminReportByShift} className={linkClass}>
+                      Theo ca làm
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to={config.routes.adminReportByTrash} className={linkClass}>
+                      Theo loại rác
+                    </NavLink>
+                  </li>
+                </>
+              }
+              {
+                VIEW_PAGE_ISSUE &&
+                <li>
+                  <NavLink to={config.routes.adminReportMaterials} className={linkClass}>
+                    Vật tư
+                  </NavLink>
+                </li>
+              }
+            </Section>
+          }
 
           {/* Kiểm tra phân loại */}
           <Section
@@ -166,11 +196,14 @@ function Sidebar() {
               setDownClassCheck((v) => !v);
             }}
           >
-            <li>
-              <NavLink to={config.routes.adminClassCheckHistory} className={linkClass}>
-                Lịch sử
-              </NavLink>
-            </li>
+            {
+              VIEW_PAGE_CHECKCLASS &&
+              <li>
+                <NavLink to={config.routes.adminClassCheckHistory} className={linkClass}>
+                  Lịch sử
+                </NavLink>
+              </li>
+            }
             <li>
               <NavLink to={config.routes.adminClassCheckListBin} className={linkClass}>
                 DS thùng rác
@@ -180,133 +213,143 @@ function Sidebar() {
         </div>
 
         {/* ===== Manage ===== */}
-        <div className="px-1 pt-3">
-          <div className="uppercase text-emerald-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
-            Manage
+        {
+          ACTION_MANAGE &&
+          <div className="px-1 pt-3">
+            <div className="uppercase text-emerald-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
+              Manage
+            </div>
+
+            {/* Xe đựng rác */}
+            {
+              ACTION_SECTION_TRASHTRUCK &&
+              <Section
+                title="Xe đựng rác"
+                icon={BsCart2}
+                open={downTrashTruck}
+                onToggle={() => {
+                  hiddenItem('trashTrush');
+                  setDownTrashTruck((v) => !v);
+                }}
+              >
+                <li>
+                  <NavLink to={config.routes.adminTrashTruck} className={linkClass}>
+                    Danh sách xe
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to={config.routes.adminTrashTruckCreate} className={linkClass}>
+                    Thêm xe
+                  </NavLink>
+                </li>
+              </Section>
+            }
+
+            {/* QR Code (phân quyền) */}
+            {
+              ACTION_SECTION_QRCODE &&
+              <Section
+                title="QR Code"
+                icon={BsQrCodeScan}
+                open={downQrcode}
+                onToggle={() => {
+                  hiddenItem('qrcode');
+                  setDownQrcode((v) => !v);
+                }}
+              >
+                <li>
+                  <NavLink to={config.routes.adminQrcode} className={linkClass}>
+                    List
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to={config.routes.adminQrcodeCreate} className={linkClass}>
+                    Create
+                  </NavLink>
+                </li>
+              </Section>
+            }
+
+            {/* User (phân quyền) */}
+            {/* {
+              ACTION_SECTION_USER &&
+              <Section
+                title="User"
+                icon={BsPerson}
+                open={downUser}
+                onToggle={() => {
+                  hiddenItem('user');
+                  setDownUser((v) => !v);
+                }}
+              >
+                <li>
+                  <NavLink to={config.routes.adminUser} className={linkClass}>
+                    List
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to={config.routes.adminUserCreate} className={linkClass}>
+                    Create
+                  </NavLink>
+                </li>
+              </Section>
+            } */}
+
+            {/* Trash Type (phân quyền)
+            {user?.managerTrash && (
+              <Section
+                title="Trash Type"
+                icon={BsTrash2}
+                open={downWaste}
+                onToggle={() => {
+                  hiddenItem('waste');
+                  setDownWaste((v) => !v);
+                }}
+              >
+                <li>
+                  <NavLink to={config.routes.adminTrashType} className={linkClass}>
+                    List
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to={config.routes.adminTrashTypeCreate} className={linkClass}>
+                    Create
+                  </NavLink>
+                </li>
+              </Section>
+            )} */}
+
+            
+            {/* Utils */}
+            {
+              ACTION_SECTION_UTIL &&
+              <Section
+                title="Tiện ích"
+                icon={BsGear}
+                open={downUtils}
+                onToggle={() => {
+                  hiddenItem('utils');
+                  setDownUtils((v) => !v);
+                }}
+              >
+                <li>
+                  <NavLink to={config.routes.adminSortUnitByDepartment} className={linkClass}>
+                    Sắp xếp chuyền theo tổ
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to={config.routes.adminSettingTable} className={linkClass}>
+                    Phân chia tổ
+                  </NavLink>
+                </li>
+              </Section>
+            }
           </div>
-
-          {/* Xe đựng rác */}
-          <Section
-            title="Xe đựng rác"
-            icon={BsCart2}
-            open={downTrashTruck}
-            onToggle={() => {
-              hiddenItem('trashTrush');
-              setDownTrashTruck((v) => !v);
-            }}
-          >
-            <li>
-              <NavLink to={config.routes.adminTrashTruck} className={linkClass}>
-                Danh sách xe
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to={config.routes.adminTrashTruckCreate} className={linkClass}>
-                Thêm xe
-              </NavLink>
-            </li>
-          </Section>
-
-          {/* QR Code (phân quyền) */}
-          {user?.userID === 1 && (
-            <Section
-              title="QR Code"
-              icon={BsQrCodeScan}
-              open={downQrcode}
-              onToggle={() => {
-                hiddenItem('qrcode');
-                setDownQrcode((v) => !v);
-              }}
-            >
-              <li>
-                <NavLink to={config.routes.adminQrcode} className={linkClass}>
-                  List
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={config.routes.adminQrcodeCreate} className={linkClass}>
-                  Create
-                </NavLink>
-              </li>
-            </Section>
-          )}
-
-          {/* User (phân quyền) */}
-          {user?.userID === 1 && (
-            <Section
-              title="User"
-              icon={BsPerson}
-              open={downUser}
-              onToggle={() => {
-                hiddenItem('user');
-                setDownUser((v) => !v);
-              }}
-            >
-              <li>
-                <NavLink to={config.routes.adminUser} className={linkClass}>
-                  List
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={config.routes.adminUserCreate} className={linkClass}>
-                  Create
-                </NavLink>
-              </li>
-            </Section>
-          )}
-
-          {/* Trash Type (phân quyền) */}
-          {user?.managerTrash && (
-            <Section
-              title="Trash Type"
-              icon={BsTrash2}
-              open={downWaste}
-              onToggle={() => {
-                hiddenItem('waste');
-                setDownWaste((v) => !v);
-              }}
-            >
-              <li>
-                <NavLink to={config.routes.adminTrashType} className={linkClass}>
-                  List
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={config.routes.adminTrashTypeCreate} className={linkClass}>
-                  Create
-                </NavLink>
-              </li>
-            </Section>
-          )}
-
-          
-          {/* Utils */}
-          {(user?.userID === 1 || user?.userID === 3) && (
-            <Section
-              title="Tiện ích"
-              icon={BsGear}
-              open={downUtils}
-              onToggle={() => {
-                hiddenItem('utils');
-                setDownUtils((v) => !v);
-              }}
-            >
-              <li>
-                <NavLink to={config.routes.adminSortUnitByDepartment} className={linkClass}>
-                  Sắp xếp chuyền theo tổ
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={config.routes.adminSettingTable} className={linkClass}>
-                  Phân chia tổ
-                </NavLink>
-              </li>
-            </Section>
-          )}
-        </div>
+        }
 
         {/* ===== CTA vui vui (giữ nguyên điều kiện) ===== */}
-        {(user?.userID === 1 || user?.userID === 3) && (
+        {
+          ACTION_PAGE_NOTIFY_TRASH &&
           <div className="pt-3 pb-2 px-1 flex justify-center">
             <button
               onClick={() => navigate(config.routes.adminNgienCheChou)}
@@ -316,9 +359,10 @@ function Sidebar() {
               Ngiên Chẻ Chou (màu galaxy)
             </button>
           </div>
-        )}
+        }
 
-        {(user?.userID === 1 || user?.userID === 3) && (
+        {
+          ACTION_PAGE_QRCODE_EXPORT_EXCEL &&
           <div className="pt-3 pb-2 px-1 flex justify-center">
             <button
               onClick={() => navigate(config.routes.adminExportQR)}
@@ -327,7 +371,7 @@ function Sidebar() {
               QrCode xuất excel
             </button>
           </div>
-        )}
+        }
       </div>
     </aside>
   );

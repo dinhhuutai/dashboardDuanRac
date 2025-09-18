@@ -80,7 +80,7 @@ function Header() {
 </button>
                   </li>
 
-                <li className="relative">
+                {/* <li className="relative">
                   <NavLink to={config.routes.home} className={tabLink}>
                     {({ isActive }) => (
                       <>
@@ -89,7 +89,7 @@ function Header() {
                       </>
                     )}
                   </NavLink>
-                </li>
+                </li> */}
 
                 {/* <li className="relative">
                   <NavLink to={config.routes.history} className={tabLink}>
@@ -102,7 +102,7 @@ function Header() {
                   </NavLink>
                 </li> */}
 
-                <li className="relative">
+                {/* <li className="relative">
                   <NavLink to={config.routes.user} className={tabLink}>
                     {({ isActive }) => (
                       <>
@@ -111,7 +111,7 @@ function Header() {
                       </>
                     )}
                   </NavLink>
-                </li>
+                </li> */}
               </ul>
             </nav>
 
@@ -184,7 +184,7 @@ function Header() {
 </button>
 
 
-              <NavLink
+              {/* <NavLink
                 to={config.routes.home}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
@@ -192,7 +192,7 @@ function Header() {
                 }
               >
                 Trang chủ
-              </NavLink>
+              </NavLink> */}
 
               {/* <NavLink
                 to={config.routes.history}
@@ -204,7 +204,7 @@ function Header() {
                 Lịch sử cân
               </NavLink> */}
 
-              <NavLink
+              {/* <NavLink
                 to={config.routes.user}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
@@ -212,7 +212,7 @@ function Header() {
                 }
               >
                 Thông tin
-              </NavLink>
+              </NavLink> */}
 
               {/* User row */}
               <div className="mt-2 flex items-center gap-3 p-2 rounded-lg bg-slate-50/70 border border-white/70">

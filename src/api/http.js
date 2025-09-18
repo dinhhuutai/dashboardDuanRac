@@ -7,7 +7,7 @@ import authSlice from "~/redux/slices/authSlice";
 // Sửa path này cho khớp backend của bạn:
 // - Nếu BE: app.use('/auth', ...)  => "/auth/refresh"
 // - Nếu BE: app.use('/api', ...) + router.post('/auth/refresh') => "/api/auth/refresh"
-const REFRESH_PATH = "/auth/refresh";
+const REFRESH_PATH = "/refresh";
 
 const http = axios.create({
   baseURL: BASE_URL,

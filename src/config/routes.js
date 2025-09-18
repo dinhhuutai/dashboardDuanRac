@@ -76,6 +76,20 @@ const routes = {
   
   adminNgienCheChou: '/admin/trash/Ngien-Che-chou',
   adminExportQR: '/admin/trash/export-qr',
+
+  lunchOrder: '/lunch-order/me',
+  lunchOrderHistory: '/lunch-order/history',
+  lunchOrderProxy: '/lunch-order/proxy',
+
+  adminLunchOrderDashboard: '/admin/lunch-order/dashboard',
+  adminLunchOrderWeeklyMenu: '/admin/lunch-order/weekly-menu',
+  adminLunchOrderFood: '/admin/lunch-order/foods',
+  adminLunchOrderDepartment: '/admin/lunch-order/department',
+  adminLunchOrderAssignUserDept: '/admin/lunch-order/assign-user-dept',
+  adminLunchOrderNotOrder: '/admin/lunch-order/not-order',
+  adminLunchOrderHistory: '/admin/lunch-order/history',
+  adminLunchOrderReport: '/admin/lunch-order/report',
+
 };
 
 export default routes;

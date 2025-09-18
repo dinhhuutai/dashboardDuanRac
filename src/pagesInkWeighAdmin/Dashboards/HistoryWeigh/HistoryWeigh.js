@@ -15,11 +15,16 @@ import {
 } from 'react-icons/fi';
 import { userSelector } from '~/redux/selectors';
 import { useSelector } from 'react-redux';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 const PAGE_SIZE = 10;
 const PAGE_SIZE_ALL = 100000;
 
 function HistoryWeigh() {
+
+  const ACTION_UPDATE_HISTORY = useFeatureAllowed(MODULEID.CANMUC, 'cm_thaotacsualichsucanmuc');
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [allData, setAllData] = useState([]);
@@ -395,7 +400,7 @@ function HistoryWeigh() {
 
   
 // ngay trước phần <table ...> thêm các biến tiện dụng:
-const SHOW_ACTIONS = (user?.username !== 'thla@cm' && user?.username !== 'testcanmuc');
+const SHOW_ACTIONS = ACTION_UPDATE_HISTORY;
 
 const ITEM_HEADERS = ['Mã mực','Tên mực','Khối lượng (kg)','Khối lượng (g)', 'PJ Name', 'PJ weight (g)'];
 if (SHOW_ACTIONS) {

@@ -12,6 +12,9 @@ import { userSelector } from '~/redux/selectors';
 import { FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import http from '~/api/http';
 
+import MODULEID from '~/contants/modules';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+
 // ======================= Helpers =======================
 const cx = (...classes) => classes.filter(Boolean).join(' ');
 const Card = ({ className = '', children }) => (
@@ -35,6 +38,10 @@ const SummaryPill = ({ label, value }) => (
 
 // ======================= Component =======================
 const Report = () => {
+
+  const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
+  const ADD_DATA_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_themdulieuobangbaocao');
+
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);
 
@@ -764,12 +771,15 @@ const Report = () => {
           {/* Top toolbar */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex items-center gap-2">
-              <button
-                onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
-                className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
-              >
-                📤 Xuất Excel
-              </button>
+              {
+                EXPORT_EXCEL_REPORT &&
+                <button
+                  onClick={filterType === 'one' ? exportToExcel : exportToExcel2}
+                  className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
+                >
+                  📤 Xuất Excel
+                </button>
+              }
 
               <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">
                 <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'one' && 'bg-slate-100 font-medium')}>
@@ -961,14 +971,15 @@ const Report = () => {
                                   i === 63 ? 'font-semibold text-slate-900' : 'text-slate-700',
                                 )}
                                 onDoubleClick={() => {
-                                  if (!user?.roleEditReport || filterType !== 'one') return;
+                                  if (!ADD_DATA_REPORT || filterType !== 'one') return;
+
                                   setStatusUpdate(true);
                                   setSelectInput({ group: group.group, item, index: i });
                                   setValue(e);
                                   setTimeout(() => inputRef.current?.focus(), 0);
                                 }}
                               >
-                                {user?.roleEditReport &&
+                                {ADD_DATA_REPORT &&
                                 statusUpdate &&
                                 filterType === 'one' &&
                                 selectInput.group === group.group &&
