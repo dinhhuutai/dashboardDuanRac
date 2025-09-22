@@ -29,7 +29,7 @@ const SectionTitle = ({ children }) => (
 
 const ReportTrash = () => {
 
-  const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'xuatexceltrangbaocao');
+  const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
 
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState([]);

@@ -30,7 +30,7 @@
 // // ---------------- Component ----------------
 // const ReportByShift = () => {
 
-//   const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'xuatexceltrangbaocao');
+//   const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
 
 //   const [loading, setLoading] = useState(true);
 //   const [report, setReport] = useState([]);
@@ -712,11 +712,15 @@
 
 // export default ReportByShift;
 
-// src/pages/ReportByShift.jsx
+
+
+
 import 'react-datepicker/dist/react-datepicker.css';
 import React, { useEffect, useMemo, useState } from 'react';
+/* ⛳️ Di chuyển import XLSX & saveAs vào dynamic import trong exportToExcel để giảm bundle
 import * as XLSX from 'xlsx-js-style';
 import { saveAs } from 'file-saver';
+*/
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
@@ -735,7 +739,6 @@ const SectionTitle = ({ children }) => (
 
 // helpers
 const round1 = (n) => Math.round(n * 10) / 10;
-// cộng 2 vector cùng độ dài
 const sumArrays = (...arrays) => {
   if (!arrays.length) return [];
   const len = arrays[0]?.length || 0;
@@ -747,7 +750,7 @@ const sumArrays = (...arrays) => {
   }
   return out;
 };
-// n=64 (9×7 + 1 tổng). Gom theo 6 ca + Tổng
+// n=64 (9×7 + 1 tổng). Gom theo 6 ca + Tổng (⚡️ dùng sẵn cho render/Excel)
 function sumEvery7(arr = []) {
   const result = [];
   for (let i = 0; i < 7; i++) {
@@ -758,10 +761,9 @@ function sumEvery7(arr = []) {
     result.push(sum);
   }
   result.push(arr[arr.length - 1] || 0);
-  result.splice(6, 1); // bỏ slot "null" → còn 6 ca + Tổng
+  result.splice(6, 1);
   return result;
 }
-// format VN date
 function toVNDateISO(d) {
   const vnOffset = 7 * 60;
   const local = new Date(d.getTime() + vnOffset * 60 * 1000);
@@ -788,7 +790,7 @@ function fmtDmyDash(date) {
 
 export default function ReportByShift() {
   const [loading, setLoading] = useState(true);
-  const [raw, setRaw] = useState([]);      // [{bucketID,bucketName,departmentID,units:[{unitID,unitName,value}], orphan?, sum:[]}]
+  const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
   const [filterType, setFilterType] = useState('one');
   const [selectedBucket, setSelectedBucket] = useState('');
@@ -796,17 +798,22 @@ export default function ReportByShift() {
   const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; });
   const [endDate, setEndDate] = useState(new Date());
 
-  const headersDetail = ['BP/Tổ', 'Chuyền', 'Ca Ngắn 1', 'Ca Ngắn 2', 'Ca Ngắn 3', 'Ca Dài 1', 'Ca Dài 2', 'Ca Hành Chính', 'Tổng'];
+  const headersDetail = ['BP/Tổ', 'Chuyền', 'Ca Ngắn 1', 'Ca Ngắn 2', 'Ca Ngắn 3', 'Ca Dài 1', 'Ca Dài 2', 'Ca Hành Chính', 'Tổng'];
 
+  // ⚡️ Debounce + Abort request cũ để giảm spam API
   useEffect(() => {
-    (async () => {
-      setLoading(true);
+    setLoading(true);
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
       try {
         const params = {
           startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
           endDate:   filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(endDate),
         };
-        const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, { params });
+        const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, {
+          params,
+          signal: controller.signal, // axios >=1: hỗ trợ AbortController
+        });
         if (res.data?.status === 'success') {
           setRaw(res.data.data || []);
           setGrand(res.data.grandTotal || Array(64).fill(0));
@@ -814,76 +821,88 @@ export default function ReportByShift() {
           setRaw([]); setGrand(Array(64).fill(0));
         }
       } catch (e) {
-        console.error('fetch error', e);
+        if (e.name !== 'CanceledError' && e.message !== 'canceled') {
+          console.error('fetch error', e);
+        }
         setRaw([]); setGrand(Array(64).fill(0));
       } finally {
         setLoading(false);
       }
-    })();
+    }, 300); // ⏳ debounce 300ms
+
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
   }, [filterType, dateOne, startDate, endDate]);
 
+  // ⚡️ Precompute buckets + collapse trong useMemo (tránh sumEvery7() ngay trong JSX)
+  const processedBuckets = useMemo(() => {
+    return (raw || []).map((bucket) => {
+      const units = bucket.units || [];
+      let rows;
+      if (units.length === 0) {
+        rows = [{ name: '', type: 'single', raw: bucket.sum }];
+      } else if (units.length === 1) {
+        const u = units[0];
+        const v = bucket.orphan ? sumArrays(u.value, bucket.orphan.value) : u.value;
+        rows = [{ name: u.unitName, type: 'single', raw: v }];
+      } else {
+        rows = [
+          ...units.map((u) => ({ name: u.unitName, type: 'unit', raw: u.value })),
+          ...(bucket.orphan ? [{ name: '(QR cấp bộ phận)', type: 'orphan', raw: bucket.orphan.value }] : []),
+          { name: 'Tổng', type: 'sum', raw: bucket.sum },
+        ];
+      }
+      // collapse sẵn (6 ca + Tổng)
+      const rowsCollapsed = rows.map((r) => ({ ...r, val: sumEvery7(r.raw || []) }));
+      return { ...bucket, rows: rowsCollapsed };
+    });
+  }, [raw]);
+
+  // ⚡️ Lọc bucket theo select (memo)
   const buckets = useMemo(() => {
-    if (!selectedBucket) return raw;
-    return raw.filter(b => b.bucketName === selectedBucket);
-  }, [raw, selectedBucket]);
+    if (!selectedBucket) return processedBuckets;
+    return processedBuckets.filter((b) => b.bucketName === selectedBucket);
+  }, [processedBuckets, selectedBucket]);
 
-  // Tạo danh sách hiển thị cho từng bucket theo yêu cầu:
-  // - 0 chuyền: 1 hàng, tên chuyền rỗng, giá trị = bucket.sum
-  // - 1 chuyền: 1 hàng, tên = unit, giá trị = unit.value (+ orphan nếu có)
-  // - ≥2 chuyền: liệt kê các chuyền (+ orphan nếu có) + 1 hàng "Tổng"
-  const buildDisplayList = (bucket) => {
-    const units = bucket.units || [];
-    if (units.length === 0) {
-      return [{ name: '', val: bucket.sum, type: 'single' }];
-    }
-    if (units.length === 1) {
-      const u = units[0];
-      const v = bucket.orphan ? sumArrays(u.value, bucket.orphan.value) : u.value;
-      return [{ name: u.unitName, val: v, type: 'single' }];
-    }
-    // nhiều chuyền
-    const list = [
-      ...units.map(u => ({ name: u.unitName, val: u.value, type: 'unit' })),
-      ...(bucket.orphan ? [{ name: '(QR cấp bộ phận)', val: bucket.orphan.value, type: 'orphan' }] : []),
-      { name: 'Tổng', val: bucket.sum, type: 'sum' }
-    ];
-    return list;
-  };
+  // ⚡️ collapse grand (memo)
+  const grandCollapsed = useMemo(() => sumEvery7(grand), [grand]);
 
-  // Excel
-  const exportToExcel = () => {
+  // ⚡️ Dynamic import Excel libs khi bấm Export (nhanh hơn khi load trang)
+  const exportToExcel = async () => {
+    const XLSX = await import('xlsx-js-style');
+    const { saveAs } = await import('file-saver');
+
     const wb = XLSX.utils.book_new();
     const title = [
       `BẢNG THEO DÕI RÁC THẢI ${selectedBucket ? selectedBucket : ''} THEO CA LÀM NGÀY ${
         filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`
       }`,
     ];
-    const headerRow = headersDetail;
+    const wsData = [title, headersDetail];
 
-    const rows = [];
     const merges = [];
     let rowPtr = 2;
 
-    buckets.forEach(bucket => {
-      const list = buildDisplayList(bucket);
+    buckets.forEach((bucket) => {
+      const list = bucket.rows;
       if (list.length) merges.push({ s: { r: rowPtr, c: 0 }, e: { r: rowPtr + list.length - 1, c: 0 } });
       list.forEach((row, i) => {
-        const v = sumEvery7(row.val).map(e => (e === 0 ? '-' : round1(e).toFixed(1)));
-        rows.push([i === 0 ? bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName : '', row.name, ...v]);
+        const v = row.val.map((e) => (e === 0 ? '-' : round1(e).toFixed(1)));
+        wsData.push([i === 0 ? (bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName) : '', row.name, ...v]);
         rowPtr++;
       });
     });
 
     if (!selectedBucket) {
-      const v = sumEvery7(grand).map(e => (e === 0 ? '-' : round1(e).toFixed(1)));
-      rows.push(['Tổng cộng', '', ...v]);
+      const v = grandCollapsed.map((e) => (e === 0 ? '-' : round1(e).toFixed(1)));
+      wsData.push(['Tổng cộng', '', ...v]);
     }
 
-    const wsData = [title, headerRow, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }, ...merges];
 
-    // style
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -950,7 +969,7 @@ export default function ReportByShift() {
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="">-- Tất cả --</option>
-                  {raw.map((b) => (
+                  {processedBuckets.map((b) => (
                     <option key={b.bucketID} value={b.bucketName}>{b.bucketName}</option>
                   ))}
                 </select>
@@ -1022,32 +1041,31 @@ export default function ReportByShift() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {buckets.map((bucket) => {
-                  const list = buildDisplayList(bucket);
-                  return list.map((row, idx) => (
+                {buckets.map((bucket) =>
+                  bucket.rows.map((row, idx) => (
                     <tr key={`${bucket.bucketID}-${idx}`} className={cx(row.type === 'sum' ? 'bg-amber-50' : 'hover:bg-slate-50 odd:bg-white even:bg-slate-50/60', 'transition')}>
                       {idx === 0 && (
                         <td
-                          rowSpan={list.length}
+                          rowSpan={bucket.rows.length}
                           className="px-2 md:px-3 py-2 text-center font-medium text-slate-800 border-r border-slate-100"
                         >
-                          {bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName}
+                          {bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName}
                         </td>
                       )}
                       <td className="px-2 md:px-3 py-2 text-center">{row.name}</td>
-                      {sumEvery7(row.val).map((e, i) => (
+                      {row.val.map((e, i) => (
                         <td key={i} className={cx('px-2 md:px-3 py-2 text-center', i === 6 ? 'font-semibold text-slate-900' : 'text-slate-700')}>
                           {e === 0 ? '-' : parseFloat(round1(e)?.toFixed(1))}
                         </td>
                       ))}
                     </tr>
-                  ));
-                })}
+                  ))
+                )}
 
                 {!selectedBucket && (
                   <tr className="bg-emerald-50 border-t border-emerald-200">
                     <td className="px-2 md:px-3 py-2 text-center font-bold text-emerald-800" colSpan={2}>Tổng cộng</td>
-                    {sumEvery7(grand).map((e, i) => (
+                    {grandCollapsed.map((e, i) => (
                       <td key={i} className="px-2 md:px-3 py-2 text-center font-bold text-emerald-900">
                         {e === 0 ? '-' : parseFloat(round1(e)?.toFixed(1))}
                       </td>

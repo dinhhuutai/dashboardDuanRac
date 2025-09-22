@@ -15,7 +15,6 @@ import {
   FiSettings,
   FiFilter,
   FiMenu,
-  FiHelpCircle,
   FiCheckCircle,
   FiAlertTriangle,
 } from "react-icons/fi";
@@ -23,8 +22,6 @@ import http from "~/api/http";
 import { useDispatch, useSelector } from "react-redux";
 import { reloadPermissions } from "~/redux/slices/authSlice";
 import { userSelector } from "~/redux/selectors";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
 
 /* ========================== Utilities ========================== */
 const cn = (...xs) => xs.filter(Boolean).join(" ");
@@ -164,11 +161,20 @@ export default function UserModuleAccessModern() {
   const fetchUsers = async () => {
     try {
       setULoading(true);
+      // thay trong fetchUsers()
       const res = await http.get("/api/users", { params: { q: uQdebounced, page: uPage, pageSize: uPageSize } });
       if (res.data?.success) {
-        setUsers(res.data.data || []);
+        const normalized = (res.data.data || []).map(u => ({
+          ...u,
+          // ép có field userId chuẩn để UI dùng thống nhất
+          userId: u.userId ?? u.userID ?? u.id,
+          fullName: u.fullName ?? u.name ?? u.userName,
+          email: u.email ?? u.mail ?? u.userEmail,
+        }));
+        setUsers(normalized);
         setUTotal(res.data.pagination?.total || 0);
       }
+
     } catch {
       toast.error("Không tải được danh sách người dùng.");
     } finally { setULoading(false); }
@@ -178,7 +184,7 @@ export default function UserModuleAccessModern() {
     try {
       setModLoading(true);
       const res = await http.get("/api/modules", { params: { page: 1, pageSize: 500 } });
-      if (res.data?.success) setModules(res.data.data || []);
+    if (res.data?.success) setModules(res.data.data || []);
     } catch {
       toast.error("Không tải được danh sách modules.");
     } finally { setModLoading(false); }
@@ -325,29 +331,6 @@ export default function UserModuleAccessModern() {
     if (msg.type === "success") toast.success(msg.text); else toast.error(msg.text);
   }, [msg]);
 
-  /* ========================== Driver.js Guided Tour ========================== */
-  const driverRef = useRef(null);
-  const startTour = () => {
-    const d = driver({
-      showProgress: true,
-      nextBtnText: "Tiếp",
-      prevBtnText: "Trước",
-      doneBtnText: "Xong",
-      overlayOpacity: 0.45,
-      stagePadding: 6,
-      allowClose: true,
-      steps: [
-        { element: "#tour-search",  popover: { title: "Tìm người dùng", description: "Gõ tên hoặc email để lọc nhanh danh sách.", side: "bottom" } },
-        { element: "#tour-users",   popover: { title: "Danh sách người dùng", description: "Chọn một người để gán quyền.", side: "right" } },
-        { element: "#tour-modules", popover: { title: "Phân quyền module", description: "Bật/tắt quyền và chọn vai trò user/admin cho module.", side: "top" } },
-        { element: "#tour-features",popover: { title: "Chức năng & quyền", description: "Quản lý danh sách chức năng của module và ghi đè quyền theo từng user.", side: "top" } },
-        { element: "#tour-save",    popover: { title: "Lưu thay đổi", description: "Nhấn để lưu phân quyền sau khi chỉnh.", side: "left" } },
-      ],
-    });
-    driverRef.current = d;
-    d.drive();
-  };
-
   /* ========================== UI ========================== */
   return (
     <div
@@ -361,7 +344,7 @@ export default function UserModuleAccessModern() {
           <Button variant="default" size="sm" className="xl:hidden" onClick={() => setUsersOpen(true)}>
             <FiMenu /> Người dùng
           </Button>
-          <div id="tour-search" className="relative">
+          <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={uQ}
@@ -375,13 +358,12 @@ export default function UserModuleAccessModern() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="default" size="sm"><FiFilter /> Lọc</Button>
-          <Button id="tour-help" variant="ghost" size="sm" onClick={startTour}><FiHelpCircle /> Hướng dẫn</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
         {/* LEFT: Users list (drawer on mobile) */}
-        <SectionCard id="tour-users" title="Chọn người dùng" subtitle="Tìm và chọn để gán quyền" className="hidden xl:block">
+        <SectionCard title="Chọn người dùng" subtitle="Tìm và chọn để gán quyền" className="hidden xl:block">
           <UsersList
             users={users}
             loading={uLoading}
@@ -398,13 +380,12 @@ export default function UserModuleAccessModern() {
         {/* RIGHT: Modules + Features */}
         <div className="space-y-6">
           <SectionCard
-            id="tour-modules"
             title="Phân quyền module"
             subtitle={userId ? "Tick module để cấp quyền, chọn vai trò admin/user." : "Hãy chọn một người dùng."}
             right={
               <div className="flex items-center gap-2">
                 <Button onClick={resetDraft} disabled={!hasChanges || !isSuper} variant="default" size="sm"><FiRefreshCcw /> Hoàn tác</Button>
-                <Button id="tour-save" onClick={saveModuleAssignments} disabled={!userId || !hasChanges || saving || !isSuper} variant="primary" size="sm"><FiSave /> {saving?"Đang lưu…":"Lưu"}</Button>
+                <Button onClick={saveModuleAssignments} disabled={!userId || !hasChanges || saving || !isSuper} variant="primary" size="sm"><FiSave /> {saving?"Đang lưu…":"Lưu"}</Button>
               </div>
             }
           >
@@ -413,7 +394,7 @@ export default function UserModuleAccessModern() {
             ) : loadingAssign ? (
               <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-white/10 p-4 space-y-3">
+                  <div key={i} className="rounded-2xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-white/10 p-4 space-y-3">
                     <SkeletonLine w="w-1/2" />
                     <SkeletonLine />
                     <SkeletonLine w="w-2/3" />
@@ -467,7 +448,6 @@ export default function UserModuleAccessModern() {
           </SectionCard>
 
           <SectionCard
-            id="tour-features"
             title="Chức năng & quyền theo user"
             subtitle="Chọn module để quản lý chức năng trong module và phân quyền theo người dùng."
             right={
