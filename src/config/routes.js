@@ -90,6 +90,9 @@ const routes = {
   adminLunchOrderHistory: '/admin/lunch-order/history',
   adminLunchOrderReport: '/admin/lunch-order/report',
 
+
+  imageCaddi: '/image-caddi',
+
 };
 
 export default routes;

@@ -698,7 +698,7 @@ function Scan() {
                         updatedBy: user.userID
                       });
 
-                      if (res.ok) setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu thành công!' });
+                      if (res.status === 200) setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu thành công!' });
                       else setMessageModal({ type: 'error', message: `❌ Lỗi: ${await res.text()}` });
                     } catch {
                       setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });

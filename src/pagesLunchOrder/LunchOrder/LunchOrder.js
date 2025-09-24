@@ -228,7 +228,7 @@ export default function UserOrderSlide() {
 
 
       {hasOrdered ? (
-        <div className="bg-white rounded-2xl shadow p-6 mt-[10px]">
+        <div className="bg-white rounded-2xl shadow p-6 mx-[10px] mt-[10px]">
           <h3 className="font-semibold text-lg mb-4">
             Bạn đã đặt cơm tuần này
           </h3>
@@ -265,7 +265,7 @@ export default function UserOrderSlide() {
           )}
         </div>
       ) : (
-        <>
+        <div className="w-full p-6 mx-[10px] mt-[10px] lg:w-[calc(100vw-350px)]">
           <Swiper
             ref={swiperRef}
             spaceBetween={30}
@@ -383,7 +383,7 @@ export default function UserOrderSlide() {
                 </button>
               </div>
             )}
-        </>
+        </div>
       )}
 
       <NoticeModal

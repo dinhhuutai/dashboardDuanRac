@@ -7,7 +7,7 @@ function HeaderLogo({ onToggle }) {
   return (
     <div className="flex items-center justify-between px-3 sm:px-6 w-auto md:w-[var(--admin-width-sidebar)]">
       <Link
-        to={config.routes.adminAnalytics}
+        to={config.routes.adminLunchOrderDashboard}
         className="hidden md:flex items-center gap-3 group"
         aria-label="Trang phân tích"
       >

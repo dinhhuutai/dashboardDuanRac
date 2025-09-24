@@ -86,6 +86,8 @@ import LunchOrderHistory from '~/pagesLunchOrderAdmin/History';
 import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
 
 
+import ImageCaddi from '~/pages/ImageCaddi';
+
 export const routes = [
   {
     path: config.routes.home,
@@ -157,6 +159,13 @@ export const routes = [
     module: 'datcom',
   },
 
+  
+  {
+    path: config.routes.imageCaddi,
+    component: ImageCaddi,
+    login: true,
+    module: 'imageCaddi',
+  },
 ];
 
 export const routesAdmin = [

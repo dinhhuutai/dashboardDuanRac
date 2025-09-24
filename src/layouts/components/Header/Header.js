@@ -52,7 +52,7 @@ function Header() {
         <div className="mx-auto max-w-7xl px-3 sm:px-6">
           <div className="h-14 sm:h-16 grid grid-cols-[auto_1fr_auto] items-center gap-2">
             {/* Left: Logo only */}
-            <Link to={config.routes.home} className="flex items-center">
+            <Link to={'#'} className="flex items-center">
               <img
                 src={logo}
                 alt="Logo"

@@ -1194,6 +1194,8 @@ function HomeMain() {
         rou = config.routes.lunchOrder
     } else if (m.moduleId === MODULEID.DATCOM && role === 'admin') {
         rou = config.routes.adminLunchOrderDashboard
+    } else if (m.moduleId === MODULEID.HINHDRAWER && role === 'user') {
+        rou = config.routes.imageCaddi
     }
 
     navigate(rou);

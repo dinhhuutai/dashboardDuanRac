@@ -6,6 +6,7 @@ const MODULEID = {
     HOMTHU: 4,
     TINHLUONG: 5,
     DATCOM: 6,
+    HINHDRAWER: 7,
 }
 
 
