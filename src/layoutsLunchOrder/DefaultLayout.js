@@ -23,12 +23,11 @@ export default function UserLayout({ children }) {
         {/* Content */}
         <main
           className="
-            w-full px-3 sm:px-4 md:px-0
-            pb-[92px] md:pb-8
+            w-full
           "
           style={{
             paddingBottom:
-              "max(92px, env(safe-area-inset-bottom))" /* tránh đè bottom tab iOS */,
+              "max(50px, env(safe-area-inset-bottom))" /* tránh đè bottom tab iOS */,
           }}
         >
           <div className="mx-auto md:mx-0 md:max-w-none">

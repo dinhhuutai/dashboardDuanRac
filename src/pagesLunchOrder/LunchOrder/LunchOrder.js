@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+// src/pages/Lunch/UserOrderSlide.jsx
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 import { useSelector } from "react-redux";
@@ -7,7 +8,13 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCheck, FaSpinner, FaSave, FaTimes, FaRedo } from "react-icons/fa";
+import {
+  MdOutlineRestaurant,
+  MdOutlineSoupKitchen,
+} from "react-icons/md";
+import { GiForkKnifeSpoon, GiChopsticks } from "react-icons/gi";
 
+/* ================= Helpers ================= */
 function dayNameVN(day) {
   const map = {
     1: "Thứ 2",
@@ -21,7 +28,16 @@ function dayNameVN(day) {
   return map[day];
 }
 
-/* ==== Modal Thông báo ==== */
+// icon theo tên món (đơn giản + hiệu quả)
+function getFoodIcon(name = "") {
+  const n = name.toLowerCase();
+  if (/(soup|canh)/.test(n)) return <MdOutlineSoupKitchen className="text-2xl" />;
+  if (/(cơm|rice|bento)/.test(n)) return <MdOutlineRestaurant className="text-2xl" />;
+  if (/(bún|phở|mì|noodle)/.test(n)) return <GiChopsticks className="text-2xl" />;
+  return <GiForkKnifeSpoon className="text-2xl" />;
+}
+
+/* ================= Modal ================= */
 function NoticeModal({ open, title, message, onClose }) {
   return (
     <AnimatePresence>
@@ -33,22 +49,19 @@ function NoticeModal({ open, title, message, onClose }) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-gray-100 rounded-2xl shadow-xl max-w-md w-full"
+            className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl max-w-md w-full border border-white/40"
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
           >
-            <div className="flex items-center justify-between px-5 py-3 border-b">
-              <h3 className="font-semibold text-lg">{title}</h3>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-200 rounded"
-              >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200/60">
+              <h3 className="font-semibold text-lg text-slate-800">{title}</h3>
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl">
                 <FaTimes />
               </button>
             </div>
-            <div className="px-5 py-4 text-gray-700">{message}</div>
-            <div className="px-5 py-3 border-t flex justify-end">
+            <div className="px-5 py-4 text-slate-700">{message}</div>
+            <div className="px-5 py-3 border-t border-slate-200/60 flex justify-end">
               <button
                 onClick={onClose}
                 className="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow"
@@ -63,37 +76,50 @@ function NoticeModal({ open, title, message, onClose }) {
   );
 }
 
+/* ================= Main ================= */
 export default function UserOrderSlide() {
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
 
   const [weeklyMenu, setWeeklyMenu] = useState(null);
-  const [selected, setSelected] = useState({});
+  const [selected, setSelected] = useState({}); // { [day]: weeklyMenuEntryId | null }
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState({ open: false, title: "", message: "" });
   const [hasOrdered, setHasOrdered] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
-
   const swiperRef = useRef(null);
+  
+  // ngay sau các useState/useEffect, trước mọi return:
+const grouped = useMemo(() => {
+  const entries = weeklyMenu?.entries ?? []; // <-- an toàn khi null
+  return entries.reduce((acc, e) => {
+    (acc[e.dayOfWeek] ||= []).push(e);
+    return acc;
+  }, {});
+}, [weeklyMenu]);
 
-  // Load menu + selections
+const totalSlides = useMemo(() => Object.keys(grouped).length, [grouped]);
+
+const hasChosenAll = useMemo(
+  () => Object.keys(grouped).every((d) => Object.prototype.hasOwnProperty.call(selected, d)),
+  [grouped, selected]
+);
+
+
+  // load data
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const wmRes = await http.get(
-          `${BASE_URL}/api/lunch-order/user/weekly-menu-latest`
-        );
+        const wmRes = await http.get(`${BASE_URL}/api/lunch-order/user/weekly-menu-latest`);
         const menu = wmRes.data?.data;
-
         if (!menu) {
           setWeeklyMenu(null);
           return;
         }
         setWeeklyMenu(menu);
 
-        // lấy selections của user
         const sRes = await http.get(
           `${BASE_URL}/api/lunch-order/user/selections/${menu.weeklyMenuId}/${tmp?.login?.currentUser?.userID}`
         );
@@ -101,9 +127,7 @@ export default function UserOrderSlide() {
           setHasOrdered(true);
           const sel = {};
           sRes.data.data.forEach((eid) => {
-            const entry = menu.entries.find(
-              (x) => x.weeklyMenuEntryId === eid
-            );
+            const entry = menu.entries.find((x) => x.weeklyMenuEntryId === eid);
             if (entry) sel[entry.dayOfWeek] = entry.weeklyMenuEntryId;
           });
           setSelected(sel);
@@ -119,12 +143,13 @@ export default function UserOrderSlide() {
   }, []);
 
   function choose(day, entryId) {
-    if (weeklyMenu?.isLocked) return; // 🔒 không cho chọn
+    if (weeklyMenu?.isLocked) return;
     setSelected((prev) => ({ ...prev, [day]: entryId }));
+    // auto next
     if (swiperRef.current) {
       const swiper = swiperRef.current.swiper;
       if (swiper && swiper.activeIndex < swiper.slides.length - 1) {
-        setTimeout(() => swiper.slideNext(), 300);
+        setTimeout(() => swiper.slideNext(), 250);
       }
     }
   }
@@ -140,24 +165,16 @@ export default function UserOrderSlide() {
         createdBy: user.fullName,
       });
       setHasOrdered(true);
-      setNotice({
-        open: true,
-        title: "Thành công",
-        message: "Đặt cơm thành công!",
-      });
+      setNotice({ open: true, title: "Thành công", message: "Đặt cơm thành công!" });
     } catch {
-      setNotice({
-        open: true,
-        title: "Lỗi",
-        message: "Không thể lưu đặt cơm.",
-      });
+      setNotice({ open: true, title: "Lỗi", message: "Không thể lưu đặt cơm." });
     } finally {
       setLoading(false);
     }
   }
 
   function handleReorder() {
-    if (weeklyMenu?.isLocked) return; // 🔒 không cho đặt lại
+    if (weeklyMenu?.isLocked) return;
     setHasOrdered(false);
     setSelected({});
   }
@@ -170,79 +187,45 @@ export default function UserOrderSlide() {
     );
   if (!weeklyMenu) return <div className="p-6">Chưa có menu tuần này</div>;
 
-  const grouped = weeklyMenu.entries.reduce((acc, e) => {
-    acc[e.dayOfWeek] = acc[e.dayOfWeek] || [];
-    acc[e.dayOfWeek].push(e);
-    return acc;
-  }, {});
-  const totalSlides = Object.keys(grouped).length;
-
-  // Kiểm tra đã chọn đủ chưa
-  const allDays = Object.keys(grouped);
-  const hasChosenAll = allDays.every((day) =>
-    Object.prototype.hasOwnProperty.call(selected, day)
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      {/* CSS cho hiệu ứng shine */}
-<style>{`
-  .card { 
-    position: relative; 
-    overflow: hidden; 
-  }
+    <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100">
 
-  .card .shine {
-    position: absolute;
-    top: -60%;
-    left: -60%;
-    height: 220%;
-    width: 110px; /* dải sáng to hơn chút */
-    transform: rotate(25deg) translateX(-200%);
-    background: linear-gradient(
-      90deg,
-      rgba(255,255,255,0) 0%,
-      rgba(255,255,255,0.7) 50%,
-      rgba(255,255,255,0) 100%
-    );
-    pointer-events: none;
-    /* Tổng 6s: ~1s chạy + ~5s nghỉ */
-    animation: shine 6s linear infinite;
-  }
-
-  @keyframes shine {
-    /* 0% -> 16.666% (~1s nếu tổng 6s): chạy ngang qua hết thẻ */
-    0%   { transform: rotate(25deg) translateX(-200%); opacity: 0; }
-    4%   { opacity: 1; }
-    16.666% { transform: rotate(25deg) translateX(250%); opacity: 1; }
-
-    /* 16.667% -> 99%: ẩn để tạo khoảng nghỉ ~5s */
-    16.667% { opacity: 0; }
-    99%  { opacity: 0; transform: rotate(25deg) translateX(250%); }
-
-    /* 100%: reset về đầu (ẩn nên không thấy giật) */
-    100% { transform: rotate(25deg) translateX(-200%); opacity: 0; }
-  }
-`}</style>
-
-
+      {/* CSS shine + blister */}
+      <style>{`
+        .toy-card {
+          background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%);
+          box-shadow: 0 12px 28px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);
+          border: 1px solid rgba(255,255,255,.6);
+          backdrop-filter: blur(6px);
+        }
+        .card { position: relative; overflow: hidden; }
+        .card .shine, .toy-card .shine {
+          position: absolute; top: -60%; left: -60%;
+          height: 220%; width: 110px;
+          transform: rotate(25deg) translateX(-200%);
+          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
+          pointer-events: none; animation: shine 6s linear infinite;
+        }
+        @keyframes shine {
+          0% { transform: rotate(25deg) translateX(-200%); opacity: 0; }
+          4% { opacity: 1; }
+          16.6% { transform: rotate(25deg) translateX(250%); opacity: 1; }
+          16.7% { opacity: 0; }
+          100% { transform: rotate(25deg) translateX(-200%); opacity: 0; }
+        }
+      `}</style>
 
       {hasOrdered ? (
-        <div className="bg-white rounded-2xl shadow p-6 mx-[10px] mt-[10px]">
-          <h3 className="font-semibold text-lg mb-4">
-            Bạn đã đặt cơm tuần này
-          </h3>
+        <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/40 shadow-xl p-6 mx-[10px]">
+          <h3 className="font-semibold text-lg mb-4 text-slate-800">Bạn đã đặt cơm tuần này</h3>
           <ul className="space-y-3">
             {Object.keys(grouped).map((day) => {
               const entryId = selected[day];
-              const entry = weeklyMenu.entries.find(
+              const entry = (weeklyMenu?.entries ?? []).find(
                 (x) => x.weeklyMenuEntryId === entryId
               );
               return (
-                <li
-                  key={day}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-50"
-                >
+                <li key={day} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="w-24 font-medium">{dayNameVN(day)}</span>
                   {entry ? (
                     <span className="text-slate-700">{entry.foodName}</span>
@@ -265,7 +248,7 @@ export default function UserOrderSlide() {
           )}
         </div>
       ) : (
-        <div className="w-full p-6 mx-[10px] mt-[10px] lg:w-[calc(100vw-350px)]">
+        <div className="w-full p-6 mx-[10px] lg:w-[calc(100vw-350px)]">
           <Swiper
             ref={swiperRef}
             spaceBetween={30}
@@ -277,89 +260,86 @@ export default function UserOrderSlide() {
               const items = grouped[day];
               return (
                 <SwiperSlide key={day}>
-                  <div className="pb-[20px]">
-                    <h3 className="text-xl font-semibold text-slate-700 mb-6 text-center">
+                  <div className="pb-5">
+                    <h3 className="text-xl font-semibold text-slate-800 mb-6 text-center">
                       {dayNameVN(day)}
                     </h3>
+
                     <div className="flex justify-center">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
-                        <AnimatePresence>
-                          {items.map((item) => {
-                            const checked =
-                              selected[day] === item.weeklyMenuEntryId;
-                            return (
-                              <motion.div
-                                key={item.weeklyMenuEntryId}
-                                layout
-                                whileTap={{ scale: 0.97 }}
-                                className={`card relative w-56 h-64 rounded-3xl flex flex-col cursor-pointer
-                                  transition transform
-                                  ${checked ? "ring-2 ring-emerald-400" : ""}
-                                  bg-gray-100 
-                                  shadow-[8px_8px_16px_#d1d9e6,-8px_-8px_16px_#ffffff]
-                                  hover:shadow-[4px_4px_8px_#d1d9e6,-4px_-4px_8px_#ffffff]
-                                  ${
-                                    weeklyMenu?.isLocked
-                                      ? "opacity-50 pointer-events-none"
-                                      : ""
-                                  }
-                                `}
-                                onClick={() =>
-                                  choose(day, item.weeklyMenuEntryId)
-                                }
-                              >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 justify-items-center">
+                        {/* Cards */}
+                        {items.map((item) => {
+                          const checked = selected[day] === item.weeklyMenuEntryId;
+                          return (
+                            <motion.button
+                              key={item.weeklyMenuEntryId}
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => choose(day, item.weeklyMenuEntryId)}
+                              className={`toy-card relative w-60 h-72 rounded-[28px] text-left cursor-pointer transition 
+                                ${checked ? "ring-2 ring-emerald-400" : "ring-1 ring-white/50"}
+                                ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
+                            >
+                              {/* Header */}
+                              <div className="px-5 pt-4 pb-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-200 to-amber-100 shadow-inner text-slate-700">
+                                    {getFoodIcon(item.foodName)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[11px] uppercase tracking-widest text-slate-500">Món ăn</div>
+                                    <div className="font-semibold text-slate-800 leading-tight line-clamp-2">
+                                      {item.foodName}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Image window */}
+                              <div className="flex mx-4 mt-2 rounded-2xl bg-white/70 backdrop-blur border border-white/60 shadow-inner h-40 overflow-hidden place-items-center">
                                 {item.imageUrl ? (
                                   <img
                                     src={item.imageUrl}
                                     alt={item.foodName}
-                                    className="h-32 w-full object-cover rounded-t-2xl"
+                                    className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <div className="h-32 w-full flex items-center justify-center text-gray-400 bg-slate-100 rounded-t-3xl">
-                                    Chưa có hình
-                                  </div>
+                                  <div className="text-slate-400 text-sm">Chưa có hình</div>
                                 )}
-                                <div className="flex-1 p-4 flex flex-col justify-center items-center">
-                                  <h3 className="font-semibold text-lg text-center text-gray-700">
-                                    {item.foodName}
-                                  </h3>
-                                  {checked && (
-                                    <FaCheck className="text-emerald-600 mt-2 text-xl" />
-                                  )}
-                                </div>
-                                <span className="shine" />
-                              </motion.div>
-                            );
-                          })}
+                              </div>
 
-                          {/* Thẻ "Không chọn" */}
-                          <motion.div
-                            key={`none-${day}`}
-                            layout
-                            whileTap={{ scale: 0.97 }}
-                            className={`card relative w-56 h-64 rounded-3xl flex flex-col items-center justify-center cursor-pointer
-                              bg-gray-100 
-                              shadow-[8px_8px_16px_#d1d9e6,-8px_-8px_16px_#ffffff]
-                              hover:shadow-[4px_4px_8px_#d1d9e6,-4px_-4px_8px_#ffffff]
-                              ${
-                                selected[day] === null
-                                  ? "ring-2 ring-rose-400"
-                                  : ""
-                              }
-                              ${
-                                weeklyMenu?.isLocked
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
-                              }
-                            `}
-                            onClick={() => choose(day, null)}
-                          >
-                            <span className="font-medium text-gray-600">
-                              Không chọn
-                            </span>
-                            <span className="shine" />
-                          </motion.div>
-                        </AnimatePresence>
+                              {/* Footer */}
+                              <div className="px-5 pt-3">
+                                <div className="flex items-center justify-between">
+                                  <div
+                                    className={`px-3 py-1 rounded-full text-[11px] font-medium
+                                      ${checked ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-300" : "bg-slate-100 text-slate-500"}`}
+                                  >
+                                    {checked ? "Đã chọn" : "Chọn món"}
+                                  </div>
+                                  {checked && <FaCheck className="text-emerald-600" />}
+                                </div>
+                              </div>
+
+                              <span className="shine" />
+                            </motion.button>
+                          );
+                        })}
+
+                        {/* None card */}
+                        <motion.button
+                          key={`none-${day}`}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => choose(day, null)}
+                          className={`toy-card relative w-60 h-72 rounded-[28px] grid place-items-center cursor-pointer
+                            ${selected[day] === null ? "ring-2 ring-rose-400" : "ring-1 ring-white/50"}
+                            ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
+                        >
+                          <div className="text-center">
+                            <GiForkKnifeSpoon className="text-3xl text-slate-400 mx-auto mb-2" />
+                            <span className="font-medium text-slate-600">Không chọn</span>
+                          </div>
+                          <span className="shine" />
+                        </motion.button>
                       </div>
                     </div>
                   </div>
@@ -368,24 +348,23 @@ export default function UserOrderSlide() {
             })}
           </Swiper>
 
-          {/* Nút chỉ hiện ở slide cuối + chọn đủ tất cả ngày + chưa bị lock */}
-          {activeSlide === totalSlides - 1 &&
-            hasChosenAll &&
-            !weeklyMenu?.isLocked && (
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="px-6 py-3 rounded-xl bg-emerald-600 text-white flex items-center gap-2 shadow disabled:opacity-50"
-                >
-                  {loading && <FaSpinner className="animate-spin" />}
-                  <FaSave /> Lưu đặt cơm
-                </button>
-              </div>
-            )}
+          {/* Save button (only at last slide + chosen all) */}
+          {activeSlide === totalSlides - 1 && hasChosenAll && !weeklyMenu?.isLocked && (
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center gap-2 shadow disabled:opacity-50"
+              >
+                {loading && <FaSpinner className="animate-spin" />}
+                <FaSave /> Lưu đặt cơm
+              </button>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Notice */}
       <NoticeModal
         open={notice.open}
         title={notice.title}
