@@ -1196,6 +1196,8 @@ function HomeMain() {
         rou = config.routes.adminLunchOrderDashboard
     } else if (m.moduleId === MODULEID.HINHDRAWER && role === 'user') {
         rou = config.routes.imageCaddi
+    } else if (m.moduleId === MODULEID.SANXUAT && role === 'admin') {
+        rou = config.routes.adminProductionDashboard
     }
 
     navigate(rou);

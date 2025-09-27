@@ -250,6 +250,8 @@ function Scan() {
       return null;
     }
 
+
+    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/trash-weighings/check`, {
         params: {
@@ -263,6 +265,8 @@ function Scan() {
     } catch (error) {
       console.error('❌ Lỗi kiểm tra cân:', error);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -515,10 +519,11 @@ function Scan() {
                   ❌ Hủy lượt cân
                 </button>
                 <button
-                  onClick={async () => { setAlreadyWeighedData(null); await handleConfirm(); }}
+                  disabled={loading}
+                  onClick={async () => { await handleConfirm(); setAlreadyWeighedData(null); }}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow hover:from-sky-700 hover:to-blue-700"
                 >
-                  ✅ Tiếp tục lưu
+                  {loading ? (<><FaSpinner className="animate-spin" /> Đang lưu...</>) : 'Tiếp tục lưu'}
                 </button>
               </div>
             </motion.div>

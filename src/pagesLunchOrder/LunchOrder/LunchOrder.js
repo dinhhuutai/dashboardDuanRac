@@ -188,7 +188,7 @@ const hasChosenAll = useMemo(
   if (!weeklyMenu) return <div className="p-6">Chưa có menu tuần này</div>;
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100">
+    <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-[10px]">
 
       {/* CSS shine + blister */}
       <style>{`
@@ -275,7 +275,7 @@ const hasChosenAll = useMemo(
                               key={item.weeklyMenuEntryId}
                               whileTap={{ scale: 0.97 }}
                               onClick={() => choose(day, item.weeklyMenuEntryId)}
-                              className={`toy-card relative w-60 h-72 rounded-[28px] text-left cursor-pointer transition 
+                              className={`toy-card relative w-[240px] h-[298px] rounded-[28px] text-left cursor-pointer transition 
                                 ${checked ? "ring-2 ring-emerald-400" : "ring-1 ring-white/50"}
                                 ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
                             >
@@ -330,7 +330,7 @@ const hasChosenAll = useMemo(
                           key={`none-${day}`}
                           whileTap={{ scale: 0.97 }}
                           onClick={() => choose(day, null)}
-                          className={`toy-card relative w-60 h-72 rounded-[28px] grid place-items-center cursor-pointer
+                          className={`toy-card relative w-[240px] h-[298px] rounded-[28px] grid place-items-center cursor-pointer
                             ${selected[day] === null ? "ring-2 ring-rose-400" : "ring-1 ring-white/50"}
                             ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
                         >

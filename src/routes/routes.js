@@ -88,6 +88,8 @@ import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
 
 import ImageCaddi from '~/pages/ImageCaddi';
 
+import ProductionDashboardAdmin from '~/pagesProductionAdmin/Dashboard';
+
 export const routes = [
   {
     path: config.routes.home,
@@ -463,6 +465,15 @@ export const routesLunchOrderAdmin = [
   {
     path: config.routes.adminLunchOrderReport,
     component: LunchOrderReport,
+    login: true,
+  },
+]
+
+
+export const routesProductionAdmin = [
+  {
+    path: config.routes.adminProductionDashboard,
+    component: ProductionDashboardAdmin,
     login: true,
   },
 ]

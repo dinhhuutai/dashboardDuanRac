@@ -726,6 +726,8 @@ import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
 import { FaSpinner } from 'react-icons/fa';
 import http from '~/api/http';
+import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
+import MODULEID from '~/contants/modules';
 
 const cx = (...cls) => cls.filter(Boolean).join(' ');
 const Card = ({ className = '', children }) => (
@@ -769,15 +771,15 @@ function toVNDateISO(d) {
   const local = new Date(d.getTime() + vnOffset * 60 * 1000);
   return local.toISOString().slice(0, 10);
 }
-function fmtDmy(date) {
-  const vnOffset = 7 * 60;
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  const vn = new Date(utc + vnOffset * 60000);
-  const dd = String(vn.getDate()).padStart(2, '0');
-  const mm = String(vn.getMonth() + 1).padStart(2, '0');
-  const yy = vn.getFullYear();
-  return `${dd}/${mm}/${yy}`;
-}
+const fmtDmy = (date) => {
+    const vnOffset = 7 * 60;
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    const vnTime = new Date(utc + vnOffset * 60000);
+    const day = String(vnTime.getDate()).padStart(2, '0');
+    const month = String(vnTime.getMonth() + 1).padStart(2, '0');
+    const year = vnTime.getFullYear();
+    return `${day}/${month}/${year}`;
+};
 function fmtDmyDash(date) {
   const vnOffset = 7 * 60;
   const utc = date.getTime() + date.getTimezoneOffset() * 60000;
@@ -789,6 +791,9 @@ function fmtDmyDash(date) {
 }
 
 export default function ReportByShift() {
+
+  const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
+
   const [loading, setLoading] = useState(true);
   const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
@@ -872,7 +877,12 @@ export default function ReportByShift() {
   // ⚡️ Dynamic import Excel libs khi bấm Export (nhanh hơn khi load trang)
   const exportToExcel = async () => {
     const XLSX = await import('xlsx-js-style');
-    const { saveAs } = await import('file-saver');
+    // BẮT CHẮC saveAs tồn tại ở mọi bundler
+  const fsaver = await import('file-saver');
+  const saveAs = fsaver?.default ?? fsaver?.saveAs;
+  if (typeof saveAs !== 'function') {
+    throw new Error('file-saver: saveAs not available');
+  }
 
     const wb = XLSX.utils.book_new();
     const title = [
@@ -941,12 +951,15 @@ export default function ReportByShift() {
         <Card className="p-4 md:p-5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex items-center gap-2">
-              <button
-                onClick={exportToExcel}
-                className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
-              >
-                📤 Xuất Excel
-              </button>
+              {
+                EXPORT_EXCEL_REPORT &&
+                <button
+                  onClick={exportToExcel}
+                  className="px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm"
+                >
+                  📤 Xuất Excel
+                </button>
+              }
 
               <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">
                 <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'one' && 'bg-slate-100 font-medium')}>
@@ -1049,7 +1062,7 @@ export default function ReportByShift() {
                           rowSpan={bucket.rows.length}
                           className="px-2 md:px-3 py-2 text-center font-medium text-slate-800 border-r border-slate-100"
                         >
-                          {bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName}
+                          {bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName}
                         </td>
                       )}
                       <td className="px-2 md:px-3 py-2 text-center">{row.name}</td>

@@ -1,6 +1,6 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest } from "./routes";
+import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest, routesProductionAdmin } from "./routes";
 
 import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
 import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
@@ -9,6 +9,8 @@ import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmi
 
 import DefaultLayoutLunchOrder from "./layoutsLunchOrder/DefaultLayout";
 import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutAdmin';
+
+import DefaultLayoutAdminProduction from "./layoutsProductionAdmin/DefaultLayoutAdmin";
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -82,7 +84,7 @@ function App() {
         <Route
           element={
             <RequireModule
-              moduleKey="waste-weigh"
+              moduleKey="canrac"
               fallbackName="Quản lý cân rác"   // nếu cần, đúng chính tả bạn lưu
               needRoles={["admin"]}
             />
@@ -108,7 +110,7 @@ function App() {
         <Route
           element={
             <RequireModule
-              moduleKey="ink-weigh"
+              moduleKey="canmuc"
               fallbackName="Quản lý cân mực"
               needRoles={["admin"]}
             />
@@ -131,7 +133,7 @@ function App() {
         <Route
           element={
             <RequireModule
-              moduleKey="suggest-box"
+              moduleKey="homthu"
               fallbackName="Hòm thư góp ý"
               needRoles={["admin"]}
             />
@@ -155,7 +157,7 @@ function App() {
         <Route
           element={
             <RequireModule
-              moduleKey="lunch-order"
+              moduleKey="datcom"
               fallbackName="Đặt cơm"
               needRoles={["admin"]}
             />
@@ -169,6 +171,30 @@ function App() {
                 <DefaultLayoutAdminLunchOrder>
                   <route.component />
                 </DefaultLayoutAdminLunchOrder>
+              }
+            />
+          ))}
+        </Route>
+
+        
+        {/* ====== ADMIN SẢN XUẤT (module sanxuat, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="sanxuat"
+              fallbackName="Quản lý sản xuất"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesProductionAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminProduction>
+                  <route.component />
+                </DefaultLayoutAdminProduction>
               }
             />
           ))}

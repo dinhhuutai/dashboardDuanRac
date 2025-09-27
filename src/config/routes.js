@@ -93,6 +93,10 @@ const routes = {
 
   imageCaddi: '/image-caddi',
 
+
+  adminProductionDashboard: '/admin/production/dashboard',
+  
+
 };
 
 export default routes;
