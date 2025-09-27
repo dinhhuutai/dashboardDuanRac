@@ -800,7 +800,7 @@
 
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react';
 // ⚡ import động khi bấm Export
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
@@ -908,6 +908,7 @@ export default function ReportTrash() {
         const params = {
           startDate: filterType === 'one' ? toISODate(dateOne) : toISODate(startDate),
           endDate:   filterType === 'one' ? toISODate(dateOne) : toISODate(endDate),
+          bucketName: selectedBucketId || '',
         };
         const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, {
           params, signal: controller.signal,
@@ -926,11 +927,13 @@ export default function ReportTrash() {
       }
     }, 300);
     return () => { controller.abort(); clearTimeout(t); };
-  }, [filterType, dateOne, startDate, endDate]);
+  }, [filterType, dateOne, startDate, endDate, selectedBucketId]);
+
+  const deferredRaw = useDeferredValue(raw);
 
   // ==== Chuẩn hoá buckets + gộp theo LOẠI ====
   const processedBuckets = useMemo(() => {
-    return (raw || []).map((bucket) => {
+    return (deferredRaw || []).map((bucket) => {
       const units = bucket.units || [];
       let rows;
       if (units.length === 0) {
@@ -949,7 +952,7 @@ export default function ReportTrash() {
       const rowsCollapsed = rows.map((r) => ({ ...r, val: sumByType(r.raw || []) }));
       return { ...bucket, rows: rowsCollapsed };
     });
-  }, [raw]);
+  }, [deferredRaw]);
 
   // helper sumArrays (theo chiều từng index)
   function sumArrays(arrays = []) {

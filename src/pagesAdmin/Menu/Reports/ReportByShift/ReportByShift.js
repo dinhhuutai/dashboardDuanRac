@@ -716,7 +716,7 @@
 
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useDeferredValue } from 'react';
 /* ⛳️ Di chuyển import XLSX & saveAs vào dynamic import trong exportToExcel để giảm bundle
 import * as XLSX from 'xlsx-js-style';
 import { saveAs } from 'file-saver';
@@ -814,6 +814,7 @@ export default function ReportByShift() {
         const params = {
           startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
           endDate:   filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(endDate),
+          bucketName: selectedBucket || '',
         };
         const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, {
           params,
@@ -839,11 +840,13 @@ export default function ReportByShift() {
       controller.abort();
       clearTimeout(t);
     };
-  }, [filterType, dateOne, startDate, endDate]);
+  }, [filterType, dateOne, startDate, endDate, selectedBucket]);
+
+  const deferredRaw = useDeferredValue(raw);
 
   // ⚡️ Precompute buckets + collapse trong useMemo (tránh sumEvery7() ngay trong JSX)
   const processedBuckets = useMemo(() => {
-    return (raw || []).map((bucket) => {
+    return (deferredRaw || []).map((bucket) => {
       const units = bucket.units || [];
       let rows;
       if (units.length === 0) {
@@ -863,7 +866,7 @@ export default function ReportByShift() {
       const rowsCollapsed = rows.map((r) => ({ ...r, val: sumEvery7(r.raw || []) }));
       return { ...bucket, rows: rowsCollapsed };
     });
-  }, [raw]);
+  }, [deferredRaw]);
 
   // ⚡️ Lọc bucket theo select (memo)
   const buckets = useMemo(() => {

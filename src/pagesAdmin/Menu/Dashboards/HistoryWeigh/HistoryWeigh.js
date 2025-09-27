@@ -796,7 +796,7 @@ function HistoryWeigh() {
   const debouncedFilters = useDebouncedValue(filters, 300);
 
   // ======= Phân trang server-side =======
-  const [pageSize, setPageSize] = useState(30);
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset về trang 1 khi đổi ngày hoặc filter
@@ -1259,7 +1259,7 @@ function HistoryWeigh() {
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-xl">
             <p className="mb-4 text-base font-semibold text-slate-800">
-              ❓Xoá bản ghi cân rác
+              Xoá bản ghi cân rác
               <br />
               <span className="text-rose-600">
                 ({deleteItem.trashBinCode} - {formatDateTime(deleteItem.weighingTime)})

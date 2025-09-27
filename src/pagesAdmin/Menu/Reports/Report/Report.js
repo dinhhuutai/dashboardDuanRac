@@ -1099,7 +1099,7 @@
 
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react';
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
@@ -1236,12 +1236,13 @@ export default function ReportTotalDynamic() {
     return () => { controller.abort(); clearTimeout(t); };
   }, [filterType, dateOne, startDate, endDate]);
 
+  const deferredRaw = useDeferredValue(raw);
   /* ===== Chuẩn hóa dữ liệu để render nhanh ===== */
   // rowsOneDay: render chi tiết (BP/Tổ, Chuyền, 8 loại × 7 ca + Tổng)
   const rowsOneDay = useMemo(() => {
     // Mỗi bucket → nhiều rows: từng chuyền + (QR cấp bộ phận nếu có) + 1 dòng Tổng bucket
     const rows = [];
-    for (const b of raw || []) {
+    for (const b of deferredRaw || []) {
       const list = [
         ...(b.units || []).map(u => ({ bucketID: b.bucketID, bucketName: b.bucketName, type: 'unit', unitName: u.unitName, raw: u.value })),
         ...(b.orphan ? [{ bucketID: b.bucketID, bucketName: b.bucketName, type: 'orphan', unitName: '(QR cấp bộ phận)', raw: b.orphan.value }] : []),
@@ -1251,15 +1252,15 @@ export default function ReportTotalDynamic() {
       rows.push({ bucketName: b.bucketName, span: list.length, rows: list });
     }
     return rows;
-  }, [raw]);
+  }, [deferredRaw]);
 
   // rowsRange: render nhiều ngày → gọn theo loại rác: mỗi bucket 1 dòng, lấy ô đầu mỗi nhóm 7 (C1..KoC → lấy ô tổng đầu nhóm)
   const rowsRange = useMemo(() => {
-    return (raw || []).map(b => {
+    return (deferredRaw || []).map(b => {
       const collapsed = groupEach7TakeFirst(b.sum || []);
       return { bucketID: b.bucketID, bucketName: b.bucketName, vals: collapsed };
     });
-  }, [raw]);
+  }, [deferredRaw]);
 
   const grandRange = useMemo(() => groupEach7TakeFirst(grand), [grand]);
 
