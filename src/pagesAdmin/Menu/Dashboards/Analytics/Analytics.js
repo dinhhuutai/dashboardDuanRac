@@ -19,28 +19,19 @@ import { BsSpeedometer2, BsBarChart, BsTrophy, BsTrash, BsPeople } from 'react-i
 
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
+import TimeDrillChart from './TimeDrillChart';
 
 // Danh sách phòng ban để chọn so sánh
 const departmentsList = [
-  'Điều hành',
-  'Chất lượng',
-  'Bán hàng',
-  'Kế hoạch',
-  'IT - Bảo trì',
-  'Văn phòng',
-  'Vật tư',
-  'Tổ canh hàng',
-  'Tổ bổ sung',
-  'Tổ mẫu',
-  'Tổ 3',
-  'Tổ 4',
-  'Tổ 5',
-  'Tổ sửa hàng',
-  'Tổ ép',
-  'Tổ logo',
+  'C1',
+  'C2',
+  'C3',
+  'C4',
+  'Mẫu',
+  'Chụp khuôn',
   'Kcs',
-  'Chụp khung',
-  'Pha màu',
+  'Sửa hàng',
+  'Pha màu',
 ];
 
 // palette mềm hiện đại
@@ -185,8 +176,8 @@ const Analytics = () => {
   const [departmentData, setDepartmentData] = useState([]);
   const [trashTypeData, setTrashTypeData] = useState([]);
 
-  const [selectedDep1, setSelectedDep1] = useState('Tổ 3');
-  const [selectedDep2, setSelectedDep2] = useState('Tổ 4');
+  const [selectedDep1, setSelectedDep1] = useState('C1');
+  const [selectedDep2, setSelectedDep2] = useState('C2');
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -266,6 +257,14 @@ const Analytics = () => {
           </div>
         </div>
 
+        <div className="px-4 md:px-6 mt-6">
+          <div className="mx-auto max-w-7xl">
+            <SectionCard title="Phân tích theo thời gian (Ngày/Tuần/Tháng)">
+              <TimeDrillChart />
+            </SectionCard>
+          </div>
+        </div>
+
         {/* Line compare */}
         <div className="px-4 md:px-6 mt-6">
           <div className="mx-auto max-w-7xl">
@@ -324,8 +323,8 @@ const Analytics = () => {
             </SectionCard>
 
             <SectionCard title="Tỉ lệ loại rác hôm nay">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-[380px]">
+                <ResponsiveContainer width="110%" height="100%">
                   <PieChart>
                     <Pie
                       data={trashTypeData}
