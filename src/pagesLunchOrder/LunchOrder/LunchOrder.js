@@ -77,6 +77,11 @@ export default function UserOrderSlide() {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef(null);
 
+  // thêm state
+const [notifPerm, setNotifPerm] = useState('unknown'); // 'granted' | 'denied' | 'default' | 'unsupported'
+const [isIOS, setIsIOS] = useState(false);
+const [isStandalone, setIsStandalone] = useState(false);
+
   // Push states
   const [pushReady, setPushReady] = useState(false);
   const [pushChecking, setPushChecking] = useState(true);
@@ -86,41 +91,44 @@ export default function UserOrderSlide() {
 
   // Kiểm tra permission + subscription để xác định "đã bật"
   useEffect(() => {
+  try {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent));
+    // iOS PWA mở từ Home Screen sẽ có navigator.standalone = true (Safari)
+    setIsStandalone(window.navigator.standalone === true);
+
+    const hasNoti = typeof window !== 'undefined' && 'Notification' in window;
+    setNotifPerm(hasNoti ? Notification.permission : 'unsupported');
+
+    const supported =
+      typeof navigator !== 'undefined' &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      hasNoti;
+
+    if (!supported) {
+      setPushReady(false);
+      setPushChecking(false);
+      return;
+    }
+
     (async () => {
-      try {
-        const supported =
-          typeof navigator !== "undefined" &&
-          "serviceWorker" in navigator &&
-          "PushManager" in window &&
-          "Notification" in window;
-
-        if (!supported) {
-          setPushReady(false);
-          setPushChecking(false);
-          return;
-        }
-
-        const perm = Notification.permission; // granted|default|denied
-        let hasSub = false;
-
-        if (perm === "granted") {
-          try {
-            const reg = await navigator.serviceWorker.ready;
-            const sub = await reg.pushManager.getSubscription();
-            hasSub = !!sub;
-          } catch {
-            hasSub = false;
-          }
-        }
-
-        setPushReady(perm === "granted" && hasSub);
-      } catch {
-        setPushReady(false);
-      } finally {
-        setPushChecking(false);
+      let hasSub = false;
+      if (Notification.permission === 'granted') {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          hasSub = !!sub;
+        } catch {}
       }
+      setPushReady(Notification.permission === 'granted' && hasSub);
+      setPushChecking(false);
     })();
-  }, []);
+  } catch {
+    setPushReady(false);
+    setPushChecking(false);
+    setNotifPerm('unsupported');
+  }
+}, []);
 
   // Bật thông báo
   async function handleEnablePush() {
@@ -274,34 +282,53 @@ export default function UserOrderSlide() {
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-[10px]">
       {/* Banner bật thông báo */}
-      {!pushChecking && !pushReady && (
-        <div className="mx-[10px] mb-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center justify-between">
-          <div>
-            <div className="font-semibold">Bật thông báo đặt cơm</div>
-            <div className="text-sm opacity-90">Nhận nhắc lịch chọn món/khóa menu ngay cả khi bạn không mở trang.</div>
-            {pushError && <div className="text-red-600 text-sm mt-1">{pushError}</div>}
-            {Notification?.permission === "denied" && (
-              <div className="text-red-600 text-sm mt-1">
-                Bạn đang chặn thông báo. Hãy bật lại trong cài đặt trình duyệt, rồi bấm “Bật thông báo”.
-              </div>
-            )}
-            {pushStatus && <div className="text-emerald-700 text-sm mt-1">{pushStatus}</div>}
-          </div>
-          <button
-            onClick={handleEnablePush}
-            disabled={pushBusy}
-            className={`px-4 py-2 rounded-xl text-white shadow ${
-              pushBusy ? "bg-amber-400 cursor-not-allowed" : "bg-amber-500 hover:bg-amber-600"
-            }`}
-            aria-busy={pushBusy}
-          >
-            <span className="inline-flex items-center gap-2">
-              {pushBusy && <FaSpinner className="animate-spin" />}
-              {pushBusy ? "Đang bật…" : "Bật thông báo"}
-            </span>
-          </button>
+{!pushChecking && !pushReady && (
+  <div className="mx-[10px] mb-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <div className="font-semibold">Bật thông báo đặt cơm</div>
+        <div className="text-sm opacity-90">
+          Nhận nhắc lịch chọn món/khóa menu ngay cả khi bạn không mở trang.
         </div>
-      )}
+
+        {/* iOS guidance */}
+        {isIOS && !isStandalone && (
+          <div className="text-[13px] text-slate-700 mt-2">
+            iPhone/iPad: để bật thông báo, hãy mở trang qua HTTPS và cài lên màn hình chính:
+            <ol className="list-decimal ml-5 mt-1">
+              <li>Vào liên kết HTTPS của app (vd: ngrok).</li>
+              <li>Chạm nút <b>Share</b> → <b>Add to Home Screen</b>.</li>
+              <li>Mở app từ icon Home Screen rồi bấm “Bật thông báo”.</li>
+            </ol>
+          </div>
+        )}
+
+        {notifPerm === 'denied' && (
+          <div className="text-red-600 text-sm mt-1">
+            Bạn đang chặn thông báo. Hãy bật lại trong cài đặt trình duyệt, rồi bấm “Bật thông báo”.
+          </div>
+        )}
+        {pushError && <div className="text-red-600 text-sm mt-1">{pushError}</div>}
+        {pushStatus && <div className="text-emerald-700 text-sm mt-1">{pushStatus}</div>}
+      </div>
+
+      <button
+        onClick={handleEnablePush}
+        disabled={pushBusy || (isIOS && !isStandalone)}
+        className={`px-4 py-2 rounded-xl text-white shadow ${
+          pushBusy ? "bg-amber-400 cursor-not-allowed" : "bg-amber-500 hover:bg-amber-600"
+        }`}
+        aria-busy={pushBusy}
+      >
+        <span className="inline-flex items-center gap-2">
+          {pushBusy && <FaSpinner className="animate-spin" />}
+          {isIOS && !isStandalone ? "Cài lên màn hình chính" : (pushBusy ? "Đang bật…" : "Bật thông báo")}
+        </span>
+      </button>
+    </div>
+  </div>
+)}
+
 
       {/* Chip đã bật + nút tắt */}
       {!pushChecking && pushReady && (
