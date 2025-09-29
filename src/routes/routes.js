@@ -54,6 +54,7 @@ import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
 import ProductionOrder from '~/pagesInkWeighAdmin/Dashboards/ProductionOrder';
 import InkTransferCart from '~/pagesInkWeighAdmin/Dashboards/InkTransferCart';
 import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
+import HistoryWeighInkV2 from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh/v2.0';
 import CompareWeighInk from '~/pagesInkWeighAdmin/Dashboards/CompareWeigh';
 
 import ReportCartInk from '~/pagesInkWeighAdmin/Dashboards/ReportCartInk';
@@ -386,7 +387,7 @@ export const routesInkAdmin = [
   },
   {
     path: config.routes.adminInkWeighHistory,
-    component: HistoryWeighInk,
+    component: HistoryWeighInkV2,
     login: true,
   },
   {
