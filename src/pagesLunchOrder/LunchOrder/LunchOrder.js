@@ -292,7 +292,7 @@ const [isStandalone, setIsStandalone] = useState(false);
         </div>
 
         {/* iOS guidance */}
-        {isIOS && !isStandalone && (
+        {/* {isIOS && !isStandalone && (
           <div className="text-[13px] text-slate-700 mt-2">
             iPhone/iPad: để bật thông báo, hãy mở trang qua HTTPS và cài lên màn hình chính:
             <ol className="list-decimal ml-5 mt-1">
@@ -301,7 +301,7 @@ const [isStandalone, setIsStandalone] = useState(false);
               <li>Mở app từ icon Home Screen rồi bấm “Bật thông báo”.</li>
             </ol>
           </div>
-        )}
+        )} */}
 
         {notifPerm === 'denied' && (
           <div className="text-red-600 text-sm mt-1">

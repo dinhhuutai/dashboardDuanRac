@@ -461,6 +461,8 @@ function HistoryWeigh() {
     'Người nhận'
   ];
 
+  console.log(data);
+
   return (
     <div className="p-4 sm:p-6">
       <div className="mx-auto max-w-[1300px] space-y-5">

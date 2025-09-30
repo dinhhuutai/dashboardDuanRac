@@ -147,7 +147,7 @@ function Scan() {
   
     setLoading(false);
   
-    };
+  };
 
   // mount/unmount
   useEffect(() => {
