@@ -727,7 +727,6 @@
 
 // ... các phần import giữ nguyên
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { BASE_URL } from '~/config/index';
 import { FaTrash, FaEdit, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -749,6 +748,33 @@ function useDebouncedValue(value, delay = 300) {
   }, [value, delay]);
   return v;
 }
+
+// đặt cùng file (phía trên return) hoặc tách riêng
+function FilterSelect({ label, value, onChange, children }) {
+  return (
+    <div className="col-span-1">
+      <label className="block mb-1 text-xs font-medium text-slate-600">{label}</label>
+      <div className="relative group">
+        <select
+          value={value}
+          onChange={onChange}
+          className="w-full appearance-none rounded-xl border border-slate-200 bg-white/90 px-3 py-2.5 pr-9 text-sm text-slate-800 shadow-sm
+                     focus:outline-none focus:ring-2 focus:ring-emerald-500/80 focus:border-emerald-500
+                     hover:border-slate-300 transition"
+        >
+          {children}
+        </select>
+        {/* Chevron icon */}
+        <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+          <svg className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function HistoryWeigh() {
   const UPDATE_HISTORY = useFeatureAllowed(MODULEID.CANRAC, 'cr_thaotacsualichsucan');
@@ -776,10 +802,16 @@ function HistoryWeigh() {
 
   const [messageModal, setMessageModal] = useState(null);
 
+  // trong component
+const [dropdowns, setDropdowns] = useState({
+  userNames: [], departmentNames: [], unitNames: [], trashNames: [], workShifts: []
+});
+
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
 
+  
   // ======= Filters (đẩy xuống server) =======
   const [filters, setFilters] = useState({
     userName: '',
@@ -834,6 +866,7 @@ function HistoryWeigh() {
         const total = res.data.total || 0;
         setServerTotal(total);
         setSummary(res.data.summary || { totalRows: total, totalWeight: 0 });
+        setDropdowns(res.data.dropdowns || { userNames: [], departmentNames: [], unitNames: [], trashNames: [], workShifts: [] });
 
         // Nếu page vượt quá số trang (khi filter làm ít đi), nhảy về 1
         const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -976,62 +1009,62 @@ function HistoryWeigh() {
           </div>
 
           {/* Các filter text/select: đẩy xuống server */}
-          <div className="col-span-1">
-            <label className="block text-xs text-slate-500 mb-1">Người cân</label>
-            <input
-              value={filters.userName}
-              onChange={(e) => setFilters((f) => ({ ...f, userName: e.target.value }))}
-              placeholder="Nhập tên hoặc để trống"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+          {/* Người cân */}
+<FilterSelect
+  label="Người cân"
+  value={filters.userName}
+  onChange={(e)=>setFilters(f=>({...f,userName:e.target.value}))}
+>
+  <option value="">Tất cả</option>
+  {dropdowns.userNames.map(v => <option key={v} value={v}>{v}</option>)}
+</FilterSelect>
 
-          <div className="col-span-1">
-            <label className="block text-xs text-slate-500 mb-1">Bộ phận</label>
-            <input
-              value={filters.departmentName}
-              onChange={(e) => setFilters((f) => ({ ...f, departmentName: e.target.value }))}
-              placeholder="Nhập bộ phận"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+<FilterSelect
+  label="Bộ phận"
+  value={filters.departmentName}
+  onChange={(e)=>setFilters(f=>({...f,departmentName:e.target.value}))}
+>
+  <option value="">Tất cả</option>
+  {dropdowns.departmentNames.map(v => <option key={v} value={v}>{v}</option>)}
+</FilterSelect>
 
-          <div className="col-span-1">
-            <label className="block text-xs text-slate-500 mb-1">Đơn vị</label>
-            <input
-              value={filters.unitName}
-              onChange={(e) => setFilters((f) => ({ ...f, unitName: e.target.value }))}
-              placeholder="Nhập đơn vị"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+<FilterSelect
+  label="Đơn vị"
+  value={filters.unitName}
+  onChange={(e)=>setFilters(f=>({...f,unitName:e.target.value}))}
+>
+  <option value="">Tất cả</option>
+  {dropdowns.unitNames.map(v => <option key={v} value={v}>{v}</option>)}
+</FilterSelect>
 
-          <div className="col-span-1">
-            <label className="block text-xs text-slate-500 mb-1">Loại rác</label>
-            <input
-              value={filters.trashName}
-              onChange={(e) => setFilters((f) => ({ ...f, trashName: e.target.value }))}
-              placeholder="Nhập loại rác"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+<FilterSelect
+  label="Loại rác"
+  value={filters.trashName}
+  onChange={(e)=>setFilters(f=>({...f,trashName:e.target.value}))}
+>
+  <option value="">Tất cả</option>
+  {dropdowns.trashNames.map(v => <option key={v} value={v}>{v}</option>)}
+</FilterSelect>
 
-          <div className="col-span-1">
-            <label className="block text-xs text-slate-500 mb-1">Ca</label>
-            <select
-              value={filters.workShift}
-              onChange={(e) => setFilters((f) => ({ ...f, workShift: e.target.value }))}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="">Tất cả</option>
-              <option value="ca1">Ca ngắn 1</option>
-              <option value="ca2">Ca ngắn 2</option>
-              <option value="ca3">Ca ngắn 3</option>
-              <option value="dai1">Ca dài 1</option>
-              <option value="dai2">Ca dài 2</option>
-              <option value="cahc">Ca hành chính</option>
-            </select>
-          </div>
+<FilterSelect
+  label="Ca"
+  value={filters.workShift}
+  onChange={(e)=>setFilters(f=>({...f,workShift:e.target.value}))}
+>
+  <option value="">Tất cả</option>
+  {dropdowns.workShifts.map(v => (
+    <option key={v} value={v}>
+      {v==='ca1'?'Ca ngắn 1'
+      :v==='ca2'?'Ca ngắn 2'
+      :v==='ca3'?'Ca ngắn 3'
+      :v==='dai1'?'Ca dài 1'
+      :v==='dai2'?'Ca dài 2'
+      :v==='cahc'?'Ca hành chính'
+      : v}
+    </option>
+  ))}
+</FilterSelect>
+
 
           <div className="col-span-1">
             <label className="block text-xs text-slate-500 mb-1">Ngày đổ</label>

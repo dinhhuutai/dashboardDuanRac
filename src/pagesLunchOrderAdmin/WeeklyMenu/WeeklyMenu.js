@@ -374,7 +374,6 @@ export default function WeeklyMenu() {
   />
 </div>
 
-
           </div>
         </div>
       </div>
