@@ -1052,7 +1052,6 @@ function ProfileSettingsCard() {
 }
 
 
-
 /* ---------- Trang chính ---------- */
 function HomeMain() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -1072,6 +1071,8 @@ function HomeMain() {
   const [modules, setModules] = useState([]);
   const [loadingModules, setLoadingModules] = useState(false);
 
+  const [loadingLogout, setLoadingLogout] = useState(false);
+  
   // Search
   const [query, setQuery] = useState("");
   const searchRef = useRef(null);
@@ -1150,16 +1151,61 @@ function HomeMain() {
       document.removeEventListener("keydown", onEsc);
     };
   }, []);
+  
+  // 👇 Chỉ làm nhiệm vụ hủy subscription, KHÔNG đụng loading ở đây
+async function unregisterPushSafe(timeoutMs = 1000) {
+  // Nếu không có SW/Push thì coi như xong
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-  const handleLogout = async () => {
+  // Helper timeout
+  const withTimeout = (p, ms) =>
+    Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
+  try {
+    const reg = await withTimeout(navigator.serviceWorker.ready, timeoutMs);
+    const sub = await withTimeout(reg.pushManager.getSubscription(), timeoutMs);
+    if (!sub) return;
+
+    // Gỡ ở server (best-effort)
     try {
-        await http.post('/auth/logout'); // thu hồi refresh ở server + clear cookie
+      await withTimeout(
+        http.post(`${BASE_URL}/api/push/lunch-order/unsubscribe`, { endpoint: sub.endpoint }),
+        timeoutMs
+      );
     } catch {}
 
+    // Gỡ ở client
+    try { await withTimeout(sub.unsubscribe(), timeoutMs); } catch {}
+  } catch {
+    // nuốt lỗi, không chặn luồng logout
+  }
+}
+
+
+async function handleLogout() {
+  if (loadingLogout) return;
+  setLoadingLogout(true);
+  try {
+    // Tắt push: không để kẹt quá lâu
+    await unregisterPushSafe(1200);
+
+    // Thu hồi phiên server (best-effort)
+    try {
+      await http.post('/auth/logout', {}, { withCredentials: true });
+    } catch {}
+
+    // Clear redux/session local
     dispatch(authSlice.actions.logoutSuccess());
+
+    // Điều hướng – giữ loading để tránh nháy
     navigate(config.routes.login);
-    
-  };
+  } finally {
+    // Phòng trường hợp navigate fail
+    setTimeout(() => setLoadingLogout(false), 1000);
+  }
+}
+
+  
 
   // Sidebar item helper
   const NavIcon = ({ active, title, children, onClick }) => (
@@ -1302,12 +1348,30 @@ function HomeMain() {
                     <FiSettings /> Cài đặt tài khoản
                   </button>
                   <hr className="my-1 border-slate-200" />
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <FiLogOut /> Đăng xuất
-                  </button>
+                  
+    <button
+  onClick={handleLogout}
+  disabled={loadingLogout}
+  aria-busy={loadingLogout}
+  className={`w-full flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition
+    ${loadingLogout ? 'bg-slate-50 text-slate-500 cursor-wait opacity-70' : 'text-red-600 hover:bg-red-50'}`}
+>
+  {loadingLogout ? (
+    <>
+      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2A6 6 0 006 12H4z" />
+      </svg>
+      Đang đăng xuất...
+    </>
+  ) : (
+    <>
+      <FiLogOut />
+      Đăng xuất
+    </>
+  )}
+</button>
+
                 </div>
               )}
             </div>

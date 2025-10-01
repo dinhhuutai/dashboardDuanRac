@@ -74,6 +74,7 @@ export default function AdminHistory() {
           http.get(`${BASE_URL}/api/lunch-order/admin/departments`),
           http.get(`${BASE_URL}/api/lunch-order/admin/proxy-users`),
         ]);
+
         setDepartments(depRes.data?.data || []);
         setProxyUsers(proxyRes.data?.data || []);
       } catch (e) {
@@ -108,8 +109,9 @@ export default function AdminHistory() {
           pageSize,
         },
       });
+
       setRows(res.data?.data || []);
-      setTotal(res.data?.total || 0);
+      setTotal(res.data?.total || 0); // total chỉ đếm isAction=1 theo API đã sửa
     } finally {
       setLoading(false);
     }
@@ -136,7 +138,8 @@ export default function AdminHistory() {
         foodName: r.foodName,
         imageUrl: r.imageUrl,
         dayOfWeek: r.dayOfWeek,
-        selectedAt: r.selectedAt, // ngày/giờ bấm đặt
+        selectedAt: r.selectedAt,   // ngày/giờ bấm đặt
+        isAction: r.isAction,       // <<— lấy trạng thái 0/1 từ API
       });
       if (r.selectedByUserId) map.get(key).hasProxy = true;
       if (r.selectedAt) {
@@ -145,11 +148,15 @@ export default function AdminHistory() {
         if (!map.get(key).latestSelectedAt || nd > cur) map.get(key).latestSelectedAt = r.selectedAt;
       }
     }
+
+    // filter theo ô tìm kiếm tên (client-side)
     const arr = Array.from(map.values()).filter((u) =>
       !search?.trim()
         ? true
         : (u.fullName || "").toLowerCase().includes(search.toLowerCase())
     );
+
+    // sort theo tên
     arr.sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
     return arr;
   }, [rows, search]);
@@ -248,7 +255,7 @@ export default function AdminHistory() {
 
       {/* Table-like card (accordion rows) */}
       <div className="card overflow-hidden">
-        {/* Header row (đưa GIỜ đặt lên ngay sau Người dùng, thêm cột NGÀY ĐẶT) */}
+        {/* Header row */}
         <div className="grid grid-cols-12 px-4 py-3 text-[13px] font-semibold text-slate-700 bg-white/60 border-b border-slate-200">
           <div className="w-12 text-center">#</div>
           <div className="col-span-3">Người dùng</div>
@@ -272,10 +279,25 @@ export default function AdminHistory() {
             const rowIndex = (page - 1) * pageSize + idx + 1;
             const isOpen = expanded.has(u.userID);
             const zebra = idx % 2 === 0 ? "bg-white" : "bg-[#f9fbff]";
-            const days = Array.from(new Set(u.items.map((i) => i.dayOfWeek))).sort((a, b) => a - b);
+
+            // Tính trạng thái theo ngày để hiện badge ở hàng tổng
+            // - Nếu có ít nhất 1 item isAction=1 ở ngày d => active
+            // - Nếu KHÔNG có item active nhưng có item isAction=0 => cancelOnly
+            const dayStatus = new Map(); // d -> {active:boolean, cancelOnly:boolean}
+            for (const it of u.items) {
+              const cur = dayStatus.get(it.dayOfWeek) || { active: false, cancelOnly: false };
+              if (it.isAction === true) {
+                cur.active = true;
+              } else {
+                // đánh dấu có huỷ
+                if (!cur.active) cur.cancelOnly = true; // chỉ coi cancelOnly nếu chưa có active
+              }
+              dayStatus.set(it.dayOfWeek, cur);
+            }
+            const days = Array.from(dayStatus.keys()).sort((a, b) => a - b);
 
             return (
-              <div key={u.userID} className={`border-t border-slate-200 ${zebra}`}>
+              <div key={u.userID} className={`border-top border-slate-200 ${zebra}`}>
                 <button
                   onClick={() => toggle(u.userID)}
                   className={`w-full grid grid-cols-12 px-4 py-3 items-center text-left hover:bg-slate-50 transition ${
@@ -323,68 +345,118 @@ export default function AdminHistory() {
                   {/* Bộ phận */}
                   <div className="col-span-1 text-slate-600 truncate">{u.departmentName || "-"}</div>
 
-                  {/* Ngày (món trong tuần) */}
+                  {/* Ngày (món trong tuần) - phản ánh ngày chỉ còn hủy */}
                   <div className="col-span-2 text-right pr-1">
                     {days.length === 0 ? (
                       <span className="text-slate-400">-</span>
                     ) : (
                       <div className="inline-flex gap-1 flex-wrap justify-end">
-                        {days.map((d) => (
-                          <span key={d} className="pill bg-white text-slate-600">
-                            {dayNameVN(d)}
-                          </span>
-                        ))}
+                        {days.map((d) => {
+                          const st = dayStatus.get(d);
+                          const isCancelOnly = st?.cancelOnly && !st?.active;
+                          return (
+                            <span
+                              key={d}
+                              className={`pill ${
+                                isCancelOnly
+                                  ? "bg-white text-slate-400 line-through"
+                                  : "bg-white text-slate-600"
+                              }`}
+                              title={isCancelOnly ? "Đã huỷ cơm" : "Đã đặt"}
+                            >
+                              {dayNameVN(d)}
+                              {isCancelOnly ? " (Huỷ)" : ""}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 </button>
 
-                {/* Expand detail: cards with image + selectedAt date/time */}
+                {/* Expand detail: cards with image + selectedAt + trạng thái */}
                 {isOpen && (
                   <div className="px-5 pb-5">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {u.items.map((it) => (
-                        <div
-                          key={it.id}
-                          className="p-3 rounded-xl border border-slate-200 bg-white shadow-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
-                              {it.imageUrl ? (
-                                <img
-                                  src={it.imageUrl}
-                                  alt={it.foodName}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full grid place-items-center text-[10px] text-slate-400">
-                                  No image
+                      {u.items
+                        // sắp theo thứ tự thứ trong tuần rồi theo thời gian
+                        .sort((a, b) => (a.dayOfWeek - b.dayOfWeek) || (new Date(a.selectedAt) - new Date(b.selectedAt)))
+                        .map((it) => {
+                          const isCanceled = it.isAction === false;
+                          return (
+                            <div
+                              key={it.id}
+                              className={`p-3 rounded-xl border bg-white shadow-sm ${
+                                isCanceled ? "border-rose-100" : "border-slate-200"
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
+                                  {it.imageUrl ? (
+                                    <img
+                                      src={it.imageUrl}
+                                      alt={it.foodName}
+                                      className={`w-full h-full object-cover ${isCanceled ? "opacity-60" : ""}`}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full grid place-items-center text-[10px] text-slate-400">
+                                      No image
+                                    </div>
+                                  )}
+                                  {isCanceled && (
+                                    <div className="absolute inset-0 bg-white/0 pointer-events-none" />
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-semibold text-slate-800 truncate">
-                                {it.foodName}
-                              </div>
-                              <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                                <span className="pill bg-[#f5f8ff] text-slate-600">
-                                  {dayNameVN(it.dayOfWeek)}
-                                </span>
-                                {it.selectedAt && (
-                                  <>
-                                    <span className="pill bg-[#f5f8ff] text-slate-600">
-                                      {fmtDate(it.selectedAt)}
+
+                                <div className="min-w-0">
+                                  <div
+                                    className={`font-semibold truncate ${
+                                      isCanceled ? "text-slate-400 line-through" : "text-slate-800"
+                                    }`}
+                                    title={it.foodName}
+                                  >
+                                    {it.foodName}
+                                  </div>
+
+                                  <div className="mt-1 flex flex-wrap gap-2 text-xs items-center">
+                                    <span
+                                      className={`pill ${
+                                        isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
+                                      }`}
+                                    >
+                                      {dayNameVN(it.dayOfWeek)}
                                     </span>
-                                    <span className="pill bg-[#f5f8ff] text-slate-600">
-                                      {fmtTime(it.selectedAt)}
-                                    </span>
-                                  </>
-                                )}
+
+                                    {it.selectedAt && (
+                                      <>
+                                        <span
+                                          className={`pill ${
+                                            isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
+                                          }`}
+                                        >
+                                          {fmtDate(it.selectedAt)}
+                                        </span>
+                                        <span
+                                          className={`pill ${
+                                            isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
+                                          }`}
+                                        >
+                                          {fmtTime(it.selectedAt)}
+                                        </span>
+                                      </>
+                                    )}
+
+                                    {isCanceled && (
+                                      <span className="pill bg-rose-50 text-rose-600 border-rose-200">
+                                        ĐÃ HUỶ CƠM
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          );
+                        })}
                     </div>
                   </div>
                 )}
@@ -397,7 +469,7 @@ export default function AdminHistory() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="card px-4 py-2 text-slate-700">
           Tổng người đặt: <b>{totalUsers}</b>{" "}
-          <span className="text-slate-500">| Tổng món: {total}</span>
+          <span className="text-slate-500">| Tổng món (active): {total}</span>
         </div>
         <div className="flex items-center gap-2">
           <button

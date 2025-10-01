@@ -18,6 +18,7 @@ import bgNeumo from "~/assets/imgs/bg-neumo.webp";
 
 import http from "~/api/http"; // ⬅️ dùng axios instance + in-memory token
 import { fetchUserModules } from "~/redux/slices/userModulesSlice";
+import MODULEID from "~/contants/modules";
 
 const bg = "#e9eef6";
 
@@ -67,7 +68,12 @@ export default function Login() {
           dispatch(fetchUserModules(user.userID));
         }
 
-        navigate(config.routes.homeMain);
+        
+        navigate(config.routes.homeMain, {
+          replace: true,
+          state: { from: 'login' }   // <— cờ đánh dấu vừa login
+        });
+
       } else {
         setErrorMessage(res?.data?.message || "Tên đăng nhập hoặc mật khẩu không đúng.");
         dispatch(authSlice.actions.loginFailed());

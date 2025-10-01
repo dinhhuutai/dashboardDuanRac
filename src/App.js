@@ -51,7 +51,7 @@ function App() {
           path={config.routes.login}
           element={
             user?.login?.currentUser
-              ? <Navigate to={config.routes.homeMain} replace />
+              ? <Navigate to={config.routes.homeMain} replace state={{ from: 'login' }} />
               : <Login />
           }
         />
