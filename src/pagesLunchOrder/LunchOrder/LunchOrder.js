@@ -327,12 +327,14 @@ export default function UserOrderSlide() {
       return next;
     });
     setSelected((prev) => ({ ...prev, [day]: entryId }));
-    if (swiperRef.current) {
-      const swiper = swiperRef.current.swiper;
-      if (swiper && swiper.activeIndex < swiper.slides.length - 1) {
-        setTimeout(() => swiper.slideNext(), 250);
-      }
+    // auto-next nếu chưa ở slide cuối
+  const swiper = swiperRef.current;
+  if (swiper && typeof swiper.activeIndex === 'number') {
+    const isLast = swiper.activeIndex >= swiper.slides.length - 1;
+    if (!isLast) {
+      setTimeout(() => swiper.slideNext(), 250);
     }
+  }
   }
 
   async function handleSave() {
@@ -758,6 +760,7 @@ export default function UserOrderSlide() {
           )}
 
           <Swiper
+            onSwiper={(s) => (swiperRef.current = s)}
             ref={swiperRef}
             spaceBetween={30}
             slidesPerView={1}
@@ -779,7 +782,7 @@ export default function UserOrderSlide() {
                             <motion.button
                               key={item.weeklyMenuEntryId}
                               whileTap={{ scale: 0.97 }}
-                              onClick={() => setSelected((prev) => ({ ...prev, [day]: item.weeklyMenuEntryId }))}
+                              onClick={() => choose(day, item.weeklyMenuEntryId)}
                               className={`toy-card relative w-[240px] h-[298px] rounded-[28px] text-left cursor-pointer transition 
                                 ${checked ? "ring-2 ring-emerald-400" : "ring-1 ring-white/50"}
                                 ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
@@ -823,19 +826,47 @@ export default function UserOrderSlide() {
 
                         {/* None card */}
                         <motion.button
-                          key={`none-${day}`}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => setSelected((prev) => ({ ...prev, [day]: null }))}
-                          className={`toy-card relative w-[240px] h-[298px] rounded-[28px] grid place-items-center cursor-pointer
-                            ${selected[day] === null ? "ring-2 ring-rose-400" : "ring-1 ring-white/50"}
-                            ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
-                        >
-                          <div className="text-center">
-                            <GiForkKnifeSpoon className="text-3xl text-slate-400 mx-auto mb-2" />
-                            <span className="font-medium text-slate-600">Không chọn</span>
-                          </div>
-                          <span className="shine" />
-                        </motion.button>
+  key={`none-${day}`}
+  whileTap={{ scale: 0.97 }}
+  onClick={() => choose(day, null)}
+  aria-pressed={selected[day] === null}
+  title={selected[day] === null ? "Đã chọn: Không ăn ngày này" : "Chọn: Không ăn ngày này"}
+  className={`toy-card relative w-[240px] h-[298px] rounded-[28px] grid place-items-center cursor-pointer
+    ${selected[day] === null ? "ring-2 ring-rose-400" : "ring-1 ring-white/50"}
+    ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
+>
+  {/* Chip trạng thái (góc phải trên) */}
+  {selected[day] === null && (
+    <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-100 text-rose-700 border border-rose-200 shadow">
+      <FaCheck className="text-[10px]" />
+      Đã chọn
+    </span>
+  )}
+
+  {/* Nội dung thẻ */}
+  <div className="text-center">
+    <GiForkKnifeSpoon className={`text-3xl mx-auto mb-2 ${selected[day] === null ? "text-rose-500" : "text-slate-400"}`} />
+    <span className={`font-medium ${
+      selected[day] === null ? "text-rose-700" : "text-slate-600"
+    }`}>
+      Không chọn
+    </span>
+
+    {/* Gợi ý phụ (nhỏ, chỉ hiện khi đã chọn) */}
+    {selected[day] === null && (
+      <div className="mt-1 text-[11px] text-rose-500/90">
+        Sẽ không đặt cơm ngày này
+      </div>
+    )}
+  </div>
+
+  {/* Icon check góc phải dưới (nhỏ xinh) */}
+  {selected[day] === null && (
+    <FaCheck className="absolute right-2 bottom-2 text-rose-500 opacity-80" />
+  )}
+
+  <span className="shine" />
+</motion.button>
                       </div>
                     </div>
                   </div>

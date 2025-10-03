@@ -173,6 +173,11 @@ function Sidebar() {
                       Theo loại rác
                     </NavLink>
                   </li>
+                  <li>
+                    <NavLink to={config.routes.adminReportByTrashBF17} className={linkClass}>
+                      Theo loại rác trước 17/09
+                    </NavLink>
+                  </li>
                 </>
               }
               {

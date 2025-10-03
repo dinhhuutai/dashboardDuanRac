@@ -28,6 +28,7 @@ import ExportQr from '~/pagesAdmin/ExportQr';
 import Report from '~/pagesAdmin/Menu/Reports/Report';
 import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
 import ReportByTrash from '~/pagesAdmin/Menu/Reports/ReportTrash';
+import ReportByTrashBF17 from '~/pagesAdmin/Menu/Reports/ReportTrashBF17';
 import ReportByDepartment from '~/pagesAdmin/Menu/Reports/ReportDepartment';
 import ReportMaterials from '~/pagesAdmin/Menu/Reports/ReportMaterials';
 
@@ -290,6 +291,11 @@ export const routesAdmin = [
   {
     path: config.routes.adminReportByTrash,
     component: ReportByTrash,
+    login: true,
+  },
+  {
+    path: config.routes.adminReportByTrashBF17,
+    component: ReportByTrashBF17,
     login: true,
   },
   {

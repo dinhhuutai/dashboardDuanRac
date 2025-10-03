@@ -1,382 +1,374 @@
-import { useEffect, useState } from "react";
+// src/pages/Reports/ReportMaterials.jsx
+import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { motion } from "framer-motion";
-import { ImSpinner9 } from "react-icons/im";
-import { FiPackage } from "react-icons/fi"; // icon nhẹ nhàng phù hợp
-import { FaSpinner } from 'react-icons/fa';
+import { FiPackage } from "react-icons/fi";
+import { FaSpinner } from "react-icons/fa";
+import { BASE_URL } from "~/config";
 
-function ReportMaterials() {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dataMaterials, setDataMaterials] = useState({
-    t1: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    t2: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    t3: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    t4: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    t5: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    tm: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    pm: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    ck: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    ch: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    kcs: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    sh: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-    tb: {
-        vv: '',
-        mit: '',
-        mil: '',
-        ni: '',
-        nxl: '',
-        nck: '',
-        hc: '',
-        bk: '',
-        lck: '',
-        kb: '',
-    },
-  });
+/* ================== Cấu hình ================== */
+const TEAMS = ["C1", "C2", "C3", "C4", "CTM"];
+const FIXED_IDX = { TO_IN: 2, TEN: 20, DVT: 21 };
+const CAND_CONG = [
+  "cong",
+  "cộng",
+  "tong cong",
+  "tổng cộng",
+  "cong (gram)",
+  "tong cong (gram)",
+  "cộng (gram)",
+  "tổng cộng (gram)",
+];
+const CAND_VATTU = ["vat tu", "vật tư", "vat_tu"];
 
+/* ================== Helpers ================== */
+const vn = (s) =>
+  String(s ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
-    const getTotal = (field) => {
-        return Object.values(dataMaterials).reduce((sum, row) => {
-            const val = parseFloat(row[field]);
-            return sum + (isNaN(val) ? 0 : val);
-        }, 0);
+const makeKey = (s) =>
+  String(s || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+const getNumber = (cell) => {
+  if (cell === null || cell === undefined || cell === "") return 0;
+  if (typeof cell === "number") return cell;
+  const n = parseFloat(String(cell).replace(/\s/g, "").replace(/\./g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+};
+
+const round2 = (n) => Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+const fmt2 = (n) =>
+  round2(n).toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function findHeaderRow(rows2D) {
+  for (let i = 0; i < Math.min(rows2D.length, 15); i++) {
+    const row = rows2D[i] || [];
+    const normed = row.map(vn);
+    if (normed.includes("ten") || normed.includes("dvt") || normed.includes("đvt")) return i;
+  }
+  return 4; // fallback hàng 5
+}
+
+function findColByNames(row, candidates) {
+  const map = {};
+  row.forEach((v, idx) => (map[vn(v)] = idx));
+  for (const c of candidates) if (map[c] !== undefined) return map[c];
+  return -1;
+}
+
+async function parseExcelWithFixedCols(file) {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  // dùng dense array để nhẹ hơn
+  const rows2D = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, raw: true });
+
+  const headerIdx = findHeaderRow(rows2D);
+  const headerRow = rows2D[headerIdx] || [];
+
+  const idxCong = findColByNames(headerRow, CAND_CONG);
+  const idxVatTu = findColByNames(headerRow, CAND_VATTU);
+  if (idxCong < 0 && idxVatTu < 0) {
+    throw new Error("Không tìm thấy cột 'Cộng' hoặc 'Vật tư' trong header.");
+  }
+
+  return { rows2D, headerIdx, idxCong, idxVatTu };
+}
+
+/* ====== GỘP vật tư có cùng label (materialName) ====== */
+function groupMaterials(materialList = []) {
+  const map = new Map();
+  for (const m of materialList) {
+    const label = m.label || "";
+    const k = makeKey(label);
+    const g = map.get(label) || {
+      key: k,
+      label,
+      ingredients: new Set(),
+      units: new Set(),
     };
+    if (m.ingredient) g.ingredients.add(vn(m.ingredient));
+    (m.units || []).forEach((u) => g.units.add(vn(u)));
+    map.set(label, g);
+  }
+  // mở rộng 'cuộn' -> 'cuon' nếu có
+  const arr = Array.from(map.values()).map((g) => {
+    const units = Array.from(g.units);
+    if (units.includes("cuộn") && !units.includes("cuon")) units.push("cuon");
+    return {
+      key: g.key,
+      label: g.label,
+      ingredients: Array.from(g.ingredients),
+      units,
+    };
+  });
+  return arr;
+}
 
+/* ====== Chunking trên main thread ====== */
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+async function aggregateInChunks({
+  rows2D,
+  headerIdx,
+  idxCong,
+  idxVatTu,
+  materials,
+  TEAMS,
+  chunkSize = 2000,
+  onProgress = () => {},
+}) {
+  // Khởi tạo ma trận
+  const matrix = {};
+  const colTotals = {};
+  TEAMS.forEach((t) => {
+    matrix[t] = {};
+    materials.forEach((m) => (matrix[t][m.label] = 0));
+    matrix[t].total = 0;
+  });
+  materials.forEach((m) => (colTotals[m.label] = 0));
+
+  // Chuẩn bị lookup nhanh
+  const teamSet = new Set(TEAMS.map(vn));
+  const defs = materials.map((m) => ({
+    label: m.label,
+    ingredients: new Set((m.ingredients || []).map(vn)),
+    units: new Set((m.units || []).map(vn)),
+    acceptsCuon: (m.units || []).map(vn).some((u) => u === "cuộn" || u === "cuon"),
+  }));
+  const isCuon = (u) => u === "cuộn" || u === "cuon";
+  const CUON_TO_KG = 0.2;
+
+  const start = headerIdx + 1;
+  const end = rows2D.length;
+  let i = start;
+  while (i < end) {
+    const j = Math.min(i + chunkSize, end);
+    for (let r = i; r < j; r++) {
+      const row = rows2D[r] || [];
+
+      const toIn = String(row[FIXED_IDX.TO_IN] || "").trim();
+      const ten = String(row[FIXED_IDX.TEN] || "").trim();
+      const dvt = String(row[FIXED_IDX.DVT] || "").trim();
+      const vCong = idxCong >= 0 ? row[idxCong] : "";
+      const vVatTu = idxVatTu >= 0 ? row[idxVatTu] : "";
+
+      if ([toIn, ten, dvt, vCong, vVatTu].every((x) => (x ?? "") === "")) continue;
+
+      // Không gọi row.some(vn(...)) để tiết kiệm — bỏ qua kiểm tra này
+      // (Nếu bạn cần, đặt idx cho cột ghi "Tổng" cụ thể thay vì quét cả hàng)
+
+      const qty = getNumber(vCong) || getNumber(vVatTu);
+      if (!qty) continue;
+
+      const teamKey = vn(toIn);
+      if (!teamSet.has(teamKey)) continue;
+
+      const nameInRow = vn(ten);
+      const unitInRow = vn(dvt);
+
+      for (const m of defs) {
+        if (!m.ingredients.has(nameInRow)) continue;
+
+        let adjQty = qty;
+        if (m.acceptsCuon && isCuon(unitInRow)) {
+          adjQty = qty * CUON_TO_KG;
+        } else {
+          if (m.units.size > 0 && !m.units.has(unitInRow)) continue;
+        }
+
+        matrix[toIn][m.label] += adjQty;
+      }
+    }
+
+    // báo tiến độ & nhường frame để UI render
+    onProgress(((j - start) / (end - start)) * 100);
+    await nextFrame();
+    i = j;
+  }
+
+  // Tổng kết
+  let grandTotal = 0;
+  for (const t of TEAMS) {
+    let rowSum = 0;
+    for (const m of materials) {
+      const v = matrix[t][m.label] || 0;
+      rowSum += v;
+      colTotals[m.label] += v;
+    }
+    matrix[t].total = rowSum;
+    grandTotal += rowSum;
+  }
+
+  return { dataByTeam: matrix, colTotals, grandTotal };
+}
+
+/* ================== Component ================== */
+export default function ReportMaterials() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dataByTeam, setDataByTeam] = useState({});
+  const [colTotals, setColTotals] = useState({});
+  const [grandTotal, setGrandTotal] = useState(0);
+  const [materials, setMaterials] = useState([]);
+
+  // tải danh sách vật tư (từ API /api/materials) và gộp theo label
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(`${BASE_URL}/api/materials?active=1`);
+      const json = await res.json();
+
+      if (json.success) {
+        const grouped = groupMaterials(json.data || []);
+        setMaterials(grouped);
+      }
+    })();
+  }, []);
+
+  const canUpload = useMemo(() => materials.length > 0, [materials]);
 
   const handleFileUpload = async (e) => {
-  setIsLoading(true);
-  const file = e.target.files[0];
-  if (!file) return;
+    setIsLoading(true);
+    setProgress(0);
+    try {
+      const file = e.target.files?.[0];
+      if (!file || !canUpload) return;
 
-  const readFileAsBinary = async (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (evt) => resolve(evt.target.result);
-      reader.onerror = reject;
-      reader.readAsBinaryString(file);
-    });
+      const { rows2D, headerIdx, idxCong, idxVatTu } = await parseExcelWithFixedCols(file);
 
-  const typeMaterials = [
-    { dep: 't1', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 't2', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 't3', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 't4', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 't5', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'tm', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'pm', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'ck', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'ch', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'kcs', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'sh', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-    { dep: 'tb', mat: ['vv', 'mit', 'mil', 'ni', 'nxl', 'nck', 'hc', 'bk', 'lck', 'kb'] },
-  ];
+      const { dataByTeam, colTotals, grandTotal } = await aggregateInChunks({
+        rows2D,
+        headerIdx,
+        idxCong,
+        idxVatTu,
+        materials,
+        TEAMS,
+        chunkSize: 2000, // tùy chỉnh 1000-5000 tùy máy
+        onProgress: (p) => setProgress(p),
+      });
 
-  const boPhanMap = {
-    t1: 'TO 1',
-    t2: 'TO 2',
-    t3: 'TO 3',
-    t4: 'TO 4',
-    t5: 'TO 5',
-    tm: 'TO MAU',
-    pm: ['PHA MAU', 'THLA-KT-PM'],
-    ck: 'CHUP KHUON',
-    ch: '',
-    kcs: 'THLA-TO KCS',
-    sh: '',
-    tb: ''
-  };
-
-  const nameMap = {
-    vv: { hanghoaten: 'Vải vụn', chungloaiten: 'Nguyên liệu bao bì' },
-    // Các vật liệu khác cần được thêm vào nếu muốn xử lý
-  };
-
-  try {
-    const binaryStr = await readFileAsBinary(file);
-    const workbook = XLSX.read(binaryStr, { type: "binary" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-    setData(jsonData); // lưu tất cả data nếu muốn xem
-
-    let dataMaterialsTmp = {};
-
-    // Khởi tạo dữ liệu rỗng
-    for (const { dep, mat } of typeMaterials) {
-      dataMaterialsTmp[dep] = {};
-      for (const m of mat) {
-        dataMaterialsTmp[dep][m] = '';
-      }
+      setDataByTeam(dataByTeam);
+      setColTotals(colTotals);
+      setGrandTotal(grandTotal);
+    } catch (err) {
+      console.error("Lỗi xử lý file:", err);
+      setDataByTeam({});
+      setColTotals({});
+      setGrandTotal(0);
+    } finally {
+      setIsLoading(false);
+      setProgress(0);
+      e.target.value = "";
     }
-
-    // Bắt đầu xử lý theo thứ tự
-    for (const type of typeMaterials) {
-      const boPhanTen = boPhanMap[type.dep];
-
-      for (const m of type.mat) {
-        const { hanghoaten, chungloaiten } = nameMap[m] || {};
-        if (!hanghoaten || !chungloaiten || boPhanTen === undefined) continue;
-
-        const filteredData = jsonData.filter((row) => {
-          const matchBoPhan = Array.isArray(boPhanTen)
-            ? boPhanTen.includes(row.BoPhanTen)
-            : row.BoPhanTen === boPhanTen;
-
-          return (
-            row.hanghoaten === hanghoaten &&
-            row.chungloaiten === chungloaiten &&
-            matchBoPhan
-          );
-        });
-
-        const totalSoluong = filteredData.reduce((sum, row) => {
-          const value = parseFloat(row.Soluong);
-          return sum + (isNaN(value) ? 0 : value);
-        }, 0);
-
-        dataMaterialsTmp[type.dep][m] = totalSoluong || 0;
-      }
-    }
-
-    setDataMaterials(dataMaterialsTmp);
-    console.log(dataMaterialsTmp);
-  } catch (error) {
-    console.error("Lỗi xử lý file:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-    
+  };
 
   return (
     <div className="p-4">
-      <div className="p-2 space-y-6 bg-white rounded-[6px]">
-      
-      {isLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <FaSpinner className="animate-spin text-blue-600 text-5xl" />
-            <span className="text-gray-700 text-lg font-medium">Đang tải dữ liệu...</span>
+      {(isLoading || progress > 0) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 bg-white/90 rounded-xl p-5 shadow">
+            <FaSpinner className="animate-spin text-teal-600 text-4xl" />
+            <div className="text-gray-700 text-sm font-medium">
+              Đang xử lý file… {progress ? `${fmt2(progress)}%` : ""}
+            </div>
+            <div className="w-64 h-2 bg-gray-200 rounded">
+              <div
+                className="h-2 bg-teal-500 rounded"
+                style={{ width: `${Math.min(progress, 100)}%` }}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      <div className="relative space-y-6 bg-white rounded-2xl p-6 z-10">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-2xl font-bold text-teal-700 flex items-center gap-2"
-        >
-          <FiPackage className="inline" /> Kê xuất vật tư
-        </motion.h1>
-
-        <div>
-          <label
-            htmlFor="fileInput"
-            className="cursor-pointer inline-block px-6 py-2 text-white bg-teal-600 hover:bg-teal-700 rounded-xl font-medium transition-all duration-300"
+      <div className="p-2 space-y-6 bg-white rounded-[6px]">
+        <div className="relative space-y-6 bg-white rounded-2xl p-6 z-10">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-2xl font-bold text-teal-700 flex items-center gap-2"
           >
-            Lấy file Excel
-          </label>
-          <input
-            id="fileInput"
-            type="file"
-            accept=".xlsx, .xls"
-            className="hidden"
-            onChange={handleFileUpload}
-            disabled={isLoading}
-          />
+            <FiPackage /> Kê xuất vật tư (chunk xử lý để mượt UI)
+          </motion.h1>
+
+          <div>
+            <label
+              htmlFor="fileInput"
+              className={`cursor-pointer inline-block px-6 py-2 text-white rounded-xl font-medium ${
+                canUpload ? "bg-teal-600 hover:bg-teal-700" : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
+              Chọn file Excel
+            </label>
+            <input
+              id="fileInput"
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleFileUpload}
+              disabled={!canUpload || isLoading}
+            />
+            {!canUpload && (
+              <div className="text-sm text-amber-600 mt-2">
+                * Đang tải danh mục vật tư…
+              </div>
+            )}
+          </div>
+
+          {Object.keys(dataByTeam).length > 0 && (
+            <div className="overflow-x-auto rounded-lg border border-gray-300 mt-6">
+              <table className="min-w-full text-sm text-left border-collapse">
+                <thead className="bg-yellow-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="border px-3 py-2 font-bold text-center bg-yellow-200">BP/Tổ</th>
+                    {materials.map((m) => (
+                      <th key={m.key} className="border px-3 py-2 font-bold">
+                        {m.label} (kg)
+                      </th>
+                    ))}
+                    <th className="border px-3 py-2 font-bold text-center bg-yellow-200">Tổng (kg)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TEAMS.map((t, i) => (
+                    <tr key={t} className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-yellow-50`}>
+                      <td className="border px-3 py-2 text-center font-medium">{t}</td>
+                      {materials.map((m) => (
+                        <td key={m.key} className="border px-3 py-2 text-right">
+                          {fmt2(dataByTeam[t][m.label] || 0)}
+                        </td>
+                      ))}
+                      <td className="border px-3 py-2 text-right font-semibold">
+                        {fmt2(dataByTeam[t].total || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-yellow-100 font-semibold">
+                    <td className="border px-3 py-2 text-center">Tổng cộng</td>
+                    {materials.map((m) => (
+                      <td key={m.key} className="border px-3 py-2 text-right">
+                        {fmt2(colTotals[m.label] || 0)}
+                      </td>
+                    ))}
+                    <td className="border px-3 py-2 text-right">
+                      {fmt2(grandTotal || 0)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-
-        {Object.keys(dataMaterials).length > 0 && (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="overflow-x-auto rounded-lg border border-gray-300 mt-6"
-  >
-    <table className="min-w-full text-sm text-left border-collapse">
-      <thead className="bg-yellow-100 sticky top-0 z-10">
-        <tr>
-          <th className="border px-3 py-2 font-bold text-center bg-yellow-200">BP/Tổ</th>
-          <th className="border px-3 py-2 font-bold">Vải vụn</th>
-          <th className="border px-3 py-2 font-bold">Mực in thường</th>
-          <th className="border px-3 py-2 font-bold">Mực in lapa</th>
-          <th className="border px-3 py-2 font-bold">Nước in</th>
-          <th className="border px-3 py-2 font-bold">Nước xử lý</th>
-          <th className="border px-3 py-2 font-bold">Nước chùi khuôn</th>
-          <th className="border px-3 py-2 font-bold">Hóa chất</th>
-          <th className="border px-3 py-2 font-bold">Băng keo</th>
-          <th className="border px-3 py-2 font-bold">Lụa căng khung</th>
-          <th className="border px-3 py-2 font-bold">Keo bản</th>
-        </tr>
-      </thead>
-      <tbody>
-        {Object.entries(dataMaterials).map(([key, val], idx) => (
-          <tr
-            key={key}
-            className={`${
-              idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-            } hover:bg-yellow-50 transition`}
-          >
-            <td className="border px-3 py-2 font-medium text-center capitalize">{key}</td>
-            <td className="border px-3 py-2">{val.vv}</td>
-            <td className="border px-3 py-2">{val.mit}</td>
-            <td className="border px-3 py-2">{val.mil}</td>
-            <td className="border px-3 py-2">{val.ni}</td>
-            <td className="border px-3 py-2">{val.nxl}</td>
-            <td className="border px-3 py-2">{val.nck}</td>
-            <td className="border px-3 py-2">{val.hc}</td>
-            <td className="border px-3 py-2">{val.bk}</td>
-            <td className="border px-3 py-2">{val.lck}</td>
-            <td className="border px-3 py-2">{val.kb}</td>
-          </tr>
-        ))}
-
-        {/* Tổng cộng */}
-        <tr className="bg-yellow-100 font-semibold">
-          <td className="border px-3 py-2 text-center">Tổng cộng</td>
-          <td className="border px-3 py-2">{getTotal("vv")}</td>
-          <td className="border px-3 py-2">{getTotal("mit")}</td>
-          <td className="border px-3 py-2">{getTotal("mil")}</td>
-          <td className="border px-3 py-2">{getTotal("ni")}</td>
-          <td className="border px-3 py-2">{getTotal("nxl")}</td>
-          <td className="border px-3 py-2">{getTotal("nck")}</td>
-          <td className="border px-3 py-2">{getTotal("hc")}</td>
-          <td className="border px-3 py-2">{getTotal("bk")}</td>
-          <td className="border px-3 py-2">{getTotal("lck")}</td>
-          <td className="border px-3 py-2">{getTotal("kb")}</td>
-        </tr>
-      </tbody>
-    </table>
-  </motion.div>
-)}
-
       </div>
-    </div>
     </div>
   );
 }
-
-export default ReportMaterials;

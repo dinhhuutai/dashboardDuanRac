@@ -13,6 +13,7 @@ const routes = {
   adminReport: '/admin/menu/dashboard/report',
   adminReportByShift: '/admin/menu/dashboard/report-by-shift',
   adminReportByTrash: '/admin/menu/dashboard/report-by-trash',
+  adminReportByTrashBF17: '/admin/menu/dashboard/report-by-trash-bf17',
   adminReportByDepartment: '/admin/menu/dashboard/report-by-department',
   adminReportMaterials: '/admin/menu/dashboard/report-materials',
   adminHistoryWeigh: '/admin/menu/dashboard/historyWeigh',
