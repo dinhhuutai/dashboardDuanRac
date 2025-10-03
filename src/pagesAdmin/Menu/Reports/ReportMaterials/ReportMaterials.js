@@ -55,7 +55,7 @@ function findHeaderRow(rows2D) {
     const normed = row.map(vn);
     if (normed.includes("ten") || normed.includes("dvt") || normed.includes("đvt")) return i;
   }
-  return 4; // fallback hàng 5
+  return 4;
 }
 
 function findColByNames(row, candidates) {
@@ -69,7 +69,6 @@ async function parseExcelWithFixedCols(file) {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  // dùng dense array để nhẹ hơn
   const rows2D = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, raw: true });
 
   const headerIdx = findHeaderRow(rows2D);
@@ -77,9 +76,7 @@ async function parseExcelWithFixedCols(file) {
 
   const idxCong = findColByNames(headerRow, CAND_CONG);
   const idxVatTu = findColByNames(headerRow, CAND_VATTU);
-  if (idxCong < 0 && idxVatTu < 0) {
-    throw new Error("Không tìm thấy cột 'Cộng' hoặc 'Vật tư' trong header.");
-  }
+  if (idxCong < 0 && idxVatTu < 0) throw new Error("Không tìm thấy cột 'Cộng' hoặc 'Vật tư'.");
 
   return { rows2D, headerIdx, idxCong, idxVatTu };
 }
@@ -100,7 +97,6 @@ function groupMaterials(materialList = []) {
     (m.units || []).forEach((u) => g.units.add(vn(u)));
     map.set(label, g);
   }
-  // mở rộng 'cuộn' -> 'cuon' nếu có
   const arr = Array.from(map.values()).map((g) => {
     const units = Array.from(g.units);
     if (units.includes("cuộn") && !units.includes("cuon")) units.push("cuon");
@@ -114,60 +110,53 @@ function groupMaterials(materialList = []) {
   return arr;
 }
 
-/* ====== Chunking trên main thread ====== */
+/* ====== Rule lọc tiền tố cho “Mực” (fallback từ Excel) ====== */
+const BAD_PREFIXES = ["Bao", "Bột", "Cát", "Chui", "In ", "keo ", "lapa", "Mỡ", "Vit"];
+const startsWithAnyPrefix = (name, prefixes) => {
+  const s = vn(name);
+  return prefixes.some((p) => s.startsWith(vn(p)));
+};
+
+/* ====== Chunking + Fallback nhóm “Mực” ====== */
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 async function aggregateInChunks({
-  rows2D,
-  headerIdx,
-  idxCong,
-  idxVatTu,
-  materials,
-  TEAMS,
-  chunkSize = 2000,
-  onProgress = () => {},
+  rows2D, headerIdx, idxCong, idxVatTu, materials, TEAMS,
+  chunkSize = 2000, onProgress = () => {},
 }) {
-  // Khởi tạo ma trận
-  const matrix = {};
-  const colTotals = {};
-  TEAMS.forEach((t) => {
-    matrix[t] = {};
-    materials.forEach((m) => (matrix[t][m.label] = 0));
-    matrix[t].total = 0;
-  });
-  materials.forEach((m) => (colTotals[m.label] = 0));
+  const matrix = {}, colTotals = {};
+  TEAMS.forEach(t => { matrix[t] = {}; materials.forEach(m => (matrix[t][m.label] = 0)); matrix[t].total = 0; });
+  materials.forEach(m => (colTotals[m.label] = 0));
 
-  // Chuẩn bị lookup nhanh
   const teamSet = new Set(TEAMS.map(vn));
-  const defs = materials.map((m) => ({
+  const defs = materials.map(m => ({
     label: m.label,
     ingredients: new Set((m.ingredients || []).map(vn)),
     units: new Set((m.units || []).map(vn)),
-    acceptsCuon: (m.units || []).map(vn).some((u) => u === "cuộn" || u === "cuon"),
+    acceptsCuon: (m.units || []).map(vn).some(u => u === "cuộn" || u === "cuon"),
   }));
-  const isCuon = (u) => u === "cuộn" || u === "cuon";
+  const inkIndex = materials.findIndex(m => vn(m.label) === vn("Mực"));
+  const inkDef = inkIndex >= 0 ? defs[inkIndex] : null;
+
+  const isCuon = u => u === "cuộn" || u === "cuon";
   const CUON_TO_KG = 0.2;
 
-  const start = headerIdx + 1;
-  const end = rows2D.length;
+  const start = headerIdx + 1, end = rows2D.length;
   let i = start;
   while (i < end) {
     const j = Math.min(i + chunkSize, end);
     for (let r = i; r < j; r++) {
       const row = rows2D[r] || [];
-
       const toIn = String(row[FIXED_IDX.TO_IN] || "").trim();
-      const ten = String(row[FIXED_IDX.TEN] || "").trim();
-      const dvt = String(row[FIXED_IDX.DVT] || "").trim();
-      const vCong = idxCong >= 0 ? row[idxCong] : "";
+      const ten  = String(row[FIXED_IDX.TEN]  || "").trim();
+      const dvt  = String(row[FIXED_IDX.DVT]  || "").trim();
+      const vCong  = idxCong  >= 0 ? row[idxCong]  : "";
       const vVatTu = idxVatTu >= 0 ? row[idxVatTu] : "";
 
-      if ([toIn, ten, dvt, vCong, vVatTu].every((x) => (x ?? "") === "")) continue;
+      if ([toIn, ten, dvt, vCong, vVatTu].every(x => (x ?? "") === "")) continue;
 
-      // Không gọi row.some(vn(...)) để tiết kiệm — bỏ qua kiểm tra này
-      // (Nếu bạn cần, đặt idx cho cột ghi "Tổng" cụ thể thay vì quét cả hàng)
-
-      const qty = getNumber(vCong) || getNumber(vVatTu);
-      if (!qty) continue;
+      // tách 2 biến lượng
+      const qtyCong = getNumber(vCong);                  // chỉ cột "Cộng"
+      const qtyAny  = qtyCong || getNumber(vVatTu);      // "Cộng" hoặc "Vật tư"
 
       const teamKey = vn(toIn);
       if (!teamSet.has(teamKey)) continue;
@@ -175,21 +164,35 @@ async function aggregateInChunks({
       const nameInRow = vn(ten);
       const unitInRow = vn(dvt);
 
-      for (const m of defs) {
+      let matched = false;
+
+      // 1) match các nhóm TRƯỚC "Mực" -> dùng qtyAny
+      for (let gIdx = 0; gIdx < defs.length; gIdx++) {
+        if (gIdx === inkIndex) continue;
+        const m = defs[gIdx];
+        if (!qtyAny) break;                     // không có số thì khỏi xét
         if (!m.ingredients.has(nameInRow)) continue;
 
-        let adjQty = qty;
-        if (m.acceptsCuon && isCuon(unitInRow)) {
-          adjQty = qty * CUON_TO_KG;
-        } else {
-          if (m.units.size > 0 && !m.units.has(unitInRow)) continue;
-        }
+        let adjQty = qtyAny;
+        if (m.acceptsCuon && isCuon(unitInRow)) adjQty = qtyAny * CUON_TO_KG;
+        else if (m.units.size > 0 && !m.units.has(unitInRow)) continue;
 
-        matrix[toIn][m.label] += adjQty;
+        matrix[toIn][materials[gIdx].label] += adjQty;
+        matched = true;
+        break;
+      }
+
+      // 2) fallback cho "Mực" -> chỉ dùng qtyCong
+      if (!matched && inkDef && qtyCong) {
+        if (startsWithAnyPrefix(ten, BAD_PREFIXES)) continue;
+
+        let adjQty = qtyCong;
+        if (inkDef.acceptsCuon && isCuon(unitInRow)) adjQty = qtyCong * CUON_TO_KG;
+        else if (inkDef.units.size > 0 && !inkDef.units.has(unitInRow)) continue;
+
+        matrix[toIn][materials[inkIndex].label] += adjQty;
       }
     }
-
-    // báo tiến độ & nhường frame để UI render
     onProgress(((j - start) / (end - start)) * 100);
     await nextFrame();
     i = j;
@@ -201,15 +204,13 @@ async function aggregateInChunks({
     let rowSum = 0;
     for (const m of materials) {
       const v = matrix[t][m.label] || 0;
-      rowSum += v;
-      colTotals[m.label] += v;
+      rowSum += v; colTotals[m.label] += v;
     }
-    matrix[t].total = rowSum;
-    grandTotal += rowSum;
+    matrix[t].total = rowSum; grandTotal += rowSum;
   }
-
   return { dataByTeam: matrix, colTotals, grandTotal };
 }
+
 
 /* ================== Component ================== */
 export default function ReportMaterials() {
@@ -220,12 +221,11 @@ export default function ReportMaterials() {
   const [grandTotal, setGrandTotal] = useState(0);
   const [materials, setMaterials] = useState([]);
 
-  // tải danh sách vật tư (từ API /api/materials) và gộp theo label
+  // tải danh sách vật tư từ API và gộp theo label (KHÔNG lọc trước nhóm “Mực”)
   useEffect(() => {
     (async () => {
       const res = await fetch(`${BASE_URL}/api/materials?active=1`);
       const json = await res.json();
-
       if (json.success) {
         const grouped = groupMaterials(json.data || []);
         setMaterials(grouped);
@@ -251,7 +251,7 @@ export default function ReportMaterials() {
         idxVatTu,
         materials,
         TEAMS,
-        chunkSize: 2000, // tùy chỉnh 1000-5000 tùy máy
+        chunkSize: 2000,
         onProgress: (p) => setProgress(p),
       });
 
@@ -280,10 +280,7 @@ export default function ReportMaterials() {
               Đang xử lý file… {progress ? `${fmt2(progress)}%` : ""}
             </div>
             <div className="w-64 h-2 bg-gray-200 rounded">
-              <div
-                className="h-2 bg-teal-500 rounded"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
+              <div className="h-2 bg-teal-500 rounded" style={{ width: `${Math.min(progress, 100)}%` }} />
             </div>
           </div>
         </div>
@@ -291,37 +288,21 @@ export default function ReportMaterials() {
 
       <div className="p-2 space-y-6 bg-white rounded-[6px]">
         <div className="relative space-y-6 bg-white rounded-2xl p-6 z-10">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="text-2xl font-bold text-teal-700 flex items-center gap-2"
-          >
-            <FiPackage /> Kê xuất vật tư (chunk xử lý để mượt UI)
+          <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+            className="text-2xl font-bold text-teal-700 flex items-center gap-2">
+            <FiPackage /> Kê xuất vật tư
           </motion.h1>
 
           <div>
-            <label
-              htmlFor="fileInput"
+            <label htmlFor="fileInput"
               className={`cursor-pointer inline-block px-6 py-2 text-white rounded-xl font-medium ${
                 canUpload ? "bg-teal-600 hover:bg-teal-700" : "bg-gray-400 cursor-not-allowed"
-              }`}
-            >
+              }`}>
               Chọn file Excel
             </label>
-            <input
-              id="fileInput"
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={handleFileUpload}
-              disabled={!canUpload || isLoading}
-            />
-            {!canUpload && (
-              <div className="text-sm text-amber-600 mt-2">
-                * Đang tải danh mục vật tư…
-              </div>
-            )}
+            <input id="fileInput" type="file" accept=".xlsx,.xls" className="hidden"
+              onChange={handleFileUpload} disabled={!canUpload || isLoading} />
+            {!canUpload && <div className="text-sm text-amber-600 mt-2">* Đang tải danh mục vật tư…</div>}
           </div>
 
           {Object.keys(dataByTeam).length > 0 && (
@@ -331,9 +312,7 @@ export default function ReportMaterials() {
                   <tr>
                     <th className="border px-3 py-2 font-bold text-center bg-yellow-200">BP/Tổ</th>
                     {materials.map((m) => (
-                      <th key={m.key} className="border px-3 py-2 font-bold">
-                        {m.label} (kg)
-                      </th>
+                      <th key={m.key} className="border px-3 py-2 font-bold">{m.label} (kg)</th>
                     ))}
                     <th className="border px-3 py-2 font-bold text-center bg-yellow-200">Tổng (kg)</th>
                   </tr>
@@ -359,9 +338,7 @@ export default function ReportMaterials() {
                         {fmt2(colTotals[m.label] || 0)}
                       </td>
                     ))}
-                    <td className="border px-3 py-2 text-right">
-                      {fmt2(grandTotal || 0)}
-                    </td>
+                    <td className="border px-3 py-2 text-right">{fmt2(grandTotal || 0)}</td>
                   </tr>
                 </tbody>
               </table>
