@@ -1083,48 +1083,49 @@ function HomeMain() {
 
   // Fetch modules theo user
   useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        setLoadingModules(true);
-        const uid = user?.userID;
-        const role = user?.role; // 'admin' | 'user'
+  const fetchModules = async () => {
+    setLoadingModules(true);
+    try {
+      const uid = user?.userID;
+      const role = user?.role;
 
-        // Ưu tiên: API phân quyền theo user
+      // 1) Ưu tiên API theo user
+      if (uid) {
         try {
-          if (uid) {
-            const r = await http.get(`${BASE_URL}/api/users/${uid}/modules-roles`, {
-              params: { page: 1, pageSize: 200, q: query }
-            });
-            const list = Array.isArray(r.data?.data)
-              ? r.data.data
-              : Array.isArray(r.data)
-              ? r.data
-              : [];
-            if (list.length || query) {
-              setModules(list);
+          const r = await http.get(`${BASE_URL}/api/users/${uid}/modules-roles`, {
+            params: { page: 1, pageSize: 200, q: query }
+          });
+          const list = Array.isArray(r.data?.data)
+            ? r.data.data
+            : Array.isArray(r.data)
+            ? r.data
+            : [];
 
-              return;
-            }
-          }
-        } catch {
-          /* fallback dưới */
+          // DÙ RỖNG CŨNG TRẢ VỀ (không fallback -> không hiện tất cả)
+          setModules(list);
+          return; // <- quan trọng
+        } catch (err) {
+          // Nếu API theo user lỗi mới dùng fallback
+          console.warn('modules-roles failed, fallback to all:', err?.message || err);
         }
-
-        // Fallback: lấy all, gán allowedRoles theo role hiện tại
-        const res = await http.get(`${BASE_URL}/api/modules`, {
-          params: { page: 1, pageSize: 200, q: query },
-        });
-        const all = res.data?.data || res.data || [];
-        const allowed = role === "admin" ? ["user", "admin"] : ["user"];
-        setModules(all.map((m) => ({ ...m, allowedRoles: allowed })));
-      } catch {
-        setModules([]);
-      } finally {
-        setLoadingModules(false);
       }
-    };
-    fetchModules();
-  }, [user?.userID, user?.role, query]);
+
+      // 2) Fallback: chỉ khi không có uid hoặc API theo user lỗi
+      const res = await http.get(`${BASE_URL}/api/modules`, {
+        params: { page: 1, pageSize: 200, q: query },
+      });
+      const all = res.data?.data || res.data || [];
+      const allowed = role === 'admin' ? ['user', 'admin'] : ['user'];
+      setModules(all.map(m => ({ ...m, allowedRoles: allowed })));
+    } catch {
+      setModules([]);
+    } finally {
+      setLoadingModules(false);
+    }
+  };
+  fetchModules();
+}, [user?.userID, user?.role, query]);
+
 
   // Ctrl/⌘+K focus search
   useEffect(() => {
@@ -1244,6 +1245,10 @@ async function handleLogout() {
         rou = config.routes.imageCaddi
     } else if (m.moduleId === MODULEID.SANXUAT && role === 'admin') {
         rou = config.routes.adminProductionDashboard
+    } else if (m.moduleId === MODULEID.TINHLUONG && role === 'admin') {
+        rou = config.routes.adminCalculateSalaryUploadPayrollReport
+    } else if (m.moduleId === MODULEID.TINHLUONG && role === 'user') {
+        rou = config.routes.calculateSalaryViewPayslip
     }
 
     navigate(rou);

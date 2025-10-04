@@ -1,6 +1,6 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest, routesProductionAdmin } from "./routes";
+import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest, routesProductionAdmin, routesCalculateSalaryAdmin } from "./routes";
 
 import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
 import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
@@ -11,6 +11,8 @@ import DefaultLayoutLunchOrder from "./layoutsLunchOrder/DefaultLayout";
 import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutAdmin';
 
 import DefaultLayoutAdminProduction from "./layoutsProductionAdmin/DefaultLayoutAdmin";
+
+import DefaultLayoutAdminCalculateSalary from "./layoutCalculateSalaryAdmin/DefaultLayoutAdmin";
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -195,6 +197,29 @@ function App() {
                 <DefaultLayoutAdminProduction>
                   <route.component />
                 </DefaultLayoutAdminProduction>
+              }
+            />
+          ))}
+        </Route>
+        
+        {/* ====== ADMIN TÍNH LƯƠNG (module tinhluong, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="tinhluong"
+              fallbackName="Xem bảng lương"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesCalculateSalaryAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminCalculateSalary>
+                  <route.component />
+                </DefaultLayoutAdminCalculateSalary>
               }
             />
           ))}

@@ -96,6 +96,10 @@ const routes = {
 
 
   adminProductionDashboard: '/admin/production/dashboard',
+
+
+  adminCalculateSalaryUploadPayrollReport: '/admin/calculate-salary/upload-payroll-report',
+  calculateSalaryViewPayslip: '/me/view-payslip',
   
 
 };

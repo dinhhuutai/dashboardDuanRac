@@ -92,6 +92,11 @@ import ImageCaddi from '~/pages/ImageCaddi';
 
 import ProductionDashboardAdmin from '~/pagesProductionAdmin/Dashboard';
 
+
+import CalculateSalaryViewPayslip from '~/pagesCalculateSalary/ViewPayslip';
+
+import CalculateSalaryUploadPayrollReport from '~/pagesCalculateSalaryAdmin/UploadPayrollReport';
+
 export const routes = [
   {
     path: config.routes.home,
@@ -169,6 +174,14 @@ export const routes = [
     component: ImageCaddi,
     login: true,
     module: 'imageCaddi',
+  },
+
+  
+  {
+    path: config.routes.calculateSalaryViewPayslip,
+    component: CalculateSalaryViewPayslip,
+    login: true,
+    module: 'tinhluong',
   },
 ];
 
@@ -481,6 +494,15 @@ export const routesProductionAdmin = [
   {
     path: config.routes.adminProductionDashboard,
     component: ProductionDashboardAdmin,
+    login: true,
+  },
+]
+
+
+export const routesCalculateSalaryAdmin = [
+  {
+    path: config.routes.adminCalculateSalaryUploadPayrollReport,
+    component: CalculateSalaryUploadPayrollReport,
     login: true,
   },
 ]

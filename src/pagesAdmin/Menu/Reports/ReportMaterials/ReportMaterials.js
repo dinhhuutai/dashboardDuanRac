@@ -520,7 +520,7 @@ export default function ReportMaterials() {
             transition={{ duration: 0.4 }}
             className="text-2xl font-bold text-teal-700 flex items-center gap-2"
           >
-            <FiPackage /> Kê xuất vật tư (Web Worker)
+            <FiPackage /> Kê xuất vật tư
           </motion.h1>
 
           <div>
