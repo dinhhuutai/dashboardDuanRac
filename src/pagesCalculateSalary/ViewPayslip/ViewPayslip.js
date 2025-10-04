@@ -1,3 +1,4 @@
+
 // src/pages/Payroll/ViewPayslip.jsx
 import React, { useEffect, useState } from 'react';
 import http from '~/api/http';
@@ -124,6 +125,51 @@ export default function ViewPayslip() {
     }
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 md:p-6">
+      {/* Header */}
+      <div className="max-w-5xl mx-auto">
+        <div className="rounded-2xl p-5 border bg-white/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 grid place-items-center text-emerald-700">
+              <FaMoneyBillWave />
+            </div>
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-slate-800">Phiếu lương gần nhất</h1>
+              <p className="text-slate-500 text-sm">Xem nhanh thông tin lương mới được cập nhật</p>
+            </div>
+          </div>
+
+          {!pushChecking && (
+            <div className="flex items-center gap-2">
+              {!pushReady ? (
+                <button
+                  onClick={handleEnablePush}
+                  disabled={pushBusy || notifPerm === 'denied'}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {pushBusy ? <FaSpinner className="animate-spin" /> : <FaBell />}
+                  Bật thông báo
+                </button>
+              ) : (
+                <button
+                  onClick={unregisterPush}
+                  disabled={pushBusy}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-800 hover:bg-slate-300 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {pushBusy ? <FaSpinner className="animate-spin" /> : <FaBellSlash />}
+                  Tắt thông báo
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {(pushError || pushStatus) && (
+          <div className={`mt-3 rounded-xl p-3 text-sm ${pushError ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
+            {pushError || pushStatus}
+          </div>
+        )}
+
 <div className="mt-5 bg-white rounded-xl border shadow-sm p-0 overflow-hidden">
   {!payslip ? (
     <div className="p-5 text-slate-600">Chưa có phiếu lương nào.</div>
@@ -205,6 +251,8 @@ export default function ViewPayslip() {
     </div>
   )}
 </div>
+</div>
+</div>
 
   );
 }
@@ -245,4 +293,5 @@ function Sep() {
     </tr>
   );
 }
+
 
