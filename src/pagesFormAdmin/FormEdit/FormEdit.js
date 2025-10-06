@@ -13,6 +13,7 @@ const TYPES = [
   { id: 'multiple_choice', label: 'Chọn một' },
   { id: 'checkboxes', label: 'Chọn nhiều' },
   { id: 'dropdown', label: 'Dropdown' },
+  { id: 'prioritized_list', label: 'Danh sách ưu tiên' },
 ];
 
 // ========= atoms =========
@@ -571,6 +572,36 @@ export default function FormEdit() {
                   </Field>
                 </div>
               )}
+
+              {qEditing.questionType === 'prioritized_list' && (
+  <div className="mt-3">
+    <div className="flex items-center justify-between">
+      <div className="font-medium">Gợi ý mục có sẵn</div>
+      <button onClick={pushOpt} className="px-3 py-1 rounded-xl border hover:bg-slate-50">Thêm</button>
+    </div>
+    <div className="grid gap-2 mt-2">
+      {(qEditing.options || []).map((o, idx) => (
+        <div key={idx} className="rounded-xl border p-2 flex items-center gap-2">
+          <input
+            className="flex-1 border rounded-xl p-2"
+            placeholder="Tên mục"
+            value={o.optionLabel}
+            onChange={(e)=>setQEditing(prev=>{
+              const opts = prev.options.slice();
+              opts[idx] = {...opts[idx], optionLabel: e.target.value };
+              return { ...prev, options: opts };
+            })}
+          />
+          <button onClick={()=>upDownOpt(idx, 'up')} className="px-2 py-1 rounded-lg border hover:bg-slate-50">▲</button>
+          <button onClick={()=>upDownOpt(idx, 'down')} className="px-2 py-1 rounded-lg border hover:bg-slate-50">▼</button>
+          <button onClick={()=>delOpt(idx)} className="px-2 py-1 rounded-lg border hover:bg-rose-50 text-rose-600">Xoá</button>
+        </div>
+      ))}
+      {(!qEditing.options || qEditing.options.length===0) && <div className="text-slate-500 text-sm">Chưa có mục gợi ý.</div>}
+    </div>
+  </div>
+)}
+
 
               {['multiple_choice','checkboxes','dropdown'].includes(qEditing.questionType) && (
                 <div className="mt-3">

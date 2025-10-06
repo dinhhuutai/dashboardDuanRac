@@ -38,6 +38,7 @@ const QUESTION_TYPES = [
   { value: 'checkboxes', label: 'Chọn nhiều' },
   { value: 'dropdown', label: 'Danh sách' },
   { value: 'linear_scale', label: 'Thang điểm' },
+  { value: 'prioritized_list', label: 'Danh sách ưu tiên' },
 ];
 
 // =================== shared UI atoms ===================
@@ -409,6 +410,60 @@ const QuestionItem = React.memo(function QuestionItem({ q, updateQuestion, remov
       </div>
 
       {q.questionType === 'linear_scale' && <LinearScaleConfig q={q} update={update} />}
+
+{q.questionType === 'prioritized_list' && (
+  <div className="space-y-2">
+    <div className="text-sm font-medium text-slate-700">Mục trong danh sách (người dùng có thể thêm khi điền, nhưng bạn có thể gợi ý sẵn)</div>
+    {(q.options || []).map((opt, idx) => (
+      <div key={idx} className="flex gap-2">
+        <input
+          className="flex-1 neu-input"
+          value={opt.label}
+          onChange={(e) => {
+            const cp = [...(q.options || [])];
+            cp[idx] = { ...cp[idx], label: e.target.value };
+            updateQuestion(q.localId, { options: cp });
+          }}
+          placeholder={`Mục ${idx + 1}`}
+        />
+        <input
+          type="number"
+          className="w-28 neu-input"
+          value={opt.displayOrder ?? idx + 1}
+          onChange={(e) => {
+            const cp = [...(q.options || [])];
+            cp[idx] = { ...cp[idx], displayOrder: Number(e.target.value) };
+            updateQuestion(q.localId, { options: cp });
+          }}
+        />
+        <button
+          onClick={() => {
+            const cp = [...(q.options || [])];
+            cp.splice(idx, 1);
+            updateQuestion(q.localId, { options: cp });
+          }}
+          className="neu-btn neu-btn--danger"
+        >
+          Xoá
+        </button>
+      </div>
+    ))}
+    <button
+      onClick={() =>
+        updateQuestion(q.localId, {
+          options: [
+            ...(q.options || []),
+            { label: 'Mục', value: '', displayOrder: (q.options?.length || 0) + 1 },
+          ],
+        })
+      }
+      className="neu-btn neu-btn--muted"
+    >
+      Thêm mục gợi ý
+    </button>
+    <div className="text-xs text-slate-500">Người dùng vẫn có thể tự thêm mục mới khi điền biểu mẫu.</div>
+  </div>
+)}
 
       {['multiple_choice', 'checkboxes', 'dropdown'].includes(q.questionType) && (
         <OptionsEditor q={q} update={update} />

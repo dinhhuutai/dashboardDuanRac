@@ -5,7 +5,7 @@ import { FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
-import FloatingLanterns from "~/components/FloatingLanterns";
+
 
 /**
  * Form trả lời – UI hiện đại & thân thiện
@@ -112,6 +112,10 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
         if (!v || !String(v).trim()) miss.push(q.questionId);
       } else if (q.questionType === 'linear_scale') {
         if (v === undefined || v === null || v === '') miss.push(q.questionId);
+      // ... trong vòng for (const q of requiredQuestions) { ... }
+      } else if (q.questionType === 'prioritized_list') {
+        const v = values[q.questionId];
+        if (!Array.isArray(v) || v.length === 0) miss.push(q.questionId);
       } else {
         // multiple_choice / checkboxes / dropdown
         if (!v || (Array.isArray(v) ? v.length === 0 : !String(v).trim())) miss.push(q.questionId);
@@ -158,6 +162,11 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
         } else if (q.questionType === 'multiple_choice' || q.questionType === 'dropdown') {
           // v: single optionValue
           answers.push({ questionId: q.questionId, answerOptions: [v] });
+        } else if (q.questionType === 'prioritized_list') {
+        // value: array các nhãn theo thứ tự ưu tiên (cao -> thấp)
+            if (Array.isArray(v) && v.length > 0) {
+                answers.push({ questionId: q.questionId, answerOptions: v });
+            }
         }
       }
 
@@ -510,6 +519,15 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       )}
                     </div>
                   )}
+
+                  {q.questionType === 'prioritized_list' && (
+  <PrioritizedListInput
+    value={Array.isArray(values[q.questionId]) ? values[q.questionId] : []}
+    onChange={(next) => handleChange(q, next)}
+    required={q.isRequired && missingRequired.has(q.questionId)}
+  />
+)}
+
                 </Card>
               ))}
             </div>
@@ -589,6 +607,101 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
 }
 
 /* ====================== Tiện ích UI ====================== */
+function PrioritizedListInput({ value = [], onChange, required }) {
+  const [text, setText] = useState('');
+
+  const addItem = () => {
+    const t = text.trim();
+    if (!t) return;
+    onChange([...(value || []), t]);
+    setText('');
+  };
+
+  const move = (idx, dir) => {
+    const swap = dir === 'up' ? idx - 1 : idx + 1;
+    if (swap < 0 || swap >= value.length) return;
+    const arr = value.slice();
+    [arr[idx], arr[swap]] = [arr[swap], arr[idx]];
+    onChange(arr);
+  };
+
+  const del = (idx) => {
+    const arr = value.slice();
+    arr.splice(idx, 1);
+    onChange(arr);
+  };
+
+  return (
+    <div className="mt-2">
+      <div className="flex gap-2">
+        <input
+          className={`flex-1 border rounded-xl p-2 ${required ? 'border-rose-400' : ''}`}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') addItem(); }}
+          placeholder="Nhập tính năng rồi Enter để thêm"
+        />
+        <button
+          type="button"
+          onClick={addItem}
+          className="px-3 py-2 rounded-xl border hover:bg-slate-50"
+        >
+          Thêm
+        </button>
+      </div>
+
+      <div className="mt-3 grid gap-2">
+        {value.map((item, idx) => (
+          <div
+            key={`${item}-${idx}`}
+            className="flex items-center justify-between rounded-xl border p-2 bg-white"
+          >
+            <div className="flex items-center gap-3">
+              <span className="inline-flex w-6 h-6 items-center justify-center rounded-lg bg-slate-100 text-slate-700 text-xs">
+                {idx + 1}
+              </span>
+              <span className="font-medium">{item}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                className="px-2 py-1 rounded-lg border hover:bg-slate-50"
+                onClick={() => move(idx, 'up')}
+                aria-label="Move up"
+              >
+                ▲
+              </button>
+              <button
+                className="px-2 py-1 rounded-lg border hover:bg-slate-50"
+                onClick={() => move(idx, 'down')}
+                aria-label="Move down"
+              >
+                ▼
+              </button>
+              <button
+                className="px-2 py-1 rounded-lg border hover:bg-rose-50 text-rose-600"
+                onClick={() => del(idx)}
+                aria-label="Delete"
+              >
+                Xoá
+              </button>
+            </div>
+          </div>
+        ))}
+        {required && (!value || value.length === 0) && (
+          <div className="text-rose-600 text-sm">Vui lòng thêm ít nhất 1 mục và sắp xếp ưu tiên.</div>
+        )}
+      </div>
+
+      {value?.length > 0 && (
+        <div className="text-xs text-slate-500 mt-1">
+          Mẹo: Ưu tiên cao nhất ở vị trí số 1. Kéo thả nâng cao có thể thêm sau.
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function Card({ children, className = '', hover = false }) {
   return (
     <div
