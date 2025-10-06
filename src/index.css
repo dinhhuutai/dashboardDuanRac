@@ -208,6 +208,104 @@ code {
   }
 }
 
+@layer utilities {
+  /* Màu nền dịu mắt (light) */
+  .neu-page {
+    @apply min-h-screen bg-[#e8eef5];
+    /* có thể chuyển sang #e9edf3/#eaeef5 tùy palette */
+  }
+
+  /* Khối nổi (card) */
+  .neu-card {
+    @apply rounded-2xl p-4 md:p-5;
+    background: #e8eef5;
+    /* shadow đôi: đậm/dịu */
+    box-shadow:
+      10px 10px 20px #c8ced6,
+      -10px -10px 20px #ffffff;
+  }
+
+  /* Vùng section to hơn */
+  .neu-section {
+    @apply rounded-3xl p-4 md:p-6;
+    background: #e8eef5;
+    box-shadow:
+      12px 12px 26px #c8ced6,
+      -12px -12px 26px #ffffff;
+  }
+
+  /* Input/Select kiểu lõm (inset) */
+  .neu-input, .neu-select {
+    @apply w-full rounded-2xl px-3 py-2 text-slate-700 outline-none transition;
+    background: #e8eef5;
+    box-shadow:
+      inset 6px 6px 12px #c8ced6,
+      inset -6px -6px 12px #ffffff;
+  }
+  .neu-input:focus, .neu-select:focus {
+    box-shadow:
+      inset 4px 4px 10px #c8ced6,
+      inset -4px -4px 10px #ffffff,
+      0 0 0 3px rgba(16,185,129,0.25);
+  }
+
+  /* Nút nổi */
+  .neu-btn {
+    @apply rounded-2xl px-4 py-2 font-medium text-slate-700 transition select-none;
+    background: #e8eef5;
+    box-shadow:
+      8px 8px 16px #c8ced6,
+      -8px -8px 16px #ffffff;
+  }
+  .neu-btn:hover {
+    box-shadow:
+      6px 6px 12px #c8ced6,
+      -6px -6px 12px #ffffff;
+  }
+  .neu-btn:active {
+    box-shadow:
+      inset 6px 6px 12px #c8ced6,
+      inset -6px -6px 12px #ffffff;
+  }
+  /* Biến thể xanh lá cho nút hành động chính */
+  .neu-btn--primary {
+    @apply text-emerald-700;
+  }
+
+  /* Badge/nhãn nhỏ */
+  .neu-badge {
+    @apply inline-flex items-center rounded-xl px-2 py-1 text-[12px] font-medium text-slate-600;
+    background: #e8eef5;
+    box-shadow:
+      4px 4px 8px #c8ced6,
+      -4px -4px 8px #ffffff;
+  }
+
+  /* Card thống kê mini */
+  .neu-stat {
+    @apply rounded-2xl p-4;
+    background: #e8eef5;
+    box-shadow:
+      8px 8px 16px #c8ced6,
+      -8px -8px 16px #ffffff;
+  }
+
+  /* Khung biểu đồ */
+  .neu-chart {
+    @apply rounded-2xl p-3 md:p-4;
+    background: #e8eef5;
+    box-shadow:
+      inset 6px 6px 12px #c8ced6,
+      inset -6px -6px 12px #ffffff;
+  }
+
+  /* Overlay loading dịu mắt */
+  .neu-overlay {
+    @apply fixed inset-0 z-50 grid place-items-center backdrop-blur-sm;
+    background: rgba(232,238,245,0.75);
+  }
+}
+
 /* ===================== CSS variables ===================== */
 :root {
   --height-header: 70px;

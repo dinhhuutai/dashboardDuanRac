@@ -97,6 +97,15 @@ import CalculateSalaryViewPayslip from '~/pagesCalculateSalary/ViewPayslip';
 
 import CalculateSalaryUploadPayrollReport from '~/pagesCalculateSalaryAdmin/UploadPayrollReport';
 
+import Form from '~/pagesForm/Form';
+
+import FormCreate from '~/pagesFormAdmin/FormCreate';
+import FormList from '~/pagesFormAdmin/FormList';
+import FormEdit from '~/pagesFormAdmin/FormEdit';
+import FormResponses from '~/pagesFormAdmin/FormResponses';
+import FormResponseDetail from '~/pagesFormAdmin/FormResponseDetail';
+import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
+
 export const routes = [
   {
     path: config.routes.home,
@@ -182,6 +191,21 @@ export const routes = [
     component: CalculateSalaryViewPayslip,
     login: true,
     module: 'tinhluong',
+  },
+
+  
+  {
+    path: config.routes.form,
+    component: Form,
+    login: false,
+    isLogin: false,
+    addId: true,
+  },
+  {
+    path: config.routes.form,
+    component: Form,
+    login: false,
+    isLogin: false,
   },
 ];
 
@@ -503,6 +527,42 @@ export const routesCalculateSalaryAdmin = [
   {
     path: config.routes.adminCalculateSalaryUploadPayrollReport,
     component: CalculateSalaryUploadPayrollReport,
+    login: true,
+  },
+]
+
+export const routesFormAdmin = [
+  {
+    path: config.routes.adminFormCreate,
+    component: FormCreate,
+    login: true,
+  },
+  {
+    path: config.routes.adminFormList,
+    component: FormList,
+    login: true,
+  },
+  {
+    path: config.routes.adminFormEdit,
+    component: FormEdit,
+    login: true,
+    addId: true,
+  },
+  {
+    path: config.routes.adminFormResponses,
+    component: FormResponses,
+    login: true,
+    addId: true,
+  },
+  {
+    path: config.routes.adminFormResponseDetail,
+    component: FormResponseDetail,
+    login: true,
+    addId: true,
+  },
+  {
+    path: config.routes.adminFormAnalytics,
+    component: FormAnalytics,
     login: true,
   },
 ]

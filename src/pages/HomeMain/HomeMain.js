@@ -1249,6 +1249,10 @@ async function handleLogout() {
         rou = config.routes.adminCalculateSalaryUploadPayrollReport
     } else if (m.moduleId === MODULEID.TINHLUONG && role === 'user') {
         rou = config.routes.calculateSalaryViewPayslip
+    } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === 'admin') {
+        rou = config.routes.adminFormCreate
+    } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === 'user') {
+        rou = config.routes.form
     }
 
     navigate(rou);

@@ -41,7 +41,7 @@ const isEditedCM = (s) => {
   const notEmpty = (v) => !!v && v !== '0';
   return notEmpty(a) || notEmpty(b) || notEmpty(c);
 };
-const isSessionEdited = (s) => (s?.operationCode === 'GC' ? isEditedGC(s) : s?.operationCode === 'CM' ? isEditedCM(s) : false);
+const isSessionEdited = (s) => (s?.operationCode === 'GC' ? isEditedGC(s) : s?.operationCode === 'CM' || s?.operationCode === 'TV' ? isEditedCM(s) : false);
 
 // Chi tiết edited (hiện trong popover)
 function buildEditedDetail(s) {
@@ -51,7 +51,7 @@ function buildEditedDetail(s) {
     if (a === 0 && b === 0) return 'Không chỉnh (0 ~ 0)';
     return `GC: Ca xe giao=${a || 0} · Ca xe nhận=${b || 0}`;
   }
-  if (s?.operationCode === 'CM') {
+  if (s?.operationCode === 'CM' || s?.operationCode === 'TV') {
     const a = (s?.editedWorkShift || '').trim();
     const b = (s?.editedUnit || '').trim();
     const c = (s?.editedScaleShift || '').trim();

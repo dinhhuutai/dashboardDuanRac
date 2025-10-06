@@ -1,6 +1,15 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { routes, routesAdmin, routesInkAdmin, routesLunchOrderAdmin, routesSuggest, routesProductionAdmin, routesCalculateSalaryAdmin } from "./routes";
+import { 
+  routes, 
+  routesAdmin, 
+  routesInkAdmin, 
+  routesLunchOrderAdmin, 
+  routesSuggest, 
+  routesProductionAdmin, 
+  routesCalculateSalaryAdmin,
+  routesFormAdmin, 
+} from "./routes";
 
 import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
 import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
@@ -13,6 +22,8 @@ import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutA
 import DefaultLayoutAdminProduction from "./layoutsProductionAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutAdminCalculateSalary from "./layoutCalculateSalaryAdmin/DefaultLayoutAdmin";
+
+import DefaultLayoutAdminForm from "./layoustFormAdmin/DefaultLayoutAdmin";
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -62,7 +73,7 @@ function App() {
         {routes.map((route, index) => (
           <Route element={route.login && <ProtecteRouterLogin />} key={index}>
             <Route
-              path={route.path}
+              path={route.addId ? `${route.path}/:id` : route.path}
               element={
                 route.isLogin
                   ? <route.component />
@@ -220,6 +231,29 @@ function App() {
                 <DefaultLayoutAdminCalculateSalary>
                   <route.component />
                 </DefaultLayoutAdminCalculateSalary>
+              }
+            />
+          ))}
+        </Route>
+        
+        {/* ====== ADMIN TẠO FORM (module bieumaunoibo, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="bieumaunoibo"
+              fallbackName="Biểu mẫu nội bộ"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesFormAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminForm>
+                  <route.component />
+                </DefaultLayoutAdminForm>
               }
             />
           ))}

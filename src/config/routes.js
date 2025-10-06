@@ -101,7 +101,16 @@ const routes = {
   adminCalculateSalaryUploadPayrollReport: '/admin/calculate-salary/upload-payroll-report',
   calculateSalaryViewPayslip: '/me/view-payslip',
   
+  
+  form: '/form',
 
+  adminFormCreate: '/admin/form/create',
+  adminFormList: '/admin/form/list',
+  adminFormEdit: '/admin/form/edit',
+  adminFormResponses: '/admin/form/responses',
+  adminFormResponseDetail: '/admin/form/response-detail',
+  adminFormAnalytics: '/admin/form/analyics',
+  
 };
 
 export default routes;

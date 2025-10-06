@@ -8,6 +8,7 @@ const MODULEID = {
     DATCOM: 6,
     HINHDRAWER: 7,
     SANXUAT: 8,
+    BIEUMAUNOIBO: 9,
 }
 
 
