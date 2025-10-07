@@ -11,7 +11,9 @@ import {
   FiEdit2,
   FiSave,
   FiX,
-  FiCheck
+  FiCheck,
+  FiPlus,
+  FiTrash,
 } from 'react-icons/fi';
 import { userSelector } from '~/redux/selectors';
 import { useSelector } from 'react-redux';
@@ -20,6 +22,15 @@ import MODULEID from '~/contants/modules';
 
 const PAGE_SIZE = 10;
 const PAGE_SIZE_ALL = 100000;
+
+const SHIFT_OPTIONS = [
+  { label: 'Ca 1', value: 'C1' },
+  { label: 'Ca 2', value: 'C2' },
+  { label: 'Ca 3', value: 'C3' },
+  { label: 'Dài 1', value: 'D1' },
+  { label: 'Dài 2', value: 'D2' },
+  { label: 'Hành chính', value: 'HC' },
+];
 
 // ==== Helpers: tên nghiệp vụ thân thiện ====
 const opName = (op) =>
@@ -102,6 +113,66 @@ function HistoryWeigh() {
   const [formMap, setFormMap] = useState({});
   const [savingMap, setSavingMap] = useState({});
   const [exporting, setExporting] = useState(false);
+
+  const [creating, setCreating] = useState(false);
+const [createError, setCreateError] = useState(null);
+
+const trimStr = (v) => (typeof v === 'string' ? v.trim() : v);
+const toInt = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+};
+
+
+  // ==== Create Modal State (UI only) ====
+const [openCreate, setOpenCreate] = useState(false);
+
+const defaultItem = { inkCode: '', inkName: '', productionDate: '', weight: '', pjName: '', pjWeight: '' };
+
+const [createForm, setCreateForm] = useState({
+  operationCode: 'CM', // 'CM' | 'TV' | 'GC'
+  // Cha cho CM/TV
+  hsktId: '',
+  Lenhsx: '',
+  department: '',
+  unit: '',
+  editedWorkShift: '',
+  editedScaleShift: '',
+  // Cha cho GC
+  scaleDeliveredBy: '',
+  scaleReceivedBy: '',
+  // Items
+  items: [ { ...defaultItem } ],
+});
+
+// Helpers
+const isCMorTV = createForm.operationCode === 'CM' || createForm.operationCode === 'TV';
+const isGC = createForm.operationCode === 'GC';
+
+const openCreateModal = () => setOpenCreate(true);
+const closeCreateModal = () => setOpenCreate(false);
+
+const changeCreateField = (field, value) =>
+  setCreateForm(prev => ({ ...prev, [field]: value }));
+
+const changeItemField = (idx, field, value) =>
+  setCreateForm(prev => {
+    const items = [...prev.items];
+    items[idx] = { ...items[idx], [field]: value };
+    return { ...prev, items };
+  });
+
+const addItemRow = () =>
+  setCreateForm(prev => ({ ...prev, items: [...prev.items, { ...defaultItem }] }));
+
+const removeItemRow = (idx) =>
+  setCreateForm(prev => {
+    const items = prev.items.filter((_, i) => i !== idx);
+    return { ...prev, items: items.length ? items : [{ ...defaultItem }] };
+  });
+
+
+
   const isAnySaving = useMemo(() => Object.values(savingMap).some(Boolean), [savingMap]);
 
   // Popover chi tiết edited theo sessionId
@@ -461,7 +532,156 @@ function HistoryWeigh() {
     'Người nhận'
   ];
 
-  console.log(data);
+   // format helper
+ const pad2 = (n) => String(n).padStart(2, '0');
+ const yyyymmddTo_ddmmyy = (s) => {
+   // s: 'YYYY-MM-DD' → 'DD/MM/YY'
+   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+   const [Y, M, D] = s.split('-');
+   const yy = Y.slice(2);
+   return `${D}/${M}/${yy}`;
+ };
+ const now = new Date();
+ const HH = pad2(now.getHours());
+ const mm = pad2(now.getMinutes());
+ const hsktTimeStr = `${HH}:${mm}~${yyyymmddTo_ddmmyy(filters.date)}`; // ví dụ "10:59~06/10/25"
+
+// 'YYYY-MM-DD' -> 'YYMMDD'
+const yyyymmddTo_yymmdd = (s) => {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+  const [Y, M, D] = s.split('-');
+  return `${Y.slice(2)}${M}${D}`; // YYMMDD
+};
+
+// Lấy mã ca từ editedWorkShift (đã là C1/C2/C3/D1/D2/HC)
+const getShiftCode = (v) => (v || '').toString().trim().toUpperCase(); 
+
+
+  const handleCreateSubmit = async (e) => {
+  e.preventDefault();
+  setCreateError(null);
+
+  // --- VALIDATE cơ bản ---
+  const op = createForm.operationCode; // 'CM' | 'TV' | 'GC'
+
+  if (!op) {
+    setCreateError('Vui lòng chọn Nghiệp vụ.');
+    return;
+  }
+
+  // Lọc bỏ dòng item trống
+  const cleanedItems = (createForm.items || []).map(x => ({
+    inkCode: trimStr(x.inkCode),
+    inkName: trimStr(x.inkName),
+    productionDate: trimStr(x.productionDate) || null, // format 'YYYY-MM-DD'
+    weight: toInt(x.weight),       // g
+    pjName: trimStr(x.pjName),
+    pjWeight: toInt(x.pjWeight),   // g
+  })).filter(x =>
+    x.inkCode || x.inkName || x.weight > 0 || x.pjName || x.pjWeight > 0 || x.productionDate
+  );
+
+  if (cleanedItems.length === 0) {
+    setCreateError('Vui lòng nhập ít nhất 1 item màu.');
+    return;
+  }
+
+  // Validate theo loại nghiệp vụ
+  if (op === 'CM' || op === 'TV') {
+    if (!trimStr(createForm.department)) {
+      setCreateError('CM/TV: Vui lòng nhập Bộ phận.');
+      return;
+    }
+    if (!trimStr(createForm.unit)) {
+      setCreateError('CM/TV: Vui lòng nhập Chuyền.');
+      return;
+    }
+    // editedWorkShift / editedScaleShift có thể để trống nếu không dùng
+  } else if (op === 'GC') {
+    if (!trimStr(createForm.editedWorkShift) && !trimStr(createForm.editedScaleShift)) {
+      setCreateError('GC: Cần nhập ít nhất 1 trong 2: Xe giao/Xe nhận.');
+      return;
+    }
+  }
+
+  // --- BUILD PAYLOAD ---
+  const base = {
+    operationCode: op,               // 'CM' | 'TV' | 'GC'
+    date: filters.date || null,      // optional: nếu backend cần ngày; bỏ nếu server tự set
+  };
+
+  const parentCM_TV = {
+    hsktId: trimStr(createForm.hsktId) || null,
+    Lenhsx: trimStr(createForm.Lenhsx) || null,
+    department: trimStr(createForm.department) || null,
+    unit: trimStr(createForm.unit) || null,
+    editedWorkShift: trimStr(createForm.editedWorkShift) || null,   // C1/C2/C3/D1/D2/HC
+    editedScaleShift: trimStr(createForm.editedScaleShift) || null, // C1/C2/C3/D1/D2/HC
+  };
+
+  const parentGC = {
+    // số xe: giữ string nếu backend mong string, đổi Number(...) nếu cần số nguyên
+    scaleDeliveredBy: trimStr(createForm.editedWorkShift) || null,
+    scaleReceivedBy: trimStr(createForm.editedScaleShift) || null,
+  };
+
+  const isCM_TV = op === 'CM' || op === 'TV';
+const workShift = isCM_TV ? getShiftCode(createForm.editedWorkShift) : '';
+const scaleShift = isCM_TV ? getShiftCode(createForm.editedScaleShift) : '';
+
+const yymmdd = yyyymmddTo_yymmdd(filters.date); // ví dụ '2025-10-06' -> '251006'
+const ngaycaStr = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
+
+
+const editedScaleShifttmp = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
+const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workShift}` : null;
+
+  const payload = {
+    ...base,
+    ...(op === 'GC' ? parentGC : parentCM_TV),
+    items: cleanedItems,
+    hskt: 'Nhập tay',
+    scaleCode: 999,
+    hskt_time: hsktTimeStr,
+    editedScaleShift: editedScaleShifttmp,
+    editedWorkShift: editedWorkShifttmp,
+    ngayca: ngaycaStr,
+    // optional: nếu cần lưu user tạo
+    // createdBy: user?.username || null,
+  };
+
+  // --- CALL API ---
+  try {
+    setCreating(true);
+    await axios.post(`${BASE_URL_SERVER_THLA}/api/ink-weighing/sessions`, payload);
+
+    // reset form + đóng modal + refresh list & stats
+    setCreateForm({
+      operationCode: 'CM',
+      hsktId: '',
+      Lenhsx: '',
+      department: '',
+      unit: '',
+      editedWorkShift: '',
+      editedScaleShift: '',
+      scaleDeliveredBy: '',
+      scaleReceivedBy: '',
+      items: [{ inkCode: '', inkName: '', productionDate: '', weight: '', pjName: '', pjWeight: '' }],
+    });
+    setOpenCreate(false);
+
+    // refresh dữ liệu
+    await fetchPage();
+    await fetchMeta();
+  } catch (err) {
+    console.error('Create order error:', err);
+    const msg = err?.response?.data?.message || err?.message || 'Tạo lệnh thất bại.';
+    setCreateError(msg);
+  } finally {
+    setCreating(false);
+  }
+};
+
 
   return (
     <div className="p-4 sm:p-6">
@@ -471,7 +691,16 @@ function HistoryWeigh() {
           <div className="flex flex-col gap-4 border-b border-slate-200/60 p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-800">📜 Lịch sử cân mực</h1>
-              <button
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={openCreateModal}
+                  className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium shadow-sm bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  title="Tạo lệnh cấp mực"
+                >
+                  <FiPlus className="text-base" />
+                  Thêm lệnh cấp mực
+                </button>
+                <button
                 onClick={exportToExcel}
                 disabled={exporting || isLoading}
                 className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2
@@ -482,6 +711,7 @@ function HistoryWeigh() {
                 {exporting ? <FiLoader className="animate-spin" /> : <FiDownload className="text-base" />}
                 {exporting ? 'Đang xuất...' : 'Xuất Excel'}
               </button>
+            </div>
             </div>
 
             {/* Stats mini */}
@@ -887,6 +1117,305 @@ function HistoryWeigh() {
           <span className="text-sm text-slate-700">Đang lưu thay đổi…</span>
         </div>
       )}
+
+      {/* ===== Create Modal ===== */}
+{openCreate && (
+  <div className="fixed inset-0 z-[999]">
+    {/* backdrop */}
+    <div
+      className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]"
+      onClick={closeCreateModal}
+    />
+    {/* panel */}
+    <div className="absolute inset-0 flex items-start justify-center p-4 sm:p-6 pt-16 sm:pt-20 overflow-hidden">
+      <form
+        onSubmit={handleCreateSubmit}
+        className="relative w-full max-w-4xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 max-h-[85vh] flex flex-col"
+      >
+        {/* Modal header */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 sm:px-6 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold text-slate-800">➕ Tạo lệnh cân mực</span>
+            <span className="text-xs px-2 py-0.5 rounded-full ring-1 ring-slate-300 text-slate-600 bg-slate-50">
+              {createForm.operationCode}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={closeCreateModal}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <FiX /> Đóng
+          </button>
+        </div>
+
+        {/* Modal body */}
+        <div className="px-4 sm:px-6 py-4 space-y-5 flex-1 overflow-y-auto">
+          {/* Operation */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex flex-col">
+              <label className="text-xs font-medium text-slate-600 mb-1">Nghiệp vụ</label>
+              <select
+                value={createForm.operationCode}
+                onChange={(e)=>changeCreateField('operationCode', e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              >
+                <option value="CM">Cấp mực (CM)</option>
+                <option value="TV">Trả về (TV)</option>
+                <option value="GC">Giao ca (GC)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Thông tin cha: CM/TV */}
+          {isCMorTV && (
+            <div className="rounded-xl border border-slate-200">
+              <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 uppercase">
+                Thông tin {createForm.operationCode}
+              </div>
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Hồ sơ kỹ thuật</label>
+                  <input
+                    value={createForm.hsktId}
+                    onChange={(e)=>changeCreateField('hsktId', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="VD: HSKT-2025-001"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Lệnh sản xuất</label>
+                  <input
+                    value={createForm.Lenhsx}
+                    onChange={(e)=>changeCreateField('Lenhsx', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="VD: LSX-7890"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Bộ phận/Tổ</label>
+                  <input
+                    value={createForm.department}
+                    onChange={(e)=>changeCreateField('department', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="VD: C3"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Chuyền/Máy</label>
+                  <input
+                    value={createForm.unit}
+                    onChange={(e)=>changeCreateField('unit', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    placeholder="VD: M7"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Ca chuyền</label>
+                  <select
+                    value={createForm.editedWorkShift}
+                    onChange={(e)=>changeCreateField('editedWorkShift', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="">-- Chọn ca chuyền --</option>
+                    {SHIFT_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs font-medium text-slate-600 mb-1">Ca xe</label>
+                  <select
+                    value={createForm.editedScaleShift}
+                    onChange={(e)=>changeCreateField('editedScaleShift', e.target.value)}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="">-- Chọn ca xe --</option>
+                    {SHIFT_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Thông tin cha: GC */}
+          {isGC && (
+            <div className="rounded-xl border border-slate-200">
+              <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 uppercase">
+                Thông tin {createForm.operationCode}
+              </div>
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="flex flex-col">
+                <label className="text-xs font-medium text-slate-600 mb-1">Ca chuyền</label>
+                <select
+                  value={createForm.editedWorkShift}
+                  onChange={(e)=>changeCreateField('editedWorkShift', e.target.value)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                >
+                  <option value="">-- Chọn ca chuyền --</option>
+                  {SHIFT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-slate-600 mb-1">Ca xe</label>
+                <select
+                  value={createForm.editedScaleShift}
+                  onChange={(e)=>changeCreateField('editedScaleShift', e.target.value)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                >
+                  <option value="">-- Chọn ca xe --</option>
+                  {SHIFT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              </div>
+            </div>
+          )}
+
+          {/* Items */}
+          <div className="rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-slate-50">
+              <div className="text-xs font-semibold text-slate-700 uppercase">Danh sách màu</div>
+              <button
+                type="button"
+                onClick={addItemRow}
+                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 hover:bg-indigo-100"
+              >
+                <FiPlus /> Thêm dòng
+              </button>
+            </div>
+
+            <div className="p-3 overflow-x-auto min-h-0">
+              <table className="min-w-[900px] w-full text-sm">
+                <thead>
+                  <tr className="text-xs uppercase tracking-wide text-slate-600 bg-slate-50">
+                    <th className="px-3 py-2 text-left">Mã màu</th>
+                    <th className="px-3 py-2 text-left">Tên màu</th>
+                    <th className="px-3 py-2 text-left">Ngày SX</th>
+                    <th className="px-3 py-2 text-right">Khối lượng (g)</th>
+                    <th className="px-3 py-2 text-left">Tên PJ</th>
+                    <th className="px-3 py-2 text-right">Khối lượng PJ (g)</th>
+                    <th className="px-3 py-2 text-center">Xoá</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {createForm.items.map((it, idx) => (
+                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-3 py-2">
+                        <input
+                          value={it.inkCode}
+                          onChange={(e)=>changeItemField(idx,'inkCode', e.target.value)}
+                          className="w-36 rounded border border-slate-300 px-2 py-1"
+                          placeholder="VD: GA.5000"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={it.inkName}
+                          onChange={(e)=>changeItemField(idx,'inkName', e.target.value)}
+                          className="w-48 rounded border border-slate-300 px-2 py-1"
+                          placeholder="VD: J3.WHITE"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="date"
+                          value={it.productionDate}
+                          onChange={(e)=>changeItemField(idx,'productionDate', e.target.value)}
+                          className="rounded border border-slate-300 px-2 py-1"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={it.weight}
+                          onChange={(e)=>changeItemField(idx,'weight', e.target.value)}
+                          className="w-32 rounded border border-slate-300 px-2 py-1 text-right"
+                          placeholder="(g)"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={it.pjName}
+                          onChange={(e)=>changeItemField(idx,'pjName', e.target.value)}
+                          className="w-40 rounded border border-slate-300 px-2 py-1"
+                          placeholder="Tên PJ"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={it.pjWeight}
+                          onChange={(e)=>changeItemField(idx,'pjWeight', e.target.value)}
+                          className="w-32 rounded border border-slate-300 px-2 py-1 text-right"
+                          placeholder="(g)"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={()=>removeItemRow(idx)}
+                          className="inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                          title="Xoá dòng"
+                        >
+                          <FiTrash />
+                          Xoá
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Gợi ý nhỏ */}
+              <div className="mt-2 text-xs text-slate-500">
+                * Khối lượng nhập **(g)**. Nếu bạn đang có kg, nhân 1000 trước khi nhập.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 sm:px-6 py-3">
+          <button
+            type="button"
+            onClick={closeCreateModal}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <FiX /> Huỷ
+          </button>
+          <button
+            type="submit"
+            disabled={creating}
+            className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2
+              ${creating ? 'bg-emerald-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500/40'}`}
+          >
+            {creating ? <FiLoader className="animate-spin" /> : <FiCheck />}
+            {creating ? 'Đang tạo...' : 'Tạo lệnh'}
+          </button>
+        </div>
+      </form>
+    </div>
+    
+{createError && (
+  <div className="px-4 sm:px-6 z-[1000]">
+    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {createError}
+    </div>
+  </div>
+)}
+  </div>
+)}
+
+
     </div>
   );
 }
