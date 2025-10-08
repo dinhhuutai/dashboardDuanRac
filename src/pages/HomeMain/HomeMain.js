@@ -1260,6 +1260,7 @@ async function handleLogout() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-sky-50">
+      
       <div className="mx-auto max-w-[1200px] p-4 sm:p-6">
         <div className="rounded-3xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-slate-200 overflow-hidden">
           {/* Topbar */}
