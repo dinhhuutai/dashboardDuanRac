@@ -13,8 +13,6 @@ function ProtecteRouterLogin() {
     return <Navigate to={config.routes.login} replace />;
   }
 
-  console.log(login);
-
   // 2) Chỉ auto-redirect ngay SAU khi đăng nhập
   const justLoggedIn = location.state?.from === 'login';
   if (justLoggedIn) {
@@ -31,7 +29,10 @@ function ProtecteRouterLogin() {
       } else if (m.moduleId === MODULEID.CANRAC) {
         if (m.role === 'admin' && (login?.currentUser.userID === 2 || login?.currentUser.userID === 18)) to = config.routes.home;
         else if (m.role === 'admin') to = config.routes.adminReportByShift;
-      }
+      } else if (m.moduleId === MODULEID.TINHLUONG) {
+        if (m.role === 'user') to = config.routes.calculateSalaryViewPayslip;
+        else if (m.role === 'admin') to = config.routes.adminCalculateSalaryUploadPayrollReport;
+      } 
     }
 
     // dùng replace và xóa state để lần sau vào homeMain KHÔNG còn tự đẩy nữa
