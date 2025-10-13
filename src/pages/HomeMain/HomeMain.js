@@ -2546,6 +2546,14 @@ function ProfileSettingsCard() {
   );
 }
 
+const THEMES = [
+  { key: "normal",    label: "Mặc định", icon: BsStars,      accent: "#6366f1" },
+  { key: "tet",       label: "Tết",       icon: RiRedPacketLine, accent: "#ef4444" },
+  { key: "summer",    label: "Hè",        icon: BsUmbrella,      accent: "#06b6d4" }, // có thể dùng BsUmbrella
+  { key: "midautumn", label: "Trung thu", icon: GiLantern,    accent: "#f59e0b" },
+  { key: "noel",      label: "Noel",      icon: BsSnow,       accent: "#22c55e" },
+];
+
 /* ===== Segmented Toggle ===== */
 function ThemeToggle({ value, onChange }) {
   const containerRef = useRef(null);
@@ -2571,12 +2579,22 @@ function ThemeToggle({ value, onChange }) {
   }, [value]);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+
+    // cập nhật khi container thay đổi size (font tải xong, icon load, v.v.)
+    const ro = new ResizeObserver(() => updateSlider());
+    ro.observe(containerRef.current);
+
+    // fallback: cập nhật khi window resize
     const onResize = () => updateSlider();
-    window.addEventListener("resize", onResize);
-    // cập nhật khi fonts/images load xong
+    window.addEventListener('resize', onResize);
+
+    // một nhịp sau paint đầu tiên
     const id = setTimeout(updateSlider, 0);
+
     return () => {
-      window.removeEventListener("resize", onResize);
+      ro.disconnect();
+      window.removeEventListener('resize', onResize);
       clearTimeout(id);
     };
   }, []);
@@ -2632,14 +2650,6 @@ function ThemeToggle({ value, onChange }) {
     </div>
   );
 }
-
-const THEMES = [
-  { key: "normal",    label: "Mặc định", icon: BsStars,      accent: "#6366f1" },
-  { key: "tet",       label: "Tết",       icon: RiRedPacketLine, accent: "#ef4444" },
-  { key: "summer",    label: "Hè",        icon: BsUmbrella,      accent: "#06b6d4" }, // có thể dùng BsUmbrella
-  { key: "midautumn", label: "Trung thu", icon: GiLantern,    accent: "#f59e0b" },
-  { key: "noel",      label: "Noel",      icon: BsSnow,       accent: "#22c55e" },
-];
 
 /* ---------- Trang chính ---------- */
 function HomeMain() {
