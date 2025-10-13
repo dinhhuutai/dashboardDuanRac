@@ -810,6 +810,13 @@ import http from '~/api/http';
 import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import MODULEID from '~/contants/modules';
 
+  const formatNow = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  };
+
 // ---------- UI helpers ----------
 const cx = (...cls) => cls.filter(Boolean).join(' ');
 const Card = ({ className = '', children }) => (
@@ -1025,7 +1032,7 @@ const pickVisibleCols = (vals = []) => {
     const title = [
       `BẢNG THEO DÕI RÁC THẢI ${selectedBucketName ? selectedBucketName : ''} THEO LOẠI RÁC NGÀY ${
         filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`
-      }`,
+      } ${formatNow()}`,
     ];
 
     const headers = ['BP/Tổ','Chuyền', ...visibleTypeLabels, 'Tổng'];

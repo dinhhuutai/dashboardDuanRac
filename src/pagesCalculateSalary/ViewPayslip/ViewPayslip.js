@@ -14,6 +14,17 @@ function fmtVND(x) {
   return n.toLocaleString('vi-VN');
 }
 
+// đặt ở đầu file (trên component)
+const companyFromMSNV = (raw) => {
+  // chuẩn hóa nhẹ: chỉ giữ số để tránh ký tự lạ/space
+  const s = String(raw ?? "").replace(/\D/g, "");
+  if (s.startsWith("02")) return "CÔNG TY TNHH DAMY";
+  if (s.startsWith("01")) return "CÔNG TY TNHH THUẬN HƯNG LONG AN";
+  // fallback nếu không khớp
+  return "CÔNG TY TNHH THUẬN HƯNG LONG AN";
+};
+
+
 export default function ViewPayslip() {
   const tmp = useSelector(userSelector);
   const user = tmp?.login?.currentUser;
@@ -198,7 +209,7 @@ function Line({ k, v, bold = false }) {
             <div className="p-4 md:p-6">
               {/* Header giống ảnh */}
               <div className="text-center border-b pb-3">
-                <div className="font-semibold text-slate-800">CÔNG TY TNHH THUẬN HƯNG LONG AN</div>
+                <div className="font-semibold text-slate-800">{companyFromMSNV(payslip?.msnv ?? user?.msnv)}</div>
                 <div className="font-extrabold text-xl md:text-2xl text-slate-900 tracking-wide mt-1 uppercase">
                   {payslip?.title}
                 </div>

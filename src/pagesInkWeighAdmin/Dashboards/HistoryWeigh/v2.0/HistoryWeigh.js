@@ -529,7 +529,7 @@ const removeItemRow = (idx) =>
     'STT','Mã cân','Nghiệp vụ','Mã HSKT','Tổ in','Chuyền','Số CT','Thời gian',
     'Edited?', // NEW (click để xem chi tiết)
     ...ITEM_HEADERS,
-    'Người nhận'
+    'Người cấp'
   ];
 
    // format helper
@@ -698,7 +698,7 @@ const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workSh
                   title="Tạo lệnh cấp mực"
                 >
                   <FiPlus className="text-base" />
-                  Thêm lệnh cấp mực
+                  Thêm lệnh cân mực
                 </button>
                 <button
                 onClick={exportToExcel}
@@ -839,7 +839,7 @@ const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workSh
                                       {sIdx + 1}
                                     </td>
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
-                                      {session?.scaleCode || ''}
+                                      {session?.weighingSessionId || ''}
                                     </td>
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
                                       {opName(session.operationCode)}
@@ -1010,7 +1010,7 @@ const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workSh
                                 {/* Người nhận (rowSpan theo session) */}
                                 {iIdx === 0 && (
                                   <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
-                                    {session.receivedBy}
+                                    {session.inkIssuedBy}
                                   </td>
                                 )}
                               </tr>

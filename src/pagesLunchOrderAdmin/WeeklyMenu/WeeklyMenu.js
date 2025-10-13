@@ -316,7 +316,7 @@ export default function WeeklyMenu() {
     { d: 5, name: "Thứ 6" },
     { d: 6, name: "Thứ 7" },
   ];
-  const positions = [1, 2, 3, 4, 5]; // tối đa 5 món/ngày
+  const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // tối đa 5 món/ngày
 
   return (
     <div className="p-6">

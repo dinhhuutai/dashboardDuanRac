@@ -15,7 +15,7 @@ import {
   Line,
   CartesianGrid,
 } from 'recharts';
-import { BsSpeedometer2, BsBarChart, BsTrophy, BsTrash, BsPeople } from 'react-icons/bs';
+import { BsSpeedometer2, BsBarChart, BsExclamationOctagon, BsTrash, BsPeople } from 'react-icons/bs';
 
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
@@ -206,6 +206,13 @@ const Analytics = () => {
     [trashTypeData]
   );
 
+  const formatNow = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  };
+
   return (
     <div className="relative">
       {loading && (
@@ -241,14 +248,14 @@ const Analytics = () => {
                 <StatCard
                   icon={BsBarChart}              // <-- đã sửa: thay BsScale bằng BsBarChart
                   label="Tổng (kg)"
-                  value={Number(todayStats.totalWeight || 0).toFixed(1)}
+                  value={`${Number(todayStats.totalWeight || 0).toFixed(1)} (${formatNow()})`}
                   accent="#22c55e"
                 />
                 <StatCard
-                  icon={BsTrophy}
+                  icon={BsExclamationOctagon}
                   label="Bộ phận nhiều nhất"
                   value={todayStats.mostActiveDepartment}
-                  accent="#8b5cf6"
+                  accent="#ef4444"
                 />
                 <StatCard icon={BsTrash} label="Loại rác nhiều nhất" value={todayStats.mostCommonTrashType} accent="#f59e0b" />
                 <StatCard icon={BsPeople} label="Tài khoản" value={todayStats.totalAccounts} accent="#06b6d4" />
@@ -351,7 +358,7 @@ const Analytics = () => {
               {/* tổng giữa donut */}
               <div className="mt-3 text-center">
                 <div className="inline-flex items-baseline gap-1 rounded-full border border-slate-200 px-3 py-1 bg-white">
-                  <span className="text-slate-500 text-sm">Tổng lượt</span>
+                  <span className="text-slate-500 text-sm">Tổng khối lượng</span>
                   <span className="font-semibold text-slate-800">{donutTotal.toLocaleString('vi-VN')}</span>
                 </div>
               </div>

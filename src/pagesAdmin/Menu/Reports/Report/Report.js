@@ -1128,6 +1128,13 @@ const SummaryPill = ({ label, value }) => (
   </div>
 );
 
+  const formatNow = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  };
+
 /* ======================= Constants ======================= */
 // 8 nhóm chất thải × 7 ca = 56 cột, + 2 cột đầu (BP/Tổ, Chuyền) + 1 cột Tổng = 59 cột
 const TRASH_CATEGORIES = [
@@ -1183,6 +1190,21 @@ function sumArrays(...arrays) {
   }
   return out;
 }
+
+function sum7ShiftsPerCategory(arr = []) {
+  // Lấy 56 ô đầu (8 loại x 7 ca), chia 8 nhóm, mỗi nhóm cộng 7 ô
+  const base = arr.slice(0, 56);
+  const out = [];
+  for (let k = 0; k < TRASH_CATEGORIES.length; k++) {
+    let s = 0;
+    for (let j = 0; j < SHIFTS.length; j++) {
+      s += Number(base[k * SHIFTS.length + j] || 0);
+    }
+    out.push(Math.round(s * 100) / 100);
+  }
+  return out; // trả về 8 giá trị – mỗi loại rác 1 tổng
+}
+
 
 /* ======================= Component ======================= */
 export default function ReportTotalDynamic() {
@@ -1240,29 +1262,56 @@ export default function ReportTotalDynamic() {
   /* ===== Chuẩn hóa dữ liệu để render nhanh ===== */
   // rowsOneDay: render chi tiết (BP/Tổ, Chuyền, 8 loại × 7 ca + Tổng)
   const rowsOneDay = useMemo(() => {
-    // Mỗi bucket → nhiều rows: từng chuyền + (QR cấp bộ phận nếu có) + 1 dòng Tổng bucket
-    const rows = [];
-    for (const b of deferredRaw || []) {
-      const list = [
-        ...(b.units || []).map(u => ({ bucketID: b.bucketID, bucketName: b.bucketName, type: 'unit', unitName: u.unitName, raw: u.value })),
-        ...(b.orphan ? [{ bucketID: b.bucketID, bucketName: b.bucketName, type: 'orphan', unitName: '(QR cấp bộ phận)', raw: b.orphan.value }] : []),
-        { bucketID: b.bucketID, bucketName: b.bucketName, type: 'sum', unitName: 'Tổng', raw: b.sum },
-      ];
-      // Gộp vào rows với thông tin rowSpan (để merge cột BP/Tổ)
-      rows.push({ bucketName: b.bucketName, span: list.length, rows: list });
+  const rows = [];
+  for (const b of deferredRaw || []) {
+    const unitRows = (b.units || []).map(u => ({
+      bucketID: b.bucketID,
+      bucketName: b.bucketName,
+      type: 'unit',
+      unitName: u.unitName,
+      raw: u.value,
+    }));
+    const orphanRow = b.orphan
+      ? [{
+          bucketID: b.bucketID,
+          bucketName: b.bucketName,
+          type: 'orphan',
+          unitName: '(QR cấp bộ phận)',
+          raw: b.orphan.value,
+        }]
+      : [];
+
+    let baseRows = [...unitRows, ...orphanRow];
+    if (baseRows.length === 0) {
+      baseRows = [{
+        bucketID: b.bucketID,
+        bucketName: b.bucketName,
+        type: 'unit',
+        unitName: '(Không chuyền)',
+        raw: Array(64).fill(0),
+      }];
     }
-    return rows;
-  }, [deferredRaw]);
+    const hasSum = baseRows.length >= 2; // ✅ chỉ thêm “Tổng” nếu có từ 2 dòng trở lên
+    const list = hasSum
+      ? [...baseRows, { bucketID: b.bucketID, bucketName: b.bucketName, type: 'sum', unitName: 'Tổng', raw: b.sum || Array(64).fill(0) }]
+      : baseRows;
+
+    rows.push({ bucketName: b.bucketName, span: list.length, rows: list });
+  }
+  return rows;
+}, [deferredRaw]);
+
 
   // rowsRange: render nhiều ngày → gọn theo loại rác: mỗi bucket 1 dòng, lấy ô đầu mỗi nhóm 7 (C1..KoC → lấy ô tổng đầu nhóm)
   const rowsRange = useMemo(() => {
-    return (deferredRaw || []).map(b => {
-      const collapsed = groupEach7TakeFirst(b.sum || []);
-      return { bucketID: b.bucketID, bucketName: b.bucketName, vals: collapsed };
-    });
-  }, [deferredRaw]);
+  return (deferredRaw || []).map(b => {
+    const collapsed = sum7ShiftsPerCategory(b.sum || []); // ✅ mỗi loại 1 số tổng
+    return { bucketID: b.bucketID, bucketName: b.bucketName, vals: collapsed };
+  });
+}, [deferredRaw]);
 
-  const grandRange = useMemo(() => groupEach7TakeFirst(grand), [grand]);
+const grandRange = useMemo(() => sum7ShiftsPerCategory(grand || []), [grand]);
+
 
   /* ===== Inline save (giữ nguyên logic cũ, chỉ thay group/item theo động) ===== */
   const handleSave = async () => {
@@ -1325,8 +1374,13 @@ export default function ReportTotalDynamic() {
       });
     }
 
-    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateOne).dmy}`];
-    const wsData = [title, headerRow1, headerRow2, ...rows];
+{
+  const vs = (grand || []).map(e => (e === 0 ? '-' : round1(e).toFixed(1)));
+  rows.push(['', 'Tổng cộng', ...vs]); // 2 cột đầu + 59-2 cột số liệu
+}
+
+const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateOne).dmy} ${formatNow()}`];
+const wsData = [title, headerRow1, headerRow2, ...rows];
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -1393,7 +1447,7 @@ export default function ReportTotalDynamic() {
     const grandTotal = grandRange.reduce((s, x) => s + (x || 0), 0);
     rows.push(['Tổng cộng', ...grandRange.map(v => (v === 0 ? '-' : round1(v).toFixed(1))), grandTotal === 0 ? '-' : round1(grandTotal).toFixed(1)]);
 
-    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy}`];
+    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy} ${formatNow()}`];
     const wsData = [title, headerRow1, ...rows];
 
     const wb = XLSX.utils.book_new();
@@ -1572,12 +1626,13 @@ export default function ReportTotalDynamic() {
                             key={i}
                             className={cx('px-2 py-1 text-center', 'text-slate-700', (i === (TRASH_CATEGORIES.length * SHIFTS.length)) && 'font-semibold text-slate-900')}
                             onDoubleClick={() => {
-                              if (!ADD_DATA_REPORT || filterType !== 'one' || r.type === 'sum') return;
-                              setStatusUpdate(true);
-                              setSelectInput({ group: group.bucketName, item: r.unitName, index: i });
-                              setValue(e);
-                              setTimeout(() => inputRef.current?.focus(), 0);
-                            }}
+  if (!ADD_DATA_REPORT || filterType !== 'one' || r.type === 'sum') return;
+  setStatusUpdate(true);
+  setSelectInput({ group: group.bucketName, item: r.unitName, index: i });
+  const num = Number(e || 0);
+  setValue(Number.isFinite(num) ? num : 0); // ✅ tránh “-” đẩy vào input
+  setTimeout(() => inputRef.current?.focus(), 0);
+}}
                           >
                             {fmt1(e || 0)}
                           </td>
@@ -1602,7 +1657,7 @@ export default function ReportTotalDynamic() {
                 )}
 
                 {/* Grand total */}
-                <tr className="bg-emerald-50 border-t border-emerald-200">
+                <tr className="bg-emerald-50 border-t border-emerald-200 sticky bottom-0">
                   <td className="px-2 py-2 text-center font-bold text-emerald-800" colSpan={filterType === 'one' ? 2 : 1}>Tổng cộng</td>
                   {(
                     filterType === 'one'

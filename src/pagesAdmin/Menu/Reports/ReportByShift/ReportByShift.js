@@ -729,6 +729,14 @@ import http from '~/api/http';
 import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import MODULEID from '~/contants/modules';
 
+
+  const formatNow = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  };
+
 const cx = (...cls) => cls.filter(Boolean).join(' ');
 const Card = ({ className = '', children }) => (
   <div className={cx('bg-white/80 backdrop-blur rounded-2xl border border-slate-200 shadow-sm', className)}>{children}</div>
@@ -891,7 +899,7 @@ export default function ReportByShift() {
     const title = [
       `BẢNG THEO DÕI RÁC THẢI ${selectedBucket ? selectedBucket : ''} THEO CA LÀM NGÀY ${
         filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`
-      }`,
+      }  ${formatNow()}`,
     ];
     const wsData = [title, headersDetail];
 
