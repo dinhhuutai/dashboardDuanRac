@@ -118,28 +118,47 @@ function DraggableFood({ food }) {
     </motion.div>
   );
 }
-function DroppableSlot({ id, assignedFood, onRemove, disabled }) {
-  const { isOver, setNodeRef } = useDroppable({ id });
+function DroppableSlot({ id, assignedFood, onRemove, disabled, droppableDisabled = false }) {
+  const { isOver, setNodeRef } = useDroppable({ id, disabled: droppableDisabled });
+
+  // id dạng "slot-<day>-<pos>" → lấy pos
+  const parts = String(id).split("-");
+  const pos = Number(parts[2]);
+  const isFixed = pos >= 6 && pos <= 12; // slot cố định (6..12)
+
   return (
-    <motion.div ref={setNodeRef}
+    <motion.div
+      ref={setNodeRef}
       className={`h-24 rounded-xl flex items-center justify-center border-2 border-dashed relative
-        ${isOver && !disabled ? "border-emerald-500 bg-emerald-50" : "border-slate-300"} 
-        ${disabled ? "opacity-60" : ""}`}>
+        ${isOver && !disabled && !droppableDisabled ? "border-emerald-500 bg-emerald-50" : "border-slate-300"} 
+        ${disabled ? "opacity-60" : ""}`}
+    >
       {assignedFood ? (
         <div className="relative h-full w-full">
-          <img src={assignedFood.imageUrl} alt={assignedFood.foodName}
-               className="h-full w-full object-cover rounded-xl" />
-          {!disabled && (
-            <button onClick={onRemove}
-              className="absolute top-1 right-1 px-2 py-1 bg-rose-600 text-white text-xs rounded">✕</button>
+          <img
+            src={assignedFood.imageUrl}
+            alt={assignedFood.foodName}
+            className="h-full w-full object-cover rounded-xl"
+          />
+          {/* Ẩn nút xoá khi là slot cố định 6..12 */}
+          {!disabled && !isFixed && (
+            <button
+              onClick={onRemove}
+              className="absolute top-1 right-1 px-2 py-1 bg-rose-600 text-white text-xs rounded"
+            >
+              ✕
+            </button>
           )}
         </div>
       ) : (
-        <span className="text-slate-400 text-sm px-2 text-center">Thả món vào đây</span>
+        <span className="text-slate-400 text-sm px-2 text-center">
+          Thả món vào đây
+        </span>
       )}
     </motion.div>
   );
 }
+
 
 /* =================== Main page =================== */
 export default function WeeklyMenu() {
@@ -223,8 +242,11 @@ export default function WeeklyMenu() {
     try {
       setLoading(true);
       const payload = { weekStartMonday: toISODate(monday) };
-      const rs = await http.post(`${BASE_URL}/api/weekly-menus`, payload);
-      setWeeklyMenu(rs.data?.data || null);
+
+      await http.post(`${BASE_URL}/api/weekly-menus`, payload);
+      
+      await loadWeeklyMenu();
+
       setNotice({ open: true, title: "Thành công", message: "Đã tạo thực đơn tuần. Hãy kéo thả món và lưu lại!" });
     } catch (e) {
       setNotice({ open: true, title: "Lỗi", message: "Không thể tạo thực đơn tuần. Có thể tuần này đã tồn tại." });
@@ -291,6 +313,10 @@ export default function WeeklyMenu() {
     const { active, over } = e;
     if (!over || !active) return;
     if (!weeklyMenu || weeklyMenu.isLocked) return;
+    
+    const parts = String(over.id).split("-");
+    const pos = Number(parts[2]);
+    if (pos >= 6 && pos <= 12) return;
 
     const food = active.data.current;
     const slotId = over.id; // "slot-<day>-<pos>"
@@ -316,7 +342,7 @@ export default function WeeklyMenu() {
     { d: 5, name: "Thứ 6" },
     { d: 6, name: "Thứ 7" },
   ];
-  const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // tối đa 5 món/ngày
+  const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // tối đa 11 món/ngày
 
   return (
     <div className="p-6">
@@ -411,7 +437,7 @@ export default function WeeklyMenu() {
                         <div className="font-semibold">{name}</div>
                         {!weeklyMenu.isLocked && (
                           <button
-                            onClick={() => positions.forEach(p => removeSlot(d, p))}
+                            onClick={() => positions.forEach(p => { if (p < 6) removeSlot(d, p); })}
                             className="text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">
                             Xoá hết
                           </button>
@@ -421,12 +447,14 @@ export default function WeeklyMenu() {
                         {positions.map(pos => {
                           const id = `slot-${d}-${pos}`;
                           const assignedFood = board[id] || null;
+                          const isFixedPos = pos >= 6 && pos <= 12;
                           return (
                             <DroppableSlot
                               key={id}
                               id={id}
                               assignedFood={assignedFood}
                               disabled={weeklyMenu.isLocked}
+                              droppableDisabled={weeklyMenu.isLocked || isFixedPos}
                               onRemove={() => removeSlot(d, pos)}
                             />
                           );

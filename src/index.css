@@ -432,3 +432,9 @@ input[type='range']::-webkit-slider-thumb {
   scrollbar-width: none;       /* Firefox */
 }
 .scrollbar-admin-sidebar-none::-webkit-scrollbar { display: none; }
+
+
+/* optional: global CSS */
+.overflow-auto::-webkit-scrollbar { height: 10px; }
+.overflow-auto::-webkit-scrollbar-thumb { background: #d1fae5; border-radius: 9999px; }
+.overflow-auto::-webkit-scrollbar-track { background: #f1f5f9; }

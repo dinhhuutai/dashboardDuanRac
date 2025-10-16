@@ -3,10 +3,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 import Select from "react-select";
-import XLSX from "xlsx-js-style";
+import * as XLSX from "xlsx-js-style";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaClock } from "react-icons/fa";
 
+/* ====== Date helpers ====== */
 function getMonday(dateStr) {
   const d = new Date(dateStr);
   const day = d.getDay(); // 0=CN..6=T7
@@ -15,34 +16,79 @@ function getMonday(dateStr) {
 }
 function getWeekDates(mondayStr) {
   const base = new Date(mondayStr + "T00:00:00");
-  const arr = [];
-  for (let i = 0; i < 7; i++) {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(base);
     d.setDate(base.getDate() + i);
-    arr.push(d);
-  }
-  return arr;
+    return d;
+  });
 }
 const shortDay = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-const toDDMM = (d) => d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+const toDDMM = (d) =>
+  d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 
+/* ====== UI helpers ====== */
+function hueFromString(str = "") {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h % 360; // 0..359
+}
+function parseFoodsText(text = "") {
+  // "Cá dứa chiên x13, Chay x5" -> [{name, qty}, ...]
+  return text
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      const m = s.match(/^(.*)\sx(\d+)$/i);
+      return m ? { name: m[1].trim(), qty: +m[2] } : { name: s, qty: 1 };
+    });
+}
+const FoodChipsCell = ({ text }) => {
+  if (!text) return <span className="text-slate-400">—</span>;
+  const items = parseFoodsText(text);
+  return (
+    <div className="flex flex-wrap gap-1.5 max-w-full">
+      {items.map((it, i) => {
+        const hue = hueFromString(it.name);
+        return (
+          <span
+            key={i}
+            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[12.5px] leading-none shadow-sm"
+            title={`${it.name} x${it.qty}`}
+          >
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: `hsl(${hue} 70% 50%)` }}
+            />
+            <span className="text-slate-700 truncate max-w-[10rem]">{it.name}</span>
+            <span className="ml-1 rounded-md bg-slate-100 px-1 text-[11px] font-semibold text-slate-700">
+              x{it.qty}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ====== Page ====== */
 export default function AdminSummaryModern() {
-  // data từ API
-  const [rows, setRows] = useState([]);
-  // filter
+  // API data
+  const [rows, setRows] = useState([]);     // user × day (ô text đã gộp: "Món xSL, ...")
+  const [totals, setTotals] = useState([]); // [{dayOfWeek, foodName, totalQty}]
+  // filters
   const [departments, setDepartments] = useState([]);
   const [departmentId, setDepartmentId] = useState(null);
   const [weekStartMonday, setWeekStartMonday] = useState("");
-
   const [loading, setLoading] = useState(false);
 
-  // set tuần hiện tại khi vào
+  // default week
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     setWeekStartMonday(getMonday(today));
   }, []);
 
-  // load danh mục bộ phận
+  // departments
   useEffect(() => {
     (async () => {
       try {
@@ -54,7 +100,7 @@ export default function AdminSummaryModern() {
     })();
   }, []);
 
-  // load dữ liệu
+  // load data
   useEffect(() => {
     if (!weekStartMonday) return;
     load();
@@ -67,192 +113,239 @@ export default function AdminSummaryModern() {
         params: { weekStartMonday, departmentId },
       });
       setRows(res.data?.data || []);
+      setTotals(res.data?.totals || []);
     } finally {
       setLoading(false);
     }
   }
 
-  // nhóm theo user → pivot theo 7 ngày
-  const grouped = useMemo(() => {
+  /* ====== Transform: users & departments ====== */
+
+  // users: gom theo user, mỗi ô ngày là chuỗi "Món xSL, ..."
+  const users = useMemo(() => {
     const map = new Map();
     for (const r of rows) {
       if (!map.has(r.userID)) {
-        map.set(r.userID, { userID: r.userID, fullName: r.fullName, days: {} });
+        map.set(r.userID, {
+          userID: r.userID,
+          fullName: r.fullName,
+          departmentId: r.departmentId,
+          departmentName: r.departmentName || "Chưa gán",
+          days: {}, // 1..7 -> "Food xN, Food2 xM"
+        });
       }
-      if (r.dayOfWeek) map.get(r.userID).days[r.dayOfWeek] = r.foodName;
+      if (r.dayOfWeek) map.get(r.userID).days[r.dayOfWeek] = r.foodsText || "";
     }
-    return Array.from(map.values()).sort((a, b) =>
-      (a.fullName || "").localeCompare(b.fullName || "")
+    return Array.from(map.values()).sort(
+      (a, b) =>
+        (a.departmentName || "").localeCompare(b.departmentName || "") ||
+        (a.fullName || "").localeCompare(b.fullName || "")
     );
   }, [rows]);
 
-  // tổng từng món theo từng ngày
-  const totalsByDay = useMemo(() => {
-    const result = {};
-    for (const r of rows) {
-      if (!r.dayOfWeek || !r.foodName) continue;
-      if (!result[r.dayOfWeek]) result[r.dayOfWeek] = {};
-      result[r.dayOfWeek][r.foodName] = (result[r.dayOfWeek][r.foodName] || 0) + 1;
+  // group by department + compute per-dept totalsByDay
+  const deptGroups = useMemo(() => {
+    const m = new Map(); // dept -> { name, users:[], totalsByDay:{ d:{food:qty} } }
+    const add = (agg, d, text) => {
+      if (!text) return;
+      agg[d] ||= {};
+      for (const { name, qty } of parseFoodsText(text)) {
+        agg[d][name] = (agg[d][name] || 0) + qty;
+      }
+    };
+    for (const u of users) {
+      const key = u.departmentName || "Chưa gán";
+      if (!m.has(key)) m.set(key, { name: key, users: [], totalsByDay: {} });
+      m.get(key).users.push(u);
+      for (let d = 1; d <= 7; d++) add(m.get(key).totalsByDay, d, u.days[d] || "");
     }
-    return result;
-  }, [rows]);
+    return Array.from(m.values()).sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "")
+    );
+  }, [users]);
+
+  // totalsByDay (toàn bộ) – ưu tiên từ API
+  const totalsByDay = useMemo(() => {
+    if (totals?.length) {
+      const out = {};
+      for (const t of totals) {
+        out[t.dayOfWeek] ||= {};
+        out[t.dayOfWeek][t.foodName] = (out[t.dayOfWeek][t.foodName] || 0) + (t.totalQty || 0);
+      }
+      return out;
+    }
+    // fallback từ deptGroups
+    const agg = {};
+    for (const g of deptGroups) {
+      for (const [d, foods] of Object.entries(g.totalsByDay)) {
+        agg[d] ||= {};
+        for (const [food, qty] of Object.entries(foods)) {
+          agg[d][food] = (agg[d][food] || 0) + qty;
+        }
+      }
+    }
+    return agg;
+  }, [totals, deptGroups]);
+
+  // totals badges
+  const totalUsers = users.length;
+  const totalMealsQty = useMemo(() => {
+    let sum = 0;
+    for (const g of deptGroups) {
+      for (const foods of Object.values(g.totalsByDay)) {
+        for (const qty of Object.values(foods)) sum += qty;
+      }
+    }
+    return sum;
+  }, [deptGroups]);
 
   const weekDates = useMemo(
     () => (weekStartMonday ? getWeekDates(weekStartMonday) : []),
     [weekStartMonday]
   );
 
-  const totalUsers = grouped.length;
-  const totalMeals = rows.length;
+  /* ====== Export Excel (nhận tham số & được wrap khi gọi) ====== */
+  function exportExcel({ weekDates, deptGroups, totalsByDay, shortDay, toDDMM }) {
+    if (!Array.isArray(weekDates) || !weekDates.length) return;
 
-  // xuất Excel (kèm dòng tổng)
-  function exportExcel() {
-  if (weekDates.length !== 7) return;
+    const wb = XLSX.utils.book_new();
 
-  // ====== 1) Chuẩn bị dữ liệu AOA ======
-  const headers = [
-    "#",
-    "Họ tên",
-    ...weekDates.map((d, i) => `${shortDay[i]} (${toDDMM(d)})`),
-  ];
+    // ---- Styles ----
+    const BORDER_THIN = { style: "thin", color: { rgb: "E2E8F0" } };
+    const BORDER_MED  = { style: "medium", color: { rgb: "94A3B8" } };
 
-  const body = grouped.map((u, i) => [
-    i + 1,
-    u.fullName,
-    u.days[1] || "",
-    u.days[2] || "",
-    u.days[3] || "",
-    u.days[4] || "",
-    u.days[5] || "",
-    u.days[6] || "",
-    u.days[7] || "",
-  ]);
+    const styleTitle = {
+      font: { bold: true, sz: 14, color: { rgb: "0F172A" } },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+    const styleHeader = {
+      font: { bold: true, color: { rgb: "0F172A" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      fill: { fgColor: { rgb: "E9F2FF" } },
+      border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN }
+    };
+    const styleTextLeft = {
+      alignment: { horizontal: "left", vertical: "center", wrapText: true },
+      border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN }
+    };
+    const styleNumber = {
+      alignment: { horizontal: "right", vertical: "center" },
+      border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN },
+      numFmt: "#,##0"
+    };
+    const styleZebra = (even) => ({ fill: { fgColor: { rgb: even ? "F8FAFC" : "FFFFFF" } } });
+    const styleTotalCell = {
+      font: { bold: true, color: { rgb: "7C2D12" } },
+      fill: { fgColor: { rgb: "FEF3C7" } },
+      alignment: { horizontal: "right", vertical: "center" },
+      border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN },
+      numFmt: "#,##0"
+    };
+    const styleTotalLeft = { ...styleTotalCell, alignment: { horizontal: "left", vertical: "center" } };
 
-  // Dòng tổng từng món theo từng ngày
-  const totalRow = [
-    "",
-    "Tổng từng món",
-    ...Array.from({ length: 7 }).map((_, idx) => {
-      const d = idx + 1;
-      if (!totalsByDay[d]) return "";
-      return Object.entries(totalsByDay[d])
-        .map(([food, count]) => `${food}: ${count}`)
-        .join(", ");
-    }),
-  ];
+    const setCellStyle = (ws, r, c, style) => {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      ws[addr] = ws[addr] || { v: "" };
+      ws[addr].s = { ...(ws[addr].s || {}), ...style };
+    };
 
-  const aoa = [headers, ...body, totalRow];
+    for (let day = 1; day <= 7; day++) {
+      // 1) Tập món ăn của ngày (union toàn bộ phòng ban, sort theo qty giảm)
+      const foodsMap = new Map();
+      (deptGroups || []).forEach((g) => {
+        const m = (g.totalsByDay && g.totalsByDay[day]) || {};
+        Object.entries(m).forEach(([food, qty]) => {
+          foodsMap.set(food, (foodsMap.get(food) || 0) + (qty || 0));
+        });
+      });
+      const foods = Array.from(foodsMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([f]) => f);
 
-  // ====== 2) Tạo worksheet có style ======
-const ws = XLSX.utils.aoa_to_sheet(aoa);
-const range = XLSX.utils.decode_range(ws["!ref"]);
+      // 2) AOA
+      const title = `Phòng ban × Món ăn — ${shortDay[day - 1]} – ${toDDMM(weekDates[day - 1])}`;
+      const header1 = [title, ...Array(foods.length + 1).fill("")];
+      const header2 = ["Phòng ban", ...foods, "Tổng"];
 
-// ---- style cơ bản
-const borderThin = {
-  top: { style: "thin", color: { rgb: "C7D2FE" } },   // xanh nhạt
-  left: { style: "thin", color: { rgb: "C7D2FE" } },
-  bottom:{ style: "thin", color: { rgb: "C7D2FE" } },
-  right: { style: "thin", color: { rgb: "C7D2FE" } },
-};
-const borderOuter = {
-  top: { style: "medium", color: { rgb: "64748B" } },   // slate-500
-  left:{ style: "medium", color: { rgb: "64748B" } },
-  bottom:{ style: "medium", color: { rgb: "64748B" } },
-  right:{ style: "medium", color: { rgb: "64748B" } },
-};
+      const body = (deptGroups || []).map((g) => {
+        let sum = 0;
+        const row = [g.name];
+        foods.forEach((f) => {
+          const v = (g.totalsByDay && g.totalsByDay[day] && g.totalsByDay[day][f]) || 0;
+          row.push(v);
+          sum += v;
+        });
+        row.push(sum);
+        return row;
+      });
 
-const baseAlign = { alignment: { vertical: "center", horizontal: "left", wrapText: true } };
-const headerBase = {
-  font: { bold: true, color: { rgb: "0F172A" } },
-  alignment: { vertical: "center", horizontal: "center", wrapText: true },
-};
+      let grand = 0;
+      const totalRow = ["Tổng"];
+      foods.forEach((f) => {
+        const q = (totalsByDay && totalsByDay[day] && totalsByDay[day][f]) || 0;
+        totalRow.push(q);
+        grand += q;
+      });
+      totalRow.push(grand);
 
-// ---- màu zebra theo CỘT (áp cho header + body)
-const COL_COLOR_EVEN = "F1F5FF"; // xanh rất nhạt
-const COL_COLOR_ODD  = "FFFFFF"; // trắng
+      const aoa = [header1, header2, ...body, totalRow];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-function cellStyle(r, c, isHeader, isTotalRow) {
-  // chọn màu nền theo CỘT
-  const isEvenCol = (c % 2 === 0);
-  const fillColor = isHeader
-    ? (isEvenCol ? "E8F1FF" : "F4F8FF")  // header nhẹ hơn tí
-    : (isEvenCol ? COL_COLOR_EVEN : COL_COLOR_ODD);
+      // 3) Merge / Freeze / Filter / Col widths
+      const lastCol = header2.length - 1;
+      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }];
+      ws["!freeze"] = { xSplit: 1, ySplit: 2 };
+      ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }) };
+      ws["!cols"] = [{ wch: 28 }, ...foods.map(() => ({ wch: 12 })), { wch: 10 }];
+      ws["!rows"] = [{ hpt: 28 }, { hpt: 22 }];
 
-  const style = {
-    ...(isHeader ? headerBase : baseAlign),
-    fill: { fgColor: { rgb: fillColor } },
-    border: { ...borderThin },
-  };
+      // 4) Styles
+      const ref = ws["!ref"] || XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: lastCol } });
+      const range = XLSX.utils.decode_range(ref);
 
-  if (isTotalRow) {
-    style.font = { ...(style.font || {}), bold: true, color: { rgb: "7C2D12" } };
-    style.fill = { fgColor: { rgb: "FEF3C7" } }; // amber-100
+      // Title
+      for (let c = 0; c <= lastCol; c++) setCellStyle(ws, 0, c, styleTitle);
+      // Header
+      for (let c = 0; c <= lastCol; c++) setCellStyle(ws, 1, c, styleHeader);
+      // Body
+      for (let r = 2; r < range.e.r; r++) {
+        const even = (r % 2) === 0;
+        setCellStyle(ws, r, 0, { ...styleTextLeft, ...styleZebra(even) });
+        for (let c = 1; c < lastCol; c++) setCellStyle(ws, r, c, { ...styleNumber, ...styleZebra(even) });
+        setCellStyle(ws, r, lastCol, { ...styleNumber, ...styleZebra(even) });
+      }
+      // Total row
+      const totalRowIndex = range.e.r;
+      setCellStyle(ws, totalRowIndex, 0, styleTotalLeft);
+      for (let c = 1; c <= lastCol; c++) setCellStyle(ws, totalRowIndex, c, styleTotalCell);
+
+      // Outline
+      for (let c = 0; c <= lastCol; c++) {
+        setCellStyle(ws, 1, c, {
+          border: { ...(ws[XLSX.utils.encode_cell({ r: 1, c })]?.s?.border || {}), top: BORDER_MED }
+        });
+        setCellStyle(ws, totalRowIndex, c, {
+          border: { ...(ws[XLSX.utils.encode_cell({ r: totalRowIndex, c })]?.s?.border || {}), bottom: BORDER_MED }
+        });
+      }
+      for (let r = 1; r <= totalRowIndex; r++) {
+        setCellStyle(ws, r, 0, {
+          border: { ...(ws[XLSX.utils.encode_cell({ r, c: 0 })]?.s?.border || {}), left:  BORDER_MED }
+        });
+        setCellStyle(ws, r, lastCol, {
+          border: { ...(ws[XLSX.utils.encode_cell({ r, c: lastCol })]?.s?.border || {}), right: BORDER_MED }
+        });
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, shortDay[day - 1]);
+    }
+
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const fileName = `Phongban_Monan_${toDDMM(weekDates[0])}.xlsx`;
+    saveAs(new Blob([buf]), fileName);
   }
-  return style;
-}
 
-// ---- áp style cho toàn sheet
-const lastRow = range.e.r;
-const lastCol = range.e.c;
-
-// Header (row 0)
-for (let c = range.s.c; c <= lastCol; c++) {
-  const addr = XLSX.utils.encode_cell({ r: 0, c });
-  if (!ws[addr]) ws[addr] = { v: "" };
-  ws[addr].s = cellStyle(0, c, true, false);
-}
-
-// Body + dòng tổng
-for (let r = 1; r <= lastRow; r++) {
-  const isTotal = (r === lastRow); // dòng cuối là "Tổng từng món"
-  for (let c = range.s.c; c <= lastCol; c++) {
-    const addr = XLSX.utils.encode_cell({ r, c });
-    if (!ws[addr]) ws[addr] = { v: "" };
-    ws[addr].s = cellStyle(r, c, false, isTotal);
-  }
-}
-
-// ---- viền bao ngoài (outline)
-for (let c = range.s.c; c <= lastCol; c++) {
-  // top
-  const topAddr = XLSX.utils.encode_cell({ r: range.s.r, c });
-  ws[topAddr].s = { ...ws[topAddr].s, border: { ...ws[topAddr].s.border, top: borderOuter.top } };
-  // bottom
-  const botAddr = XLSX.utils.encode_cell({ r: lastRow, c });
-  ws[botAddr].s = { ...ws[botAddr].s, border: { ...ws[botAddr].s.border, bottom: borderOuter.bottom } };
-}
-for (let r = range.s.r; r <= lastRow; r++) {
-  // left
-  const leftAddr = XLSX.utils.encode_cell({ r, c: range.s.c });
-  ws[leftAddr].s = { ...ws[leftAddr].s, border: { ...ws[leftAddr].s.border, left: borderOuter.left } };
-  // right
-  const rightAddr = XLSX.utils.encode_cell({ r, c: lastCol });
-  ws[rightAddr].s = { ...ws[rightAddr].s, border: { ...ws[rightAddr].s.border, right: borderOuter.right } };
-}
-
-// Freeze header + độ rộng cột (giữ giống trước)
-ws["!freeze"] = { xSplit: 0, ySplit: 1 };
-ws["!cols"] = [
-  { wch: 5 },   // #
-  { wch: 28 },  // Họ tên
-  { wch: 26 },  // T2
-  { wch: 26 },  // T3
-  { wch: 26 },  // T4
-  { wch: 26 },  // T5
-  { wch: 26 },  // T6
-  { wch: 26 },  // T7
-  { wch: 26 },  // CN
-];
-
-
-  // ====== 3) Ghi file ======
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "BaoCaoTuan");
-  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-  saveAs(new Blob([buf]), `Bao_cao_tuan_${toDDMM(weekDates[0])}.xlsx`);
-}
-
-
+  /* ====== Render ====== */
   return (
     <div className="min-h-screen bg-[#f6fbff] p-5">
       {/* Header */}
@@ -263,21 +356,22 @@ ws["!cols"] = [
           </div>
           <div>
             <div className="text-lg font-bold text-slate-800">Báo cáo đặt cơm theo tuần</div>
-            <div className="text-slate-500 text-sm">
-              Lọc theo tuần & bộ phận • Xuất Excel
-            </div>
+            <div className="text-slate-500 text-sm">Lọc theo tuần & bộ phận • Xuất Excel</div>
           </div>
         </div>
 
+        {/* GỌI HÀM BẰNG CÁCH WRAP THAM SỐ */}
         <button
-          onClick={exportExcel}
+          onClick={() =>
+            exportExcel({ weekDates, deptGroups, totalsByDay, shortDay, toDDMM })
+          }
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white shadow hover:bg-emerald-700 active:scale-[0.99]"
         >
           <FaFileExcel /> Xuất Excel
         </button>
       </div>
 
-      {/* Toolbar lọc */}
+      {/* Toolbar */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 mb-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
           <div className="col-span-2">
@@ -293,12 +387,8 @@ ws["!cols"] = [
           <div className="col-span-2">
             <div className="text-xs text-slate-500 mb-1">Bộ phận</div>
             <Select
-              className="react-select-container"
               classNamePrefix="react-select"
-              options={departments.map((d) => ({
-                value: d.departmentId,
-                label: d.departmentName,
-              }))}
+              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
               onChange={(opt) => setDepartmentId(opt?.value ?? null)}
               placeholder="-- Tất cả --"
               isClearable
@@ -310,18 +400,19 @@ ws["!cols"] = [
               👥 <b>{totalUsers}</b> người
             </div>
             <div className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700">
-              🍽️ <b>{totalMeals}</b> món
+              🍚 <b>{totalMealsQty}</b> suất (active)
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bảng */}
+      {/* Table */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-auto">
-        <table className="min-w-[980px] w-full border-collapse">
+        <table className="min-w-[1100px] w-full border-collapse">
           <thead>
             <tr className="bg-[#f1f7ff] text-slate-700">
               <th className="px-3 py-3 border-b border-slate-200 w-14 text-center">#</th>
+              <th className="px-3 py-3 border-b border-slate-200 text-left w-48">Bộ phận</th>
               <th className="px-3 py-3 border-b border-slate-200 text-left w-64">Họ tên</th>
               {weekDates.length === 7 &&
                 weekDates.map((d, i) => (
@@ -336,50 +427,85 @@ ws["!cols"] = [
           <tbody className="text-sm">
             {loading && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
                   Đang tải…
                 </td>
               </tr>
             )}
 
-            {!loading && grouped.length === 0 && (
+            {!loading && !deptGroups.length && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={10} className="px-4 py-8 text-center text-slate-400">
                   Không có dữ liệu
                 </td>
               </tr>
             )}
 
             {!loading &&
-              grouped.map((u, idx) => (
-                <tr key={u.userID} className="odd:bg-white even:bg-[#fbfdff]">
-                  <td className="px-3 py-3 border-t border-slate-100 text-center">{idx + 1}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.fullName}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[1] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[2] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[3] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[4] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[5] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[6] || ""}</td>
-                  <td className="px-3 py-3 border-t border-slate-100">{u.days[7] || ""}</td>
-                </tr>
+              deptGroups.map((grp, gi) => (
+                <React.Fragment key={grp.name + gi}>
+                  {/* group header */}
+                  <tr className="bg-slate-50/80">
+                    <td colSpan={10} className="px-3 py-2 border-t border-slate-200 text-slate-700 font-semibold">
+                      {grp.name}{" "}
+                      <span className="text-slate-500 font-normal">({grp.users.length} người)</span>
+                    </td>
+                  </tr>
+
+                  {/* users */}
+                  {grp.users.map((u, idx) => (
+                    <tr key={u.userID} className="odd:bg-white even:bg-[#fbfdff] align-top">
+                      <td className="px-3 py-3 border-t border-slate-100 text-center">{idx + 1}</td>
+                      <td className="px-3 py-3 border-t border-slate-100">{grp.name}</td>
+                      <td className="px-3 py-3 border-t border-slate-100">{u.fullName}</td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[1]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[2]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[3]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[4]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[5]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[6]} /></td>
+                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[7]} /></td>
+                    </tr>
+                  ))}
+
+                  {/* dept totals row */}
+                  <tr className="bg-emerald-50/60">
+                    <td className="px-3 py-3 border-t border-emerald-100"></td>
+                    <td className="px-3 py-3 border-t border-emerald-100 font-semibold text-emerald-800">
+                      Tổng từng món (bộ phận)
+                    </td>
+                    <td className="px-3 py-3 border-t border-emerald-100"></td>
+                    {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+                      const foods = grp.totalsByDay[d] || {};
+                      const text = Object.entries(foods)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([f, q]) => `${f} x${q}`)
+                        .join(", ");
+                      return (
+                        <td key={d} className="px-3 py-3 border-t border-emerald-100 align-top">
+                          <FoodChipsCell text={text} />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </React.Fragment>
               ))}
 
-            {/* Dòng tổng từng món theo từng ngày */}
-            {!loading && grouped.length > 0 && (
+            {/* grand totals */}
+            {!loading && deptGroups.length > 0 && (
               <tr className="bg-amber-50/70 font-medium">
-                <td className="px-3 py-3 border-t border-slate-200"></td>
-                <td className="px-3 py-3 border-t border-slate-200">Tổng từng món</td>
-                {Array.from({ length: 7 }).map((_, idx) => {
-                  const d = idx + 1;
-                  const text = totalsByDay[d]
-                    ? Object.entries(totalsByDay[d])
-                        .map(([food, count]) => `${food}: ${count}`)
-                        .join(", ")
-                    : "";
+                <td className="px-3 py-3 border-t border-amber-200"></td>
+                <td className="px-3 py-3 border-t border-amber-200">Tổng từng món (toàn bộ)</td>
+                <td className="px-3 py-3 border-t border-amber-200"></td>
+                {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+                  const o = totalsByDay[d] || {};
+                  const txt = Object.entries(o)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([food, qty]) => `${food} x${qty}`)
+                    .join(", ");
                   return (
-                    <td key={idx} className="px-3 py-3 border-t border-slate-200 text-[12.5px] text-slate-700">
-                      {text}
+                    <td key={d} className="px-3 py-3 border-t border-amber-200 align-top">
+                      <FoodChipsCell text={txt} />
                     </td>
                   );
                 })}

@@ -18,6 +18,9 @@ export default function LunchOrderHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // tổng suất (cộng theo quantity)
+  const totalQty = history.reduce((s, r) => s + (r.quantity ?? 0), 0);
+
   // Load API
   async function loadHistory(dateStr) {
     if (!dateStr || !user?.userID) return;
@@ -48,8 +51,8 @@ export default function LunchOrderHistory() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6">
       <div className="max-w-5xl mx-auto">
-        {/* Input chọn ngày */}
-        <div className="mb-6">
+        {/* Filter bar */}
+        <div className="mb-6 flex items-center justify-between gap-3">
           <input
             type="date"
             value={weekStart}
@@ -57,12 +60,26 @@ export default function LunchOrderHistory() {
             className="px-3 py-2 rounded-xl border border-slate-300 shadow-inner 
                        focus:ring-2 focus:ring-emerald-400 outline-none"
           />
+          {history.length > 0 && (
+            <div className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700">
+              🍚 <b>{totalQty}</b> suất (tuần này)
+            </div>
+          )}
         </div>
 
-        {loading && <div>Đang tải...</div>}
+        {loading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-3xl bg-slate-100 h-56"
+              />
+            ))}
+          </div>
+        )}
 
         {!loading && history.length > 0 && (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {history.map((item, idx) => (
               <div
                 key={idx}
@@ -74,6 +91,18 @@ export default function LunchOrderHistory() {
                 {/* Hiệu ứng ánh sáng lấp lánh */}
                 <div className="shine"></div>
 
+                {/* Badge đã chọn */}
+                {item.selectedAt && (
+                  <div
+                    className="absolute top-3 right-3 flex items-center gap-1 
+                               bg-emerald-100 text-emerald-700 text-[11px] px-2.5 py-1 rounded-full shadow"
+                    title={new Date(item.selectedAt).toLocaleString("vi-VN")}
+                  >
+                    <FaCheck className="text-[10px]" /> Đã chọn
+                  </div>
+                )}
+
+                {/* Ảnh */}
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
@@ -85,18 +114,24 @@ export default function LunchOrderHistory() {
                     Không có hình
                   </div>
                 )}
-                <h3 className="font-semibold text-base text-slate-700 mb-1 text-center">
+
+                {/* Tên món */}
+                <h3 className="font-semibold text-base text-slate-700 mb-1 text-center line-clamp-2">
                   {item.foodName}
                 </h3>
-                <p className="text-sm text-slate-500 text-center">
-                  {dayNameVN(item.dayOfWeek)}
-                </p>
-                {item.selectedAt && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 
-                                  bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full shadow">
-                    <FaCheck /> Đã chọn
-                  </div>
-                )}
+
+                {/* Ngày + Số lượng */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-slate-500">{dayNameVN(item.dayOfWeek)}</p>
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[12px] font-semibold
+                               bg-white border border-slate-200 rounded-full px-2.5 py-1 shadow-sm"
+                    title="Số lượng đã đặt"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+                    x{item.quantity ?? 1}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

@@ -10,19 +10,19 @@ function dayNameVN(d) {
 }
 function getMonday(dateStr) {
   const d = new Date(dateStr);
-  const day = d.getDay(); // 0=CN..6=T7
+  const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff)).toISOString().slice(0, 10);
 }
 const fmtTime = (dt) =>
   new Date(dt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-const fmtDate = (dt) =>
-  new Date(dt).toLocaleDateString("vi-VN");
+const fmtDate = (dt) => new Date(dt).toLocaleDateString("vi-VN");
 
 export default function AdminHistory() {
   // data
   const [rows, setRows] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [totalQty, setTotalQty] = useState(0);       // ★ tổng SL active
+  const [totalRows, setTotalRows] = useState(0);     // ★ tổng bản ghi (phân trang)
 
   // filters
   const [weekStartMonday, setWeekStartMonday] = useState("");
@@ -41,7 +41,7 @@ export default function AdminHistory() {
   // accordion
   const [expanded, setExpanded] = useState(new Set());
 
-  // neumorphism style helpers
+  // neumorphism style
   const styles = `
     .card {
       background: #f5f8ff;
@@ -74,7 +74,6 @@ export default function AdminHistory() {
           http.get(`${BASE_URL}/api/lunch-order/admin/departments`),
           http.get(`${BASE_URL}/api/lunch-order/admin/proxy-users`),
         ]);
-
         setDepartments(depRes.data?.data || []);
         setProxyUsers(proxyRes.data?.data || []);
       } catch (e) {
@@ -83,7 +82,7 @@ export default function AdminHistory() {
     })();
   }, []);
 
-  // default to this week
+  // default this week
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     setWeekStartMonday(getMonday(today));
@@ -111,7 +110,8 @@ export default function AdminHistory() {
       });
 
       setRows(res.data?.data || []);
-      setTotal(res.data?.total || 0); // total chỉ đếm isAction=1 theo API đã sửa
+      setTotalQty(res.data?.totalQtyActive || 0); // ★
+      setTotalRows(res.data?.totalRows || 0);     // ★
     } finally {
       setLoading(false);
     }
@@ -130,16 +130,17 @@ export default function AdminHistory() {
           hasProxy: !!r.selectedByUserId,
           proxyName: r.proxyName,
           items: [],
-          latestSelectedAt: null, // dùng cho giờ/ngày đặt ở hàng tổng
+          latestSelectedAt: null,
         });
       }
       map.get(key).items.push({
-        id: r.userWeeklySelectionId ?? `${key}-${r.weeklyMenuEntryId}-${r.dayOfWeek}`,
+        id: r.userWeeklySelectionId ?? `${key}-${r.weeklyMenuEntryId}-${r.dayOfWeek}-${r.selectedAt}`,
         foodName: r.foodName,
         imageUrl: r.imageUrl,
         dayOfWeek: r.dayOfWeek,
-        selectedAt: r.selectedAt,   // ngày/giờ bấm đặt
-        isAction: r.isAction,       // <<— lấy trạng thái 0/1 từ API
+        selectedAt: r.selectedAt,
+        isAction: r.isAction,
+        quantity: Number.isFinite(+r.quantity) ? +r.quantity : 1, // ★
       });
       if (r.selectedByUserId) map.get(key).hasProxy = true;
       if (r.selectedAt) {
@@ -149,20 +150,20 @@ export default function AdminHistory() {
       }
     }
 
-    // filter theo ô tìm kiếm tên (client-side)
+    // client-side search by name (optional)
     const arr = Array.from(map.values()).filter((u) =>
       !search?.trim()
         ? true
         : (u.fullName || "").toLowerCase().includes(search.toLowerCase())
     );
 
-    // sort theo tên
+    // sort by name
     arr.sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
     return arr;
   }, [rows, search]);
 
   const totalUsers = grouped.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = Math.max(1, Math.ceil((totalRows || 0) / pageSize)); // ★
 
   function toggle(userID) {
     setExpanded((prev) => {
@@ -172,15 +173,24 @@ export default function AdminHistory() {
     });
   }
 
+  // tính tổng SL active theo ngày cho badge "Ngày (món)"
+  function dayQtyMap(items) {
+    const m = new Map();
+    for (const it of items) {
+      if (it.isAction) {
+        m.set(it.dayOfWeek, (m.get(it.dayOfWeek) || 0) + (it.quantity || 1));
+      }
+    }
+    return m; // day -> qty
+  }
+
   return (
     <div className="min-h-screen bg-[#f7faff] p-5">
       <style>{styles}</style>
 
-      {/* Header card */}
+      {/* Header */}
       <div className="card p-4 mb-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg grid place-items-center bg-white border border-slate-200">
-          📊
-        </div>
+        <div className="w-10 h-10 rounded-lg grid place-items-center bg-white border border-slate-200">📊</div>
         <div>
           <h2 className="text-xl font-bold text-slate-800">Lịch sử đặt cơm theo tuần</h2>
           <p className="text-slate-500 text-sm">Lọc theo ngày, bộ phận, người đặt giùm & tìm kiếm theo tên</p>
@@ -247,13 +257,13 @@ export default function AdminHistory() {
           <div className="flex flex-col justify-end">
             <div className="flex items-center gap-3">
               <span className="pill bg-white text-slate-700">👥 {totalUsers} người</span>
-              <span className="pill bg-white text-slate-700">🍽️ {total} món</span>
+              <span className="pill bg-white text-slate-700">🍚 Tổng SL (active): {totalQty}</span> {/* ★ */}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Table-like card (accordion rows) */}
+      {/* Table-like card */}
       <div className="card overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-12 px-4 py-3 text-[13px] font-semibold text-slate-700 bg-white/60 border-b border-slate-200">
@@ -263,13 +273,11 @@ export default function AdminHistory() {
           <div className="col-span-2">Ngày đặt</div>
           <div className="col-span-2">Trạng thái</div>
           <div className="col-span-1">Bộ phận</div>
-          <div className="col-span-2 text-right pr-1">Ngày (món)</div>
+          <div className="col-span-2 text-right pr-1">Ngày (SL)</div> {/* ★ */}
         </div>
 
         {/* Body */}
-        {loading && (
-          <div className="px-4 py-10 text-center text-slate-500">Đang tải…</div>
-        )}
+        {loading && <div className="px-4 py-10 text-center text-slate-500">Đang tải…</div>}
         {!loading && grouped.length === 0 && (
           <div className="px-4 py-10 text-center text-slate-400">Không có dữ liệu</div>
         )}
@@ -279,22 +287,19 @@ export default function AdminHistory() {
             const rowIndex = (page - 1) * pageSize + idx + 1;
             const isOpen = expanded.has(u.userID);
             const zebra = idx % 2 === 0 ? "bg-white" : "bg-[#f9fbff]";
+            const dMap = dayQtyMap(u.items); // ★
 
-            // Tính trạng thái theo ngày để hiện badge ở hàng tổng
-            // - Nếu có ít nhất 1 item isAction=1 ở ngày d => active
-            // - Nếu KHÔNG có item active nhưng có item isAction=0 => cancelOnly
-            const dayStatus = new Map(); // d -> {active:boolean, cancelOnly:boolean}
-            for (const it of u.items) {
-              const cur = dayStatus.get(it.dayOfWeek) || { active: false, cancelOnly: false };
-              if (it.isAction === true) {
-                cur.active = true;
-              } else {
-                // đánh dấu có huỷ
-                if (!cur.active) cur.cancelOnly = true; // chỉ coi cancelOnly nếu chưa có active
+            // trạng thái ngày có huỷ-only để gạch ngang badge
+            const cancelOnly = new Set();
+            {
+              const status = new Map(); // day -> {active, cancelled}
+              for (const it of u.items) {
+                const st = status.get(it.dayOfWeek) || { active: false, cancelled: false };
+                if (it.isAction) st.active = true; else st.cancelled = true;
+                status.set(it.dayOfWeek, st);
               }
-              dayStatus.set(it.dayOfWeek, cur);
+              for (const [d, st] of status) if (!st.active && st.cancelled) cancelOnly.add(d);
             }
-            const days = Array.from(dayStatus.keys()).sort((a, b) => a - b);
 
             return (
               <div key={u.userID} className={`border-top border-slate-200 ${zebra}`}>
@@ -305,35 +310,19 @@ export default function AdminHistory() {
                   }`}
                 >
                   <div className="w-12 text-center font-medium">{rowIndex}</div>
-
                   <div className="col-span-3 flex items-center gap-2">
-                    {isOpen ? (
-                      <FaChevronDown className="text-slate-500" />
-                    ) : (
-                      <FaChevronRight className="text-slate-500" />
-                    )}
+                    {isOpen ? <FaChevronDown className="text-slate-500" /> : <FaChevronRight className="text-slate-500" />}
                     <span className="font-semibold text-slate-800 truncate">{u.fullName}</span>
                   </div>
 
-                  {/* Giờ đặt (latest) */}
                   <div className="col-span-1 text-slate-700">
-                    {u.latestSelectedAt ? (
-                      <span className="pill bg-white">{fmtTime(u.latestSelectedAt)}</span>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
+                    {u.latestSelectedAt ? <span className="pill bg-white">{fmtTime(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
                   </div>
 
-                  {/* Ngày đặt (latest date) */}
                   <div className="col-span-2 text-slate-700">
-                    {u.latestSelectedAt ? (
-                      <span className="pill bg-white">{fmtDate(u.latestSelectedAt)}</span>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
+                    {u.latestSelectedAt ? <span className="pill bg-white">{fmtDate(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
                   </div>
 
-                  {/* Trạng thái */}
                   <div className="col-span-2">
                     {u.hasProxy ? (
                       <span className="pill bg-amber-100 text-amber-700">Đặt giùm: {u.proxyName}</span>
@@ -342,53 +331,39 @@ export default function AdminHistory() {
                     )}
                   </div>
 
-                  {/* Bộ phận */}
                   <div className="col-span-1 text-slate-600 truncate">{u.departmentName || "-"}</div>
 
-                  {/* Ngày (món trong tuần) - phản ánh ngày chỉ còn hủy */}
                   <div className="col-span-2 text-right pr-1">
-                    {days.length === 0 ? (
+                    {dMap.size === 0 ? (
                       <span className="text-slate-400">-</span>
                     ) : (
                       <div className="inline-flex gap-1 flex-wrap justify-end">
-                        {days.map((d) => {
-                          const st = dayStatus.get(d);
-                          const isCancelOnly = st?.cancelOnly && !st?.active;
-                          return (
-                            <span
-                              key={d}
-                              className={`pill ${
-                                isCancelOnly
-                                  ? "bg-white text-slate-400 line-through"
-                                  : "bg-white text-slate-600"
-                              }`}
-                              title={isCancelOnly ? "Đã huỷ cơm" : "Đã đặt"}
-                            >
-                              {dayNameVN(d)}
-                              {isCancelOnly ? " (Huỷ)" : ""}
-                            </span>
-                          );
-                        })}
+                        {Array.from(dMap.keys()).sort((a,b)=>a-b).map((d) => (
+                          <span
+                            key={d}
+                            className={`pill ${cancelOnly.has(d) ? "bg-white text-slate-400 line-through" : "bg-white text-slate-700"}`}
+                            title={cancelOnly.has(d) ? "Chỉ còn huỷ" : "Có đặt active"}
+                          >
+                            {dayNameVN(d)} · {dMap.get(d)}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
                 </button>
 
-                {/* Expand detail: cards with image + selectedAt + trạng thái */}
+                {/* details */}
                 {isOpen && (
                   <div className="px-5 pb-5">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {u.items
-                        // sắp theo thứ tự thứ trong tuần rồi theo thời gian
-                        .sort((a, b) => (a.dayOfWeek - b.dayOfWeek) || (new Date(a.selectedAt) - new Date(b.selectedAt)))
+                        .sort((a, b) => (a.dayOfWeek - b.dayOfWeek) || (new Date(b.selectedAt) - new Date(a.selectedAt))) // ★ newest first in day
                         .map((it) => {
                           const isCanceled = it.isAction === false;
                           return (
                             <div
                               key={it.id}
-                              className={`p-3 rounded-xl border bg-white shadow-sm ${
-                                isCanceled ? "border-rose-100" : "border-slate-200"
-                              }`}
+                              className={`p-3 rounded-xl border bg-white shadow-sm ${isCanceled ? "border-rose-100" : "border-slate-200"}`}
                             >
                               <div className="flex items-start gap-3">
                                 <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
@@ -403,53 +378,29 @@ export default function AdminHistory() {
                                       No image
                                     </div>
                                   )}
-                                  {isCanceled && (
-                                    <div className="absolute inset-0 bg-white/0 pointer-events-none" />
-                                  )}
                                 </div>
 
                                 <div className="min-w-0">
                                   <div
-                                    className={`font-semibold truncate ${
-                                      isCanceled ? "text-slate-400 line-through" : "text-slate-800"
-                                    }`}
+                                    className={`font-semibold truncate ${isCanceled ? "text-slate-400 line-through" : "text-slate-800"}`}
                                     title={it.foodName}
                                   >
                                     {it.foodName}
                                   </div>
 
                                   <div className="mt-1 flex flex-wrap gap-2 text-xs items-center">
-                                    <span
-                                      className={`pill ${
-                                        isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
-                                      }`}
-                                    >
-                                      {dayNameVN(it.dayOfWeek)}
-                                    </span>
+                                    <span className="pill bg-[#f5f8ff] text-slate-600">{dayNameVN(it.dayOfWeek)}</span>
+                                    <span className="pill bg-emerald-50 text-emerald-700 border-emerald-200">SL: {it.quantity}</span> {/* ★ */}
 
                                     {it.selectedAt && (
                                       <>
-                                        <span
-                                          className={`pill ${
-                                            isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
-                                          }`}
-                                        >
-                                          {fmtDate(it.selectedAt)}
-                                        </span>
-                                        <span
-                                          className={`pill ${
-                                            isCanceled ? "bg-white text-slate-400 line-through" : "bg-[#f5f8ff] text-slate-600"
-                                          }`}
-                                        >
-                                          {fmtTime(it.selectedAt)}
-                                        </span>
+                                        <span className="pill bg-[#f5f8ff] text-slate-600">{fmtDate(it.selectedAt)}</span>
+                                        <span className="pill bg-[#f5f8ff] text-slate-600">{fmtTime(it.selectedAt)}</span>
                                       </>
                                     )}
 
                                     {isCanceled && (
-                                      <span className="pill bg-rose-50 text-rose-600 border-rose-200">
-                                        ĐÃ HUỶ CƠM
-                                      </span>
+                                      <span className="pill bg-rose-50 text-rose-600 border-rose-200">ĐÃ HUỶ</span>
                                     )}
                                   </div>
                                 </div>
@@ -465,11 +416,11 @@ export default function AdminHistory() {
           })}
       </div>
 
-      {/* Footer bar */}
+      {/* Footer */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="card px-4 py-2 text-slate-700">
-          Tổng người đặt: <b>{totalUsers}</b>{" "}
-          <span className="text-slate-500">| Tổng món (active): {total}</span>
+          Tổng người hiển thị: <b>{totalUsers}</b>{" "}
+          <span className="text-slate-500">| Tổng SL (active): {totalQty}</span> {/* ★ */}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -483,7 +434,7 @@ export default function AdminHistory() {
             Trang {page} / {totalPages}
           </span>
           <button
-            disabled={page * pageSize >= total}
+            disabled={page * pageSize >= totalRows} // ★ dùng totalRows
             onClick={() => setPage((p) => p + 1)}
             className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50"
           >
