@@ -462,6 +462,8 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
       try {
         const wmRes = await http.get(`${BASE_URL}/api/lunch-order/user/weekly-menu-latest`);
         const menu = wmRes.data?.data;
+
+        console.log(menu);
         if (!menu) {
           setWeeklyMenu(null);
           return;
@@ -880,7 +882,7 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
 
       {/* Công tắc chế độ thư ký */}
       <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
-        <span className="text-slate-700 text-sm">Chế độ</span>
+        <span className="text-slate-700 text-sm">Thư ký</span>
         <button
           role="switch"
           aria-checked={isSec}
