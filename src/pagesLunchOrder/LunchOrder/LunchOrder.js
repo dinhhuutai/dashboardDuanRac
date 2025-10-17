@@ -880,7 +880,7 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
 
       {/* Công tắc chế độ thư ký */}
       <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
-        <span className="text-slate-700 text-sm">Chế độ thư ký</span>
+        <span className="text-slate-700 text-sm">Chế độ</span>
         <button
           role="switch"
           aria-checked={isSec}
@@ -1096,7 +1096,8 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
                                   className={`toy-card relative w-[240px] rounded-[28px] text-left cursor-pointer transition
                                     ${checked ? "ring-2 ring-emerald-400" : "ring-1 ring-white/50"}
                                     ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}
-                                    ${showStepper ? "h-[320px] pb-16 flex flex-col" : "h-[298px]"}`}
+                                    ${showStepper ? "h-[320px] pb-16 flex flex-col" : "h-[298px]"}
+                                    bg-white/80 backdrop-blur border border-white/60 shadow-sm`}
                                 >
                                   <div className="px-5 pt-4 pb-2">
                                     <div className="flex items-center gap-3">
@@ -1167,7 +1168,8 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
                                 title={selected[day] === null ? "Đã chọn: Không ăn ngày này" : "Chọn: Không ăn ngày này"}
                                 className={`toy-card relative w-[240px] h-[298px] rounded-[28px] grid place-items-center cursor-pointer
                                   ${selected[day] === null ? "ring-2 ring-rose-400" : "ring-1 ring-white/50"}
-                                  ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}`}
+                                  ${weeklyMenu?.isLocked ? "opacity-50 pointer-events-none" : ""}
+                                  bg-white/90 backdrop-blur border border-white/60 shadow-sm`}
                               >
                                 {selected[day] === null && (
                                   <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-100 text-rose-700 border border-rose-200 shadow">
