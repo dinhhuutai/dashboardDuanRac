@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
  * - Nhạc auto sau khi bấm, confetti khi mở.
  */
 
-import ms2010 from '../../assets/music/2010.mp3';
 
 // ✅ Import 56 ảnh (tn1.jpg → tn56.jpg) trong ~/assets/imgs
 import tn1 from '~/assets/imgs/tn1.jpg';
@@ -68,7 +67,7 @@ import tn54 from '~/assets/imgs/tn54.jpg';
 import tn55 from '~/assets/imgs/tn55.jpg';
 import tn56 from '~/assets/imgs/tn56.jpg';
 
-const AUDIO_SRC = ms2010;
+const AUDIO_SRC = '/music/2010.mp3';
 const ALL_IMAGES = [
   tn17, tn18, tn19, tn20,
   tn21, tn22, tn23, tn24, tn25, tn26, tn27, tn28, tn29, tn30,
