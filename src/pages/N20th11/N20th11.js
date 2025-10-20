@@ -67,7 +67,7 @@ import tn54 from '~/assets/imgs/tn54.jpg';
 import tn55 from '~/assets/imgs/tn55.jpg';
 import tn56 from '~/assets/imgs/tn56.jpg';
 
-const AUDIO_SRC = '/music/2010.mp3';
+const AUDIO_SRC = "/music/2010.mp3";
 const ALL_IMAGES = [
   tn17, tn18, tn19, tn20,
   tn21, tn22, tn23, tn24, tn25, tn26, tn27, tn28, tn29, tn30,
@@ -117,14 +117,18 @@ export default function LoveGift20_10() {
   
   const isVideo = typeof AUDIO_SRC === 'string' ? AUDIO_SRC.toLowerCase().endsWith('.mp4') : true;
 
-  window.addEventListener("click", () => {
-  const m = mediaRef.current;
-  if (m && m.paused) {
+  useEffect(() => {
+  const oneClick = () => {
+    const m = mediaRef.current;
+    if (!m) return;
     m.muted = false;
     m.volume = 0.6;
     m.play().catch(() => {});
-  }
-}, { once: true });
+  };
+  window.addEventListener("click", oneClick, { once: true });
+  return () => window.removeEventListener("click", oneClick);
+}, []);
+
 
 
   useEffect(() => {
@@ -196,6 +200,7 @@ export default function LoveGift20_10() {
   <audio
   ref={mediaRef}
   src={AUDIO_SRC}
+  controls
   loop
   preload="auto"
   playsInline
