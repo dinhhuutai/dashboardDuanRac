@@ -143,18 +143,27 @@ export default function LoveGift20_10() {
 }, [muted]);
 
   
-  const startExperience = () => {
+  const startExperience = async () => {
   setStarted(true);
   const m = mediaRef.current;
   if (!m) return;
-  m.muted = false;
-  m.volume = 0.7;
-  m.play().then(() => {
-    console.log('play() ok');
-  }).catch(err => {
-    console.log('play() failed:', err.name, err.message);
-  });
+
+  try {
+    // Tắt mute, chỉnh âm lượng
+    m.muted = false;
+    m.volume = 0.6;
+
+    // Reload file đề phòng state pause từ trước
+    m.load();
+
+    // Gọi play ngay trong click (đây là điểm mấu chốt)
+    await m.play();
+    console.log("🎵 Music started");
+  } catch (err) {
+    console.warn("❌ Cannot play audio:", err.name, err.message);
+  }
 };
+
 
 
   const [burstKey, setBurstKey] = useState(0);
