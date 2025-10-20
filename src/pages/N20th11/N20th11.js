@@ -147,11 +147,13 @@ export default function LoveGift20_10() {
   setStarted(true);
   const m = mediaRef.current;
   if (!m) return;
-  try {
-    m.muted = false;     // hoặc giữ theo state 'muted'
-    m.volume = 0.5;
-    m.play();
-  } catch {}
+  m.muted = false;
+  m.volume = 0.7;
+  m.play().then(() => {
+    console.log('play() ok');
+  }).catch(err => {
+    console.log('play() failed:', err.name, err.message);
+  });
 };
 
 
@@ -173,12 +175,15 @@ export default function LoveGift20_10() {
       </div>
 
   <audio
-    ref={mediaRef}
-    src={AUDIO_SRC}
-    loop
+  ref={mediaRef}
+  src={AUDIO_SRC}
+  loop
   preload="auto"
   playsInline
-  />
+  onError={(e) => console.log('Audio error:', e.currentTarget.error)}
+  onPlay={() => console.log('Audio playing')}
+  onPause={() => console.log('Audio paused')}
+/>
 
 
       {!started && mounted && <RisingPhotoParticles images={ALL_IMAGES} count={20} />}
