@@ -102,11 +102,20 @@ function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
 /* -------------------------------- Component -------------------------------- */
 
+function useHasMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
+}
+
+
 export default function LoveGift20_10() {
+    const mounted = useHasMounted();
   const { vw } = useViewport();
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
   const mediaRef = useRef(null);
+  
   const isVideo = typeof AUDIO_SRC === 'string' ? AUDIO_SRC.toLowerCase().endsWith('.mp4') : true;
 
   useEffect(() => {
@@ -130,7 +139,7 @@ export default function LoveGift20_10() {
         {!started ? (
           <IntroLetter onStart={() => setStarted(true)} />
         ) : (
-          <AfterOpenScene vw={vw} muted={muted} onToggleMute={() => setMuted((m) => !m)} />
+          <AfterOpenScene mounted={mounted} vw={vw} muted={muted} onToggleMute={() => setMuted((m) => !m)} />
         )}
       </div>
 
@@ -140,7 +149,7 @@ export default function LoveGift20_10() {
         <audio ref={mediaRef} src={AUDIO_SRC} loop preload="auto" />
       )}
 
-      {!started && <RisingPhotoParticles images={ALL_IMAGES} count={20} />}
+      {!started && mounted && <RisingPhotoParticles images={ALL_IMAGES} count={20} />}
 
       <AnimatePresence>{started && <ConfettiBurst key={burstKey} />}</AnimatePresence>
       <FooterSignature />
@@ -178,7 +187,7 @@ function IntroLetter({ onStart }) {
 
 /* ------------------------------ After Open -------------------------------- */
 
-function AfterOpenScene({ vw, muted, onToggleMute }) {
+function AfterOpenScene({ mounted, vw, muted, onToggleMute }) {
   const [showRing, setShowRing] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShowRing(true), 1800);
@@ -204,7 +213,7 @@ function AfterOpenScene({ vw, muted, onToggleMute }) {
 
       {/* BLOOM: nổi phía trên ring trong 1.8s đầu */}
       <AnimatePresence>
-        {!showRing && (
+        {!showRing && mounted && (
           <motion.div
             key="bloom"
             className="fixed inset-0 z-[6] pointer-events-none grid place-items-center"
@@ -219,7 +228,7 @@ function AfterOpenScene({ vw, muted, onToggleMute }) {
 
       {/* RING: fixed toàn màn, luôn giữa, không bị đẩy lệch bởi header/footer */}
       <AnimatePresence>
-        {showRing && (
+        {showRing && mounted && (
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -289,11 +298,13 @@ function SpinningImageRing({ images, vw }) {
     });
   }, [images, angle, baseR]);
 
-  const isTouch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
-
+  const isTouch = useMemo(() => {
+   if (typeof window === 'undefined') return false;
+   return window.matchMedia?.('(hover: none)')?.matches ?? false;
+ }, []);
   return (
     <div className="relative" style={{ width: ringW, height: ringH }}>
-      <div className="absolute inset-0 mt-[200px]">
+      <div className="absolute inset-0">
         {items.map(({ i, src, x, y, z, depthScale, opacity }) => (
           
           <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -363,7 +374,7 @@ function SpinningImageRing1({ images, vw }) {
       <div className="absolute inset-0">
         {items.map(({ i, src, x, y, z, depthScale, opacity }) => (
           
-          <div className="absolute top-3/4 right-0 -translate-y-1/2"
+          <div className="absolute mt-[-250px] top-3/4 right-0 -translate-y-1/2"
     style={{ zIndex: 1000 + Math.round(z) }}>
   <motion.div
     style={{ zIndex: Math.round(z + 1000), position: 'relative' }}
