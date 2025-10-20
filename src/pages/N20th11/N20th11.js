@@ -173,24 +173,13 @@ export default function LoveGift20_10() {
         )}
       </div>
 
-      {isVideo ? (
-  <video
-    ref={mediaRef}
-    src={AUDIO_SRC}
-    loop
-    preload="auto"
-    playsInline
-    // webkit-playsinline không cần trên React mới, nhưng thêm cũng được
-    className="hidden"
-  />
-) : (
   <audio
     ref={mediaRef}
     src={AUDIO_SRC}
     loop
-    preload="auto"
+  preload="auto"
+  playsInline
   />
-)}
 
 
       {!started && mounted && <RisingPhotoParticles images={ALL_IMAGES} count={20} />}
