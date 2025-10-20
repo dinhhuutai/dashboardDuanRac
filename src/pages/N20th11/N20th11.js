@@ -185,7 +185,7 @@ export default function LoveGift20_10() {
 
   <audio
   ref={mediaRef}
-  src={AUDIO_SRC}
+  src="https://noibo.thuanhunglongan.com/music/2010.mp3"
   loop
   preload="auto"
   playsInline
