@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
  * - Nhạc auto sau khi bấm, confetti khi mở.
  */
 
-import ms2010 from '~/assets/music/2010.mp3';
+import ms2010 from '/music/2010.mp3';
 
 // ✅ Import 56 ảnh (tn1.jpg → tn56.jpg) trong ~/assets/imgs
 import tn1 from '~/assets/imgs/tn1.jpg';
