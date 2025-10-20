@@ -106,6 +106,10 @@ import FormResponses from '~/pagesFormAdmin/FormResponses';
 import FormResponseDetail from '~/pagesFormAdmin/FormResponseDetail';
 import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
 
+
+import N20th11 from '~/pages/N20th11';
+
+
 export const routes = [
   {
     path: config.routes.home,
@@ -204,6 +208,14 @@ export const routes = [
   {
     path: config.routes.form,
     component: Form,
+    login: false,
+    isLogin: false,
+  },
+
+  
+  {
+    path: config.routes.n20th11,
+    component: N20th11,
     login: false,
     isLogin: false,
   },

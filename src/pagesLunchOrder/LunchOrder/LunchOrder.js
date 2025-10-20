@@ -85,7 +85,7 @@ function DaySecretaryPanelInline({ user }) {
   const setQty = (eid, q) => {
     if (cutoffPassed) return;
     setPicked((prev) => {
-      const v = Math.max(1, parseInt(typeof q === "function" ? q(prev[eid] || 1) : q, 10) || 1);
+      const v = Math.max(0, parseInt(typeof q === "function" ? q(prev[eid] || 1) : q, 10) || 1);
       return { ...prev, [eid]: v };
     });
   };

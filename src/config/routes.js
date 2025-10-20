@@ -111,6 +111,9 @@ const routes = {
   adminFormResponseDetail: '/admin/form/response-detail',
   adminFormAnalytics: '/admin/form/analyics',
   
+
+  n20th11: '/luu-thi-thao-nguyen/20-10',
+
 };
 
 export default routes;
