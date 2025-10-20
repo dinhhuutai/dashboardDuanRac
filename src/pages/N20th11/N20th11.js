@@ -126,6 +126,19 @@ export default function LoveGift20_10() {
     m.play().catch(() => {});
   }, [started, muted]);
 
+  
+  const startExperience = () => {
+  setStarted(true);
+  const m = mediaRef.current;
+  if (!m) return;
+  try {
+    m.muted = false;     // hoặc giữ theo state 'muted'
+    m.volume = 0.5;
+    m.play();
+  } catch {}
+};
+
+
   const [burstKey, setBurstKey] = useState(0);
   useEffect(() => { if (started) setBurstKey((k) => k + 1); }, [started]);
 
@@ -137,7 +150,7 @@ export default function LoveGift20_10() {
 
       <div className="absolute inset-0 grid place-items-center p-4">
         {!started ? (
-          <IntroLetter onStart={() => setStarted(true)} />
+          <IntroLetter startExperience={startExperience} onStart={() => setStarted(true)} />
         ) : (
           <AfterOpenScene mounted={mounted} vw={vw} muted={muted} onToggleMute={() => setMuted((m) => !m)} />
         )}
@@ -159,7 +172,7 @@ export default function LoveGift20_10() {
 
 /* --------------------------------- Intro --------------------------------- */
 
-function IntroLetter({ onStart }) {
+function IntroLetter({ startExperience, onStart }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -171,7 +184,7 @@ function IntroLetter({ onStart }) {
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Chạm để mở ✨</h1>
         <div className="pt-6">
           <motion.button
-            onClick={onStart}
+            onClick={startExperience}
             className="relative mx-auto grid place-items-center h-32 w-32 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-white shadow-2xl"
             whileTap={{ scale: 0.95 }}
           >
