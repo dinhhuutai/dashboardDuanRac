@@ -117,6 +117,16 @@ export default function LoveGift20_10() {
   
   const isVideo = typeof AUDIO_SRC === 'string' ? AUDIO_SRC.toLowerCase().endsWith('.mp4') : true;
 
+  window.addEventListener("click", () => {
+  const m = mediaRef.current;
+  if (m && m.paused) {
+    m.muted = false;
+    m.volume = 0.6;
+    m.play().catch(() => {});
+  }
+}, { once: true });
+
+
   useEffect(() => {
     if (!started || !mediaRef.current) return;
     const m = mediaRef.current;
@@ -185,7 +195,7 @@ export default function LoveGift20_10() {
 
   <audio
   ref={mediaRef}
-  src="https://noibo.thuanhunglongan.com/music/2010.mp3"
+  src={AUDIO_SRC}
   loop
   preload="auto"
   playsInline
