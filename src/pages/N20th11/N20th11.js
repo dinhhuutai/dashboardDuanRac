@@ -126,6 +126,23 @@ export default function LoveGift20_10() {
     m.play().catch(() => {});
   }, [started, muted]);
 
+  useEffect(() => {
+  const unlock = () => {
+    const m = mediaRef.current;
+    if (m && m.paused) {
+      m.muted = muted;
+      m.volume = 0.5;
+      m.play().catch(()=>{});
+    }
+  };
+  window.addEventListener('touchend', unlock, { once: true });
+  window.addEventListener('click', unlock, { once: true });
+  return () => {
+    window.removeEventListener('touchend', unlock);
+    window.removeEventListener('click', unlock);
+  };
+}, [muted]);
+
   
   const startExperience = () => {
   setStarted(true);
@@ -157,10 +174,24 @@ export default function LoveGift20_10() {
       </div>
 
       {isVideo ? (
-        <video ref={mediaRef} src={AUDIO_SRC} loop preload="auto" className="hidden" />
-      ) : (
-        <audio ref={mediaRef} src={AUDIO_SRC} loop preload="auto" />
-      )}
+  <video
+    ref={mediaRef}
+    src={AUDIO_SRC}
+    loop
+    preload="auto"
+    playsInline
+    // webkit-playsinline không cần trên React mới, nhưng thêm cũng được
+    className="hidden"
+  />
+) : (
+  <audio
+    ref={mediaRef}
+    src={AUDIO_SRC}
+    loop
+    preload="auto"
+  />
+)}
+
 
       {!started && mounted && <RisingPhotoParticles images={ALL_IMAGES} count={20} />}
 
