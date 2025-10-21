@@ -67,8 +67,9 @@ import tn54 from '~/assets/imgs/tn54.jpg';
 import tn55 from '~/assets/imgs/tn55.jpg';
 import tn56 from '~/assets/imgs/tn56.jpg';
 
+import song from '~/assets/music/2010.mp3';
 
-const AUDIO_SRC = "/music/2010.mp3";
+const AUDIO_SRC = song;
 const ALL_IMAGES = [
   tn17, tn18, tn19, tn20,
   tn21, tn22, tn23, tn24, tn25, tn26, tn27, tn28, tn29, tn30,
@@ -162,23 +163,12 @@ export default function LoveGift20_10() {
   setStarted(true);
   const m = mediaRef.current;
   if (!m) return;
-
   try {
-    // Tắt mute, chỉnh âm lượng
     m.muted = false;
     m.volume = 0.6;
-
-    // Reload file đề phòng state pause từ trước
-    m.load();
-
-    // Gọi play ngay trong click (đây là điểm mấu chốt)
-    await m.play();
-    console.log("🎵 Music started");
-  } catch (err) {
-    console.warn("❌ Cannot play audio:", err.name, err.message);
-  }
+    await m.play();   // không cần m.load() ở đây
+  } catch(e) { console.warn(e); }
 };
-
 
 
   const [burstKey, setBurstKey] = useState(0);
