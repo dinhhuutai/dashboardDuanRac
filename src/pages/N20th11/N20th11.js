@@ -685,7 +685,7 @@ export default function LoveGift20_10() {
 
       <FloatingSparkles started={started} />
 
-      <div className="absolute inset-0 grid place-items-center p-4">
+      <div className="absolute inset-0 grid place-items-center">
         {!started ? (
           <IntroLetter startExperience={startExperience} />
         ) : (
@@ -755,23 +755,23 @@ function AfterOpenScene({ vw, muted, onToggleMute }) {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55 }}
-        className="relative z-10 w-full px-4 pt-4 text-center"
+        className="relative z-10 w-full px-4 text-center"
       >
         <h2 className="text-3xl md:text-4xl font-black tracking-tight drop-shadow">Happy 20/10</h2>
       </motion.div>
 
       {/* Top Horizontal Timeline */}
       {show && (
-        <TopHorizontalTimeline
-          className="fixed left-0 right-0 top-16 z-[7]"        // đặt cao hơn chút để không trùng header
-          images={topImages}
-          cardW={tickW}
-          cardH={tickH}
-          gap={18}
-          amplitude={Math.floor(tickH * 0.55)} // lệch trên/ dưới đường
-          duration={36} // nhỏ = chạy nhanh hơn
-        />
-      )}
+  <TopHorizontalTimeline
+    images={topImages}
+    cardW={ tickW }               // bạn đang tính tickW/ tickH sẵn
+    cardH={ tickH }
+    gap={18}
+    amplitude={Math.floor(tickH * 0.55)}
+    duration={36}
+  />
+)}
+
 
       {/* Ring + Flower */}
       <AnimatePresence>
@@ -889,110 +889,152 @@ function RingClean({ images, baseR, cardW, cardH }) {
 }
 
 // ====== Top Horizontal Timeline ======
-function TopHorizontalTimeline({ className = "", images, cardW = 110, cardH = 70, gap = 16, amplitude = 38, duration = 38 }) {
-  // lấy 1 track ngắn gọn
+/* ==================== Top Horizontal Timeline (fixed) ==================== */
+
+/* ==================== Top Horizontal Timeline (Framer Motion marquee) ==================== */
+
+function TopHorizontalTimeline({
+  className = "",
+  images,
+  cardW = 110,
+  cardH = 70,
+  gap = 16,
+  amplitude = 38,
+  duration = 36, // giây/ vòng
+}) {
   const track = useMemo(() => {
-    const max = Math.min(images.length, 24);
-    return images.slice(0, max);
+    const max = Math.min(images?.length ?? 0, 24);
+    return (images ?? []).slice(0, max);
   }, [images]);
 
-  // tổng chiều rộng 1 vòng
-  const trackWidth = (cardW + gap) * track.length; // px
+  if (!track.length) return null;
 
-  // keyframes theo trackWidth
-  const kfName = `topTicker_${trackWidth}_${duration}`;
+  const trackWidth = (cardW + gap) * track.length;
 
   return (
-    <div className={`${className}`}>
-      {/* baseline full width */}
-      <div className="relative w-screen px-3">
-        <div className="relative">
-          {/* Line */}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-white/35 rounded">
-            <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/70 to-transparent blur-[1px]" />
-          </div>
-
-          {/* Mask vùng hiển thị */}
+    <div className={`${className} pointer-events-none`}>
+      {/* wrapper full viewport, cố định & căn giữa tuyệt đối */}
+      <div
+        style={{
+          position: "fixed",
+          left: "50%",
+          transform: "translateX(-50%)",
+          top: 64,            // chỉnh nếu header cao hơn
+          width: "100vw",
+          zIndex: 7,
+        }}
+      >
+        {/* khung có chiều cao cố định theo cardH + amplitude*2 */}
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: cardH + amplitude * 2,
+            overflow: "hidden",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)",
+          }}
+        >
+          {/* line giữa */}
           <div
-            className="relative"
             style={{
-              height: cardH + amplitude * 2,
-              overflow: 'hidden',
-              maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
+              position: "absolute",
+              inset: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+              height: 2,
+              background: "rgba(255,255,255,0.35)",
+              borderRadius: 2,
             }}
           >
-            {/* 2 tracks nối nhau */}
-            <TickerTrack
-              kfName={kfName}
-              track={track}
-              cardW={cardW}
-              cardH={cardH}
-              gap={gap}
-              amplitude={amplitude}
-              duration={duration}
-              trackWidth={trackWidth}
-              offset={0}
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 2,
+                background:
+                  "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.7), rgba(255,255,255,0))",
+                filter: "blur(1px)",
+              }}
             />
-            <TickerTrack
-              kfName={kfName}
-              track={track}
-              cardW={cardW}
-              cardH={cardH}
-              gap={gap}
-              amplitude={amplitude}
-              duration={duration}
-              trackWidth={trackWidth}
-              offset={trackWidth}
-            />
+          </div>
+
+          {/* vùng chứa track, luôn căn giữa theo trục dọc */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <motion.div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",          // rất quan trọng để center theo chiều dọc
+                willChange: "transform",
+              }}
+              animate={{ x: [0, -trackWidth] }}
+              transition={{ duration, ease: "linear", repeat: Infinity }}
+            >
+              <TickerRow
+                track={track}
+                cardW={cardW}
+                cardH={cardH}
+                gap={gap}
+                amplitude={amplitude}
+              />
+              <TickerRow
+                track={track}
+                cardW={cardW}
+                cardH={cardH}
+                gap={gap}
+                amplitude={amplitude}
+              />
+            </motion.div>
           </div>
         </div>
       </div>
-
-      {/* keyframes theo width */}
-      <style>{`
-        @keyframes ${kfName} {
-          0%   { transform: translateX(0) }
-          100% { transform: translateX(-${trackWidth}px) }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          [data-top-ticker] { animation: none !important; transform: none !important; }
-        }
-      `}</style>
     </div>
   );
 }
 
-function TickerTrack({ kfName, track, cardW, cardH, gap, amplitude, duration, trackWidth, offset }) {
+function TickerRow({ track, cardW, cardH, gap, amplitude }) {
   return (
-    <div
-      data-top-ticker
-      className="absolute left-0 top-1/2"
-      style={{
-        transform: `translateX(${offset}px) translateY(-50%)`,
-        animation: `${kfName} ${duration}s linear infinite`,
-        willChange: 'transform',
-        display: 'flex',
-      }}
-    >
+    <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
       {track.map((src, i) => {
-        const above = i % 2 === 0; // so le
+        const above = i % 2 === 0; // so le trên/ dưới
         const dy = above ? -amplitude : amplitude;
         return (
           <div
-            key={`t-${i}`}
-            style={{ marginRight: gap, transform: `translateY(${dy}px)` }}
-            className="rounded-xl overflow-hidden border backdrop-blur bg-white/10"
+            key={`tick-${i}`}
+            style={{
+              marginRight: gap,
+              // dịch đúng từ TÂM: parent đã alignItems:'center', nên chỉ cần translateY(dy)
+              transform: `translateY(${dy}px)`,
+            }}
           >
             <div
               className="rounded-xl overflow-hidden border backdrop-blur bg-white/10"
               style={{
-                width: cardW, height: cardH,
-                borderColor: 'rgba(255,255,255,0.26)',
-                boxShadow: '0 10px 22px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.05)'
+                width: cardW,
+                height: cardH,
+                borderColor: "rgba(255,255,255,0.26)",
+                boxShadow:
+                  "0 10px 22px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.05)",
               }}
             >
-              <img src={src} alt={`tick-${i}`} className="h-full w-full object-cover select-none" draggable={false}/>
+              <img
+                src={src}
+                alt={`tick-${i}`}
+                className="h-full w-full object-cover select-none"
+                draggable={false}
+              />
             </div>
           </div>
         );
