@@ -40,22 +40,3 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-/* eslint-disable no-restricted-globals */
-
-// cập nhật SW ngay
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
-
-// Cho /music/* đi thẳng network (đừng trả index.html)
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // BỎ QUA audio: để browser fetch bình thường
-  if (url.pathname.startsWith('/music/')) return;
-
-  // ví dụ fallback SPA cho các điều hướng
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch('/index.html'));
-  }
-});
-
