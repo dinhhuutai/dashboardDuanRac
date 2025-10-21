@@ -69,7 +69,8 @@ import tn56 from '~/assets/imgs/tn56.jpg';
 
 import song from '~/assets/music/2010-fixed.mp3';
 
-const AUDIO_SRC = song;
+const AUDIO_SRC = `https://res.cloudinary.com/dvueewtsp/video/upload/v1761029535/QR_Trash/2010_pdekxl.mp3`;
+
 const ALL_IMAGES = [
   tn17, tn18, tn19, tn20,
   tn21, tn22, tn23, tn24, tn25, tn26, tn27, tn28, tn29, tn30,
