@@ -67,7 +67,7 @@ import tn54 from '~/assets/imgs/tn54.jpg';
 import tn55 from '~/assets/imgs/tn55.jpg';
 import tn56 from '~/assets/imgs/tn56.jpg';
 
-import song from '~/assets/music/2010.mp3';
+import song from '~/assets/music/2010-fixed.mp3';
 
 const AUDIO_SRC = song;
 const ALL_IMAGES = [
