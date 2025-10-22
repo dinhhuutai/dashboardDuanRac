@@ -170,7 +170,7 @@ function History() {
   };
 
   const downloadImage = async (url) => {
-    const response = await http.get(url, { responseType: 'arraybuffer' });
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
     return response.data;
   };
 

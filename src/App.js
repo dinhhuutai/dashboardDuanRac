@@ -25,6 +25,9 @@ import DefaultLayoutAdminCalculateSalary from "./layoutCalculateSalaryAdmin/Defa
 
 import DefaultLayoutAdminForm from "./layoustFormAdmin/DefaultLayoutAdmin";
 
+import DefaultLayoutTaskManagement from "./layoutsTaskManagement/DefaultLayout";
+
+
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
 import { userSelector } from "./redux/selectors";
@@ -83,6 +86,10 @@ function App() {
                       <DefaultLayoutLunchOrder>
                         <route.component />
                       </DefaultLayoutLunchOrder>
+                    ) : route.module === 'quanlycongviec' ? (
+                      <DefaultLayoutTaskManagement>
+                        <route.component />
+                      </DefaultLayoutTaskManagement>
                     ) : (
                       <DefaultLayoutTrashWeight>
                         <route.component />

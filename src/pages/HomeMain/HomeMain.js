@@ -2854,6 +2854,8 @@ async function handleLogout() {
         rou = config.routes.adminFormCreate
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === 'user') {
         rou = config.routes.form
+    } else if (m.moduleId === MODULEID.CONGVIEC && role === 'user') {
+        rou = config.routes.taskManagementDashboard
     }
 
     navigate(rou);

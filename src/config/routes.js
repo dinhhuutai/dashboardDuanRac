@@ -114,6 +114,16 @@ const routes = {
 
   n20th11: '/luu-thi-thao-nguyen/20-10',
 
+
+  taskManagement: '/task-management',
+
+  taskManagementDashboard: '/task-management/dashboard',
+  taskManagementMyTasks: '/task-management/my-tasks',
+
+  taskManagementProjectList: '/task-management/project-list',
+  taskManagementProjectOverview: '/task-management/project-overview',
+
+
 };
 
 export default routes;

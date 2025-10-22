@@ -109,6 +109,40 @@ import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
 
 import N20th11 from '~/pages/N20th11';
 
+import TaskManagementDashboard from '~/pagesTaskManagement/Tasks/Dashboard';
+import TaskManagementMyTasks from '~/pagesTaskManagement/Tasks/MyTasks';
+
+import TaskManagementProjectList from '~/pagesTaskManagement/Projects/ProjectList';
+import TaskManagementProjectOverview from '~/pagesTaskManagement/Projects/ProjectOverview';
+
+
+const routesTaskManagement = [
+  {
+    path: config.routes.taskManagementDashboard,
+    component: TaskManagementDashboard,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementMyTasks,
+    component: TaskManagementMyTasks,
+    login: true,
+    module: 'quanlycongviec',
+  },
+
+  {
+    path: config.routes.taskManagementProjectList,
+    component: TaskManagementProjectList,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementProjectOverview,
+    component: TaskManagementProjectOverview,
+    login: true,
+    module: 'quanlycongviec',
+  },
+]
 
 export const routes = [
   {
@@ -219,6 +253,9 @@ export const routes = [
     login: false,
     isLogin: false,
   },
+
+  ...routesTaskManagement,
+
 ];
 
 export const routesAdmin = [
