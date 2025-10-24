@@ -14,15 +14,36 @@ function getMonday(dateStr) {
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff)).toISOString().slice(0, 10);
 }
-const fmtTime = (dt) =>
-  new Date(dt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+const fmtTime = (dt) => new Date(dt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 const fmtDate = (dt) => new Date(dt).toLocaleDateString("vi-VN");
+
+// tạo danh sách số trang (cửa sổ quanh trang hiện tại, có ... nếu xa)
+function buildPageList(totalPages, current, radius = 1) {
+  const pages = [];
+  const add = (v) => pages.includes(v) || pages.push(v);
+
+  // luôn thêm trang đầu
+  add(1);
+  // dải quanh current
+  for (let p = Math.max(1, current - radius); p <= Math.min(totalPages, current + radius); p++) add(p);
+  // luôn thêm trang cuối
+  add(totalPages);
+
+  // sắp xếp & chèn '...'
+  const out = [];
+  pages.sort((a, b) => a - b);
+  for (let i = 0; i < pages.length; i++) {
+    out.push(pages[i]);
+    if (i < pages.length - 1 && pages[i + 1] - pages[i] > 1) out.push("...");
+  }
+  return out;
+}
 
 export default function AdminHistory() {
   // data
   const [rows, setRows] = useState([]);
-  const [totalQty, setTotalQty] = useState(0);       // ★ tổng SL active
-  const [totalRows, setTotalRows] = useState(0);     // ★ tổng bản ghi (phân trang)
+  const [totalQty, setTotalQty] = useState(0);     // tổng SL active
+  const [totalUsersAll, setTotalUsersAll] = useState(0); // tổng số người (để phân trang)
 
   // filters
   const [weekStartMonday, setWeekStartMonday] = useState("");
@@ -88,11 +109,11 @@ export default function AdminHistory() {
     setWeekStartMonday(getMonday(today));
   }, []);
 
-  // load data
+  // load data on filters/paging change
   useEffect(() => {
     if (!weekStartMonday) return;
     load();
-    setExpanded(new Set());
+    setExpanded(new Set()); // collapse all when filter changes
   }, [weekStartMonday, departmentId, proxyByUserId, search, page]);
 
   async function load() {
@@ -109,15 +130,20 @@ export default function AdminHistory() {
         },
       });
 
-      setRows(res.data?.data || []);
-      setTotalQty(res.data?.totalQtyActive || 0); // ★
-      setTotalRows(res.data?.totalRows || 0);     // ★
+      const data = res.data?.data || [];
+      setRows(data);
+      setTotalQty(res.data?.totalQtyActive || 0);
+      setTotalUsersAll(res.data?.totalUsers || 0);
+
+      // nếu page vượt quá tổng trang → về 1
+      const totalPages = Math.max(1, Math.ceil((res.data?.totalUsers || 0) / pageSize));
+      if (page > totalPages && totalPages > 0) setPage(1);
     } finally {
       setLoading(false);
     }
   }
 
-  // group by user for header rows
+  // group by user for header rows (trang hiện tại)
   const grouped = useMemo(() => {
     const map = new Map();
     for (const r of rows) {
@@ -140,7 +166,10 @@ export default function AdminHistory() {
         dayOfWeek: r.dayOfWeek,
         selectedAt: r.selectedAt,
         isAction: r.isAction,
-        quantity: Number.isFinite(+r.quantity) ? +r.quantity : 1, // ★
+        quantity: Number.isFinite(+r.quantity) ? +r.quantity
+                 : Number.isFinite(+r.quantityOvertime) ? +r.quantityOvertime
+                 : 1,
+        isOvertime: r.quantityOvertime != null,
       });
       if (r.selectedByUserId) map.get(key).hasProxy = true;
       if (r.selectedAt) {
@@ -152,9 +181,7 @@ export default function AdminHistory() {
 
     // client-side search by name (optional)
     const arr = Array.from(map.values()).filter((u) =>
-      !search?.trim()
-        ? true
-        : (u.fullName || "").toLowerCase().includes(search.toLowerCase())
+      !search?.trim() ? true : (u.fullName || "").toLowerCase().includes(search.toLowerCase())
     );
 
     // sort by name
@@ -162,8 +189,9 @@ export default function AdminHistory() {
     return arr;
   }, [rows, search]);
 
-  const totalUsers = grouped.length;
-  const totalPages = Math.max(1, Math.ceil((totalRows || 0) / pageSize)); // ★
+  const totalUsersPage = grouped.length; // số người hiển thị trong trang hiện tại
+  const totalPages = Math.max(1, Math.ceil((totalUsersAll || 0) / pageSize));
+  const pageList = buildPageList(totalPages, page, 1); // ví dụ: [1, '...', 5, 6, 7, '...', 15]
 
   function toggle(userID) {
     setExpanded((prev) => {
@@ -173,7 +201,6 @@ export default function AdminHistory() {
     });
   }
 
-  // tính tổng SL active theo ngày cho badge "Ngày (món)"
   function dayQtyMap(items) {
     const m = new Map();
     for (const it of items) {
@@ -181,8 +208,20 @@ export default function AdminHistory() {
         m.set(it.dayOfWeek, (m.get(it.dayOfWeek) || 0) + (it.quantity || 1));
       }
     }
-    return m; // day -> qty
+    return m;
   }
+
+  // react-select options
+  const departmentOptions = useMemo(() => {
+    const opts = departments.map((d) => ({ value: d.departmentId, label: d.departmentName }));
+    return [{ value: null, label: "Tất cả bộ phận" }, ...opts];
+  }, [departments]);
+
+  const proxyOptions = useMemo(() => {
+    return [{ value: null, label: "Tất cả người đặt giùm" }].concat(
+      (proxyUsers || []).map((u) => ({ value: u.userID, label: u.fullName }))
+    );
+  }, [proxyUsers]);
 
   return (
     <div className="min-h-screen bg-[#f7faff] p-5">
@@ -205,10 +244,7 @@ export default function AdminHistory() {
             <input
               type="date"
               value={weekStartMonday}
-              onChange={(e) => {
-                setPage(1);
-                setWeekStartMonday(getMonday(e.target.value));
-              }}
+              onChange={(e) => { setPage(1); setWeekStartMonday(getMonday(e.target.value)); }}
               className="inset w-full px-3 py-2 outline-none"
             />
           </div>
@@ -219,10 +255,7 @@ export default function AdminHistory() {
               type="text"
               placeholder="Nhập tên người dùng…"
               value={search}
-              onChange={(e) => {
-                setPage(1);
-                setSearch(e.target.value);
-              }}
+              onChange={(e) => { setPage(1); setSearch(e.target.value); }}
               className="inset w-full px-3 py-2 outline-none"
             />
           </div>
@@ -230,34 +263,30 @@ export default function AdminHistory() {
           <div>
             <div className="text-xs text-slate-500 mb-1">Bộ phận</div>
             <Select
-              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
-              onChange={(opt) => {
-                setPage(1);
-                setDepartmentId(opt?.value ?? null);
-              }}
-              placeholder="Tất cả"
+              options={departmentOptions}
+              value={departmentOptions.find((o) => o.value === (departmentId ?? null)) || departmentOptions[0]}
+              onChange={(opt) => { setPage(1); setDepartmentId(opt?.value ?? null); }}
               isClearable
+              placeholder="Tất cả bộ phận"
             />
           </div>
 
           <div>
             <div className="text-xs text-slate-500 mb-1">Người đặt giùm</div>
             <Select
-              options={proxyUsers.map((u) => ({ value: u.userID, label: u.fullName }))}
-              onChange={(opt) => {
-                setPage(1);
-                setProxyByUserId(opt?.value ?? null);
-              }}
-              placeholder="Tất cả"
+              options={proxyOptions}
+              value={proxyOptions.find((o) => o.value === (proxyByUserId ?? null)) || proxyOptions[0]}
+              onChange={(opt) => { setPage(1); setProxyByUserId(opt?.value ?? null); }}
               isClearable
+              placeholder="Tất cả người đặt giùm"
             />
           </div>
 
           {/* badges */}
           <div className="flex flex-col justify-end">
             <div className="flex items-center gap-3">
-              <span className="pill bg-white text-slate-700">👥 {totalUsers} người</span>
-              <span className="pill bg-white text-slate-700">🍚 Tổng SL (active): {totalQty}</span> {/* ★ */}
+              <span className="pill bg-white text-slate-700">👥 {totalUsersPage} người</span>
+              <span className="pill bg-white text-slate-700">🍚 Tổng SL (active): {totalQty}</span>
             </div>
           </div>
         </div>
@@ -273,172 +302,173 @@ export default function AdminHistory() {
           <div className="col-span-2">Ngày đặt</div>
           <div className="col-span-2">Trạng thái</div>
           <div className="col-span-1">Bộ phận</div>
-          <div className="col-span-2 text-right pr-1">Ngày (SL)</div> {/* ★ */}
+          <div className="col-span-2 text-right pr-1">Ngày (SL)</div>
         </div>
 
         {/* Body */}
         {loading && <div className="px-4 py-10 text-center text-slate-500">Đang tải…</div>}
-        {!loading && grouped.length === 0 && (
-          <div className="px-4 py-10 text-center text-slate-400">Không có dữ liệu</div>
-        )}
+        {!loading && grouped.length === 0 && <div className="px-4 py-10 text-center text-slate-400">Không có dữ liệu</div>}
 
-        {!loading &&
-          grouped.map((u, idx) => {
-            const rowIndex = (page - 1) * pageSize + idx + 1;
-            const isOpen = expanded.has(u.userID);
-            const zebra = idx % 2 === 0 ? "bg-white" : "bg-[#f9fbff]";
-            const dMap = dayQtyMap(u.items); // ★
+        {!loading && grouped.map((u, idx) => {
+          const rowIndex = (page - 1) * pageSize + idx + 1;
+          const isOpen = expanded.has(u.userID);
+          const zebra = idx % 2 === 0 ? "bg-white" : "bg-[#f9fbff]";
+          const dMap = dayQtyMap(u.items);
 
-            // trạng thái ngày có huỷ-only để gạch ngang badge
-            const cancelOnly = new Set();
-            {
-              const status = new Map(); // day -> {active, cancelled}
-              for (const it of u.items) {
-                const st = status.get(it.dayOfWeek) || { active: false, cancelled: false };
-                if (it.isAction) st.active = true; else st.cancelled = true;
-                status.set(it.dayOfWeek, st);
-              }
-              for (const [d, st] of status) if (!st.active && st.cancelled) cancelOnly.add(d);
+          // gạch badge nếu ngày đó chỉ còn huỷ
+          const cancelOnly = new Set();
+          {
+            const status = new Map();
+            for (const it of u.items) {
+              const st = status.get(it.dayOfWeek) || { active: false, cancelled: false };
+              if (it.isAction) st.active = true; else st.cancelled = true;
+              status.set(it.dayOfWeek, st);
             }
+            for (const [d, st] of status) if (!st.active && st.cancelled) cancelOnly.add(d);
+          }
 
-            return (
-              <div key={u.userID} className={`border-top border-slate-200 ${zebra}`}>
-                <button
-                  onClick={() => toggle(u.userID)}
-                  className={`w-full grid grid-cols-12 px-4 py-3 items-center text-left hover:bg-slate-50 transition ${
-                    u.hasProxy ? "bg-amber-50/60" : ""
-                  }`}
-                >
-                  <div className="w-12 text-center font-medium">{rowIndex}</div>
-                  <div className="col-span-3 flex items-center gap-2">
-                    {isOpen ? <FaChevronDown className="text-slate-500" /> : <FaChevronRight className="text-slate-500" />}
-                    <span className="font-semibold text-slate-800 truncate">{u.fullName}</span>
-                  </div>
+          return (
+            <div key={u.userID} className={`border-top border-slate-200 ${zebra}`}>
+              <button
+                onClick={() => toggle(u.userID)}
+                className={`w-full grid grid-cols-12 px-4 py-3 items-center text-left hover:bg-slate-50 transition ${
+                  u.hasProxy ? "bg-amber-50/60" : ""
+                }`}
+              >
+                <div className="w-12 text-center font-medium">{rowIndex}</div>
+                <div className="col-span-3 flex items-center gap-2">
+                  {isOpen ? <FaChevronDown className="text-slate-500" /> : <FaChevronRight className="text-slate-500" />}
+                  <span className="font-semibold text-slate-800 truncate">{u.fullName}</span>
+                </div>
 
-                  <div className="col-span-1 text-slate-700">
-                    {u.latestSelectedAt ? <span className="pill bg-white">{fmtTime(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
-                  </div>
+                <div className="col-span-1 text-slate-700">
+                  {u.latestSelectedAt ? <span className="pill bg-white">{fmtTime(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
+                </div>
 
-                  <div className="col-span-2 text-slate-700">
-                    {u.latestSelectedAt ? <span className="pill bg-white">{fmtDate(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
-                  </div>
+                <div className="col-span-2 text-slate-700">
+                  {u.latestSelectedAt ? <span className="pill bg-white">{fmtDate(u.latestSelectedAt)}</span> : <span className="text-slate-400">-</span>}
+                </div>
 
-                  <div className="col-span-2">
-                    {u.hasProxy ? (
-                      <span className="pill bg-amber-100 text-amber-700">Đặt giùm: {u.proxyName}</span>
-                    ) : (
-                      <span className="pill bg-emerald-100 text-emerald-700">Tự đặt</span>
-                    )}
-                  </div>
+                <div className="col-span-2">
+                  {u.hasProxy ? (
+                    <span className="pill bg-amber-100 text-amber-700">Đặt giùm: {u.proxyName}</span>
+                  ) : (
+                    <span className="pill bg-emerald-100 text-emerald-700">Tự đặt</span>
+                  )}
+                </div>
 
-                  <div className="col-span-1 text-slate-600 truncate">{u.departmentName || "-"}</div>
+                <div className="col-span-1 text-slate-600 truncate">{u.departmentName || "-"}</div>
 
-                  <div className="col-span-2 text-right pr-1">
-                    {dMap.size === 0 ? (
-                      <span className="text-slate-400">-</span>
-                    ) : (
-                      <div className="inline-flex gap-1 flex-wrap justify-end">
-                        {Array.from(dMap.keys()).sort((a,b)=>a-b).map((d) => (
-                          <span
-                            key={d}
-                            className={`pill ${cancelOnly.has(d) ? "bg-white text-slate-400 line-through" : "bg-white text-slate-700"}`}
-                            title={cancelOnly.has(d) ? "Chỉ còn huỷ" : "Có đặt active"}
-                          >
-                            {dayNameVN(d)} · {dMap.get(d)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </button>
+                <div className="col-span-2 text-right pr-1">
+                  {dMap.size === 0 ? (
+                    <span className="text-slate-400">-</span>
+                  ) : (
+                    <div className="inline-flex gap-1 flex-wrap justify-end">
+                      {Array.from(dMap.keys()).sort((a, b) => a - b).map((d) => (
+                        <span
+                          key={d}
+                          className={`pill ${cancelOnly.has(d) ? "bg-white text-slate-400 line-through" : "bg-white text-slate-700"}`}
+                          title={cancelOnly.has(d) ? "Chỉ còn huỷ" : "Có đặt active"}
+                        >
+                          {dayNameVN(d)} · {dMap.get(d)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </button>
 
-                {/* details */}
-                {isOpen && (
-                  <div className="px-5 pb-5">
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {u.items
-                        .sort((a, b) => (a.dayOfWeek - b.dayOfWeek) || (new Date(b.selectedAt) - new Date(a.selectedAt))) // ★ newest first in day
-                        .map((it) => {
-                          const isCanceled = it.isAction === false;
-                          return (
-                            <div
-                              key={it.id}
-                              className={`p-3 rounded-xl border bg-white shadow-sm ${isCanceled ? "border-rose-100" : "border-slate-200"}`}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
-                                  {it.imageUrl ? (
-                                    <img
-                                      src={it.imageUrl}
-                                      alt={it.foodName}
-                                      className={`w-full h-full object-cover ${isCanceled ? "opacity-60" : ""}`}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full grid place-items-center text-[10px] text-slate-400">
-                                      No image
-                                    </div>
-                                  )}
+              {/* details */}
+              {isOpen && (
+                <div className="px-5 pb-5">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {u.items
+                      .sort((a, b) => a.dayOfWeek - b.dayOfWeek || new Date(b.selectedAt) - new Date(a.selectedAt))
+                      .map((it) => {
+                        const isCanceled = it.isAction === false;
+                        return (
+                          <div key={it.id} className={`p-3 rounded-xl border bg-white shadow-sm ${isCanceled ? "border-rose-100" : "border-slate-200"}`}>
+                            <div className="flex items-start gap-3">
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
+                                {it.imageUrl ? (
+                                  <img src={it.imageUrl} alt={it.foodName} className={`w-full h-full object-cover ${isCanceled ? "opacity-60" : ""}`} />
+                                ) : (
+                                  <div className="w-full h-full grid place-items-center text-[10px] text-slate-400">No image</div>
+                                )}
+                              </div>
+
+                              <div className="min-w-0">
+                                <div className={`font-semibold truncate ${isCanceled ? "text-slate-400 line-through" : "text-slate-800"}`} title={it.foodName}>
+                                  {it.foodName}
                                 </div>
 
-                                <div className="min-w-0">
-                                  <div
-                                    className={`font-semibold truncate ${isCanceled ? "text-slate-400 line-through" : "text-slate-800"}`}
-                                    title={it.foodName}
-                                  >
-                                    {it.foodName}
-                                  </div>
-
-                                  <div className="mt-1 flex flex-wrap gap-2 text-xs items-center">
-                                    <span className="pill bg-[#f5f8ff] text-slate-600">{dayNameVN(it.dayOfWeek)}</span>
-                                    <span className="pill bg-emerald-50 text-emerald-700 border-emerald-200">SL: {it.quantity}</span> {/* ★ */}
-
-                                    {it.selectedAt && (
-                                      <>
-                                        <span className="pill bg-[#f5f8ff] text-slate-600">{fmtDate(it.selectedAt)}</span>
-                                        <span className="pill bg-[#f5f8ff] text-slate-600">{fmtTime(it.selectedAt)}</span>
-                                      </>
-                                    )}
-
-                                    {isCanceled && (
-                                      <span className="pill bg-rose-50 text-rose-600 border-rose-200">ĐÃ HUỶ</span>
-                                    )}
-                                  </div>
+                                <div className="mt-1 flex flex-wrap gap-2 text-xs items-center">
+                                  <span className="pill bg-[#f5f8ff] text-slate-600">{dayNameVN(it.dayOfWeek)}</span>
+                                  <span className="pill bg-emerald-50 text-emerald-700 border-emerald-200">SL: {it.quantity}</span>
+                                  {it.selectedAt && (
+                                    <>
+                                      <span className="pill bg-[#f5f8ff] text-slate-600">{fmtDate(it.selectedAt)}</span>
+                                      <span className="pill bg-[#f5f8ff] text-slate-600">{fmtTime(it.selectedAt)}</span>
+                                    </>
+                                  )}
+                                  {it.isOvertime && <span className="pill bg-indigo-50 text-indigo-700 border-indigo-200">OT</span>}
+                                  {isCanceled && <span className="pill bg-rose-50 text-rose-600 border-rose-200">ĐÃ HUỶ</span>}
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                    </div>
+                          </div>
+                        );
+                      })}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Footer */}
+      {/* Footer + Pagination */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="card px-4 py-2 text-slate-700">
-          Tổng người hiển thị: <b>{totalUsers}</b>{" "}
-          <span className="text-slate-500">| Tổng SL (active): {totalQty}</span> {/* ★ */}
+          Tổng người hiển thị: <b>{totalUsersPage}</b>{" "}
+          <span className="text-slate-500">| Tổng SL (active): {totalQty}</span>
         </div>
+
+        {/* Pagination kiểu: ‹ Trước | 1 | 2 (active) | 3 | … | Sau › */}
         <div className="flex items-center gap-2">
           <button
-            disabled={page === 1}
+            disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
           >
-            ← Trước
+            ‹ Trước
           </button>
-          <span className="card px-4 py-2 text-slate-700">
-            Trang {page} / {totalPages}
-          </span>
+
+          {pageList.map((p, idx) =>
+            p === "..." ? (
+              <span key={`dots-${idx}`} className="px-2 text-slate-500 select-none">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                disabled={p === page}
+                className={`min-w-[34px] h-8 px-2 rounded-md border ${
+                  p === page
+                    ? "bg-emerald-600 text-white border-emerald-600"
+                    : "bg-white text-slate-800 border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+
           <button
-            disabled={page * pageSize >= totalRows} // ★ dùng totalRows
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
           >
-            Sau →
+            Sau ›
           </button>
         </div>
       </div>

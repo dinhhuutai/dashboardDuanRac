@@ -341,6 +341,7 @@ export default function WeeklyMenu() {
     { d: 4, name: "Thứ 5" },
     { d: 5, name: "Thứ 6" },
     { d: 6, name: "Thứ 7" },
+    { d: 7, name: "Chủ nhật" },
   ];
   const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // tối đa 11 món/ngày
 

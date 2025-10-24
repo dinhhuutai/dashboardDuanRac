@@ -18,6 +18,8 @@ import QuantityStepper from "~/components/lunch/QuantityStepper";
 import NoticeModal from "~/components/lunch/NoticeModal";
 import ConfirmCancelModal from "~/components/lunch/ConfirmCancelModal";
 import QtyChip from "~/components/lunch/QtyChip";
+import TopControlBar from "./components/TopControlBar";
+import OvertimeWeekInputs from "./components/OvertimeWeekInputs";
 
 /* ================= Helpers ================= */
 function dayNameVN(day) {
@@ -241,6 +243,9 @@ export default function UserOrderSlide() {
   const [cancelConfirm, setCancelConfirm] = useState({
     open: false, entryId: null, day: null, foodName: "", busy: false,
   });
+
+  // nếu chưa có:
+const [isOvertime, setOvertime] = useState(false);
 
   // Toggle “chế độ thư ký”
   const [secEnabled, setSecEnabled] = useState(() => localStorage.getItem("lunch.secMode") === "1");
@@ -813,7 +818,7 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-[10px]">
       {/* Tabs */}
-      <div className="mx-[10px] mb-3">
+      {/* <div className="mx-[10px] mb-3">
         <div className="inline-flex rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <button
             className={`px-4 py-2 text-sm ${tab === "week" ? "bg-emerald-600 text-white" : "text-slate-700 hover:bg-slate-50"}`}
@@ -828,85 +833,28 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
             Đặt theo ngày
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Action bar: Thông báo + Chế độ thư ký */}
 {!pushChecking && tab !== "day" && (
-  <div className="mx-[10px] mb-3 rounded-xl bg-white/80 backdrop-blur border border-white/60 shadow px-3 py-2">
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-      {/* Trạng thái thông báo + nút bật/tắt */}
-      <div className="flex items-center gap-2 w-full sm:w-auto">
-        <span
-          className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-sm
-            ${pushReady ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}
-        >
-          <span className={`w-2 h-2 rounded-full ${pushReady ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
-          {pushReady ? (pushStatus || "Đã bật thông báo") : "Thông báo: Tắt"}
-        </span>
+  <TopControlBar
+        // ---- Props Push
+        pushReady={pushReady}
+        pushBusy={pushBusy}
+        isIOS={isIOS}
+        isStandalone={!!isStandalone}
+        notifPerm={notifPerm}
+        pushStatus={pushStatus}
+        pushError={pushError}
+        unregisterPush={unregisterPush}
+        handleEnablePush={handleEnablePush}
 
-        {pushReady ? (
-          <button
-            onClick={unregisterPush}
-            disabled={pushBusy}
-            className={`h-8 px-3 rounded-lg text-sm border transition
-              ${pushBusy
-                ? "bg-slate-200 text-slate-600 cursor-not-allowed"
-                : "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"}`}
-            aria-busy={pushBusy}
-          >
-            {pushBusy ? "Đang tắt…" : "Tắt"}
-          </button>
-        ) : (
-          <button
-            onClick={handleEnablePush}
-            disabled={pushBusy || (isIOS && !isStandalone)}
-            className={`h-8 px-3 rounded-lg text-sm text-white shadow transition
-              ${pushBusy ? "bg-amber-400 cursor-not-allowed" : "bg-amber-500 hover:bg-amber-600"}`}
-            aria-busy={pushBusy}
-            title={notifPerm === "denied" ? "Bạn đang chặn thông báo trong trình duyệt" : ""}
-          >
-            {isIOS && !isStandalone ? "Cài lên màn hình chính" : pushBusy ? "Đang bật…" : "Bật thông báo"}
-          </button>
-        )}
-      </div>
-
-      {/* Cảnh báo permission / lỗi ngắn gọn */}
-      {!pushReady && notifPerm === "denied" && (
-        <div className="text-[12px] text-red-600/90 w-full sm:w-auto">
-          Bạn đang chặn thông báo. Hãy bật lại trong cài đặt trình duyệt.
-        </div>
-      )}
-      {!pushReady && pushError && (
-        <div className="text-[12px] text-red-600/90 w-full sm:w-auto">{pushError}</div>
-      )}
-
-      {/* Công tắc chế độ thư ký */}
-      <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
-        <span className="text-slate-700 text-sm">Thư ký</span>
-        <button
-          role="switch"
-          aria-checked={isSec}
-          onClick={() => setSecEnabled((v) => !v)}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition
-            ${isSec ? "bg-emerald-600" : "bg-slate-300"}`}
-          title={isSec ? "Tắt chế độ thư ký" : "Bật chế độ thư ký"}
-        >
-          <span
-            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition
-              ${isSec ? "translate-x-6" : "translate-x-1"}`}
-          />
-        </button>
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full border
-            ${isSec
-              ? "border-emerald-200 text-emerald-700 bg-emerald-50"
-              : "border-slate-200 text-slate-600 bg-slate-50"}`}
-        >
-          {isSec ? "Đang bật" : "Đang tắt"}
-        </span>
-      </div>
-    </div>
-  </div>
+        // ---- Props Tăng ca & Thư ký
+        isOvertime={isOvertime}
+        setOvertime={setOvertime}
+        isSec={isSec}
+        setSecEnabled={setSecEnabled}
+      />
 )}
 
 
@@ -915,123 +863,154 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
           user={user}
           weekStartMonday={weeklyMenu?.weekStartMonday}
           cutoffHour={11} />
-      ) : (
+      ) : 
+      isOvertime ? (
+        <OvertimeWeekInputs
+          weeklyMenuId={weeklyMenu.weeklyMenuId} // id tuần hiện tại
+          userId={user.userID}             // user đang đặt
+          actorId={true}           // người thao tác (user hoặc thư ký)
+          isOvertime={isOvertime} 
+        />
+      ) :(
         <>
-          {/* Action bar gọn */}
-          {/* (giữ nguyên phần push state & toggle thư ký của bạn) */}
-          {/* Nếu muốn, có thể copy toàn bộ action bar cũ vào đây */}
-          {/* ... */}
-
           {/* ĐÃ ĐẶT – chip + edit (thư ký, cutoff 09:00) */}
           {hasOrdered ? (
-            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/40 shadow-xl p-6 mx-[10px]">
-              <h3 className="font-semibold text-lg mb-4 text-slate-800">Bạn đã đặt cơm tuần này</h3>
-              <ul className="space-y-3">
-                {Object.keys(grouped).map((day) => {
-                  const dayEntries = isSec
-                    ? Object.keys(selectedSec[day] || {}).map((eid) => Number(eid))
-                    : [selected[day]].filter(Boolean);
-                  const canceled = canceledByDay[day];
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/40 shadow-xl p-4 sm:p-6 mx-2 sm:mx-[10px]">
+  <h3 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 text-slate-800">
+    Bạn đã đặt cơm tuần này
+  </h3>
+
+  <ul className="space-y-2 sm:space-y-3">
+    {Object.keys(grouped).map((day) => {
+      const dayEntries = isSec
+        ? Object.keys(selectedSec[day] || {}).map((eid) => Number(eid))
+        : [selected[day]].filter(Boolean);
+      const canceled = canceledByDay[day];
+
+      return (
+        <li
+          key={day}
+          className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200"
+        >
+          {/* Cột: ngày (mobile đặt trên cùng) */}
+          <div className="sm:col-span-2 flex items-center">
+            <span className="inline-flex shrink-0 px-2 py-1 rounded-md bg-white border border-slate-200 text-sm font-medium text-slate-700">
+              {dayNameVN(day)}
+            </span>
+          </div>
+
+          {/* Cột: danh sách món/chip (tự wrap + có thể cuộn ngang nếu quá dài) */}
+          <div className="sm:col-span-8 min-w-0">
+            {dayEntries.length > 0 ? (
+              <div className="flex flex-wrap gap-2 -m-1 max-w-full">
+                {dayEntries.map((eid) => {
+                  const e = (weeklyMenu?.entries ?? []).find(
+                    (x) => x.weeklyMenuEntryId === eid
+                  );
+                  const currentQty = isSec ? (qtySec[day]?.[eid] ?? 1) : 1;
+                  const isEditing =
+                    !!(editing &&
+                    editing.day === String(day) &&
+                    editing.entryId === eid);
 
                   return (
-                    <li key={day} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                      <span className="w-24 font-medium">{dayNameVN(day)}</span>
-
-                      <div className="flex-1 min-w-0">
-                        {dayEntries.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {dayEntries.map((eid) => {
-                              const e = (weeklyMenu?.entries ?? []).find((x) => x.weeklyMenuEntryId === eid);
-                              const currentQty = isSec ? (qtySec[day]?.[eid] ?? 1) : 1;
-                              const isEditing = !!(editing && editing.day === String(day) && editing.entryId === eid);
-
-                              return (
-                                <QtyChip
-                                  key={eid}
-                                  day={day}
-                                  entryId={eid}
-                                  foodName={e?.foodName}
-                                  currentQty={currentQty}
-                                  isSec={isSec}
-                                  isEditing={isEditing}
-                                  editing={editing}
-                                  openEditQty={openEditQty}
-                                  changeEditValue={changeEditValue}
-                                  saveEdit={saveEdit}
-                                  cancelEdit={cancelEdit}
-                                  canEdit={canModifyDayByMode(Number(day))}
-                                />
-                              );
-                            })}
-                          </div>
-                        ) : canceled ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400 line-through">{canceled.foodName}</span>
-                            <span className="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 text-slate-500 border border-slate-200">
-                              Đã huỷ cơm
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic">Không chọn</span>
-                        )}
-                      </div>
-
-                      {/* Huỷ cơm: chỉ user thường, disabled khi quá hạn */}
-                      {!isSec && dayEntries[0] && (
-                        (() => {
-                          const canCancel = !weeklyMenu?.isLocked && canCancelDay(Number(day));
-                          const e = (weeklyMenu?.entries ?? []).find((x) => x.weeklyMenuEntryId === dayEntries[0]);
-
-                          return (
-                            <button
-                              onClick={() => {
-                                if (!canCancel) return;
-                                if (e) askCancel(e.weeklyMenuEntryId, day, e.foodName);
-                              }}
-                              disabled={!canCancel}
-                              aria-disabled={!canCancel}
-                              className={[
-                                "px-3 py-1.5 rounded-lg text-white text-sm shadow inline-flex items-center gap-2",
-                                "bg-rose-500",
-                                canCancel ? "hover:bg-rose-600" : "opacity-50 cursor-not-allowed pointer-events-none"
-                              ].join(" ")}
-                              title={canCancel ? "Huỷ cơm ngày này" : "Đã quá hạn huỷ"}
-                            >
-                              Huỷ cơm
-                            </button>
-                          );
-                        })()
-                      )}
-                    </li>
+                    <div key={eid} className="m-1">
+                      <QtyChip
+                        day={day}
+                        entryId={eid}
+                        foodName={e?.foodName}
+                        currentQty={currentQty}
+                        isSec={isSec}
+                        isEditing={isEditing}
+                        editing={editing}
+                        openEditQty={openEditQty}
+                        changeEditValue={changeEditValue}
+                        saveEdit={saveEdit}
+                        cancelEdit={cancelEdit}
+                        canEdit={canModifyDayByMode(Number(day))}
+                      />
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
+            ) : canceled ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-slate-400 line-through truncate">
+                  {canceled.foodName}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 text-slate-600 border border-slate-200">
+                  Đã huỷ cơm
+                </span>
+              </div>
+            ) : (
+              <span className="text-slate-400 italic">Không chọn</span>
+            )}
+          </div>
 
-              {!weeklyMenu?.isLocked && (
-                <div className="mt-6 flex justify-end">
+          {/* Cột: nút huỷ (desktop: cột phải; mobile: full width phía dưới) */}
+          {!isSec && dayEntries[0] && (
+            <div className="sm:col-span-2 flex sm:justify-end">
+              {(() => {
+                const canCancel =
+                  !weeklyMenu?.isLocked && canCancelDay(Number(day));
+                const e = (weeklyMenu?.entries ?? []).find(
+                  (x) => x.weeklyMenuEntryId === dayEntries[0]
+                );
+
+                return (
                   <button
                     onClick={() => {
-                      prevSelectedRef.current = {
-                        selectedSnapshot: selected,
-                        selectedSecSnapshot: selectedSec,
-                        qtySecSnapshot: qtySec,
-                        canceledSnapshot: canceledByDay,
-                        hasOrderedSnapshot: hasOrdered,
-                      };
-                      setHasOrdered(false);
-                      setSelected({});
-                      setSelectedSec({});
-                      setQtySec({});
-                      setCanceledByDay({});
-                      setReorderMode(true);
+                      if (!canCancel) return;
+                      if (e) askCancel(e.weeklyMenuEntryId, day, e.foodName);
                     }}
-                    className="px-6 py-3 rounded-xl bg-amber-500 text-white flex items-center gap-2 shadow hover:bg-amber-600"
+                    disabled={!canCancel}
+                    aria-disabled={!canCancel}
+                    className={[
+                      "w-full sm:w-auto px-4 py-2 rounded-lg text-white text-sm shadow inline-flex items-center justify-center gap-2 transition",
+                      canCancel
+                        ? "bg-rose-500 hover:bg-rose-600"
+                        : "bg-rose-400 opacity-60 cursor-not-allowed"
+                    ].join(" ")}
+                    title={canCancel ? "Huỷ cơm ngày này" : "Đã quá hạn huỷ"}
+                    aria-label={canCancel ? "Huỷ cơm" : "Đã quá hạn huỷ"}
                   >
-                    <FaRedo /> Đặt lại
+                    Huỷ cơm
                   </button>
-                </div>
-              )}
+                );
+              })()}
             </div>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+
+  {/* Nút Đặt lại: gom về cuối, full-width mobile, phải desktop */}
+  {!weeklyMenu?.isLocked && (
+    <div className="mt-4 sm:mt-6 flex">
+      <button
+        onClick={() => {
+          prevSelectedRef.current = {
+            selectedSnapshot: selected,
+            selectedSecSnapshot: selectedSec,
+            qtySecSnapshot: qtySec,
+            canceledSnapshot: canceledByDay,
+            hasOrderedSnapshot: hasOrdered,
+          };
+          setHasOrdered(false);
+          setSelected({});
+          setSelectedSec({});
+          setQtySec({});
+          setCanceledByDay({});
+          setReorderMode(true);
+        }}
+        className="w-full sm:w-auto sm:ml-auto px-5 sm:px-6 py-3 rounded-xl bg-amber-500 text-white flex items-center justify-center gap-2 shadow hover:bg-amber-600 transition"
+      >
+        <FaRedo /> Đặt lại
+      </button>
+    </div>
+  )}
+</div>
           ) : (
             <div className="w-full p-6 mx-[10px] lg:w-[calc(100vw-350px)]">
               {/* Thanh “Đang đặt lại” */}

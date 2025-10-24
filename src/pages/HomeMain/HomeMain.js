@@ -2928,7 +2928,7 @@ async function handleLogout() {
             </div>
             
   {/* Giữa: toggle (absolute center) */}
-    <ThemeToggle value={theme} onChange={setTheme} />
+    {/* <ThemeToggle value={theme} onChange={setTheme} /> */}
 
             {/* Search chỉ hiện ở Home */}
             <div

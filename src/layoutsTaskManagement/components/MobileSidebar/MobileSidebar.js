@@ -42,7 +42,7 @@ export default function MobileSidebar({ onClose, phase }) {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <Sidebar phase={phase} />
+        <Sidebar phase={phase} onNavigate={onClose} />
       </motion.aside>
     </motion.div>
   );

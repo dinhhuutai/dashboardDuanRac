@@ -127,6 +127,55 @@ const toInt = (v) => {
   // ==== Create Modal State (UI only) ====
 const [openCreate, setOpenCreate] = useState(false);
 
+// === Session-level edit for 'editedUnit' (only CM/TV) ===
+const [sessEditMap, setSessEditMap] = useState({});     // { [sessionId]: true/false }
+const [sessFormMap, setSessFormMap] = useState({});     // { [sessionId]: { editedUnit: '' } }
+const [sessSavingMap, setSessSavingMap] = useState({}); // { [sessionId]: true/false }
+
+const startEditUnit = (session) => {
+  const sid = session.weighingSessionId;
+  const currentDisplay = (session?.editedUnit ?? session?.unit ?? '') || '';
+  setSessEditMap(m => ({ ...m, [sid]: true }));
+  setSessFormMap(f => ({ ...f, [sid]: { editedUnit: currentDisplay } }));
+};
+
+const cancelEditUnit = (sid) => {
+  setSessEditMap(m => ({ ...m, [sid]: false }));
+};
+
+const changeSessionField = (sid, field, value) => {
+  setSessFormMap(f => ({ ...f, [sid]: { ...(f[sid] || {}), [field]: value } }));
+};
+
+const saveEditedUnit = async (session) => {
+  const sid = session.weighingSessionId;
+  const draft = sessFormMap[sid] || {};
+  const editedUnit = (draft.editedUnit ?? '').trim();
+
+  try {
+    setSessSavingMap(m => ({ ...m, [sid]: true }));
+    await axios.put(`${BASE_URL_SERVER_THLA}/api/ink-weighing/sessions/${sid}`, {
+      editedUnit: editedUnit || null, // null để xoá
+    });
+
+    // Cập nhật local ngay
+    setData(prev => prev.map(s => s.weighingSessionId === sid ? { ...s, editedUnit: editedUnit || null } : s));
+    setAllData(prev => prev.map(s => s.weighingSessionId === sid ? { ...s, editedUnit: editedUnit || null } : s));
+
+    setSessEditMap(m => ({ ...m, [sid]: false }));
+
+    // Làm chắc: refetch
+    await fetchPage();
+    await fetchMeta();
+  } catch (e) {
+    console.error('Lỗi lưu editedUnit:', e);
+    alert('Lưu Chuyền (editedUnit) thất bại');
+  } finally {
+    setSessSavingMap(m => ({ ...m, [sid]: false }));
+  }
+};
+
+
 const defaultItem = { inkCode: '', inkName: '', productionDate: '', weight: '', pjName: '', pjWeight: '' };
 
 const [createForm, setCreateForm] = useState({
@@ -172,8 +221,11 @@ const removeItemRow = (idx) =>
   });
 
 
-
-  const isAnySaving = useMemo(() => Object.values(savingMap).some(Boolean), [savingMap]);
+  const isAnySaving = useMemo(() => {
+  const a = Object.values(savingMap).some(Boolean);      // item-level
+  const b = Object.values(sessSavingMap).some(Boolean);  // session-level
+  return a || b;
+}, [savingMap, sessSavingMap]);
 
   // Popover chi tiết edited theo sessionId
   const [openDetailSessionId, setOpenDetailSessionId] = useState(null);
@@ -851,8 +903,65 @@ const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workSh
                                       {session.department?.replace(/^T/, 'Tổ ')}
                                     </td>
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
-                                      {displayUnit(session)}
-                                    </td>
+  {(() => {
+    const sid = session.weighingSessionId;
+    const allowEditUnit = session.operationCode === 'CM' || session.operationCode === 'TV';
+    const isEditingUnit = !!sessEditMap[sid];
+    const form = sessFormMap[sid] || {};
+
+    if (!allowEditUnit) {
+      return <>{displayUnit(session)}</>;
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        {!isEditingUnit ? (
+          <>
+            <span>{displayUnit(session)}</span>
+            <button
+              type="button"
+              onClick={() => startEditUnit(session)}
+              disabled={isAnySaving}
+              className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs
+                ${isAnySaving ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+              title="Sửa Chuyền (CM/TV)"
+            >
+              <FiEdit2 /> Sửa
+            </button>
+          </>
+        ) : (
+          <>
+            <input
+              value={form.editedUnit ?? ''}
+              onChange={(e)=>changeSessionField(sid,'editedUnit', e.target.value)}
+              disabled={!!sessSavingMap[sid]}
+              className={`w-24 rounded border px-2 py-1 text-sm ${sessSavingMap[sid] ? 'bg-slate-100 text-slate-400' : 'border-slate-300'}`}
+              placeholder="VD: M7"
+            />
+            <button
+              onClick={() => saveEditedUnit(session)}
+              disabled={!!sessSavingMap[sid]}
+              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs text-white
+                ${sessSavingMap[sid] ? 'bg-emerald-400 opacity-70 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+            >
+              {sessSavingMap[sid] ? <FiLoader className="animate-spin" /> : <FiSave />}
+              {sessSavingMap[sid] ? 'Đang lưu...' : 'Lưu'}
+            </button>
+            <button
+              onClick={() => cancelEditUnit(sid)}
+              disabled={!!sessSavingMap[sid]}
+              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs
+                ${sessSavingMap[sid] ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-200 text-slate-700'}`}
+            >
+              <FiX /> Huỷ
+            </button>
+          </>
+        )}
+      </div>
+    );
+  })()}
+</td>
+
                                     <td className="px-3 py-2 align-middle" rowSpan={session.items.length}>
                                       {session.workShift}
                                     </td>
@@ -1023,7 +1132,60 @@ const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workSh
                             <td className="px-3 py-2">{opName(session.operationCode)}</td>
                             <td className="px-3 py-2">{session?.hsktId}</td>
                             <td className="px-3 py-2">{session.department?.replace(/^T/, 'Tổ ')}</td>
-                            <td className="px-3 py-2">{displayUnit(session)}</td>
+                            <td className="px-3 py-2">
+  {(() => {
+    const sid = session.weighingSessionId;
+    const allowEditUnit = session.operationCode === 'CM' || session.operationCode === 'TV';
+    const isEditingUnit = !!sessEditMap[sid];
+    const form = sessFormMap[sid] || {};
+
+    if (!allowEditUnit) return <>{displayUnit(session)}</>;
+
+    return !isEditingUnit ? (
+      <div className="flex items-center gap-2">
+        <span>{displayUnit(session)}</span>
+        <button
+          type="button"
+          onClick={() => startEditUnit(session)}
+          disabled={isAnySaving}
+          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs
+            ${isAnySaving ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+          title="Sửa Chuyền (CM/TV)"
+        >
+          <FiEdit2 /> Sửa
+        </button>
+      </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <input
+          value={form.editedUnit ?? ''}
+          onChange={(e)=>changeSessionField(sid,'editedUnit', e.target.value)}
+          disabled={!!sessSavingMap[sid]}
+          className={`w-24 rounded border px-2 py-1 text-sm ${sessSavingMap[sid] ? 'bg-slate-100 text-slate-400' : 'border-slate-300'}`}
+          placeholder="VD: M7"
+        />
+        <button
+          onClick={() => saveEditedUnit(session)}
+          disabled={!!sessSavingMap[sid]}
+          className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs text-white
+            ${sessSavingMap[sid] ? 'bg-emerald-400 opacity-70 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+        >
+          {sessSavingMap[sid] ? <FiLoader className="animate-spin" /> : <FiSave />}
+          {sessSavingMap[sid] ? 'Đang lưu...' : 'Lưu'}
+        </button>
+        <button
+          onClick={() => cancelEditUnit(sid)}
+          disabled={!!sessSavingMap[sid]}
+          className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs
+            ${sessSavingMap[sid] ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-200 text-slate-700'}`}
+        >
+          <FiX /> Huỷ
+        </button>
+      </div>
+    );
+  })()}
+</td>
+
                             <td className="px-3 py-2">{session.workShift}</td>
                             <td className="px-3 py-2">
                               {formatTime(session.startTime)} {formatDate(session.weighStartDate)}

@@ -91,7 +91,7 @@ function PhaseSwitcher({ phase, onChange }) {
       <button
         onClick={() => onChange("work")}
         className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
-          phase === "work" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          phase === "work" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
         }`}
       >
         <CheckSquare className="h-4 w-4" /> Công việc
@@ -99,7 +99,7 @@ function PhaseSwitcher({ phase, onChange }) {
       <button
         onClick={() => onChange("projects")}
         className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
-          phase === "projects" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          phase === "projects" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
         }`}
       >
         <FolderKanban className="h-4 w-4" /> Dự án
