@@ -141,7 +141,7 @@ function DroppableSlot({ id, assignedFood, onRemove, disabled, droppableDisabled
             className="h-full w-full object-cover rounded-xl"
           />
           {/* Ẩn nút xoá khi là slot cố định 6..12 */}
-          {!disabled && !isFixed && (
+          {!disabled && (
             <button
               onClick={onRemove}
               className="absolute top-1 right-1 px-2 py-1 bg-rose-600 text-white text-xs rounded"
