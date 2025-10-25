@@ -248,7 +248,7 @@ export default function UserOrderSlide() {
 const [isOvertime, setOvertime] = useState(false);
 
   // Toggle “chế độ thư ký”
-  const [secEnabled, setSecEnabled] = useState(() => localStorage.getItem("lunch.secMode") === "1");
+  const [secEnabled, setSecEnabled] = useState(false);
   const isSec = secEnabled;
   useEffect(() => {
     localStorage.setItem("lunch.secMode", secEnabled ? "1" : "0");
@@ -1140,7 +1140,7 @@ const canModifyDayByMode = useCallback((dayOfWeek1to7) => {
                               );
                             })}
 
-                            {!isSec && (
+                            {(
                               <motion.button
                                 key={`none-${day}`}
                                 whileTap={{ scale: 0.97 }}
