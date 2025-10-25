@@ -17,6 +17,7 @@ Modal.setAppElement('#root');
 function Home() {
 
   const FEATURE_SCAN_QR = useFeatureAllowed(MODULEID.CANRAC, 'cr_nghiepvucanrac');
+  const FEATURE_BLUE = useFeatureAllowed(MODULEID.CANRAC, 'cr_chucnangketnoibluecan');
   const FEATURE_CHECK_CLASS = useFeatureAllowed(MODULEID.CANRAC, 'cr_nghiepvukiemtraphanloai');
 
   const tmp = useSelector(userSelector);
@@ -271,14 +272,17 @@ function Home() {
                 </button>
               }
 
-              {/* <button
+{
+  FEATURE_BLUE &&
+              <button
                 onClick={handleConnectBluetooth}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-sky-600 to-blue-600
                            text-white font-semibold shadow-lg shadow-sky-600/30
                            hover:from-sky-700 hover:to-blue-700 active:scale-[.98] transition"
               >
                 Kết nối Bluetooth
-              </button> */}
+              </button>
+}
 
               {
                 FEATURE_CHECK_CLASS &&
