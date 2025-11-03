@@ -101,15 +101,15 @@ export default function BalancedTopBar({
               </svg>
             </div>
             <div className="min-w-0">
-              <div className="text-[13px] font-semibold text-slate-800">Đặt cơm tăng ca</div>
+              <div className="text-[13px] font-semibold text-slate-800">Đặt cơm đi ca</div>
               <div className="text-[11px] text-slate-600">
-                {isOvertime ? "Chế độ TĂNG CA đang bật" : "Đặt cơm bình thường"}
+                {isOvertime ? "Chế độ ĐI CA đang bật" : "Đặt cơm bình thường"}
               </div>
             </div>
           </div>
 
           {/* Switch đẹp + to hơn chút */}
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none" aria-label="Bật tắt chế độ tăng ca">
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none" aria-label="Bật tắt chế độ đi ca">
             <input
               type="checkbox"
               checked={isOvertime}

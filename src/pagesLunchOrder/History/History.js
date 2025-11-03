@@ -1,13 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";
 import { FaCheck } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 function dayNameVN(day) {
   return ["","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"][day];
 }
+
+const TYPE_META = {
+  re: { label: "Ca ngày" },
+  ws: { label: "Đi ca" },
+  ot: { label: "Tăng ca" },
+};
 
 export default function LunchOrderHistory() {
   const tmp = useSelector(userSelector);
@@ -15,21 +22,34 @@ export default function LunchOrderHistory() {
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
 
   const [weekStart, setWeekStart] = useState(""); // yyyy-mm-dd
-  const [history, setHistory] = useState([]);
+  const [orderType, setOrderType] = useState("re"); // re | ws | ot
+  const [historyRaw, setHistoryRaw] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // tổng suất (cộng theo quantity)
-  const totalQty = history.reduce((s, r) => s + (r.quantity ?? 0), 0);
+  // Fallback lọc phía client nếu API chưa hỗ trợ statusType
+  const history = useMemo(() => {
+    if (!Array.isArray(historyRaw)) return [];
+    return historyRaw.filter(
+      (r) => ((r.statusType || "re").toLowerCase()) === orderType
+    );
+  }, [historyRaw, orderType]);
 
-  // Load API
-  async function loadHistory(dateStr) {
+  // tổng suất (cộng theo quantity) — chỉ cho loại đang xem
+  const totalQty = useMemo(
+    () => history.reduce((s, r) => s + (r.quantity ?? 0), 0),
+    [history]
+  );
+
+  async function loadHistory(dateStr, type) {
     if (!dateStr || !user?.userID) return;
     setLoading(true);
     try {
       const rs = await http.get(`${BASE_URL}/api/lunch-order/history`, {
-        params: { date: dateStr, userId: user.userID },
+        // 👇 Nếu backend đã hỗ trợ, nó sẽ trả đúng theo type;
+        // Nếu chưa, ta vẫn nhận list chung và filter client bằng useMemo ở trên.
+        params: { date: dateStr, userId: user.userID, statusType: type },
       });
-      setHistory(rs.data?.data || []);
+      setHistoryRaw(rs.data?.data || []);
     } finally {
       setLoading(false);
     }
@@ -41,28 +61,56 @@ export default function LunchOrderHistory() {
     setWeekStart(today);
   }, []);
 
-  // Khi đổi ngày hoặc user → load lại
+  // Khi đổi ngày / user / loại → load lại
   useEffect(() => {
     if (weekStart && user?.userID) {
-      loadHistory(weekStart);
+      loadHistory(weekStart, orderType);
     }
-  }, [weekStart, user]);
+  }, [weekStart, user, orderType]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Filter bar */}
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <input
-            type="date"
-            value={weekStart}
-            onChange={(e) => setWeekStart(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-300 shadow-inner 
-                       focus:ring-2 focus:ring-emerald-400 outline-none"
-          />
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={weekStart}
+              onChange={(e) => setWeekStart(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-slate-300 shadow-inner 
+                         focus:ring-2 focus:ring-emerald-400 outline-none"
+            />
+          </div>
+
+          {/* Toggle loại */}
+          <div className="relative inline-flex bg-white/70 backdrop-blur rounded-xl p-1 border border-slate-200 shadow-sm">
+            {(["re","ws","ot"]).map((k) => (
+              <button
+                key={k}
+                onClick={() => setOrderType(k)}
+                className={`relative z-10 px-4 py-2 text-sm rounded-lg transition ${
+                  orderType === k
+                    ? "text-emerald-800 font-semibold"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+                style={{ minWidth: 120 }}
+              >
+                {TYPE_META[k].label}
+                {orderType === k && (
+                  <motion.span
+                    layoutId="pill-history-type"
+                    className="absolute inset-0 -z-10 rounded-lg bg-white shadow"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
           {history.length > 0 && (
             <div className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700">
-              🍚 <b>{totalQty}</b> suất (tuần này)
+              🍚 <b>{totalQty}</b> suất ({TYPE_META[orderType].label})
             </div>
           )}
         </div>
@@ -139,7 +187,7 @@ export default function LunchOrderHistory() {
 
         {!loading && weekStart && history.length === 0 && (
           <div className="text-slate-500 italic text-center">
-            Bạn chưa đặt cơm tuần này
+            Không có lịch sử cho {TYPE_META[orderType].label.toLowerCase()} tuần này
           </div>
         )}
       </div>

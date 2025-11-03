@@ -1,14 +1,9 @@
 // src/pages/Foods/FoodManager.jsx
 import React, { useEffect, useState } from "react";
 import {
-  FaEdit,
-  FaTrash,
-  FaPlus,
-  FaTimes,
-  FaSpinner,
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaInfoCircle,
+  FaEdit, FaTrash, FaPlus, FaTimes, FaSpinner,
+  FaCheckCircle, FaExclamationTriangle, FaInfoCircle,
+  FaArrowUp, FaArrowDown
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { BASE_URL } from "~/config";
@@ -19,9 +14,11 @@ const initialForm = {
   description: "",
   colorCode: "#fef3c7",
   // ảnh
-  serverImageUrl: "",     // ảnh từ server
-  imagePreviewUrl: "",    // ảnh blob để xem trước
-  imageFile: null,        // file mới nếu có
+  serverImageUrl: "",
+  imagePreviewUrl: "",
+  imageFile: null,
+  // branches
+  branches: [] // [{branchId?, branchName, isActive, sortOrder}]
 };
 
 /* ===================== Notice Modal ===================== */
@@ -57,11 +54,7 @@ function NoticeModal({ open, type = "info", title = "", message = "", onClose })
                 <Icon className={`${color} text-2xl`} />
                 <h4 className="font-bold text-lg">{title || "Thông báo"}</h4>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded hover:bg-slate-100"
-                aria-label="Đóng"
-              >
+              <button onClick={onClose} className="p-2 rounded hover:bg-slate-100" aria-label="Đóng">
                 <FaTimes />
               </button>
             </div>
@@ -84,10 +77,124 @@ function NoticeModal({ open, type = "info", title = "", message = "", onClose })
 }
 /* ======================================================== */
 
+/** Editor nhỏ cho nhánh/ghi chú mặc định */
+function BranchEditor({ value = [], onChange, disabled }) {
+  const [list, setList] = useState(value);
+
+  useEffect(() => setList(value), [value]);
+
+  const add = () => {
+    const next = [...list, { tempId: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`, branchName: "", isActive: true, sortOrder: list.length }];
+    setList(next);
+    onChange?.(next);
+  };
+
+  const updateAt = (idx, patch) => {
+    const next = list.map((it, i) => (i === idx ? { ...it, ...patch } : it));
+    setList(next);
+    onChange?.(next);
+  };
+
+  const removeAt = (idx) => {
+    const next = list.filter((_, i) => i !== idx).map((it, i) => ({ ...it, sortOrder: i }));
+    setList(next);
+    onChange?.(next);
+  };
+
+  const move = (idx, dir) => {
+    const j = idx + dir;
+    if (j < 0 || j >= list.length) return;
+    const next = [...list];
+    [next[idx], next[j]] = [next[j], next[idx]];
+    const final = next.map((it, i) => ({ ...it, sortOrder: i }));
+    setList(final);
+    onChange?.(final);
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold">🧾 Ghi chú mặc định / Nhánh của món</h4>
+        <button
+          type="button"
+          onClick={add}
+          disabled={disabled}
+          className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
+        >
+          <FaPlus className="inline-block mr-1" />
+          Thêm nhánh
+        </button>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="text-sm text-slate-500">Chưa có nhánh nào. Bấm “Thêm nhánh”.</div>
+      ) : (
+        <ul className="space-y-2">
+          {list.map((b, idx) => (
+            <li key={b.branchId ?? b.tempId ?? idx} className="bg-white rounded-xl border border-slate-200 p-3 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={b.branchName || ""}
+                  onChange={(e) => updateAt(idx, { branchName: e.target.value })}
+                  placeholder="Ví dụ: 'Đầu cá', 'Chỉ lấy nấm', 'Không hành'..."
+                  disabled={disabled}
+                  className="flex-1 border rounded-lg px-3 py-2"
+                />
+                <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-lg bg-slate-50 border">
+                  <input
+                    type="checkbox"
+                    checked={!!b.isActive}
+                    onChange={(e) => updateAt(idx, { isActive: e.target.checked })}
+                    disabled={disabled}
+                  />
+                  Kích hoạt
+                </label>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-slate-500">Thứ tự: {b.sortOrder ?? idx}</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => move(idx, -1)}
+                    disabled={disabled || idx === 0}
+                    className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    title="Lên"
+                  >
+                    <FaArrowUp />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(idx, +1)}
+                    disabled={disabled || idx === list.length - 1}
+                    className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    title="Xuống"
+                  >
+                    <FaArrowDown />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeAt(idx)}
+                    disabled={disabled}
+                    className="px-3 py-1 rounded-md bg-rose-50 text-rose-600 hover:bg-rose-100 disabled:opacity-50"
+                  >
+                    <FaTrash className="inline-block mr-1" />
+                    Xoá
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function FoodManager() {
   const [foods, setFoods] = useState([]);
-  const [loading, setLoading] = useState(false);     // fetch list
-  const [saving, setSaving] = useState(false);       // save create/update
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -97,7 +204,6 @@ function FoodManager() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [targetFood, setTargetFood] = useState(null);
 
-  // Notice state
   const [notice, setNotice] = useState({ open: false, type: "info", title: "", message: "" });
   const showNotice = (type, title, message) => setNotice({ open: true, type, title, message });
   const closeNotice = () => setNotice((n) => ({ ...n, open: false }));
@@ -105,41 +211,82 @@ function FoodManager() {
   useEffect(() => { fetchFoods(); }, []);
 
   async function fetchFoods() {
-    setLoading(true);
+  setLoading(true);
+  try {
+    let res;
     try {
-      const res = await http.get(`${BASE_URL}/api/foods`);
-      setFoods(res.data || []);
-    } catch (err) {
-      console.error(err);
-      showNotice("error", "Lỗi tải dữ liệu", "Không thể tải danh sách món ăn. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
+      res = await http.get(`${BASE_URL}/api/foods/with-branches`);
+    } catch (e) {
+      // fallback cũ: không có API gộp thì lấy foods rồi gắn branches từng món (tránh crash)
+      const base = await http.get(`${BASE_URL}/api/foods`);
+      const rows = base.data || [];
+      const rowsWithBranches = await Promise.all(
+        rows.map(async (f) => {
+          try {
+            const br = await http.get(`${BASE_URL}/api/foods/${f.foodId}/branches`);
+            return { ...f, branches: br.data || [] };
+          } catch {
+            return { ...f, branches: [] };
+          }
+        })
+      );
+      res = { data: rowsWithBranches };
     }
+    setFoods(res.data || []);
+  } catch (err) {
+    console.error(err);
+    showNotice("error", "Lỗi tải dữ liệu", "Không thể tải danh sách món ăn. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);
   }
+}
 
-  const openModal = (food = null) => {
+  const openModal = async (food = null) => {
     setEditFood(food);
     setSaving(false);
-    setForm(
-      food
-        ? {
-            foodId: food.foodId,
-            foodName: food.foodName || "",
-            description: food.description || "",
-            colorCode: food.colorCode || "#fef3c7",
-            serverImageUrl: food.imageUrl || "", // giữ ảnh cũ
-            imagePreviewUrl: "",                 // reset preview
-            imageFile: null,                     // reset file
-          }
-        : { ...initialForm }
-    );
+
+    if (food) {
+      // load branches
+      try {
+        const rs = await http.get(`${BASE_URL}/api/foods/${food.foodId}/branches`);
+        setForm({
+          foodId: food.foodId,
+          foodName: food.foodName || "",
+          description: food.description || "",
+          colorCode: food.colorCode || "#fef3c7",
+          serverImageUrl: food.imageUrl || "",
+          imagePreviewUrl: "",
+          imageFile: null,
+          branches: (rs.data || []).map((b) => ({
+            branchId: b.branchId,
+            branchName: b.branchName,
+            isActive: !!b.isActive,
+            sortOrder: b.sortOrder ?? 0
+          }))
+        });
+      } catch {
+        // nếu lỗi: vẫn mở modal, không có branches
+        setForm({
+          foodId: food.foodId,
+          foodName: food.foodName || "",
+          description: food.description || "",
+          colorCode: food.colorCode || "#fef3c7",
+          serverImageUrl: food.imageUrl || "",
+          imagePreviewUrl: "",
+          imageFile: null,
+          branches: []
+        });
+      }
+    } else {
+      setForm({ ...initialForm });
+    }
+
     setModalOpen(true);
   };
 
   function handlePreview(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     if (form.imagePreviewUrl) URL.revokeObjectURL(form.imagePreviewUrl);
 
     setForm((prev) => ({
@@ -166,25 +313,38 @@ function FoodManager() {
         ? `${BASE_URL}/api/foods/${editFood.foodId}`
         : `${BASE_URL}/api/foods`;
 
+      // Chuẩn hoá branches (filter bỏ tên rỗng)
+      const branchesClean = (form.branches || [])
+        .map((b, i) => ({
+          ...(b.branchId ? { branchId: b.branchId } : {}),
+          branchName: String(b.branchName || "").trim(),
+          isActive: !!b.isActive,
+          sortOrder: Number.isFinite(+b.sortOrder) ? parseInt(b.sortOrder, 10) : i
+        }))
+        .filter((b) => b.branchName);
+
       if (form.imageFile) {
-        // Có ảnh mới -> multipart
+        // multipart
         const fd = new FormData();
         fd.append("foodName", form.foodName || "");
         fd.append("description", form.description || "");
         fd.append("colorCode", form.colorCode || "#fef3c7");
         fd.append("image", form.imageFile);
+        fd.append("branches", JSON.stringify(branchesClean)); // <<< quan trọng
+
         if (isEdit) {
           await http.put(url, fd);
         } else {
           await http.post(url, fd);
         }
       } else {
-        // Không đổi ảnh -> JSON kèm imageUrl cũ
+        // JSON
         const payload = {
           foodName: form.foodName || "",
           description: form.description || "",
           colorCode: form.colorCode || "#fef3c7",
           imageUrl: form.serverImageUrl || "",
+          branches: branchesClean // <<< gửi mảng JSON
         };
         if (isEdit) {
           await http.put(url, payload);
@@ -282,6 +442,32 @@ function FoodManager() {
                     <div>
                       <h3 className="font-bold text-xl mb-1">{food.foodName}</h3>
                       <p className="text-sm text-gray-600 line-clamp-3">{food.description}</p>
+                      {/* Branch chips */}
+{Array.isArray(food.branches) && food.branches.length > 0 && (
+  <div className="mt-3">
+    <div className="flex flex-wrap gap-2">
+      {food.branches.slice(0, 6).map((b) => (
+        <span
+          key={b.branchId}
+          className={[
+            "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 shadow-sm",
+            b.isActive
+              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+              : "bg-slate-100 text-slate-500 ring-slate-200 line-through"
+          ].join(" ")}
+          title={b.branchName}
+        >
+          {b.branchName}
+        </span>
+      ))}
+      {food.branches.length > 6 && (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white text-slate-700 ring-1 ring-slate-200 shadow-sm">
+          +{food.branches.length - 6}
+        </span>
+      )}
+    </div>
+  </div>
+)}
                     </div>
 
                     <div className="flex justify-end gap-3 mt-4">
@@ -318,7 +504,7 @@ function FoodManager() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[80vh]"
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]"
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
@@ -385,22 +571,21 @@ function FoodManager() {
                   )}
                 </div>
 
-                <div
-                  className="rounded-2xl shadow-xl overflow-hidden mt-4"
-                  style={{ backgroundColor: form.colorCode }}
-                >
-                  {previewSrc && (
-                    <img src={previewSrc} alt="demo" className="h-56 w-full object-cover" />
-                  )}
+                {/* Card preview */}
+                <div className="rounded-2xl shadow-xl overflow-hidden mt-2" style={{ backgroundColor: form.colorCode }}>
+                  {previewSrc && <img src={previewSrc} alt="demo" className="h-56 w-full object-cover" />}
                   <div className="p-4 bg-white/80 backdrop-blur">
-                    <h4 className="font-semibold text-lg">
-                      {form.foodName || "Tên món ăn"}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {form.description || "Mô tả"}
-                    </p>
+                    <h4 className="font-semibold text-lg">{form.foodName || "Tên món ăn"}</h4>
+                    <p className="text-sm text-gray-600">{form.description || "Mô tả"}</p>
                   </div>
                 </div>
+
+                {/* Branch editor */}
+                <BranchEditor
+                  value={form.branches || []}
+                  disabled={saving}
+                  onChange={(next) => setForm((f) => ({ ...f, branches: next }))}
+                />
               </div>
 
               <div className="border-t px-5 py-3 flex justify-end gap-3">

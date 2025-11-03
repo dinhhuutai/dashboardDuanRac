@@ -76,6 +76,7 @@ import SuggestionCategoriCreate from '~/pagesSuggestionAdmin/Menu/Suggestion/Cat
 
 import LunchOrder from '~/pagesLunchOrder/LunchOrder';
 import LunchOrderProxy from '~/pagesLunchOrder/LunchOrderProxy';
+import LunchOrderSearch from '~/pagesLunchOrder/Search';
 import LunchOrderHistoryUser from '~/pagesLunchOrder/History';
 
 import LunchOrderDashboard from '~/pagesLunchOrderAdmin/Dashboard';
@@ -211,6 +212,12 @@ export const routes = [
   {
     path: config.routes.lunchOrderProxy,
     component: LunchOrderProxy,
+    login: true,
+    module: 'datcom',
+  },
+  {
+    path: config.routes.lunchSearch,
+    component: LunchOrderSearch,
     login: true,
     module: 'datcom',
   },

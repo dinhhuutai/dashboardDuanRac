@@ -81,6 +81,7 @@ const routes = {
   lunchOrder: '/lunch-order/me',
   lunchOrderHistory: '/lunch-order/history',
   lunchOrderProxy: '/lunch-order/proxy',
+  lunchSearch: '/lunch-order/search',
 
   adminLunchOrderDashboard: '/admin/lunch-order/dashboard',
   adminLunchOrderWeeklyMenu: '/admin/lunch-order/weekly-menu',

@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import {
   BsHouse,
   BsClockHistory,
-  BsPersonPlus,
+  BsCardChecklist,
   BsMenuApp,
 } from "react-icons/bs";
 import config from "~/config";
@@ -11,7 +11,7 @@ import config from "~/config";
 const items = [
   { to: config.routes.lunchOrder, label: "Đặt cơm", icon: BsMenuApp },
   { to: config.routes.lunchOrderHistory, label: "Lịch sử tuần", icon: BsClockHistory },
-  { to: config.routes.lunchOrderProxy, label: "Đặt giùm", icon: BsPersonPlus },
+  { to: config.routes.lunchSearch, label: "Tra suất", icon: BsCardChecklist },
   { to: config.routes.homeMain, label: "Quay lại", icon: BsHouse },
 ];
 

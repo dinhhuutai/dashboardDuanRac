@@ -62,14 +62,6 @@ export default function UserOrderSlide() {
     ws: { user: {}, sec: {}, selBr: {}, qtyBr: {}, qtyEntry: {}, skip: {}, userPick: {} },
     ot: { user: {}, sec: {}, selBr: {}, qtyBr: {}, qtyEntry: {}, skip: {}, userPick: {} },
   });
-  
-  // Snapshot đã LƯU cuối cùng (từ load() hoặc sau khi save thành công)
-const EMPTY_SNAPSHOT = { user:{}, sec:{}, selBr:{}, qtyBr:{}, qtyEntry:{}, skip:{}, userPick:{} };
-const [lastSavedByType, setLastSavedByType] = useState({
-  re: { ...EMPTY_SNAPSHOT },
-  ws: { ...EMPTY_SNAPSHOT },
-  ot: { ...EMPTY_SNAPSHOT },
-});
 
   const [savingDay, setSavingDay] = useState(false);
   const [savingAll, setSavingAll] = useState(false);
@@ -150,36 +142,6 @@ const [lastSavedByType, setLastSavedByType] = useState({
         setQtyEntryByType(qtyEntryInit);
         setUserPickByType(prev => ({ ...prev, ...userPickInit }));
         setSkipSecByType({ re: {}, ws: {}, ot: {} });
-
-        setLastSavedByType({
-  re: {
-    user: { ...(activeByType.re || {}) },
-    sec: { ...(secByType.re || {}) },
-    selBr: { ...(selBrByType.re || {}) },
-    qtyBr: { ...(qtyBrByType.re || {}) },
-    qtyEntry: { ...(qtyEntryInit.re || {}) },
-    skip: {},
-    userPick: { ...(userPickInit.re || {}) },
-  },
-  ws: {
-    user: { ...(activeByType.ws || {}) },
-    sec: { ...(secByType.ws || {}) },
-    selBr: { ...(selBrByType.ws || {}) },
-    qtyBr: { ...(qtyBrByType.ws || {}) },
-    qtyEntry: { ...(qtyEntryInit.ws || {}) },
-    skip: {},
-    userPick: { ...(userPickInit.ws || {}) },
-  },
-  ot: {
-    user: { ...(activeByType.ot || {}) },
-    sec: { ...(secByType.ot || {}) },
-    selBr: { ...(selBrByType.ot || {}) },
-    qtyBr: { ...(qtyBrByType.ot || {}) },
-    qtyEntry: { ...(qtyEntryInit.ot || {}) },
-    skip: {},
-    userPick: { ...(userPickInit.ot || {}) },
-  },
-});
       } finally {
         setPageLoading(false);
       }
@@ -258,62 +220,6 @@ const [lastSavedByType, setLastSavedByType] = useState({
     clickGuardRef.current = now;
     choose(day, eid);
   };
-
-  const ALL_TYPES = ["re", "ws", "ot"];
-
-const flushOtherTypes = useCallback((keepType) => {
-  const others = ALL_TYPES.filter(t => t !== keepType);
-
-  // 🔄 Khôi phục về trạng thái đã LƯU gần nhất (không xoá trắng)
-  setSelectedByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.user || {}) }; });
-    return n;
-  });
-  setUserPickByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.userPick || {}) }; });
-    return n;
-  });
-
-  setSelectedSecByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.sec || {}) }; });
-    return n;
-  });
-  setSelectedBranchesByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.selBr || {}) }; });
-    return n;
-  });
-  setQtyBranchesByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.qtyBr || {}) }; });
-    return n;
-  });
-  setQtyEntryByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.qtyEntry || {}) }; });
-    return n;
-  });
-  setSkipSecByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...(lastSavedByType[t]?.skip || {}) }; });
-    return n;
-  });
-
-  // 🔧 Chỉ reset UI flags/backup (đúng yêu cầu "xoá nháp")
-  setResetModeByType(p => { const n = { ...p }; others.forEach(t => { n[t] = false; }); return n; });
-  setStayOnChooseByType(p => { const n = { ...p }; others.forEach(t => { n[t] = false; }); return n; });
-  setEditingDayByType(p => { const n = { ...p }; others.forEach(t => { n[t] = null; }); return n; });
-  setEditBackupByType(p => { const n = { ...p }; others.forEach(t => { n[t] = {}; }); return n; });
-  setBackupByType(p => {
-    const n = { ...p };
-    others.forEach(t => { n[t] = { ...EMPTY_SNAPSHOT }; });
-    return n;
-  });
-}, [lastSavedByType]);
-
 
   // Reset
   const enterResetMode = useCallback(() => {
@@ -476,38 +382,9 @@ const flushOtherTypes = useCallback((keepType) => {
    await apiSaveSelections({
      userId: user.userID,
      weeklyMenuId: weeklyMenu.weeklyMenuId,
-     statusType: orderType,
      selections,
      createdBy: user.fullName,
    });
-
-   // ✅ Cập nhật snapshot đã LƯU cho loại hiện tại
-setLastSavedByType(prev => {
-  const next = { ...prev };
-  if (isSec) {
-    next[orderType] = {
-      user: {}, // không dùng cho thư ký
-      sec: { ...(selectedSecByType[orderType] || {}) },
-      selBr: { ...(selectedBranchesByType[orderType] || {}) },
-      qtyBr: { ...(qtyBranchesByType[orderType] || {}) },
-      qtyEntry: { ...(qtyEntryByType[orderType] || {}) },
-      skip: { ...(skipSecByType[orderType] || {}) },
-      userPick: {}, // không dùng cho thư ký
-    };
-  } else {
-    next[orderType] = {
-      user: { ...(selectedByType[orderType] || {}) },
-      sec: {},
-      selBr: {},
-      qtyBr: {},
-      qtyEntry: {},
-      skip: {},
-      userPick: { ...(userPickByType[orderType] || {}) },
-    };
-  }
-  return next;
-});
-
       setNotice({ open: true, title: "Đã lưu", message: "Cập nhật món theo ngày thành công." });
       setEditingDayByType(p => ({ ...p, [orderType]: null }));
       setStayOnChooseByType(p => ({ ...p, [orderType]: false }));
@@ -595,41 +472,19 @@ setLastSavedByType(prev => {
           .filter(Boolean);
       }
 
+      console.log({
+        userId: user.userID,
+        weeklyMenuId: weeklyMenu.weeklyMenuId,
+        selections,
+        createdBy: user.fullName,
+      })
+
       await apiSaveSelections({
         userId: user.userID,
         weeklyMenuId: weeklyMenu.weeklyMenuId,
-        statusType: orderType,
         selections,
         createdBy: user.fullName,
       });
-
-      // ✅ Cập nhật snapshot đã LƯU cho loại hiện tại
-setLastSavedByType(prev => {
-  const next = { ...prev };
-  if (isSec) {
-    next[orderType] = {
-      user: {}, // không dùng cho thư ký
-      sec: { ...(selectedSecByType[orderType] || {}) },
-      selBr: { ...(selectedBranchesByType[orderType] || {}) },
-      qtyBr: { ...(qtyBranchesByType[orderType] || {}) },
-      qtyEntry: { ...(qtyEntryByType[orderType] || {}) },
-      skip: { ...(skipSecByType[orderType] || {}) },
-      userPick: {}, // không dùng cho thư ký
-    };
-  } else {
-    next[orderType] = {
-      user: { ...(selectedByType[orderType] || {}) },
-      sec: {},
-      selBr: {},
-      qtyBr: {},
-      qtyEntry: {},
-      skip: {},
-      userPick: { ...(userPickByType[orderType] || {}) },
-    };
-  }
-  return next;
-});
-
 
       setNotice({ open: true, title: "Thành công", message: "Lưu đặt cơm thành công!" });
       if (resetMode) setResetModeByType((p) => ({ ...p, [orderType]: false }));
@@ -792,20 +647,12 @@ setLastSavedByType(prev => {
         <div className="mx-[10px] mb-3">
           <div className="relative inline-flex bg-white/70 backdrop-blur rounded-xl p-1 border border-slate-200 shadow-sm">
             {[
-              { k: "re", label: "Ca ngày" },
+              { k: "re", label: "Bình thường" },
               { k: "ws", label: "Đi ca" },
               { k: "ot", label: "Tăng ca" },
             ].map(t => (
               <button key={t.k}
-                   onClick={() => {
-                    setOrderType(t.k);
-                    // dọn nháp của 2 bên còn lại
-                    flushOtherTypes(t.k);
-                    // UI cho tab hiện tại
-                    setStayOnChooseByType(p => ({ ...p, [t.k]: false }));
-                    setEditingDayByType(p => ({ ...p, [t.k]: null }));
-                    if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
-                  }}
+                onClick={() => { setOrderType(t.k); setStayOnChooseByType(p => ({ ...p, [t.k]: false })); setEditingDayByType(p => ({ ...p, [t.k]: null })); if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0); }}
                 className={`relative z-10 px-4 py-2 text-sm rounded-lg transition ${orderType === t.k ? "text-emerald-800 font-semibold" : "text-slate-600 hover:text-slate-800"}`}
                 style={{ minWidth: 120 }}>
                 {t.label}

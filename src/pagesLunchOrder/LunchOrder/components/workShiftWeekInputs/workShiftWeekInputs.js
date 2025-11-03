@@ -17,7 +17,7 @@ export default function OvertimeWeekInputs({
   isOvertime,
 }) {
   const weekStart = useMemo(() => startOfWeekVN(new Date()), []);
-  const [rows, setRows] = useState([]);        // [{dayOfWeek, weeklyMenuEntryId, quantityOvertime}]
+  const [rows, setRows] = useState([]);        // [{dayOfWeek, weeklyMenuEntryId, quantityWorkShift}]
   const [busy, setBusy] = useState(false);
   const [original, setOriginal] = useState([]);
 
@@ -43,7 +43,7 @@ export default function OvertimeWeekInputs({
         const filled = Array.from({ length: 7 }, (_, i) => {
           const dow = i + 1;
           const found = map.get(dow);
-          return found || { dayOfWeek: dow, weeklyMenuEntryId: null, quantityOvertime: 0 };
+          return found || { dayOfWeek: dow, weeklyMenuEntryId: null, quantityWorkShift: 0 };
         });
         setRows(filled);
         setOriginal(JSON.parse(JSON.stringify(filled)));
@@ -55,14 +55,14 @@ export default function OvertimeWeekInputs({
 
   const onChange = (i, v) => {
     const val = Math.max(0, parseInt(v || "0", 10));
-    setRows(prev => prev.map((r, idx) => idx===i ? { ...r, quantityOvertime: val } : r));
+    setRows(prev => prev.map((r, idx) => idx===i ? { ...r, quantityWorkShift: val } : r));
   };
 
   // Lưu cả tuần (1 request) đúng schema backend
   const onSave = async () => {
     const changed = rows.filter((r, i) => {
       const o = original[i] || {};
-      return r.weeklyMenuEntryId && Number(r.quantityOvertime || 0) !== Number(o.quantityOvertime || 0);
+      return r.weeklyMenuEntryId && Number(r.quantityWorkShift || 0) !== Number(o.quantityWorkShift || 0);
     });
     if (changed.length === 0) return;
 
@@ -71,10 +71,10 @@ export default function OvertimeWeekInputs({
     try {
       const items = changed.map(r => ({
         weeklyMenuEntryId: Number(r.weeklyMenuEntryId),
-        quantityOvertime:  Number(r.quantityOvertime || 0),
+        quantityWorkShift:  Number(r.quantityWorkShift || 0),
       }));
 
-      await http.post(`${BASE_URL}/api/weekly-overtime/tien`, {
+      await http.post(`${BASE_URL}/api/weekly-workShift/tien`, {
         userId: Number(userId),
         weeklyMenuId: Number(weeklyMenuId),
         actorId: actorId ?? userId,
@@ -122,7 +122,7 @@ export default function OvertimeWeekInputs({
                 type="number"
                 min={0}
                 inputMode="numeric"
-                value={r.quantityOvertime ?? 0}
+                value={r.quantityWorkShift ?? 0}
                 onChange={(e)=>onChange(i, e.target.value)}
                 disabled={disabled || busy}
                 className="w-full h-9 rounded-md border border-slate-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60"

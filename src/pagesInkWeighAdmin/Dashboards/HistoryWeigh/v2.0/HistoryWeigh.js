@@ -584,6 +584,11 @@ const removeItemRow = (idx) =>
     'Người cấp'
   ];
 
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    setCreateError(null);
+    
    // format helper
  const pad2 = (n) => String(n).padStart(2, '0');
  const yyyymmddTo_ddmmyy = (s) => {
@@ -609,130 +614,124 @@ const yyyymmddTo_yymmdd = (s) => {
 const getShiftCode = (v) => (v || '').toString().trim().toUpperCase(); 
 
 
-  const handleCreateSubmit = async (e) => {
-  e.preventDefault();
-  setCreateError(null);
+    // --- VALIDATE cơ bản ---
+    const op = createForm.operationCode; // 'CM' | 'TV' | 'GC'
 
-  // --- VALIDATE cơ bản ---
-  const op = createForm.operationCode; // 'CM' | 'TV' | 'GC'
-
-  if (!op) {
-    setCreateError('Vui lòng chọn Nghiệp vụ.');
-    return;
-  }
-
-  // Lọc bỏ dòng item trống
-  const cleanedItems = (createForm.items || []).map(x => ({
-    inkCode: trimStr(x.inkCode),
-    inkName: trimStr(x.inkName),
-    productionDate: trimStr(x.productionDate) || null, // format 'YYYY-MM-DD'
-    weight: toInt(x.weight),       // g
-    pjName: trimStr(x.pjName),
-    pjWeight: toInt(x.pjWeight),   // g
-  })).filter(x =>
-    x.inkCode || x.inkName || x.weight > 0 || x.pjName || x.pjWeight > 0 || x.productionDate
-  );
-
-  if (cleanedItems.length === 0) {
-    setCreateError('Vui lòng nhập ít nhất 1 item màu.');
-    return;
-  }
-
-  // Validate theo loại nghiệp vụ
-  if (op === 'CM' || op === 'TV') {
-    if (!trimStr(createForm.department)) {
-      setCreateError('CM/TV: Vui lòng nhập Bộ phận.');
+    if (!op) {
+      setCreateError('Vui lòng chọn Nghiệp vụ.');
       return;
     }
-    if (!trimStr(createForm.unit)) {
-      setCreateError('CM/TV: Vui lòng nhập Chuyền.');
+
+    // Lọc bỏ dòng item trống
+    const cleanedItems = (createForm.items || []).map(x => ({
+      inkCode: trimStr(x.inkCode),
+      inkName: trimStr(x.inkName),
+      productionDate: trimStr(x.productionDate) || null, // format 'YYYY-MM-DD'
+      weight: toInt(x.weight),       // g
+      pjName: trimStr(x.pjName),
+      pjWeight: toInt(x.pjWeight),   // g
+    })).filter(x =>
+      x.inkCode || x.inkName || x.weight > 0 || x.pjName || x.pjWeight > 0 || x.productionDate
+    );
+
+    if (cleanedItems.length === 0) {
+      setCreateError('Vui lòng nhập ít nhất 1 item màu.');
       return;
     }
-    // editedWorkShift / editedScaleShift có thể để trống nếu không dùng
-  } else if (op === 'GC') {
-    if (!trimStr(createForm.editedWorkShift) && !trimStr(createForm.editedScaleShift)) {
-      setCreateError('GC: Cần nhập ít nhất 1 trong 2: Xe giao/Xe nhận.');
-      return;
+
+    // Validate theo loại nghiệp vụ
+    if (op === 'CM' || op === 'TV') {
+      if (!trimStr(createForm.department)) {
+        setCreateError('CM/TV: Vui lòng nhập Bộ phận.');
+        return;
+      }
+      if (!trimStr(createForm.unit)) {
+        setCreateError('CM/TV: Vui lòng nhập Chuyền.');
+        return;
+      }
+      // editedWorkShift / editedScaleShift có thể để trống nếu không dùng
+    } else if (op === 'GC') {
+      if (!trimStr(createForm.editedWorkShift) && !trimStr(createForm.editedScaleShift)) {
+        setCreateError('GC: Cần nhập ít nhất 1 trong 2: Xe giao/Xe nhận.');
+        return;
+      }
     }
-  }
 
-  // --- BUILD PAYLOAD ---
-  const base = {
-    operationCode: op,               // 'CM' | 'TV' | 'GC'
-    date: filters.date || null,      // optional: nếu backend cần ngày; bỏ nếu server tự set
+    // --- BUILD PAYLOAD ---
+    const base = {
+      operationCode: op,               // 'CM' | 'TV' | 'GC'
+      date: filters.date || null,      // optional: nếu backend cần ngày; bỏ nếu server tự set
+    };
+
+    const parentCM_TV = {
+      hsktId: trimStr(createForm.hsktId) || null,
+      Lenhsx: trimStr(createForm.Lenhsx) || null,
+      department: trimStr(createForm.department) || null,
+      unit: trimStr(createForm.unit) || null,
+      editedWorkShift: trimStr(createForm.editedWorkShift) || null,   // C1/C2/C3/D1/D2/HC
+      editedScaleShift: trimStr(createForm.editedScaleShift) || null, // C1/C2/C3/D1/D2/HC
+    };
+
+    const parentGC = {
+      // số xe: giữ string nếu backend mong string, đổi Number(...) nếu cần số nguyên
+      scaleDeliveredBy: trimStr(createForm.editedWorkShift) || null,
+      scaleReceivedBy: trimStr(createForm.editedScaleShift) || null,
+    };
+
+    const isCM_TV = op === 'CM' || op === 'TV';
+  const workShift = isCM_TV ? getShiftCode(createForm.editedWorkShift) : '';
+  const scaleShift = isCM_TV ? getShiftCode(createForm.editedScaleShift) : '';
+
+  const yymmdd = yyyymmddTo_yymmdd(filters.date); // ví dụ '2025-10-06' -> '251006'
+  const ngaycaStr = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
+
+
+  const editedScaleShifttmp = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
+  const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workShift}` : null;
+
+    const payload = {
+      ...base,
+      ...(op === 'GC' ? parentGC : parentCM_TV),
+      items: cleanedItems,
+      hskt: 'Nhập tay',
+      scaleCode: 999,
+      hskt_time: hsktTimeStr,
+      editedScaleShift: editedScaleShifttmp,
+      editedWorkShift: editedWorkShifttmp,
+      ngayca: ngaycaStr,
+    };
+
+    // --- CALL API ---
+    try {
+      setCreating(true);
+      await axios.post(`${BASE_URL_SERVER_THLA}/api/ink-weighing/sessions`, payload);
+
+      // reset form + đóng modal + refresh list & stats
+      setCreateForm({
+        operationCode: 'CM',
+        hsktId: '',
+        Lenhsx: '',
+        department: '',
+        unit: '',
+        editedWorkShift: '',
+        editedScaleShift: '',
+        scaleDeliveredBy: '',
+        scaleReceivedBy: '',
+        items: [{ inkCode: '', inkName: '', productionDate: '', weight: '', pjName: '', pjWeight: '' }],
+      });
+      setOpenCreate(false);
+
+      // refresh dữ liệu
+      await fetchPage();
+      await fetchMeta();
+    } catch (err) {
+      console.error('Create order error:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Tạo lệnh thất bại.';
+      setCreateError(msg);
+    } finally {
+      setCreating(false);
+    }
   };
-
-  const parentCM_TV = {
-    hsktId: trimStr(createForm.hsktId) || null,
-    Lenhsx: trimStr(createForm.Lenhsx) || null,
-    department: trimStr(createForm.department) || null,
-    unit: trimStr(createForm.unit) || null,
-    editedWorkShift: trimStr(createForm.editedWorkShift) || null,   // C1/C2/C3/D1/D2/HC
-    editedScaleShift: trimStr(createForm.editedScaleShift) || null, // C1/C2/C3/D1/D2/HC
-  };
-
-  const parentGC = {
-    // số xe: giữ string nếu backend mong string, đổi Number(...) nếu cần số nguyên
-    scaleDeliveredBy: trimStr(createForm.editedWorkShift) || null,
-    scaleReceivedBy: trimStr(createForm.editedScaleShift) || null,
-  };
-
-  const isCM_TV = op === 'CM' || op === 'TV';
-const workShift = isCM_TV ? getShiftCode(createForm.editedWorkShift) : '';
-const scaleShift = isCM_TV ? getShiftCode(createForm.editedScaleShift) : '';
-
-const yymmdd = yyyymmddTo_yymmdd(filters.date); // ví dụ '2025-10-06' -> '251006'
-const ngaycaStr = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
-
-
-const editedScaleShifttmp = (isCM_TV && yymmdd && scaleShift) ? `${yymmdd}${scaleShift}` : null;
-const editedWorkShifttmp = (isCM_TV && yymmdd && workShift) ? `${yymmdd}${workShift}` : null;
-
-  const payload = {
-    ...base,
-    ...(op === 'GC' ? parentGC : parentCM_TV),
-    items: cleanedItems,
-    hskt: 'Nhập tay',
-    scaleCode: 999,
-    hskt_time: hsktTimeStr,
-    editedScaleShift: editedScaleShifttmp,
-    editedWorkShift: editedWorkShifttmp,
-    ngayca: ngaycaStr,
-    // optional: nếu cần lưu user tạo
-    // createdBy: user?.username || null,
-  };
-
-  // --- CALL API ---
-  try {
-    setCreating(true);
-    await axios.post(`${BASE_URL_SERVER_THLA}/api/ink-weighing/sessions`, payload);
-
-    // reset form + đóng modal + refresh list & stats
-    setCreateForm({
-      operationCode: 'CM',
-      hsktId: '',
-      Lenhsx: '',
-      department: '',
-      unit: '',
-      editedWorkShift: '',
-      editedScaleShift: '',
-      scaleDeliveredBy: '',
-      scaleReceivedBy: '',
-      items: [{ inkCode: '', inkName: '', productionDate: '', weight: '', pjName: '', pjWeight: '' }],
-    });
-    setOpenCreate(false);
-
-    // refresh dữ liệu
-    await fetchPage();
-    await fetchMeta();
-  } catch (err) {
-    console.error('Create order error:', err);
-    const msg = err?.response?.data?.message || err?.message || 'Tạo lệnh thất bại.';
-    setCreateError(msg);
-  } finally {
-    setCreating(false);
-  }
-};
 
 
   return (

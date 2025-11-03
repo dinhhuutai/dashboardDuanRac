@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
+// src/components/TimeDrillChart.jsx
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -11,9 +12,11 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { BsChevronLeft, BsChevronRight, BsArrowUp } from 'react-icons/bs';
+import axios from 'axios';
+import { BASE_URL } from '~/config';
 
 /* =========================
-   Constants & Mock Options
+   Constants
    ========================= */
 const ALL = '__ALL__';
 const DEPARTMENTS = ['C1','C2','C3','C4','Mẫu','Chụp khuôn','Kcs','Sửa hàng','Pha màu'];
@@ -27,111 +30,7 @@ const TRASH_TYPES = [
   'Vụn logo',
   'Lụa căng khung',
 ];
-const viDaysShort = ['CN','T2','T3','T4','T5','T6','T7'];
-const viMonthsShort = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 const PAL = ['#22c55e','#06b6d4','#8b5cf6','#f59e0b','#ef4444','#3b82f6','#14b8a6','#eab308'];
-
-/* =========================
-   Time helpers
-   ========================= */
-function startOfWeek(d) {
-  const dt = new Date(d);
-  const day = dt.getDay(); // 0..6 (CN..T7)
-  const diff = (day + 6) % 7; // về T2
-  dt.setDate(dt.getDate() - diff);
-  dt.setHours(0,0,0,0);
-  return dt;
-}
-function addDays(d, n) { const dt = new Date(d); dt.setDate(dt.getDate()+n); return dt; }
-function addWeeks(d, n) { return addDays(d, n*7); }
-function addMonths(d, n) { const dt = new Date(d); dt.setMonth(dt.getMonth()+n); return dt; }
-function ymd(d){ return d.toISOString().slice(0,10); }
-function weekNumberInMonth(d) {
-  const first = new Date(d.getFullYear(), d.getMonth(), 1);
-  return Math.ceil((d.getDate() + (first.getDay() || 7) - 1) / 7);
-}
-function dmyMonth(d) { return `T${d.getMonth()+1}/${d.getFullYear()}`; }
-
-/* =========================
-   Mock data generator
-   ========================= */
-function seededRand(seed) {
-  let s = seed % 2147483647; if (s <= 0) s += 2147483646;
-  return () => (s = s * 16807 % 2147483647) / 2147483647;
-}
-function hashStr(s) {
-  let h=0; for (let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i))|0; } return Math.abs(h);
-}
-
-// Daily (7 ngày trong tuần)
-function mockDailyWindow({ baseDate, weekOffset, department, trashType }) {
-  const weekStart = addWeeks(startOfWeek(baseDate), weekOffset);
-  const seed = hashStr(`${ymd(weekStart)}|${department}|${trashType}`);
-  const rnd = seededRand(seed);
-  const data = [];
-  for (let i=0;i<7;i++){
-    const d = addDays(weekStart, i);
-    const label = viDaysShort[d.getDay()];
-    const base = 200 + rnd()*300;     // kg
-    const deptFactor = department===ALL ? 1 : 0.85 + rnd()*0.5;
-    const trashFactor = trashType===ALL ? 1 : 0.8 + rnd()*0.6;
-    const weight = +(base * deptFactor * trashFactor).toFixed(1);
-    data.push({ key: ymd(d), label, weight, trend: +(weight*(0.85 + rnd()*0.3)).toFixed(1) });
-  }
-  return { title: `Tuần ${weekNumberInMonth(weekStart)} - ${dmyMonth(weekStart)}`, data };
-}
-
-// Weekly (4-5 tuần trong tháng)
-function mockWeeklyWindow({ baseDate, monthOffset, department, trashType }) {
-  const monthStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-  const curMonthStart = addMonths(monthStart, monthOffset);
-  const seed = hashStr(`${curMonthStart.getFullYear()}-${curMonthStart.getMonth()+1}|${department}|${trashType}`);
-  const rnd = seededRand(seed);
-
-  const weeks = [];
-  let ws = startOfWeek(curMonthStart);
-  while (ws.getMonth() !== curMonthStart.getMonth() && ws < curMonthStart) ws = addWeeks(ws, 1);
-
-  for (let i=0;i<6;i++){
-    const we = addDays(ws, 6);
-    const inMonth = ws.getMonth()===curMonthStart.getMonth() || we.getMonth()===curMonthStart.getMonth();
-    if (!inMonth) break;
-    const base = 1400 + rnd()*800;
-    const deptFactor = department===ALL ? 1 : 0.85 + rnd()*0.5;
-    const trashFactor = trashType===ALL ? 1 : 0.8 + rnd()*0.6;
-    const weight = +(base * deptFactor * trashFactor).toFixed(1);
-    weeks.push({ key: `${ymd(ws)}_${ymd(we)}`, label: `W${i+1}`, weight, trend: +(weight*(0.9 + rnd()*0.2)).toFixed(1) });
-    ws = addWeeks(ws, 1);
-  }
-  return { title: `Tháng ${curMonthStart.getMonth()+1}/${curMonthStart.getFullYear()}`, data: weeks };
-}
-
-// Monthly (12 tháng trong năm)
-function mockMonthlyWindow({ baseDate, yearOffset, department, trashType }) {
-  const year = baseDate.getFullYear() + yearOffset;
-  const seed = hashStr(`${year}|${department}|${trashType}`);
-  const rnd = seededRand(seed);
-  const data = [];
-  for (let m=0;m<12;m++){
-    const base = 6000 + rnd()*3000;
-    const deptFactor = department===ALL ? 1 : 0.85 + rnd()*0.5;
-    const trashFactor = trashType===ALL ? 1 : 0.8 + rnd()*0.6;
-    const weight = +(base * deptFactor * trashFactor).toFixed(1);
-    data.push({ key: `${year}-${m+1}`, label: viMonthsShort[m], weight, trend: +(weight*(0.92 + rnd()*0.15)).toFixed(1) });
-  }
-  return { title: `Năm ${year}`, data };
-}
-
-// Drilldown (máy theo bộ phận)
-function mockMachinesForDepartment({ department, periodKey }) {
-  const seed = hashStr(`${department}|${periodKey}`);
-  const rnd = seededRand(seed);
-  const machines = Array.from({length: 8}, (_,i)=>`M${i+1}`);
-  return machines.map((m) => {
-    const weight = +(500 + rnd()*1500).toFixed(1);
-    return { name: m, weight };
-  });
-}
 
 /* =========================
    Tooltip
@@ -145,7 +44,9 @@ function Tip({ active, payload, label }) {
         <div key={i} className="flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded" style={{ background: p.color || '#64748b' }} />
           <span className="text-slate-600">{p.name}:</span>
-          <span className="font-medium text-slate-800">{Number(p.value).toLocaleString('vi-VN')} kg</span>
+          <span className="font-medium text-slate-800">
+            {Number(p.value).toLocaleString('vi-VN')} kg
+          </span>
         </div>
       ))}
     </div>
@@ -153,9 +54,34 @@ function Tip({ active, payload, label }) {
 }
 
 /* =========================
+   API helpers
+   ========================= */
+async function fetchTimeSeries({ granularity, weekOffset=0, monthOffset=0, yearOffset=0, department='__ALL__', trashType='__ALL__' }) {
+  const res = await axios.get(`${BASE_URL}/api/trash/time-series`, {
+    params: { granularity, weekOffset, monthOffset, yearOffset, department, trashType }
+  });
+  return res.data; // { title, data:[{key,label,weight,trend}] }
+}
+
+async function fetchTimeSeriesCompare({ granularity, weekOffset=0, monthOffset=0, yearOffset=0, departments=[], trashType='__ALL__' }) {
+  const res = await axios.get(`${BASE_URL}/api/trash/time-series-compare`, {
+    params: { granularity, weekOffset, monthOffset, yearOffset, departments: departments.join(','), trashType }
+  });
+  return res.data; // { title, data:[{key,label, dep1, dep2,...}] }
+}
+
+async function fetchDrill({ granularity, periodKey, department, trashType='__ALL__' }) {
+  const res = await axios.get(`${BASE_URL}/api/trash/drill`, {
+    params: { granularity, periodKey, department, trashType }
+  });
+  return res.data; // { rows:[{name, unitName, weight}] }
+}
+
+/* =========================
    Component chính
    ========================= */
 export default function TimeDrillChart() {
+  // bộ lọc
   const [granularity, setGranularity] = useState('day'); // day | week | month
   const [department, setDepartment] = useState(ALL);
   const [trashType, setTrashType] = useState(ALL);
@@ -172,40 +98,13 @@ export default function TimeDrillChart() {
   const [compareMode, setCompareMode] = useState(false);
   const [selectedDepts, setSelectedDepts] = useState(['C1','C2']); // tối đa 5 cho rõ
 
-  const baseDate = useMemo(() => new Date(), []);
+  // dữ liệu
+  const [series, setSeries] = useState({ title: '', data: [] });
+  const [seriesCompare, setSeriesCompare] = useState({ title: '', data: [] });
+  const [loading, setLoading] = useState(false);
 
-  // Dữ liệu đơn (không so sánh)
-  const { title, data } = useMemo(() => {
-    if (granularity === 'day')   return mockDailyWindow ({ baseDate, weekOffset, department, trashType });
-    if (granularity === 'week')  return mockWeeklyWindow({ baseDate, monthOffset, department, trashType });
-    return mockMonthlyWindow({ baseDate, yearOffset, department, trashType });
-  }, [granularity, baseDate, weekOffset, monthOffset, yearOffset, department, trashType]);
-
-  // Dữ liệu so sánh nhiều bộ phận
-  const dataCompare = useMemo(() => {
-    if (!compareMode || !selectedDepts.length) return [];
-    // Khung nhãn theo granularity, dùng ALL để chuẩn key/label
-    const baseWin = (granularity === 'day')
-      ? mockDailyWindow({ baseDate, weekOffset, department: ALL, trashType })
-      : (granularity === 'week')
-        ? mockWeeklyWindow({ baseDate, monthOffset, department: ALL, trashType })
-        : mockMonthlyWindow({ baseDate, yearOffset, department: ALL, trashType });
-
-    const rows = baseWin.data.map(({ key, label }) => ({ key, label }));
-
-    selectedDepts.forEach((dep) => {
-      const win = (granularity === 'day')
-        ? mockDailyWindow({ baseDate, weekOffset, department: dep, trashType })
-        : (granularity === 'week')
-          ? mockWeeklyWindow({ baseDate, monthOffset, department: dep, trashType })
-          : mockMonthlyWindow({ baseDate, yearOffset, department: dep, trashType });
-
-      const map = new Map(win.data.map(d => [d.key, d.weight]));
-      rows.forEach(r => { r[dep] = map.get(r.key) ?? 0; });
-    });
-
-    return rows;
-  }, [compareMode, selectedDepts, granularity, baseDate, weekOffset, monthOffset, yearOffset, trashType]);
+  const BAR_COLOR = '#8b5cf6';
+  const LINE_COLOR = '#06b6d4';
 
   /* Điều hướng trái/phải */
   const goLeft = () => {
@@ -229,25 +128,65 @@ export default function TimeDrillChart() {
     touchX.current = null;
   };
 
+  /* Fetch series (đơn) */
+  useEffect(() => {
+    let alive = true;
+    if (compareMode) return; // đang compare thì không gọi đơn
+    setLoading(true);
+    fetchTimeSeries({ granularity, weekOffset, monthOffset, yearOffset, department, trashType })
+      .then((out) => { if (alive) setSeries(out || { title:'', data:[] }); })
+      .catch((err) => { console.error('time-series error:', err?.message); if (alive) setSeries({ title:'', data:[] }); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [compareMode, granularity, weekOffset, monthOffset, yearOffset, department, trashType]);
+
+  /* Fetch series (compare) */
+  useEffect(() => {
+    let alive = true;
+    if (!compareMode) return;
+    setLoading(true);
+    fetchTimeSeriesCompare({ granularity, weekOffset, monthOffset, yearOffset, departments: selectedDepts, trashType })
+      .then((out) => { if (alive) setSeriesCompare(out || { title:'', data:[] }); })
+      .catch((err) => { console.error('time-series-compare error:', err?.message); if (alive) setSeriesCompare({ title:'', data:[] }); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [compareMode, selectedDepts, granularity, weekOffset, monthOffset, yearOffset, trashType]);
+
   /* Click cột → drill (tắt khi compare) */
-  const onBarClick = (d) => {
+  const onBarClick = async (evt) => {
     if (compareMode) return; // không drill khi đang so sánh
-    const periodKey = d?.activePayload?.[0]?.payload?.key;
+    const periodKey = evt?.activePayload?.[0]?.payload?.key;
     if (!periodKey) return;
-    const dept = department === ALL ? 'C1' : department; // placeholder
-    const rows = mockMachinesForDepartment({ department: dept, periodKey });
-    setDrill({ department: dept, periodKey, title: `Máy trong ${dept}`, rows });
+
+    // Nếu đang chọn "Tất cả bộ phận", dùng mặc định C1 để drill (hoặc bạn đổi thành bắt user chọn cụ thể)
+    const dept = department === ALL ? 'C1' : department;
+
+    try {
+      setLoading(true);
+      const r = await fetchDrill({ granularity, periodKey, department: dept, trashType });
+      setDrill({ department: dept, periodKey, title: `Thùng trong ${dept}`, rows: r?.rows || [] });
+    } catch (e) {
+      console.error('drill error:', e?.message);
+      setDrill({ department: dept, periodKey, title: `Thùng trong ${dept}`, rows: [] });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const backFromDrill = () => setDrill(null);
 
   /* Options */
-  const deptOptions = [{ value: ALL, label: '— Tất cả bộ phận —' }, ...DEPARTMENTS.map(d=>({value:d,label:d}))];
-  const typeOptions = [{ value: ALL, label: '— Tất cả loại rác —' }, ...TRASH_TYPES.map(t=>({value:t,label:t}))];
+  const deptOptions = useMemo(
+    () => [{ value: ALL, label: '— Tất cả bộ phận —' }, ...DEPARTMENTS.map(d=>({value:d,label:d}))],
+    []
+  );
+  const typeOptions = useMemo(
+    () => [{ value: ALL, label: '— Tất cả loại rác —' }, ...TRASH_TYPES.map(t=>({value:t,label:t}))],
+    []
+  );
 
-  /* Style */
-  const BAR_COLOR = '#8b5cf6';
-  const LINE_COLOR = '#06b6d4';
+  const title = compareMode ? seriesCompare.title : series.title;
+  const data = compareMode ? seriesCompare.data : series.data;
 
   return (
     <div
@@ -262,7 +201,7 @@ export default function TimeDrillChart() {
             <BsChevronLeft />
           </button>
           <div className="px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700">
-            {title}
+            {title || 'Đang tải...'}
           </div>
           <button onClick={goRight} className="p-2 rounded-lg border border-slate-300 hover:bg-slate-50">
             <BsChevronRight />
@@ -315,9 +254,7 @@ export default function TimeDrillChart() {
               value={selectedDepts}
               onChange={(e)=>{
                 const vals = Array.from(e.target.selectedOptions).map(o=>o.value);
-                // giới hạn 5 bộ phận
                 const cut = vals.slice(0,5);
-                // đảm bảo tồn tại ít nhất 1 lựa chọn
                 setSelectedDepts(cut.length ? cut : ['C1']);
                 setDrill(null);
               }}
@@ -338,6 +275,13 @@ export default function TimeDrillChart() {
           </select>
         </div>
       </div>
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="px-4">
+          <div className="mb-3 text-xs text-slate-500">Đang tải dữ liệu…</div>
+        </div>
+      )}
 
       {/* Chart / Drill */}
       {!drill ? (
@@ -361,7 +305,7 @@ export default function TimeDrillChart() {
                   <Line type="monotone" dataKey="trend" name="Đường xu hướng" stroke={LINE_COLOR} strokeWidth={2} dot={false} />
                 </ComposedChart>
               ) : (
-                <ComposedChart data={dataCompare}>
+                <ComposedChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="label" stroke="#64748b" />
                   <YAxis stroke="#64748b" />
@@ -382,7 +326,7 @@ export default function TimeDrillChart() {
           </div>
           <div className="mt-2 text-center text-xs text-slate-500">
             Gợi ý: vuốt trái/phải hoặc dùng các nút điều hướng để xem giai đoạn khác.
-            {!compareMode && ' Nhấn vào một cột để xem chi tiết theo máy.'}
+            {!compareMode && ' Nhấn vào một cột để xem chi tiết theo thùng.'}
           </div>
         </div>
       ) : (

@@ -1,11 +1,16 @@
 // src/pages/Datcom/NotOrderedPage.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiDownload, FiCalendar, FiUsers, FiFilter } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiCalendar, FiUsers } from 'react-icons/fi';
 import { LuUtensilsCrossed } from 'react-icons/lu';
 import ExcelJS from 'exceljs';
 import http from '~/api/http';
 import { BASE_URL } from '~/config';
+
+import { MdAllInbox } from "react-icons/md";
+import { PiSunBold, PiClockBold } from "react-icons/pi";
+import { RiFlashlightFill } from "react-icons/ri";
+import SegmentedControl from "./components/SegmentedControl";
 
 const cn = (...xs) => xs.filter(Boolean).join(' ');
 
@@ -77,6 +82,7 @@ const Chip = ({ icon, children }) => (
   </span>
 );
 
+// tailwind dynamic tone (đã dùng pattern bg-${tone}-50); đảm bảo đã safelist trong config nếu cần
 const Badge = ({ children, tone = 'slate' }) => (
   <span
     className={cn(
@@ -104,17 +110,23 @@ function SkeletonRow({ cols }) {
 export default function NotOrderedPage() {
   const [date, setDate] = useState(formatDateInput());
   const [weekStart, setWeekStart] = useState(getMonday(formatDateInput()));
-  const [mode, setMode] = useState('any'); // 'any' | 'incomplete'
+
+  // 'any' = hoàn toàn chưa đặt; 'incomplete' = đặt chưa đủ số ngày có món của tuần
+  const [mode, setMode] = useState('any');
+
   const [departmentId, setDepartmentId] = useState('');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [statusType, setStatusType] = useState('all'); // 'all' | 're' | 'ws' | 'ot'
+  const TYPE_VN = { re: 'Ca ngày', ws: 'Đi ca', ot: 'Tăng ca' };
 
   const [data, setData] = useState({
     items: [],
     summaryByDepartment: [],
     totalEligible: 0,
     totalUnordered: 0,
-    weekAvailableDays: 0,
+    weekAvailableDays: 0
   });
 
   const [departments, setDepartments] = useState([]);
@@ -143,7 +155,8 @@ export default function NotOrderedPage() {
           departmentId: departmentId || undefined,
           q: q?.trim() || undefined,
           mode,
-        },
+          statusType: statusType === 'all' ? undefined : statusType
+        }
       });
       setData(
         res.data || {
@@ -151,7 +164,7 @@ export default function NotOrderedPage() {
           summaryByDepartment: [],
           totalEligible: 0,
           totalUnordered: 0,
-          weekAvailableDays: 0,
+          weekAvailableDays: 0
         }
       );
     } catch (e) {
@@ -161,7 +174,7 @@ export default function NotOrderedPage() {
         summaryByDepartment: [],
         totalEligible: 0,
         totalUnordered: 0,
-        weekAvailableDays: 0,
+        weekAvailableDays: 0
       });
     } finally {
       setLoading(false);
@@ -172,15 +185,17 @@ export default function NotOrderedPage() {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekStart, departmentId, mode, q]);
+  }, [weekStart, departmentId, mode, q, statusType]);
 
   const filtered = useMemo(() => data?.items || [], [data]);
 
   const totalText = useMemo(() => {
     const total = data?.totalEligible || 0;
     const missing = data?.totalUnordered || 0;
-    return `${missing}/${total} chưa đặt (${mode === 'incomplete' ? 'chưa đủ ngày' : 'chưa đặt gì'})`;
-  }, [data, mode]);
+    const modeText = mode === 'incomplete' ? 'chưa đủ ngày' : 'chưa đặt gì';
+    const typeText = statusType === 'all' ? '' : ` • loại ${TYPE_VN[statusType]}`;
+    return `${missing}/${total} ${modeText}${typeText}`;
+  }, [data, mode, statusType]);
 
   const weekRangeText = useMemo(() => {
     const d0 = new Date(weekStart + 'T00:00:00');
@@ -195,15 +210,19 @@ export default function NotOrderedPage() {
     try {
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('ChuaDatComTuan');
+
       const baseHeaders = ['STT', 'Họ tên', 'Tài khoản', 'SĐT', 'Phòng ban', 'Lần cuối online'];
       const headers = mode === 'incomplete' ? [...baseHeaders, 'Đã đặt (ngày)', 'Ngày có món'] : baseHeaders;
+
       ws.getRow(1).values = headers;
-      ws.getRow(2).values = [`Tuần: ${weekRangeText}`];
+      ws.getRow(2).values = [`Tuần: ${weekRangeText}  •  Loại: ${statusType === 'all' ? 'Tất cả' : TYPE_VN[statusType]}`];
       ws.mergeCells(2, 1, 2, headers.length);
+
       ws.getRow(1).eachCell((c) => {
         c.font = { bold: true };
         c.alignment = { vertical: 'middle', horizontal: 'center' };
       });
+
       (filtered || []).forEach((it, idx) => {
         const rowIdx = idx + 3;
         const rowVals = [
@@ -212,7 +231,7 @@ export default function NotOrderedPage() {
           it.username || '',
           it.phone || '',
           it.departmentName || '',
-          it.lastLogin ? new Date(it.lastLogin) : '',
+          it.lastLogin ? new Date(it.lastLogin) : ''
         ];
         if (mode === 'incomplete') {
           rowVals.push(it.selectedDays || 0);
@@ -220,12 +239,13 @@ export default function NotOrderedPage() {
         }
         ws.getRow(rowIdx).values = rowVals;
       });
+
       const buf = await wb.xlsx.writeBuffer();
       const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ChuaDatCom_Tuan_${weekStart}_${mode}.xlsx`;
+      a.download = `ChuaDatCom_Tuan_${weekStart}_${mode}_${statusType}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -233,8 +253,7 @@ export default function NotOrderedPage() {
     }
   };
 
-  // ... sau weekRangeText useMemo
-const colsCount = useMemo(() => (mode === 'incomplete' ? 8 : 6), [mode]);
+  const colsCount = useMemo(() => (mode === 'incomplete' ? 8 : 6), [mode]);
 
   return (
     <div className="mx-auto w-full bg-[#fff] p-4 lg:p-6 space-y-4">
@@ -246,6 +265,7 @@ const colsCount = useMemo(() => (mode === 'incomplete' ? 8 : 6), [mode]);
 
       <FilterCard>
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          {/* Bộ lọc trái */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="text-sm text-slate-600 flex items-center gap-2">
@@ -287,13 +307,30 @@ const colsCount = useMemo(() => (mode === 'incomplete' ? 8 : 6), [mode]);
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Chip icon={<FiUsers />}>{filtered.length} người</Chip>
-            <Chip icon={<LuUtensilsCrossed />}>{data.weekAvailableDays || 0} ngày có món</Chip>
+          {/* Khối phải: Toggle loại + thống kê */}
+          <div className="flex flex-col items-start gap-3">
+            {/* Toggle loại */}
+            <SegmentedControl
+              value={statusType}
+              onChange={(v) => setStatusType(v)}
+              options={[
+                { v: "all", label: "Tất cả", icon: <MdAllInbox /> },
+                { v: "re",  label: "Ca ngày", icon: <PiSunBold /> },
+                { v: "ws",  label: "Đi ca",   icon: <PiClockBold /> },
+                { v: "ot",  label: "Tăng ca", icon: <RiFlashlightFill /> },
+              ]}
+              className="min-w-[320px]"
+            />
+
+            <div className="flex items-center gap-3 mt-1">
+              <Chip icon={<FiUsers />}>{(data?.items || []).length} người</Chip>
+              <Chip icon={<LuUtensilsCrossed />}>{data.weekAvailableDays || 0} ngày có món</Chip>
+            </div>
           </div>
         </div>
       </FilterCard>
 
+      {/* Tổng hợp theo phòng ban */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <AnimatePresence>
           {(data.summaryByDepartment || []).map((s, idx) => (
@@ -312,6 +349,7 @@ const colsCount = useMemo(() => (mode === 'incomplete' ? 8 : 6), [mode]);
         </AnimatePresence>
       </div>
 
+      {/* Bảng chi tiết */}
       <Card>
         <div className="overflow-auto rounded-2xl">
           <table className="min-w-full text-sm">

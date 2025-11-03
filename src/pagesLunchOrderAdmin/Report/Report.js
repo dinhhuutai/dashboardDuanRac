@@ -28,7 +28,11 @@ function buildMonthDaysUTC(yyyyMM) {
   return out;
 }
 
-// Tuần (giữ nguyên logic cũ)
+/* ====== Status map (VN) ====== */
+const STATUS_VN = { re: "Ca ngày", ws: "Đi ca", ot: "Tăng ca" };
+const statusToVN = (s) => STATUS_VN[(s || "").toLowerCase()] || "";
+
+/* ====== Tuần helpers ====== */
 function getMonday(dateStr) {
   const d = new Date(dateStr);
   const day = d.getDay(); // 0=CN..6=T7
@@ -61,7 +65,8 @@ function parseFoodsText(text = "") {
     .map((s) => {
       const m = s.match(/^(.*)\sx(\d+)$/i);
       return m ? { name: m[1].trim(), qty: +m[2] } : { name: s, qty: 1 };
-    });
+    })
+    .filter((it) => it.qty > 0);
 }
 const FoodChipsCell = ({ text }) => {
   if (!text) return <span className="text-slate-400">—</span>;
@@ -80,7 +85,9 @@ const FoodChipsCell = ({ text }) => {
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: `hsl(${hue} 70% 50%)` }}
             />
-            <span className="text-slate-700 truncate max-w-[10rem]">{it.name}</span>
+            <span className="text-slate-700 truncate max-w-[10rem]">
+              {it.name}
+            </span>
             <span className="ml-1 rounded-md bg-slate-100 px-1 text-[11px] font-semibold text-slate-700">
               x{it.qty}
             </span>
@@ -91,15 +98,72 @@ const FoodChipsCell = ({ text }) => {
   );
 };
 
+
+/* ---------- NEW: Tag theo món (có Branch + Loại) ---------- */
+function FoodItemTag({ item }) {
+  const displayName =
+    item.foodName + (item.branchName ? ` (${item.branchName})` : "");
+  const hue = hueFromString(displayName + (item.statusType || ""));
+  const typeVN = statusToVN(item.statusType);
+
+  return (
+    <span
+      className={[
+        "inline-flex max-w-full flex-col items-start gap-1",
+        "rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm",
+        "align-top" // giúp nhiều tag đứng cạnh nhau không lệch hàng
+      ].join(" ")}
+      title={`${displayName} x${item.qty}${typeVN ? ` — ${typeVN}` : ""}`}
+    >
+      {/* Tầng 1: dot + tên (truncate) */}
+      <span className="flex w-full min-w-0 items-center gap-1">
+        <span
+          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: `hsl(${hue} 70% 50%)` }}
+        />
+        <span className="truncate text-[12.5px] leading-tight text-slate-700">
+          {displayName}
+        </span>
+      </span>
+
+      {/* Tầng 2: số lượng + loại (tự wrap nếu hẹp) */}
+      <span className="flex w-full flex-wrap items-center gap-1">
+        <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700">
+          x{item.qty ?? 0}
+        </span>
+        {typeVN ? (
+          <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-medium text-emerald-700">
+            {typeVN}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
+function DayCell({ items }) {
+  if (!items?.length) return <span className="text-slate-400">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((it, i) => (
+        <FoodItemTag key={i} item={it} />
+      ))}
+    </div>
+  );
+}
+
 export default function AdminSummaryModern() {
   /* ====== Common: departments ====== */
   const [departments, setDepartments] = useState([]);
   const [departmentId, setDepartmentId] = useState(null);
+  const [weekType, setWeekType] = useState("all");
 
   useEffect(() => {
     (async () => {
       try {
-        const depRes = await http.get(`${BASE_URL}/api/lunch-order/admin/departments`);
+        const depRes = await http.get(
+          `${BASE_URL}/api/lunch-order/admin/departments`
+        );
         setDepartments(depRes.data?.data || []);
       } catch (e) {
         console.error(e);
@@ -115,7 +179,7 @@ export default function AdminSummaryModern() {
   });
   const baseMonthDays = useMemo(() => buildMonthDaysUTC(debtMonth), [debtMonth]);
 
-  const [debtRowsRaw, setDebtRowsRaw] = useState([]); // [{ actualDate, lunchQty, otQty }]
+  const [debtRowsRaw, setDebtRowsRaw] = useState([]); // [{ actualDate, lunchQty, otQty, wsQty }]
   const [debtLoading, setDebtLoading] = useState(false);
   const [unitPrice, setUnitPrice] = useState(27000);
   const [showDebt, setShowDebt] = useState(false);
@@ -126,10 +190,12 @@ export default function AdminSummaryModern() {
       if (!debtMonth) return;
       setDebtLoading(true);
       try {
-        const res = await http.get(`${BASE_URL}/api/lunch-order/admin/debt-daily`, {
-          params: { month: debtMonth, departmentId },
-        });
-        // API nên trả mọi ngày có phát sinh (có thể vượt tháng)
+        const res = await http.get(
+          `${BASE_URL}/api/lunch-order/admin/debt-daily`,
+          {
+            params: { month: debtMonth, departmentId },
+          }
+        );
         setDebtRowsRaw(res.data?.data || []);
       } finally {
         setDebtLoading(false);
@@ -137,122 +203,185 @@ export default function AdminSummaryModern() {
     })();
   }, [debtMonth, departmentId]);
 
-  // Ghép: đủ mọi ngày trong tháng + mọi ngày “tương lai” có dữ liệu (có thể qua tháng sau)
+  // Ghép đủ mọi ngày trong tháng + “vọt” tương lai có dữ liệu
   const debtDaysUnion = useMemo(() => {
     const set = new Set(baseMonthDays.map((d) => d.getTime()));
     for (const r of debtRowsRaw) {
-      // chuẩn hoá UTC ngày (00:00 UTC)
       const d = new Date(r.actualDate);
       const utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
       set.add(utc);
     }
-    return Array.from(set).sort((a, b) => a - b).map((ms) => new Date(ms));
+    return Array.from(set)
+      .sort((a, b) => a - b)
+      .map((ms) => new Date(ms));
   }, [baseMonthDays, debtRowsRaw]);
 
-  // Map dữ liệu theo ngày
   const debtRows = useMemo(() => {
     const map = new Map(); // key: UTC midnight ms
     for (const r of debtRowsRaw) {
       const d = new Date(r.actualDate);
       const key = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-      const cur = map.get(key) || { lunchQty: 0, otQty: 0 };
+      const cur = map.get(key) || { lunchQty: 0, otQty: 0, wsQty: 0 };
       map.set(key, {
         lunchQty: cur.lunchQty + (+r.lunchQty || 0),
         otQty: cur.otQty + (+r.otQty || 0),
+        wsQty: cur.wsQty + (+r.wsQty || 0),
       });
     }
     return debtDaysUnion.map((d) => {
       const key = d.getTime();
-      const v = map.get(key) || { lunchQty: 0, otQty: 0 };
-      return { actualDate: d.toISOString(), lunchQty: v.lunchQty, otQty: v.otQty };
+      const v = map.get(key) || { lunchQty: 0, otQty: 0, wsQty: 0 };
+      return {
+        actualDate: d.toISOString(),
+        lunchQty: v.lunchQty,
+        otQty: v.otQty,
+        wsQty: v.wsQty,
+      };
     });
   }, [debtRowsRaw, debtDaysUnion]);
 
   function exportDebtExcelMonth() {
     const wb = XLSX.utils.book_new();
 
-    const styleCenter = { alignment: { horizontal: "center", vertical: "center" } };
+    const styleCenter = {
+      alignment: { horizontal: "center", vertical: "center" },
+    };
     const styleBoldCenter = { ...styleCenter, font: { bold: true, sz: 14 } };
     const styleHeader = {
       font: { bold: true },
       alignment: { horizontal: "center", vertical: "center", wrapText: true },
-      border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} }
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
     };
     const styleCell = {
       alignment: { horizontal: "center", vertical: "center" },
-      border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} }
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
     };
-    const styleNum = { ...styleCell, alignment:{ horizontal:"right", vertical:"center" }, numFmt: "#,##0" };
+    const styleNum = {
+      ...styleCell,
+      alignment: { horizontal: "right", vertical: "center" },
+      numFmt: "#,##0",
+    };
 
     const title = "BẢNG TỔNG KẾT CÔNG NỢ";
     const { y, m } = parseYYYYMM(debtMonth);
-    const monthLabel = `Tháng ${String(m).padStart(2,"0")}/${y}`;
+    const monthLabel = `Tháng ${String(m).padStart(2, "0")}/${y}`;
 
     const aoa = [];
     aoa.push(["", title, ""]);
     aoa.push(["", monthLabel, ""]);
     aoa.push([]);
     aoa.push(["1. Hàng Hóa"]);
-    aoa.push(["STT","NGÀY","CƠM TRƯA","TĂNG CA & ĐI CA","TỔNG CỘNG","ĐƠN GIÁ","THÀNH TIỀN","GHI CHÚ"]);
+    aoa.push([
+      "STT",
+      "NGÀY",
+      "CƠM TRƯA",
+      "CƠM TĂNG CA",
+      "CƠM ĐI CA",
+      "TỔNG CỘNG",
+      "ĐƠN GIÁ",
+      "THÀNH TIỀN",
+      "GHI CHÚ",
+    ]);
 
-    let stt = 1, sumLunch = 0, sumOT = 0, sumTotal = 0, sumMoney = 0;
+    let stt = 1,
+      sumLunch = 0,
+      sumOT = 0,
+      sumWS = 0,
+      sumTotal = 0,
+      sumMoney = 0;
 
     for (const r of debtRows) {
       const dTxt = toVNDateUTC(r.actualDate);
       const lunch = +r.lunchQty || 0;
-      const ot = +r.otQty || 0; // tăng ca & đi ca chung
-      const tong = lunch + ot;
+      const ot = +r.otQty || 0;
+      const ws = +r.wsQty || 0;
+      const tong = lunch + ot + ws;
       const money = tong * (unitPrice || 0);
 
       sumLunch += lunch;
       sumOT += ot;
+      sumWS += ws;
       sumTotal += tong;
       sumMoney += money;
 
-      aoa.push([stt++, dTxt, lunch, ot, tong, unitPrice, money, ""]);
+      aoa.push([stt++, dTxt, lunch, ot, ws, tong, unitPrice, money, ""]);
     }
 
-    aoa.push(["", "TỔNG", sumLunch, sumOT, sumTotal, unitPrice, sumMoney, ""]);
+    aoa.push([
+      "",
+      "TỔNG",
+      sumLunch,
+      sumOT,
+      sumWS,
+      sumTotal,
+      unitPrice,
+      sumMoney,
+      "",
+    ]);
 
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     ws["!merges"] = [
-      { s:{r:0,c:0}, e:{r:0,c:7} },
-      { s:{r:1,c:0}, e:{r:1,c:7} },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
     ];
     ws["!cols"] = [
-      { wch: 6 }, { wch: 12 }, { wch: 12 }, { wch: 16 },
-      { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 20 },
+      { wch: 6 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 16 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 20 },
     ];
 
     const range = XLSX.utils.decode_range(ws["!ref"]);
-    for (let c=0;c<=7;c++) {
-      const a0 = XLSX.utils.encode_cell({r:0,c});
-      const a1 = XLSX.utils.encode_cell({r:1,c});
-      ws[a0] = ws[a0] || { v: "" }; ws[a0].s = styleBoldCenter;
-      ws[a1] = ws[a1] || { v: "" }; ws[a1].s = styleCenter;
+    for (let c = 0; c <= 7; c++) {
+      const a0 = XLSX.utils.encode_cell({ r: 0, c });
+      const a1 = XLSX.utils.encode_cell({ r: 1, c });
+      ws[a0] = ws[a0] || { v: "" };
+      ws[a0].s = styleBoldCenter;
+      ws[a1] = ws[a1] || { v: "" };
+      ws[a1].s = styleCenter;
     }
-    for (let c=0;c<=7;c++) {
-      const a = XLSX.utils.encode_cell({r:4,c});
+    for (let c = 0; c <= 7; c++) {
+      const a = XLSX.utils.encode_cell({ r: 4, c });
       ws[a].s = styleHeader;
     }
-    for (let r=5; r<=range.e.r; r++) {
-      for (let c=0; c<=7; c++) {
-        const a = XLSX.utils.encode_cell({r,c});
+    for (let r = 5; r <= range.e.r; r++) {
+      for (let c = 0; c <= 7; c++) {
+        const a = XLSX.utils.encode_cell({ r, c });
         ws[a] = ws[a] || { v: "" };
-        if (c>=2 && c<=6) ws[a].s = styleNum;
+        if (c >= 2 && c <= 6) ws[a].s = styleNum;
         else ws[a].s = styleCell;
       }
     }
 
-    const fileName = `Bang_CongNo_${String(m).padStart(2,"0")}-${y}.xlsx`;
-    XLSX.utils.book_append_sheet(wb, ws, `CongNo_${String(m).padStart(2,"0")}-${y}`);
+    const fileName = `Bang_CongNo_${String(m).padStart(2, "0")}-${y}.xlsx`;
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      `CongNo_${String(m).padStart(2, "0")}-${y}`
+    );
     const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([buf]), fileName);
   }
 
-  /* ====== B) BÁO CÁO TUẦN (giữ nguyên) ====== */
-  const [rows, setRows] = useState([]);
-  const [totals, setTotals] = useState([]);
+  /* ====== B) BÁO CÁO TUẦN ====== */
+  const [rows, setRows] = useState([]);      // bảng chuỗi ghép (cũ)
+  const [totals, setTotals] = useState([]);  // (có thể không dùng nữa)
+  const [details, setDetails] = useState([]); // chi tiết món/branch/loại
+
   const [weekStartMonday, setWeekStartMonday] = useState(() => {
     const today = new Date().toISOString().slice(0, 10);
     return getMonday(today);
@@ -262,18 +391,55 @@ export default function AdminSummaryModern() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setRows([]);
+      setTotals([]);
+      setDetails([]);
       try {
         const res = await http.get(`${BASE_URL}/api/lunch-order/admin/summary`, {
-          params: { weekStartMonday, departmentId },
+          params: {
+            weekStartMonday,
+            departmentId,
+            statusType: weekType === "all" ? null : weekType,
+          },
         });
         setRows(res.data?.data || []);
         setTotals(res.data?.totals || []);
+        setDetails(res.data?.details || []);
       } finally {
         setLoading(false);
       }
     })();
-  }, [weekStartMonday, departmentId]);
+  }, [weekStartMonday, departmentId, weekType]);
 
+  /* Map details → per user → per day */
+  const detailsMap = useMemo(() => {
+    const m = new Map();
+    for (const d of details || []) {
+      if (!m.has(d.userID)) {
+        m.set(d.userID, { days: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] } });
+      }
+      m.get(d.userID).days[d.dayOfWeek].push({
+        foodName: d.foodName,
+        qty: d.qty || 0,
+        statusType: (d.statusType || "").toLowerCase(),
+        branchName: d.branchName || "",
+      });
+    }
+    // sort để ổn định
+    for (const v of m.values()) {
+      for (const k of Object.keys(v.days)) {
+        v.days[k].sort(
+          (a, b) =>
+            (a.foodName || "").localeCompare(b.foodName || "") ||
+            (a.branchName || "").localeCompare(b.branchName || "") ||
+            (a.statusType || "").localeCompare(b.statusType || "")
+        );
+      }
+    }
+    return m;
+  }, [details]);
+
+  /* Users (từ bảng chuỗi cũ) chỉ để lấy danh sách người + tổ chức department */
   const users = useMemo(() => {
     const map = new Map();
     for (const r of rows) {
@@ -295,157 +461,300 @@ export default function AdminSummaryModern() {
     );
   }, [rows]);
 
+  /* Gom theo bộ phận (để render bảng & Excel) */
   const deptGroups = useMemo(() => {
     const m = new Map();
-    const add = (agg, d, text) => {
-      if (!text) return;
-      agg[d] ||= {};
-      for (const { name, qty } of parseFoodsText(text)) {
-        agg[d][name] = (agg[d][name] || 0) + qty;
-      }
-    };
     for (const u of users) {
       const key = u.departmentName || "Chưa gán";
-      if (!m.has(key)) m.set(key, { name: key, users: [], totalsByDay: {} });
+      if (!m.has(key)) m.set(key, { name: key, users: [] });
       m.get(key).users.push(u);
-      for (let d = 1; d <= 7; d++) add(m.get(key).totalsByDay, d, u.days[d] || "");
     }
     return Array.from(m.values()).sort((a, b) =>
       (a.name || "").localeCompare(b.name || "")
     );
   }, [users]);
 
-  const totalsByDay = useMemo(() => {
-    if (totals?.length) {
+  /* Tổng theo ngày toàn cục (tách theo món+branch+loại) */
+  const totalsByDayAll = useMemo(() => {
+    const agg = {}; // day -> key -> qty
+    for (const d of details || []) {
+      const day = d.dayOfWeek;
+      const key = [
+        d.foodName || "",
+        d.branchName || "",
+        (d.statusType || "").toLowerCase(),
+      ].join("|");
+      agg[day] ||= {};
+      agg[day][key] = (agg[day][key] || 0) + (d.qty || 0);
+    }
+    const out = {};
+    for (const [day, obj] of Object.entries(agg)) {
+      out[day] = Object.entries(obj)
+        .map(([k, qty]) => {
+          const [foodName, branchName, statusType] = k.split("|");
+          return { foodName, branchName, statusType, qty };
+        })
+        .sort(
+          (a, b) =>
+            b.qty - a.qty ||
+            (a.foodName || "").localeCompare(b.foodName || "") ||
+            (a.branchName || "").localeCompare(b.branchName || "") ||
+            (a.statusType || "").localeCompare(b.statusType || "")
+        );
+    }
+    return out;
+  }, [details]);
+
+  /* Tổng theo ngày cho từng bộ phận (tách theo món+branch+loại) */
+  const groupTotalsByDay = useMemo(() => {
+    const result = new Map(); // deptName -> day -> array items
+    for (const grp of deptGroups) {
+      // gom userIds thuộc group
+      const userIds = new Set(grp.users.map((u) => u.userID));
+      // lọc details theo userIds
+      const agg = {};
+      for (const d of details || []) {
+        if (!userIds.has(d.userID)) continue;
+        const day = d.dayOfWeek;
+        const key = [
+          d.foodName || "",
+          d.branchName || "",
+          (d.statusType || "").toLowerCase(),
+        ].join("|");
+        agg[day] ||= {};
+        agg[day][key] = (agg[day][key] || 0) + (d.qty || 0);
+      }
       const out = {};
-      for (const t of totals) {
-        out[t.dayOfWeek] ||= {};
-        out[t.dayOfWeek][t.foodName] =
-          (out[t.dayOfWeek][t.foodName] || 0) + (t.totalQty || 0);
+      for (const day of [1, 2, 3, 4, 5, 6, 7]) {
+        const o = agg[day] || {};
+        out[day] = Object.entries(o)
+          .map(([k, qty]) => {
+            const [foodName, branchName, statusType] = k.split("|");
+            return { foodName, branchName, statusType, qty };
+          })
+          .sort(
+            (a, b) =>
+              b.qty - a.qty ||
+              (a.foodName || "").localeCompare(b.foodName || "") ||
+              (a.branchName || "").localeCompare(b.branchName || "") ||
+              (a.statusType || "").localeCompare(b.statusType || "")
+          );
       }
-      return out;
+      result.set(grp.name, out);
     }
-    const agg = {};
-    for (const g of deptGroups) {
-      for (const [d, foods] of Object.entries(g.totalsByDay)) {
-        agg[d] ||= {};
-        for (const [food, qty] of Object.entries(foods)) {
-          agg[d][food] = (agg[d][food] || 0) + qty;
-        }
-      }
-    }
-    return agg;
-  }, [totals, deptGroups]);
+    return result;
+  }, [deptGroups, details]);
 
   const totalUsers = users.length;
-  const totalMealsQty = useMemo(() => {
-    let sum = 0;
-    for (const g of deptGroups) {
-      for (const foods of Object.values(g.totalsByDay)) {
-        for (const qty of Object.values(foods)) sum += qty;
-      }
-    }
-    return sum;
-  }, [deptGroups]);
 
   const weekDates = useMemo(
     () => (weekStartMonday ? getWeekDates(weekStartMonday) : []),
     [weekStartMonday]
   );
 
-  function exportExcelWeekly({ weekDates, deptGroups, totalsByDay, shortDay, toDDMM }) {
-    if (!Array.isArray(weekDates) || !weekDates.length) return;
-    const wb = XLSX.utils.book_new();
-    const BORDER_THIN = { style: "thin", color: { rgb: "E2E8F0" } };
-    const BORDER_MED = { style: "medium", color: { rgb: "94A3B8" } };
-    const styleTitle = { font: { bold: true, sz: 14, color: { rgb: "0F172A" } }, alignment: { horizontal: "center", vertical: "center" } };
-    const styleHeader = { font: { bold: true, color: { rgb: "0F172A" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, fill: { fgColor: { rgb: "E9F2FF" } }, border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN } };
-    const styleTextLeft = { alignment: { horizontal: "left", vertical: "center", wrapText: true }, border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN } };
-    const styleNumber = { alignment: { horizontal: "right", vertical: "center" }, border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN }, numFmt: "#,##0" };
-    const styleZebra = (even) => ({ fill: { fgColor: { rgb: even ? "F8FAFC" : "FFFFFF" } } });
-    const styleTotalCell = { font: { bold: true, color: { rgb: "7C2D12" } }, fill: { fgColor: { rgb: "FEF3C7" } }, alignment: { horizontal: "right", vertical: "center" }, border: { top: BORDER_THIN, left: BORDER_THIN, right: BORDER_THIN, bottom: BORDER_THIN }, numFmt: "#,##0" };
-    const styleTotalLeft = { ...styleTotalCell, alignment: { horizontal: "left", vertical: "center" } };
-    const setCellStyle = (ws, r, c, style) => {
-      const addr = XLSX.utils.encode_cell({ r, c });
-      ws[addr] = ws[addr] || { v: "" };
-      ws[addr].s = { ...(ws[addr].s || {}), ...style };
-    };
+  /* ====== Excel tuần (Món | SL | Loại x 7 ngày) + gộp Bộ phận ====== */
+  function exportExcelWeeklyOneSheet({
+  weekDates, deptGroups, shortDay, toDDMM, weekType,
+  detailsMap, groupTotalsByDay, totalsByDayAll
+}) {
+  if (!weekDates?.length) return;
+  const wb = XLSX.utils.book_new();
 
-    for (let day = 1; day <= 7; day++) {
-      const foodsMap = new Map();
-      (deptGroups || []).forEach((g) => {
-        const m = (g.totalsByDay && g.totalsByDay[day]) || {};
-        Object.entries(m).forEach(([food, qty]) => {
-          foodsMap.set(food, (foodsMap.get(food) || 0) + (qty || 0));
-        });
-      });
-      const foods = Array.from(foodsMap.entries()).sort((a, b) => b[1] - a[1]).map(([f]) => f);
+  const dayGroupTitles = weekDates.map((d,i)=>`${shortDay[i]} ${toDDMM(d)}`);
+  const headerRow0 = ["Bộ phận","Họ tên", ...dayGroupTitles.flatMap(()=>["","",""])];
+  const headerRow1 = ["",""]; for (let i=0;i<7;i++) headerRow1.push("Món","Số lượng","Loại");
 
-      const title = `Phòng ban × Món ăn — ${shortDay[day - 1]} – ${toDDMM(weekDates[day - 1])}`;
-      const header1 = [title, ...Array(foods.length + 1).fill("")];
-      const header2 = ["Phòng ban", ...foods, "Tổng"];
+  const sheetRows = [];
+  const merges = [];
+  const totalBlockRanges = []; // để bôi đậm cả block tổng
 
-      const body = (deptGroups || []).map((g) => {
-        let sum = 0;
-        const row = [g.name];
-        foods.forEach((f) => {
-          const v = (g.totalsByDay && g.totalsByDay[day] && g.totalsByDay[day][f]) || 0;
-          row.push(v);
-          sum += v;
-        });
-        row.push(sum);
-        return row;
-      });
+  sheetRows.push(headerRow0, headerRow1);
+  merges.push({ s:{r:0,c:0}, e:{r:1,c:0} }); // Bộ phận
+  merges.push({ s:{r:0,c:1}, e:{r:1,c:1} }); // Họ tên
+  for (let i=0;i<7;i++){
+    const c0 = 2 + i*3;
+    sheetRows[0][c0] = dayGroupTitles[i];
+    merges.push({ s:{r:0,c:c0}, e:{r:0,c:c0+2} });
+  }
 
-      let grand = 0;
-      const totalRow = ["Tổng"];
-      foods.forEach((f) => {
-        const q = (totalsByDay && totalsByDay[day] && totalsByDay[day][f]) || 0;
-        totalRow.push(q);
-        grand += q;
-      });
-      totalRow.push(grand);
+  let rIdx = 2;
+  const statusToVN = (s) => ({ re:"Ca ngày", ws:"Đi ca", ot:"Tăng ca" }[(s||"").toLowerCase()] || "—");
 
-      const aoa = [header1, header2, ...body, totalRow];
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
+  // fallback parse khi không có details
+  const parseFallback = (text, typeLabel) => {
+    if (!text) return [];
+    return text.split(",").map(s=>s.trim()).filter(Boolean).map(s=>{
+      const m = s.match(/^(.*)\sx(\d+)$/i);
+      return m ? { foodName: m[1].trim(), qty:+m[2], statusType:"", branchName:"", _typeVN:typeLabel }
+               : { foodName: s, qty:1,     statusType:"", branchName:"", _typeVN:typeLabel };
+    });
+  };
 
-      const lastCol = header2.length - 1;
-      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }];
-      ws["!freeze"] = { xSplit: 1, ySplit: 2 };
-      ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }) };
-      ws["!cols"] = [{ wch: 28 }, ...foods.map(() => ({ wch: 12 })), { wch: 10 }];
-      ws["!rows"] = [{ hpt: 28 }, { hpt: 22 }];
+  for (const g of deptGroups) {
+    const deptStart = rIdx;
 
-      const ref = ws["!ref"] || XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: lastCol } });
-      const range = XLSX.utils.decode_range(ref);
-
-      for (let c = 0; c <= lastCol; c++) setCellStyle(ws, 0, c, styleTitle);
-      for (let c = 0; c <= lastCol; c++) setCellStyle(ws, 1, c, styleHeader);
-      for (let r = 2; r < range.e.r; r++) {
-        const even = (r % 2) === 0;
-        setCellStyle(ws, r, 0, { ...styleTextLeft, ...styleZebra(even) });
-        for (let c = 1; c < lastCol; c++) setCellStyle(ws, r, c, { ...styleNumber, ...styleZebra(even) });
-        setCellStyle(ws, r, lastCol, { ...styleNumber, ...styleZebra(even) });
-      }
-      const totalRowIndex = range.e.r;
-      setCellStyle(ws, totalRowIndex, 0, styleTotalLeft);
-      for (let c = 1; c <= lastCol; c++) setCellStyle(ws, totalRowIndex, c, styleTotalCell);
-
-      for (let c = 0; c <= lastCol; c++) {
-        setCellStyle(ws, 1, c, { border: { ...(ws[XLSX.utils.encode_cell({ r: 1, c })]?.s?.border || {}), top: BORDER_MED } });
-        setCellStyle(ws, totalRowIndex, c, { border: { ...(ws[XLSX.utils.encode_cell({ r: totalRowIndex, c })]?.s?.border || {}), bottom: BORDER_MED } });
-      }
-      for (let r = 1; r <= totalRowIndex; r++) {
-        setCellStyle(ws, r, 0, { border: { ...(ws[XLSX.utils.encode_cell({ r, c: 0 })]?.s?.border || {}), left: BORDER_MED } });
-        setCellStyle(ws, r, lastCol, { border: { ...(ws[XLSX.utils.encode_cell({ r, c: lastCol })]?.s?.border || {}), right: BORDER_MED } });
+    // --- USERS ---
+    for (const u of g.users) {
+      const dm = detailsMap?.get(u.userID);
+      const perDay = {1:[],2:[],3:[],4:[],5:[],6:[],7:[]};
+      if (dm){
+        for (let d=1; d<=7; d++) perDay[d] = dm.days[d] || [];
+      } else {
+        const typeLabel = weekType==='all' ? "—" : ({re:"Ca ngày",ws:"Đi ca",ot:"Tăng ca"}[weekType]||"—");
+        for (let d=1; d<=7; d++){
+          perDay[d] = parseFallback(u.days[d]||"", typeLabel);
+        }
       }
 
-      XLSX.utils.book_append_sheet(wb, ws, shortDay[day - 1]);
+      const maxRows = Math.max(1, ...[1,2,3,4,5,6,7].map(d => perDay[d].length||0));
+      const userStart = rIdx;
+
+      for (let rr=0; rr<maxRows; rr++){
+        const row = new Array(2+7*3).fill("");
+        if (rr===0){ row[0]=g.name; row[1]=u.fullName; }
+        for (let d=0; d<7; d++){
+          const items = perDay[d+1];
+          const base = 2 + d*3;
+          if (items.length > rr){
+            const it = items[rr];
+            row[base+0] = it.foodName + (it.branchName ? ` (${it.branchName})` : "");
+            row[base+1] = it.qty ?? "";
+            row[base+2] = statusToVN(it.statusType) || it._typeVN || "—";
+          }
+        }
+        sheetRows.push(row);
+        rIdx++;
+      }
+      if (maxRows>1){
+        // merge “Họ tên” theo user
+        merges.push({ s:{r:userStart,c:1}, e:{r:userStart+maxRows-1,c:1} });
+      }
     }
 
-    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buf]), `Phongban_Monan_${toDDMM(weekDates[0])}.xlsx`);
+    // --- TỔNG TỪNG MÓN (BỘ PHẬN) — mỗi món 1 hàng ---
+    const grpTotals = groupTotalsByDay.get(g.name) || {}; // day -> [{foodName,branchName,statusType,qty}]
+    const perDayLists = [];
+    let maxLenAcrossDays = 0;
+    for (let d=1; d<=7; d++){
+      const list = (grpTotals[d] || []).slice();
+      perDayLists[d] = list;
+      if (list.length > maxLenAcrossDays) maxLenAcrossDays = list.length;
+    }
+
+    const totalStart = rIdx;
+    for (let i=0; i<Math.max(1,maxLenAcrossDays); i++){
+      const row = new Array(2+7*3).fill("");
+      // ✅ đặt “Họ tên” = “Tổng” ở dòng đầu tiên của block tổng
+      if (i===0) {
+        row[1] = "Tổng";
+      }
+      for (let d=1; d<=7; d++){
+        const it = (perDayLists[d] || [])[i];
+        if (!it) continue;
+        const base = 2 + (d-1)*3;
+        row[base+0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
+        row[base+1] = it.qty ?? "";
+        row[base+2] = statusToVN(it.statusType);
+      }
+      sheetRows.push(row);
+      rIdx++;
+    }
+    const totalEnd = rIdx-1;
+
+    // ✅ merge “Bộ phận” phủ cả block phòng (users + tổng)
+    merges.push({ s:{r:deptStart,c:0}, e:{r:totalEnd,c:0} });
+    // ✅ merge “Họ tên” = “Tổng” cho toàn bộ các hàng tổng của phòng
+    merges.push({ s:{r:totalStart,c:1}, e:{r:totalEnd,c:1} });
+
+    totalBlockRanges.push([totalStart, totalEnd]);
   }
+
+  // --- TỔNG TOÀN BỘ — mỗi món 1 hàng ---
+  const allPerDay = [];
+  let allMax = 0;
+  for (let d=1; d<=7; d++){
+    const list = (totalsByDayAll?.[d] || []).slice();
+    allPerDay[d] = list;
+    if (list.length > allMax) allMax = list.length;
+  }
+  const grandStart = rIdx;
+  for (let i=0; i<Math.max(1,allMax); i++){
+    const row = new Array(2+7*3).fill("");
+    if (i===0) {
+      // ✅ “Họ tên” = “Tổng” cho block tổng toàn bộ
+      row[1] = "Tổng";
+      // cột 0 bạn có thể để “Toàn bộ” (tuỳ thích). Nếu muốn:
+      row[0] = "Toàn bộ";
+    }
+    for (let d=1; d<=7; d++){
+      const it = (allPerDay[d] || [])[i];
+      if (!it) continue;
+      const base = 2 + (d-1)*3;
+      row[base+0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
+      row[base+1] = it.qty ?? "";
+      row[base+2] = statusToVN(it.statusType);
+    }
+    sheetRows.push(row);
+    rIdx++;
+  }
+  const grandEnd = rIdx-1;
+
+  // ✅ merge “Họ tên” = “Tổng” cho toàn bộ khối tổng toàn bộ
+  merges.push({ s:{r:grandStart,c:1}, e:{r:grandEnd,c:1} });
+  // (tuỳ chọn) merge “Toàn bộ” ở cột Bộ phận nếu muốn hiển thị 1 ô lớn:
+  merges.push({ s:{r:grandStart,c:0}, e:{r:grandEnd,c:0} });
+
+  totalBlockRanges.push([grandStart, grandEnd]);
+
+  // --- Render + style ---
+  const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+  ws["!merges"] = merges;
+
+  const cols = [{wch:22},{wch:24}];
+  for (let i=0;i<7;i++) cols.push({wch:26},{wch:10},{wch:12});
+  ws["!cols"] = cols;
+
+  const BORDER = { style:"thin", color:{rgb:"E5E7EB"} };
+  const headTop = { font:{bold:true}, alignment:{horizontal:"center",vertical:"center",wrapText:true}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER}, fill:{fgColor:{rgb:"E9F2FF"}} };
+  const headSub = { font:{bold:true}, alignment:{horizontal:"center",vertical:"center"}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER}, fill:{fgColor:{rgb:"F4F8FF"}} };
+  const cell =    { alignment:{vertical:"top",wrapText:true}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER} };
+  const zebraA =  { fill:{fgColor:{rgb:"FFFFFF"}} };
+  const zebraB =  { fill:{fgColor:{rgb:"FAFAFF"}} };
+  const rowBold = { font:{bold:true}, fill:{fgColor:{rgb:"FFF4E5"}}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER} };
+
+  ws["!rows"] = ws["!rows"] || [];
+  ws["!rows"][0] = { hpt: 26 };
+  ws["!rows"][1] = { hpt: 22 };
+
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  for (let r=0; r<=range.e.r; r++){
+    for (let c=0; c<=range.e.c; c++){
+      const a = XLSX.utils.encode_cell({r,c});
+      ws[a] = ws[a] || { v:"" };
+      if (r===0) ws[a].s = headTop;
+      else if (r===1) ws[a].s = headSub;
+      else {
+        const isB = (r % 2) === 0;
+        ws[a].s = { ...cell, ...(isB ? zebraB : zebraA) };
+      }
+    }
+  }
+
+  // Bôi đậm toàn bộ các block tổng (nhiều dòng)
+  for (const [rs, re] of totalBlockRanges){
+    for (let r=rs; r<=re; r++){
+      for (let c=0; c<=range.e.c; c++){
+        const a = XLSX.utils.encode_cell({r,c});
+        ws[a].s = rowBold;
+      }
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, `Tuan_${toDDMM(weekDates[0])}`);
+  const suffix = weekType==='all' ? 'ALL' : weekType.toUpperCase();
+  const buf = XLSX.write(wb, { bookType:"xlsx", type:"array" });
+  saveAs(new Blob([buf]), `BaoCaoTuan_${suffix}_${toDDMM(weekDates[0])}.xlsx`);
+}
 
   /* ====== Render ====== */
   const monthVNLabel = useMemo(() => {
@@ -453,29 +762,38 @@ export default function AdminSummaryModern() {
     return `Tháng ${String(m).padStart(2, "0")}/${y}`;
   }, [debtMonth]);
 
+  // Đếm tổng suất active (từ details để sát thực tế)
+  const totalMealsQty = useMemo(() => {
+    let sum = 0;
+    for (const d of details || []) sum += d.qty || 0;
+    return sum;
+  }, [details]);
+
   return (
     <div className="min-h-screen bg-[#f6fbff] p-5">
       {/* ====== BẢNG CÔNG NỢ THEO THÁNG (TRÊN CÙNG) ====== */}
       <div className="rounded-2xl border border-slate-200 shadow-sm bg-white p-4 mb-5">
         <div className="flex items-end flex-wrap gap-3">
           <div>
-  <div className="text-xs text-slate-500 mb-1">Chọn tháng</div>
-  <div className="flex items-center gap-2">
-    <MonthPickerVN
-      value={debtMonth}                       // "YYYY-MM"
-      onChange={(ym) => setDebtMonth(ym)}     // cập nhật state hiện có
-      minYear={2022}                          // tuỳ chỉnh
-      maxYear={new Date().getFullYear() + 1}  // tuỳ chỉnh
-    />
-  </div>
-</div>
-
+            <div className="text-xs text-slate-500 mb-1">Chọn tháng</div>
+            <div className="flex items-center gap-2">
+              <MonthPickerVN
+                value={debtMonth}
+                onChange={(ym) => setDebtMonth(ym)}
+                minYear={2022}
+                maxYear={new Date().getFullYear() + 1}
+              />
+            </div>
+          </div>
 
           <div className="w-64">
             <div className="text-xs text-slate-500 mb-1">Bộ phận</div>
             <Select
               classNamePrefix="react-select"
-              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+              options={departments.map((d) => ({
+                value: d.departmentId,
+                label: d.departmentName,
+              }))}
               onChange={(opt) => setDepartmentId(opt?.value ?? null)}
               placeholder="-- Tất cả --"
               isClearable
@@ -488,7 +806,9 @@ export default function AdminSummaryModern() {
               type="number"
               min={0}
               value={unitPrice}
-              onChange={(e) => setUnitPrice(parseInt(e.target.value || "0", 10))}
+              onChange={(e) =>
+                setUnitPrice(parseInt(e.target.value || "0", 10))
+              }
               className="px-3 py-2 rounded-xl border border-slate-200 bg-[#f9fcff] outline-none w-40 text-right"
             />
           </div>
@@ -504,7 +824,11 @@ export default function AdminSummaryModern() {
               onClick={exportDebtExcelMonth}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white shadow hover:bg-emerald-700"
               disabled={debtLoading || !debtRows.length}
-              title={!debtRows.length ? "Không có dữ liệu" : "Xuất Excel công nợ (tháng)"}
+              title={
+                !debtRows.length
+                  ? "Không có dữ liệu"
+                  : "Xuất Excel công nợ (tháng)"
+              }
             >
               <FaFileExcel /> Xuất Excel công nợ
             </button>
@@ -516,58 +840,131 @@ export default function AdminSummaryModern() {
             <table className="min-w-[820px] w-full border-collapse">
               <thead className="bg-[#f1f7ff] text-slate-700">
                 <tr>
-                  <th className="px-3 py-2 border-b border-slate-200 w-14">STT</th>
+                  <th className="px-3 py-2 border-b border-slate-200 w-14">
+                    STT
+                  </th>
                   <th className="px-3 py-2 border-b border-slate-200">NGÀY</th>
-                  <th className="px-3 py-2 border-b border-slate-200">CƠM TRƯA</th>
-                  <th className="px-3 py-2 border-b border-slate-200">TĂNG CA & ĐI CA</th>
-                  <th className="px-3 py-2 border-b border-slate-200">TỔNG CỘNG</th>
-                  <th className="px-3 py-2 border-b border-slate-200">ĐƠN GIÁ</th>
-                  <th className="px-3 py-2 border-b border-slate-200">THÀNH TIỀN</th>
-                  <th className="px-3 py-2 border-b border-slate-200">GHI CHÚ</th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    CƠM TRƯA
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    CƠM TĂNG CA
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    CƠM ĐI CA
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    TỔNG CỘNG
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    ĐƠN GIÁ
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    THÀNH TIỀN
+                  </th>
+                  <th className="px-3 py-2 border-b border-slate-200">
+                    GHI CHÚ
+                  </th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {debtLoading && (
-                  <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-500">Đang tải…</td></tr>
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className="px-4 py-6 text-center text-slate-500"
+                    >
+                      Đang tải…
+                    </td>
+                  </tr>
                 )}
 
-                {!debtLoading && debtRows.map((r, i) => {
-                  const lunch = +r.lunchQty || 0;
-                  const ot = +r.otQty || 0;
-                  const tong = lunch + ot;
-                  const money = tong * (unitPrice || 0);
-                  return (
-                    <tr key={i} className="odd:bg-white even:bg-[#fbfdff]">
-                      <td className="px-3 py-2 border-t border-slate-100 text-center">{i+1}</td>
-                      <td className="px-3 py-2 border-t border-slate-100">{toVNDateUTC(r.actualDate)}</td>
-                      <td className="px-3 py-2 border-t border-slate-100 text-right">{lunch}</td>
-                      <td className="px-3 py-2 border-t border-slate-100 text-right">{ot}</td>
-                      <td className="px-3 py-2 border-t border-slate-100 text-right">{tong}</td>
-                      <td className="px-3 py-2 border-t border-slate-100 text-right">{unitPrice.toLocaleString("vi-VN")}</td>
-                      <td className="px-3 py-2 border-t border-slate-100 text-right">{money.toLocaleString("vi-VN")}</td>
-                      <td className="px-3 py-2 border-t border-slate-100"></td>
-                    </tr>
-                  );
-                })}
+                {!debtLoading &&
+                  debtRows.map((r, i) => {
+                    const lunch = +r.lunchQty || 0;
+                    const ot = +r.otQty || 0;
+                    const ws = +r.wsQty || 0;
+                    const tong = lunch + ot + ws;
+                    const money = tong * (unitPrice || 0);
+                    return (
+                      <tr
+                        key={i}
+                        className="odd:bg-white even:bg-[#fbfdff]"
+                      >
+                        <td className="px-3 py-2 border-t border-slate-100 text-center">
+                          {i + 1}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100">
+                          {toVNDateUTC(r.actualDate)}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {lunch}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {ot}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {ws}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {tong}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {unitPrice.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100 text-right">
+                          {money.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-3 py-2 border-t border-slate-100" />
+                      </tr>
+                    );
+                  })}
 
-                {!debtLoading && !!debtRows.length && (() => {
-                  const sumL = debtRows.reduce((s,r)=>s+(+r.lunchQty||0),0);
-                  const sumO = debtRows.reduce((s,r)=>s+(+r.otQty||0),0);
-                  const sumT = sumL + sumO;
-                  const sumM = sumT * (unitPrice||0);
-                  return (
-                    <tr className="bg-amber-50/60 font-medium">
-                      <td className="px-3 py-2 border-t border-amber-200"></td>
-                      <td className="px-3 py-2 border-t border-amber-200">TỔNG</td>
-                      <td className="px-3 py-2 border-t border-amber-200 text-right">{sumL}</td>
-                      <td className="px-3 py-2 border-t border-amber-200 text-right">{sumO}</td>
-                      <td className="px-3 py-2 border-t border-amber-200 text-right">{sumT}</td>
-                      <td className="px-3 py-2 border-t border-amber-200 text-right">{unitPrice.toLocaleString("vi-VN")}</td>
-                      <td className="px-3 py-2 border-t border-amber-200 text-right">{sumM.toLocaleString("vi-VN")}</td>
-                      <td className="px-3 py-2 border-t border-amber-200"></td>
-                    </tr>
-                  );
-                })()}
+                {!debtLoading &&
+                  !!debtRows.length &&
+                  (() => {
+                    const sumL = debtRows.reduce(
+                      (s, r) => s + (+r.lunchQty || 0),
+                      0
+                    );
+                    const sumO = debtRows.reduce(
+                      (s, r) => s + (+r.otQty || 0),
+                      0
+                    );
+                    const sumW = debtRows.reduce(
+                      (s, r) => s + (+r.wsQty || 0),
+                      0
+                    );
+                    const sumT = sumL + sumO + sumW;
+                    const sumM = sumT * (unitPrice || 0);
+                    return (
+                      <tr className="bg-amber-50/60 font-medium">
+                        <td className="px-3 py-2 border-t border-amber-200"></td>
+                        <td className="px-3 py-2 border-t border-amber-200">
+                          TỔNG
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {sumL}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {sumO}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {sumW}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {sumT}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {unitPrice.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200 text-right">
+                          {sumM.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-3 py-2 border-t border-amber-200"></td>
+                      </tr>
+                    );
+                  })()}
               </tbody>
             </table>
           </div>
@@ -581,13 +978,40 @@ export default function AdminSummaryModern() {
             <FaClock />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-800">Báo cáo đặt cơm theo tuần</div>
-            <div className="text-slate-500 text-sm">Lọc theo tuần & bộ phận • Xuất Excel</div>
+            <div className="text-lg font-bold text-slate-800">
+              Báo cáo đặt cơm theo tuần
+            </div>
+            <div className="flex items-center gap-2">
+              {[
+                { v: "all", label: "Tất cả" },
+                { v: "re", label: "Ca ngày" },
+                { v: "ws", label: "Đi ca" },
+                { v: "ot", label: "Tăng ca" },
+              ].map((op) => (
+                <button
+                  key={op.v}
+                  onClick={() => setWeekType(op.v)}
+                  className={`px-3 py-1.5 rounded-lg text-sm border ${
+                    weekType === op.v
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-slate-800 border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            <div className="text-slate-500 text-sm">
+              Lọc theo tuần & bộ phận • Xuất Excel
+            </div>
           </div>
         </div>
         <button
           onClick={() =>
-            exportExcelWeekly({ weekDates, deptGroups, totalsByDay, shortDay, toDDMM })
+    exportExcelWeeklyOneSheet({
+      weekDates, deptGroups, shortDay, toDDMM, weekType,
+      detailsMap, groupTotalsByDay, totalsByDayAll
+    })
           }
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white shadow hover:bg-emerald-700"
         >
@@ -610,7 +1034,10 @@ export default function AdminSummaryModern() {
             <div className="text-xs text-slate-500 mb-1">Bộ phận</div>
             <Select
               classNamePrefix="react-select"
-              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+              options={departments.map((d) => ({
+                value: d.departmentId,
+                label: d.departmentName,
+              }))}
               onChange={(opt) => setDepartmentId(opt?.value ?? null)}
               placeholder="-- Tất cả --"
               isClearable
@@ -631,13 +1058,24 @@ export default function AdminSummaryModern() {
         <table className="min-w-[1100px] w-full border-collapse">
           <thead>
             <tr className="bg-[#f1f7ff] text-slate-700">
-              <th className="px-3 py-3 border-b border-slate-200 w-14 text-center">#</th>
-              <th className="px-3 py-3 border-b border-slate-200 text-left w-48">Bộ phận</th>
-              <th className="px-3 py-3 border-b border-slate-200 text-left w-64">Họ tên</th>
+              <th className="px-3 py-3 border-b border-slate-200 w-14 text-center">
+                #
+              </th>
+              <th className="px-3 py-3 border-b border-slate-200 text-left w-48">
+                Bộ phận
+              </th>
+              <th className="px-3 py-3 border-b border-slate-200 text-left w-64">
+                Họ tên
+              </th>
               {weekDates.length === 7 &&
                 weekDates.map((d, i) => (
-                  <th key={i} className="px-3 py-3 border-b border-slate-200 text-left">
-                    <div className="text-[13px] font-semibold">{shortDay[i]}</div>
+                  <th
+                    key={i}
+                    className="px-3 py-3 border-b border-slate-200 text-left"
+                  >
+                    <div className="text-[13px] font-semibold">
+                      {shortDay[i]}
+                    </div>
                     <div className="text-xs text-slate-500">{toDDMM(d)}</div>
                   </th>
                 ))}
@@ -658,29 +1096,51 @@ export default function AdminSummaryModern() {
                 </td>
               </tr>
             )}
+
             {!loading &&
               deptGroups.map((grp, gi) => (
                 <React.Fragment key={grp.name + gi}>
                   <tr className="bg-slate-50/80">
-                    <td colSpan={10} className="px-3 py-2 border-t border-slate-200 text-slate-700 font-semibold">
+                    <td
+                      colSpan={10}
+                      className="px-3 py-2 border-t border-slate-200 text-slate-700 font-semibold"
+                    >
                       {grp.name}{" "}
-                      <span className="text-slate-500 font-normal">({grp.users.length} người)</span>
+                      <span className="text-slate-500 font-normal">
+                        ({grp.users.length} người)
+                      </span>
                     </td>
                   </tr>
-                  {grp.users.map((u, idx) => (
-                    <tr key={u.userID} className="odd:bg-white even:bg-[#fbfdff] align-top">
-                      <td className="px-3 py-3 border-t border-slate-100 text-center">{idx + 1}</td>
-                      <td className="px-3 py-3 border-t border-slate-100">{grp.name}</td>
-                      <td className="px-3 py-3 border-t border-slate-100">{u.fullName}</td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[1]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[2]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[3]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[4]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[5]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[6]} /></td>
-                      <td className="px-3 py-3 border-t border-slate-100 align-top"><FoodChipsCell text={u.days[7]} /></td>
-                    </tr>
-                  ))}
+
+                  {grp.users.map((u, idx) => {
+                    const dm = detailsMap.get(u.userID);
+                    return (
+                      <tr
+                        key={u.userID}
+                        className="odd:bg-white even:bg-[#fbfdff] align-top"
+                      >
+                        <td className="px-3 py-3 border-t border-slate-100 text-center">
+                          {idx + 1}
+                        </td>
+                        <td className="px-3 py-3 border-t border-slate-100">
+                          {grp.name}
+                        </td>
+                        <td className="px-3 py-3 border-t border-slate-100">
+                          {u.fullName}
+                        </td>
+                        {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                          <td
+                            key={d}
+                            className="px-3 py-3 border-t border-slate-100 align-top"
+                          >
+                            <DayCell items={dm?.days[d]} />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+
+                  {/* Tổng từng món (bộ phận) — tách theo branch + loại */}
                   <tr className="bg-emerald-50/60">
                     <td className="px-3 py-3 border-t border-emerald-100"></td>
                     <td className="px-3 py-3 border-t border-emerald-100 font-semibold text-emerald-800">
@@ -688,34 +1148,44 @@ export default function AdminSummaryModern() {
                     </td>
                     <td className="px-3 py-3 border-t border-emerald-100"></td>
                     {[1, 2, 3, 4, 5, 6, 7].map((d) => {
-                      const foods = grp.totalsByDay[d] || {};
-                      const text = Object.entries(foods)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([f, q]) => `${f} x${q}`)
-                        .join(", ");
+                      const items = (groupTotalsByDay.get(grp.name) || {})[d] || [];
                       return (
-                        <td key={d} className="px-3 py-3 border-t border-emerald-100 align-top">
-                          <FoodChipsCell text={text} />
+                        <td
+                          key={d}
+                          className="px-3 py-3 border-t border-emerald-100 align-top"
+                        >
+                          <div className="flex flex-col gap-1">
+                            {items.map((it, i) => (
+                              <FoodItemTag key={i} item={it} />
+                            ))}
+                          </div>
                         </td>
                       );
                     })}
                   </tr>
                 </React.Fragment>
               ))}
+
+            {/* Tổng toàn bộ — tách theo branch + loại */}
             {!loading && deptGroups.length > 0 && (
               <tr className="bg-amber-50/70 font-medium">
                 <td className="px-3 py-3 border-t border-amber-200"></td>
-                <td className="px-3 py-3 border-t border-amber-200">Tổng từng món (toàn bộ)</td>
+                <td className="px-3 py-3 border-t border-amber-200">
+                  Tổng từng món (toàn bộ)
+                </td>
                 <td className="px-3 py-3 border-t border-amber-200"></td>
                 {[1, 2, 3, 4, 5, 6, 7].map((d) => {
-                  const o = totalsByDay[d] || {};
-                  const txt = Object.entries(o)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([food, qty]) => `${food} x${qty}`)
-                    .join(", ");
+                  const items = totalsByDayAll[d] || [];
                   return (
-                    <td key={d} className="px-3 py-3 border-t border-amber-200 align-top">
-                      <FoodChipsCell text={txt} />
+                    <td
+                      key={d}
+                      className="px-3 py-3 border-t border-amber-200 align-top"
+                    >
+                      <div className="flex flex-col gap-1">
+                        {items.map((it, i) => (
+                          <FoodItemTag key={i} item={it} />
+                        ))}
+                      </div>
                     </td>
                   );
                 })}
@@ -728,31 +1198,36 @@ export default function AdminSummaryModern() {
   );
 }
 
-// helpers (đặt ở đầu file, bạn có sẵn parseYYYYMM thì có thể dùng lại)
+/* ===== MonthPickerVN ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
-
-// --- Component nhỏ: MonthPickerVN ---
-// props: value="YYYY-MM", onChange(newYYYYMM)
-function MonthPickerVN({ value, onChange, minYear = 2022, maxYear = new Date().getFullYear() + 1 }) {
+function MonthPickerVN({
+  value,
+  onChange,
+  minYear = 2022,
+  maxYear = new Date().getFullYear() + 1,
+}) {
   const [y, m] = (value || "").split("-").map(Number);
   const months = [
-    { v: 1,  label: "Tháng 01" },
-    { v: 2,  label: "Tháng 02" },
-    { v: 3,  label: "Tháng 03" },
-    { v: 4,  label: "Tháng 04" },
-    { v: 5,  label: "Tháng 05" },
-    { v: 6,  label: "Tháng 06" },
-    { v: 7,  label: "Tháng 07" },
-    { v: 8,  label: "Tháng 08" },
-    { v: 9,  label: "Tháng 09" },
+    { v: 1, label: "Tháng 01" },
+    { v: 2, label: "Tháng 02" },
+    { v: 3, label: "Tháng 03" },
+    { v: 4, label: "Tháng 04" },
+    { v: 5, label: "Tháng 05" },
+    { v: 6, label: "Tháng 06" },
+    { v: 7, label: "Tháng 07" },
+    { v: 8, label: "Tháng 08" },
+    { v: 9, label: "Tháng 09" },
     { v: 10, label: "Tháng 10" },
     { v: 11, label: "Tháng 11" },
     { v: 12, label: "Tháng 12" },
   ];
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i);
+  const years = Array.from(
+    { length: maxYear - minYear + 1 },
+    (_, i) => minYear + i
+  );
 
   const handleMonth = (mm) => onChange?.(`${y}-${pad2(Number(mm))}`);
-  const handleYear  = (yy) => onChange?.(`${Number(yy)}-${pad2(m || 1)}`);
+  const handleYear = (yy) => onChange?.(`${Number(yy)}-${pad2(m || 1)}`);
 
   return (
     <div className="flex items-center gap-2">
@@ -762,7 +1237,9 @@ function MonthPickerVN({ value, onChange, minYear = 2022, maxYear = new Date().g
         className="px-3 py-2 rounded-xl border border-slate-200 bg-[#f9fcff] outline-none focus:ring-2 focus:ring-emerald-300"
       >
         {months.map((opt) => (
-          <option key={opt.v} value={opt.v}>{opt.label}</option>
+          <option key={opt.v} value={opt.v}>
+            {opt.label}
+          </option>
         ))}
       </select>
 
@@ -772,10 +1249,11 @@ function MonthPickerVN({ value, onChange, minYear = 2022, maxYear = new Date().g
         className="px-3 py-2 rounded-xl border border-slate-200 bg-[#f9fcff] outline-none focus:ring-2 focus:ring-emerald-300"
       >
         {years.map((yy) => (
-          <option key={yy} value={yy}>{`Năm ${yy}`}</option>
+          <option key={yy} value={yy}>
+            {`Năm ${yy}`}
+          </option>
         ))}
       </select>
     </div>
   );
 }
-

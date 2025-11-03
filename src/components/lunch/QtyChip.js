@@ -95,8 +95,7 @@ export default function QtyChip({
   };
 
   const blockedTitle = !canEdit
-    ? "Đã quá hạn chỉnh sửa (sau 09:00 ngày này)"
-    : (isSec ? "Double-click hoặc nhấn giữ để chỉnh số lượng" : "");
+    && "Đã quá hạn chỉnh sửa (sau 09:00 ngày này)";
 
   const tipId = `tip-${day}-${entryId}`;
 
