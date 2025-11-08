@@ -403,7 +403,7 @@ function FeedbackFlow() {
                 }}
                 className="rounded-full bg-rose-100 px-6 py-2 text-sm font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-200"
               >
-                Không cần nha
+                Không
               </button>
               <button
                 onClick={() => {
@@ -412,7 +412,7 @@ function FeedbackFlow() {
                 }}
                 className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               >
-                Có nha
+                Có
               </button>
             </div>
             <div className="flex justify-center">

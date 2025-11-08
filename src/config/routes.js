@@ -8,6 +8,7 @@ const routes = {
   feedback1: '/feedback',
   excelToPdf: '/excelToPdf',
   homeMain: '/',
+  feedbackLunch: '/feedback-lunch',
 
   adminAnalytics: '/admin/menu/dashboard/analytics',
   adminReport: '/admin/menu/dashboard/report',

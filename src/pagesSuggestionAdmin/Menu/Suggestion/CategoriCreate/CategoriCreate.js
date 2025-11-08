@@ -14,13 +14,19 @@ const COMMON_ICONS = [
   "FaCheckCircle","FaTimesCircle","FaCamera","FaImage","FaEdit","FaPen",
   "FaPhone","FaIdBadge","FaEye","FaComments","FaBell","FaChartBar","FaFileAlt",
   "FaTasks","FaBug","FaWrench","FaAnchor","FaFlag","FaStar","FaSearch","FaHandPaper",
-  "FaFolderOpen"
+  "FaFolderOpen",
+  "FaConciergeBell",   // chuông gọi phục vụ/canteen
+  "FaBlender",         // thiết bị bếp/pha chế
+  "FaShoppingBasket",  // lấy suất/khay
+  "FaShoppingCart",
+  "FaUtensils",
+  "FaMugHot",
 ];
 const ICON_OPTIONS = COMMON_ICONS.filter((icon) => typeof FaIcons[icon] === "function");
 
 function CategoriCreate() {
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState("FaFolderOpen");
+  const [icon, setIcon] = useState("FaMugHot");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");

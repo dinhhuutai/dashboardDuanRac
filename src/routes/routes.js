@@ -9,6 +9,7 @@ import History from '~/pages/History';
 import Feedback from '~/pages/Feedback';
 import Feedback1 from '~/pages/Feedback1';
 import ExcelToPdf from '~/pages/Utils/ExcelToPdf';
+import LunchFeedbackForm from '~/pages/LunchFeedbackForm';
 
 import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
 import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
@@ -172,6 +173,12 @@ export const routes = [
   {
     path: config.routes.feedback1,
     component: Feedback1,
+    login: false,
+    isLogin: false,
+  },
+  {
+    path: config.routes.feedbackLunch,
+    component: LunchFeedbackForm,
     login: false,
     isLogin: false,
   },

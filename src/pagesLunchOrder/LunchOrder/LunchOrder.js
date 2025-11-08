@@ -7,6 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { motion } from "framer-motion";
 import { FaCheck, FaSpinner, FaSave, FaRedo } from "react-icons/fa";
+import { FiBell, FiAlertTriangle, FiInfo, FiCheckCircle } from "react-icons/fi";
 
 import QuantityStepper from "~/components/lunch/QuantityStepper"; // vẫn dùng cho thư ký
 import NoticeModal from "~/components/lunch/NoticeModal";
@@ -697,33 +698,115 @@ setLastSavedByType(prev => {
     );
 
   if (!weeklyMenu) {
-    return (
-      <div className="min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-[10px]">
-        {!pushChecking && !pushReady && (
-          <div className="mx-[10px] mb-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="font-semibold">Bật thông báo đặt cơm</div>
-                <div className="text-sm opacity-90">Nhận nhắc lịch chọn món/khóa menu ngay cả khi bạn không mở trang.</div>
-                {notifPerm === "denied" && (<div className="text-red-600 text-sm mt-1">Bạn đang chặn thông báo. Hãy bật lại trong cài đặt trình duyệt.</div>)}
-                {pushError && <div className="text-red-600 text-sm mt-1">{pushError}</div>}
-                {pushStatus && <div className="text-emerald-700 text-sm mt-1">{pushStatus}</div>}
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-lime-50 to-teal-50 pt-3">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-lime-300/20 blur-3xl" />
+
+      {/* Push banner */}
+      {!pushChecking && !pushReady && (
+        <div className="mx-[10px] mb-4 group">
+          <div className="relative rounded-2xl border border-emerald-200/60 bg-white/70 backdrop-blur-xl shadow-sm hover:shadow-md transition-all duration-300">
+            {/* subtle gradient header strip */}
+            <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400" />
+            <div className="p-5 md:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-300/40">
+                    <FiBell className="text-emerald-600 text-xl" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-800 text-base md:text-lg">
+                      Bật thông báo đặt cơm
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      Nhận nhắc lịch chọn món / khóa menu ngay cả khi bạn không mở trang.
+                    </div>
+
+                    {/* status / errors */}
+                    {notifPerm === "denied" && (
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-red-50 px-2.5 py-1.5 text-sm text-red-700 ring-1 ring-red-200">
+                        <FiAlertTriangle />
+                        <span>Bạn đang chặn thông báo. Hãy bật lại trong cài đặt trình duyệt.</span>
+                      </div>
+                    )}
+
+                    {pushError && (
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-red-50 px-2.5 py-1.5 text-sm text-red-700 ring-1 ring-red-200">
+                        <FiAlertTriangle />
+                        <span>{pushError}</span>
+                      </div>
+                    )}
+
+                    {pushStatus && (
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-sm text-emerald-700 ring-1 ring-emerald-200">
+                        <FiCheckCircle />
+                        <span>{pushStatus}</span>
+                      </div>
+                    )}
+
+                    {/* small helper line */}
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                      <FiInfo className="opacity-80" />
+                      <span>Có thể tắt bất kỳ lúc nào trong phần Cài đặt trình duyệt.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={enablePush}
+                  disabled={pushBusy || (isIOS && !isStandalone)}
+                  className={[
+                    "inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-white",
+                    "bg-gradient-to-r from-emerald-500 to-teal-500",
+                    "shadow-sm hover:shadow md:active:scale-[0.98]",
+                    "transition-all focus:outline-none focus:ring-2 focus:ring-emerald-300",
+                    "disabled:cursor-not-allowed disabled:opacity-60"
+                  ].join(" ")}
+                  title={isIOS && !isStandalone ? "Hãy thêm trang ra màn hình chính để bật thông báo trên iOS" : ""}
+                >
+                  {pushBusy ? <FaSpinner className="animate-spin" /> : <FiBell />}
+                  <span>Bật thông báo</span>
+                </button>
               </div>
-              <button
-                onClick={enablePush}
-                disabled={pushBusy || (isIOS && !isStandalone)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/90 text-white shadow-sm hover:shadow transition-shadow hover:bg-emerald-500 disabled:opacity-50"
-              >
-                {pushBusy && <FaSpinner className="animate-spin" />}
-                Bật thông báo
-              </button>
             </div>
           </div>
-        )}
-        <div className="mx-[10px] p-6">Chưa có thực đơn tuần này.</div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      <div className="mx-[10px]">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl p-8 md:p-10 shadow-sm">
+          <div className="mb-3 text-2xl font-semibold text-slate-800 flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/5">
+              🍱
+            </span>
+            Chưa có thực đơn tuần này
+          </div>
+          <p className="text-slate-600">
+            Quản trị viên chưa đăng thực đơn. Bạn có thể bật thông báo để nhận tin khi menu được cập nhật.
+          </p>
+
+          {/* gentle divider */}
+          <div className="my-6 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+          {/* quick tips */}
+          <ul className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Kiểm tra lại vào đầu tuần (thường đăng vào sáng thứ Hai).
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Nhấn “Bật thông báo” để không bỏ lỡ thời điểm khóa menu.
+            </li>
+          </ul>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   const editingBannerVisible = !!editingDay;
   const daysToRender = editingDay ? [String(editingDay)] : sortedDays;
@@ -831,6 +914,14 @@ setLastSavedByType(prev => {
 
               const canChangeThisDay = canModifyDayByMode(Number(day));
 
+                // Thông tin phục vụ nút Huỷ (chỉ áp dụng user thường)
+  const chosenEid = !isSec ? (selected[day] ?? null) : null;
+  const chosenEntry = (!isSec && chosenEid)
+    ? (weeklyMenu?.entries || []).find(x => x.weeklyMenuEntryId === chosenEid)
+    : null;
+  const canCancelThisDay = canCancelDay(Number(day));
+
+
               return (
                 <li key={day} className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="sm:col-span-2 flex items-center">
@@ -903,13 +994,39 @@ setLastSavedByType(prev => {
                     )}
                   </div>
 
-                  <div className="sm:col-span-2 flex items-start sm:justify-end">
-                    <button onClick={() => startEditDay(day)} disabled={!canChangeThisDay}
-                      className={`inline-flex items-center justify-center rounded-xl shadow-sm text-sm transition px-4 py-2
-                        ${canChangeThisDay ? "bg-emerald-500/90 hover:bg-emerald-500 text-white hover:shadow" : "bg-emerald-300 text-white/90 cursor-not-allowed"}`}>
-                      Sửa ngày
-                    </button>
-                  </div>
+                  <div className="sm:col-span-2 flex items-start sm:justify-end gap-2">
+  {/* Nút Huỷ món (chỉ hiển thị cho user thường) */}
+{!isSec && (
+  <button
+    onClick={() => askCancel(chosenEid, day, chosenEntry?.foodName || "")}
+    disabled={!chosenEid || !canCancelThisDay}
+    className={`inline-flex h-10 items-center justify-center rounded-2xl text-sm font-medium px-4 whitespace-nowrap
+      shadow-sm transition
+      ${(!chosenEid || !canCancelThisDay)
+        ? "bg-rose-300 text-white/90 cursor-not-allowed"
+        : "bg-rose-500/90 hover:bg-rose-500 text-white hover:shadow"}`}
+    title={!chosenEid ? "Chưa chọn món ở ngày này" : (!canCancelThisDay ? "Đã quá hạn huỷ" : "Huỷ món ngày này")}
+  >
+    Huỷ món
+  </button>
+)}
+
+{/* Nút Sửa ngày */}
+<button
+  onClick={() => startEditDay(day)}
+  disabled={!canChangeThisDay}
+  className={`inline-flex h-10 items-center justify-center rounded-2xl text-sm font-medium px-4 whitespace-nowrap
+    shadow-sm transition
+    ${canChangeThisDay
+      ? "bg-emerald-500/90 hover:bg-emerald-500 text-white hover:shadow"
+      : "bg-emerald-300 text-white/90 cursor-not-allowed"}`}
+  title={canChangeThisDay ? "Sửa món ngày này" : "Đã quá hạn đổi"}
+>
+  Sửa ngày
+</button>
+
+</div>
+
                 </li>
               );
             })}
