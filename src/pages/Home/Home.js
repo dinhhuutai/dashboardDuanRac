@@ -10,9 +10,18 @@ import { format } from 'date-fns';
 import http from '~/api/http';
 import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import MODULEID from '~/contants/modules';
+import WeighSelectionSummaryModal from './WeighSelectionSummaryModal';
 
 
 Modal.setAppElement('#root');
+
+const Spinner = () => (
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+  </svg>
+);
+
 
 function Home() {
 
@@ -55,6 +64,201 @@ function Home() {
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+
+  
+  const [isWeighModalOpen, setWeighModalOpen] = useState(false);
+  const [weighStep, setWeighStep] = useState(1); // 1: rác, 2: bộ phận, 3: chuyền/máy
+  const [isLoadingWeigh, setIsLoadingWeigh] = useState(false);
+
+  const [isSummaryOpen, setSummaryOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState({ trashId: null, departmentId: null, lineId: null });
+
+  // Loại rác (trashName - id)
+  const DATA_TRASH = [
+    { id: 3,  trashName: 'Giẻ lau dính mực thường' },
+    { id: 9,  trashName: 'Giẻ lau dính mực lapa' },
+    { id: 5,  trashName: 'Băng keo dính mực' },
+    { id: 7,  trashName: 'Keo bàn thải' },
+    { id: 6,  trashName: 'Mực in thường thải' },
+    { id: 2,  trashName: 'Mực in lapa thải' },
+    { id: 4,  trashName: 'Vụn logo' },
+    { id: 1,  trashName: 'Lụa căng khung' },
+  ];
+
+  // Bộ phận (name - deptId hoặc null; fixedLine là chuyền cố định nếu có)
+  const DATA_DEPARTMENTS = [
+    { key: 'auto',  name: 'Máy in tự động', deptId: null },
+    { key: 'ban',   name: 'Máy in bàn',     deptId: null },
+    { key: 'robot', name: 'Máy in robot',   deptId: null },
+    { key: 'mau',   name: 'Mẫu',            deptId: 24, fixedLine: 68 },
+    { key: 'ck',    name: 'Chụp khuôn',     deptId: 25 },
+    { key: 'kcs',   name: 'KCS',            deptId: 26 },
+    { key: 'sh',    name: 'Sửa hàng',       deptId: 27 },
+    { key: 'pm',    name: 'Pha màu',        deptId: 28 },
+    { key: 'rc1',   name: 'Rác chung C1',   deptId: 20, fixedLine: 48 },
+    { key: 'rc2',   name: 'Rác chung C2',   deptId: 21, fixedLine: 58 },
+  ];
+
+  // Danh sách máy/chuyền theo nhóm đặc biệt
+  // item: { label: 'M1', deptId: 20, lineId: 49 }
+  const LINES_AUTO = [
+    { label: 'M1', deptId: 20, lineId: 49 },
+    { label: 'M2', deptId: 20, lineId: 50 },
+    { label: 'M3', deptId: 20, lineId: 51 },
+    { label: 'M4', deptId: 20, lineId: 37 },
+    { label: 'M5', deptId: 20, lineId: 59 },
+    { label: 'M6', deptId: 20, lineId: 60 },
+    { label: 'M7', deptId: 20, lineId: 38 },
+    { label: 'M8', deptId: 20, lineId: 39 },
+  ];
+
+  const LINES_BAN = [
+    { label: 'M1A',    deptId: 20, lineId: 40 },
+    { label: 'M1B',    deptId: 20, lineId: 35 },
+    { label: 'M2A-2B', deptId: 20, lineId: 36 },
+    { label: 'M4A-4B', deptId: 20, lineId: 41 },
+    { label: 'M5A-5B', deptId: 20, lineId: 42 },
+    { label: 'M6A-6B', deptId: 20, lineId: 43 },
+    { label: 'M7A-7B', deptId: 20, lineId: 44 },
+    { label: 'M8A-8B', deptId: 20, lineId: 45 },
+    { label: 'M9A-9B', deptId: 20, lineId: 46 },
+    { label: 'M10A',   deptId: 20, lineId: 52 },
+    { label: 'M11A',   deptId: 20, lineId: 53 },
+    { label: 'M12A',   deptId: 20, lineId: 54 },
+    { label: 'M13A',   deptId: 20, lineId: 55 },
+    { label: 'M14A',   deptId: 20, lineId: 56 },
+    { label: 'M10B',   deptId: 21, lineId: 61 },
+    { label: 'M11B',   deptId: 21, lineId: 62 },
+    { label: 'M12B',   deptId: 21, lineId: 63 },
+    { label: 'M13B',   deptId: 21, lineId: 64 },
+    { label: 'M14B',   deptId: 21, lineId: 65 },
+  ];
+
+  const LINES_ROBOT = [
+    { label: 'MRB1', deptId: 20, lineId: 47 },
+    { label: 'MRB2', deptId: 20, lineId: 57 },
+    { label: 'MRB3', deptId: 20, lineId: 66 },
+  ];
+
+  // Helper trả về lines theo key bộ phận
+  const getLinesForDeptKey = (deptKey) => {
+    if (deptKey === 'auto')  return LINES_AUTO;
+    if (deptKey === 'ban')   return LINES_BAN;
+    if (deptKey === 'robot') return LINES_ROBOT;
+    return []; // các bộ phận khác không có máy
+  };
+
+  // selections
+  const [selectedTrashTypeW, setSelectedTrashTypeW] = useState(null); // {id, trashName}
+  const [selectedDeptW, setSelectedDeptW] = useState(null);           // {key, name, deptId, fixedLine?}
+  const [linesOfDept, setLinesOfDept] = useState([]);                 // array lines cho bước 3
+  const [selectedLineW, setSelectedLineW] = useState(null);           // {label, deptId, lineId} | null
+
+  // mở modal cân rác
+  const openWeigh = () => {
+    setSelectedTrashTypeW(null);
+    setSelectedDeptW(null);
+    setLinesOfDept([]);
+    setSelectedLineW(null);
+    setWeighStep(1);
+    setWeighModalOpen(true);
+  };
+
+  // chọn loại rác
+  const onSelectTrashType = (t) => {
+    setSelectedTrashTypeW(t);
+    setWeighStep(2);
+  };
+
+  // chọn bộ phận
+  // chọn bộ phận
+const onSelectDeptW = (dept) => {
+  setSelectedDeptW(dept);
+
+  // Nếu có fixedLine → hoàn tất ngay (lineId = fixedLine)
+  if (dept.fixedLine) {
+    const payload = {
+      trashId: selectedTrashTypeW?.id ?? null,
+      trashName: selectedTrashTypeW?.trashName ?? null,
+      departmentId: dept.deptId ?? null,
+      departmentName: dept.name ?? null,
+      lineId: dept.fixedLine,
+      lineLabel: `Chuyền ${dept.fixedLine}`,
+    };
+    finishWeighImmediate(payload);
+    return;
+  }
+
+  // Nếu là nhóm có máy → hiển thị danh sách máy (sang bước 3)
+  const lines = getLinesForDeptKey(dept.key);
+  if (lines.length > 0) {
+    setLinesOfDept(lines);
+    setSelectedLineW(null);
+    setWeighStep(3);
+    return;
+  }
+
+  // Còn lại: không có máy/chuyền → hoàn tất (lineId = null)
+  const payload = {
+    trashId: selectedTrashTypeW?.id ?? null,
+    trashName: selectedTrashTypeW?.trashName ?? null,
+    departmentId: dept.deptId ?? null,
+    departmentName: dept.name ?? null,
+    lineId: null,
+    lineLabel: null,
+  };
+  finishWeighImmediate(payload);
+};
+
+// Hoàn tất ngay (dùng chung cho 3 trường hợp)
+const finishWeighImmediate = (payload) => {
+  // Lưu 3 ID và mở modal tóm tắt
+  setSelectedIds({
+    trashId: payload.trashId ?? null,
+    departmentId: payload.departmentId ?? null,
+    lineId: payload.lineId ?? null,
+  });
+  setWeighModalOpen(false);
+  setSummaryOpen(true);
+};
+
+
+  // chọn chuyền/máy (hoặc để null cho các bộ phận không có máy)
+  const onSelectLineW = (line) => {
+  setSelectedLineW(line);
+  const payload = {
+    trashId: selectedTrashTypeW?.id ?? null,
+    trashName: selectedTrashTypeW?.trashName ?? null,
+    departmentId: line.deptId ?? selectedDeptW?.deptId ?? null,
+    departmentName: selectedDeptW?.name ?? null,
+    lineId: line.lineId,
+    lineLabel: line.label,
+  };
+  finishWeighImmediate(payload);
+};
+
+
+  // hoàn tất lựa chọn — tạm thời chỉ hiển thị để bạn kiểm tra
+  const finishWeighSelect = () => {
+    // Quy tắc lưu:
+    //  - trashId = selectedTrashTypeW.id
+    //  - departmentId = selectedLineW?.deptId ?? selectedDeptW?.deptId ?? null
+    //  - lineId = selectedLineW?.lineId ?? (selectedDeptW?.fixedLine ?? null)
+    const payload = {
+      trashId: selectedTrashTypeW?.id ?? null,
+      trashName: selectedTrashTypeW?.trashName ?? null,
+      departmentId: selectedLineW?.deptId ?? selectedDeptW?.deptId ?? null,
+      departmentName: selectedDeptW?.name ?? null,
+      lineId: selectedLineW?.lineId ?? selectedDeptW?.fixedLine ?? null,
+      lineLabel: selectedLineW?.label ?? (selectedDeptW?.fixedLine ? `Chuyền ${selectedDeptW.fixedLine}` : null),
+    };
+    // Tạm báo lên modal lỗi để bạn thấy kết quả (bạn có thể thay bằng navigate/post sau)
+    showError(
+      `Chọn xong:\n- Rác: ${payload.trashName} (#${payload.trashId})\n- Bộ phận: ${payload.departmentName} (${payload.departmentId ?? 'null'})\n- Chuyền/Máy: ${payload.lineLabel ?? 'null'} (${payload.lineId ?? 'null'})`
+    );
+    setWeighModalOpen(false);
+  };
+
 
   const showError = (msg) => {
     setErrorMessage(msg);
@@ -260,7 +464,20 @@ function Home() {
           {/* 3 nút hành động (giữ nguyên logic onClick) */}
           
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              {
+              
+              <button
+  onClick={openWeigh}
+  disabled={isLoadingWeigh}
+  className="px-6 py-3 rounded-full bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-600
+             text-white font-semibold shadow-lg shadow-sky-500/30 hover:from-sky-600 hover:via-cyan-600 hover:to-blue-700
+             active:scale-[.98] transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2
+             ring-1 ring-white/20 focus:outline-none focus:ring-4 focus:ring-sky-300/40"
+>
+  {isLoadingWeigh ? <Spinner/> : '⚖️ Cân rác'}
+</button>
+
+
+{
                 FEATURE_SCAN_QR &&
                 <button
                   onClick={handleScanQR}
@@ -310,6 +527,125 @@ function Home() {
   </div>
 </div>
 
+<Modal
+  isOpen={isWeighModalOpen}
+  onRequestClose={() => setWeighModalOpen(false)}
+  className="bg-white/90 backdrop-blur-md rounded-xl max-w-md w-full p-0 mx-auto mt-10 shadow-xl outline-none border border-white/60 overflow-hidden"
+  overlayClassName="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[60]"
+>
+  {/* Top info (thay cho header + footer cũ) */}
+  <div className="px-4 pt-3 pb-2 bg-white/80 border-b border-slate-200">
+    <div className="flex items-center justify-between">
+      <button
+        onClick={() => {
+          if (weighStep === 1) setWeighModalOpen(false);
+          else setWeighStep((s) => s - 1);
+        }}
+        className="text-sm text-slate-600 hover:text-slate-900"
+      >
+        ← Quay lại
+      </button>
+      <div className="text-slate-900 font-semibold">⚖️ Cân rác</div>
+      
+      <button
+        onClick={() => setWeighModalOpen(false)}
+        className="h-8 w-8 grid place-items-center rounded-full hover:bg-slate-100 text-slate-600"
+        aria-label="Đóng"
+        title="Đóng"
+      >
+        ✕
+      </button>
+    </div>
+
+    {/* chips thông tin đã chọn */}
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-[12.5px]">
+      {selectedTrashTypeW?.trashName && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1">
+          ♻️ {selectedTrashTypeW.trashName}
+        </span>
+      )}
+      {selectedDeptW?.name && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 px-2 py-1">
+          🏷️ {selectedDeptW.name}
+        </span>
+      )}
+      {(selectedLineW?.label || selectedDeptW?.fixedLine) && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1">
+          🚏 {selectedLineW?.label ?? `Chuyền ${selectedDeptW.fixedLine}`}
+        </span>
+      )}
+      {weighStep === 3 && selectedDeptW && !selectedDeptW.fixedLine && linesOfDept.length === 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2 py-1">
+          🚏 Chuyền: null
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* Nội dung chính — gọn, không hiển thị ID, không footer */}
+  <div className="p-4 max-h-[70vh] overflow-y-auto">
+    {/* Bước 1: Loại rác */}
+    {weighStep === 1 && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {DATA_TRASH.map(t => (
+          <button
+            key={t.id}
+            onClick={() => onSelectTrashType(t)}
+            className={`text-left rounded-xl border ${selectedTrashTypeW?.id===t.id ? 'border-emerald-500 ring-1 ring-emerald-200' : 'border-slate-200'} bg-white hover:border-emerald-400 hover:shadow transition p-3`}
+          >
+            <div className="text-slate-900 font-medium">{t.trashName}</div>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {/* Bước 2: Bộ phận */}
+    {weighStep === 2 && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {DATA_DEPARTMENTS.map(d => (
+          <button
+            key={d.key}
+            onClick={() => onSelectDeptW(d)}
+            className={`text-left rounded-xl border ${selectedDeptW?.key===d.key ? 'border-sky-500 ring-1 ring-sky-200' : 'border-slate-200'} bg-white hover:border-sky-400 hover:shadow transition p-3`}
+          >
+            <div className="text-slate-900 font-medium">{d.name}</div>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {/* Bước 3: Chuyền/Máy (chỉ hiện nếu nhóm có máy) */}
+    {weighStep === 3 && (
+      <>
+        {linesOfDept.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {linesOfDept.map((ln, i) => (
+              <button
+                key={`${ln.label}-${ln.lineId}-${i}`}
+                onClick={() => onSelectLineW(ln)}
+                className={`text-left rounded-xl border ${selectedLineW?.lineId===ln.lineId ? 'border-amber-500 ring-1 ring-amber-200' : 'border-slate-200'} bg-white hover:border-amber-400 hover:shadow transition p-3`}
+              >
+                <div className="text-slate-900 font-medium">{ln.label}</div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white/70 p-4 text-center text-slate-700">
+            Bộ phận này không có máy/chuyền. Đã lưu với <b>chuyền = null</b>.
+          </div>
+        )}
+      </>
+    )}
+  </div>
+</Modal>
+
+<WeighSelectionSummaryModal
+  isOpen={isSummaryOpen}
+  onClose={() => setSummaryOpen(false)}
+  trashId={selectedIds.trashId}
+  departmentId={selectedIds.departmentId}
+  lineId={selectedIds.lineId}
+/>
 
       {/* Modal chọn bộ phận & đơn vị */}
       <Modal

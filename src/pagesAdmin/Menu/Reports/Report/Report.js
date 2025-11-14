@@ -1130,10 +1130,14 @@ const SummaryPill = ({ label, value }) => (
 
   const formatNow = () => {
     const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
     const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mi} ${dd}-${mm}-${yyyy}`;
   };
+
 
 /* ======================= Constants ======================= */
 // 8 nhóm chất thải × 7 ca = 56 cột, + 2 cột đầu (BP/Tổ, Chuyền) + 1 cột Tổng = 59 cột
@@ -1379,7 +1383,7 @@ const grandRange = useMemo(() => sum7ShiftsPerCategory(grand || []), [grand]);
   rows.push(['', 'Tổng cộng', ...vs]); // 2 cột đầu + 59-2 cột số liệu
 }
 
-const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateOne).dmy} ${formatNow()}`];
+const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateOne).dmy} (xuất ${formatNow()})`];
 const wsData = [title, headerRow1, headerRow2, ...rows];
 
     const wb = XLSX.utils.book_new();
@@ -1447,7 +1451,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
     const grandTotal = grandRange.reduce((s, x) => s + (x || 0), 0);
     rows.push(['Tổng cộng', ...grandRange.map(v => (v === 0 ? '-' : round1(v).toFixed(1))), grandTotal === 0 ? '-' : round1(grandTotal).toFixed(1)]);
 
-    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy} ${formatNow()}`];
+    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy}  (xuất ${formatNow()})`];
     const wsData = [title, headerRow1, ...rows];
 
     const wb = XLSX.utils.book_new();

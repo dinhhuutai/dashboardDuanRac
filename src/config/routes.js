@@ -125,6 +125,7 @@ const routes = {
   taskManagementProjectList: '/task-management/project-list',
   taskManagementProjectOverview: '/task-management/project-overview',
 
+  dryingCart: '/drying-cart',
 
 };
 

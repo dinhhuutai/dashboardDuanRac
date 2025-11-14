@@ -92,6 +92,8 @@ import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
 
 import ImageCaddi from '~/pages/ImageCaddi';
 
+import DryingCart from '~/pageDryingCart/DryingCart';
+
 import ProductionDashboardAdmin from '~/pagesProductionAdmin/Dashboard';
 
 
@@ -235,6 +237,14 @@ export const routes = [
     component: ImageCaddi,
     login: true,
     module: 'imageCaddi',
+  },
+
+  
+  {
+    path: config.routes.dryingCart,
+    component: DryingCart,
+    login: true,
+    module: 'dryingCart',
   },
 
   

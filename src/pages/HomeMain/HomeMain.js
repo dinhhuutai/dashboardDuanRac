@@ -2856,6 +2856,8 @@ async function handleLogout() {
         rou = config.routes.form
     } else if (m.moduleId === MODULEID.CONGVIEC && role === 'user') {
         rou = config.routes.taskManagementDashboard
+    } else if (m.moduleId === MODULEID.XEPHOIVAI && role === 'user') {
+        rou = config.routes.dryingCart
     }
 
     navigate(rou);
