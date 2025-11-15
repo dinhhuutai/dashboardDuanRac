@@ -4,6 +4,7 @@ import { BASE_URL } from "~/config";
 import Select from "react-select";
 import * as XLSX from "xlsx-js-style";
 import { saveAs } from "file-saver";
+import ExcelJS from 'exceljs';
 import { FaFileExcel, FaClock } from "react-icons/fa";
 
 /* ====== Date helpers (UTC to avoid off-by-one) ====== */
@@ -553,208 +554,274 @@ export default function AdminSummaryModern() {
   );
 
   /* ====== Excel tuần (Món | SL | Loại x 7 ngày) + gộp Bộ phận ====== */
-  function exportExcelWeeklyOneSheet({
+  async function exportExcelWeeklyOneSheet({
   weekDates, deptGroups, shortDay, toDDMM, weekType,
   detailsMap, groupTotalsByDay, totalsByDayAll
 }) {
   if (!weekDates?.length) return;
-  const wb = XLSX.utils.book_new();
 
-  const dayGroupTitles = weekDates.map((d,i)=>`${shortDay[i]} ${toDDMM(d)}`);
-  const headerRow0 = ["Bộ phận","Họ tên", ...dayGroupTitles.flatMap(()=>["","",""])];
-  const headerRow1 = ["",""]; for (let i=0;i<7;i++) headerRow1.push("Món","Số lượng","Loại");
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(`Tuan_${toDDMM(weekDates[0])}`);
 
-  const sheetRows = [];
-  const merges = [];
-  const totalBlockRanges = []; // để bôi đậm cả block tổng
+  // Freeze 2 hàng + 2 cột (header + Bộ phận/Họ tên)
+  ws.views = [{ state: 'frozen', xSplit: 2, ySplit: 2 }];
 
-  sheetRows.push(headerRow0, headerRow1);
-  merges.push({ s:{r:0,c:0}, e:{r:1,c:0} }); // Bộ phận
-  merges.push({ s:{r:0,c:1}, e:{r:1,c:1} }); // Họ tên
-  for (let i=0;i<7;i++){
-    const c0 = 2 + i*3;
-    sheetRows[0][c0] = dayGroupTitles[i];
-    merges.push({ s:{r:0,c:c0}, e:{r:0,c:c0+2} });
+  // Header
+  const dayGroupTitles = weekDates.map((d, i) => `${shortDay[i]} ${toDDMM(d)}`);
+  const headerRow0 = ["Bộ phận", "Họ tên", ...dayGroupTitles.flatMap(() => ["", "", ""])];
+  const headerRow1 = ["", ""];
+  for (let i = 0; i < 7; i++) headerRow1.push("Món", "Số lượng", "Loại");
+
+  ws.addRow(headerRow0);
+  ws.addRow(headerRow1);
+
+  // Merge header
+  ws.mergeCells(1,1,2,1); // Bộ phận
+  ws.mergeCells(1,2,2,2); // Họ tên
+  for (let i = 0; i < 7; i++) {
+    const c0 = 3 + i * 3; // cột đầu của nhóm ngày
+    ws.getRow(1).getCell(c0).value = dayGroupTitles[i];
+    ws.mergeCells(1, c0, 1, c0 + 2);
   }
 
-  let rIdx = 2;
-  const statusToVN = (s) => ({ re:"Ca ngày", ws:"Đi ca", ot:"Tăng ca" }[(s||"").toLowerCase()] || "—");
+  // Độ rộng cột
+  const cols = [{ width: 22 }, { width: 24 }];
+  for (let i = 0; i < 7; i++) cols.push({ width: 26 }, { width: 10 }, { width: 12 });
+  ws.columns = cols;
 
-  // fallback parse khi không có details
+  // Style header
+const thin = { top:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}, bottom:{style:'thin'} };
+const headTopFill = 'FFE9F2FF';
+const headSubFill = 'FFF4F8FF';
+
+  ws.getRow(1).height = 26;
+  ws.getRow(2).height = 22;
+  ws.getRow(1).eachCell((cell) => {
+  cell.alignment = { vertical:'middle', horizontal:'center', wrapText:true };
+  cell.font = { bold:true };
+  cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: headTopFill } }; // ARGB
+  cell.border = thin;
+});
+ws.getRow(2).eachCell((cell) => {
+  cell.alignment = { vertical:'middle', horizontal:'center' };
+  cell.font = { bold:true };
+  cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: headSubFill } }; // ARGB
+  cell.border = thin;
+});
+
+
+  // Helpers
+  const statusToVN = (s) => ({ re: "Ca ngày", ws: "Đi ca", ot: "Tăng ca" }[(s || "").toLowerCase()] || "—");
   const parseFallback = (text, typeLabel) => {
     if (!text) return [];
-    return text.split(",").map(s=>s.trim()).filter(Boolean).map(s=>{
+    return text.split(",").map(s => s.trim()).filter(Boolean).map(s => {
       const m = s.match(/^(.*)\sx(\d+)$/i);
-      return m ? { foodName: m[1].trim(), qty:+m[2], statusType:"", branchName:"", _typeVN:typeLabel }
-               : { foodName: s, qty:1,     statusType:"", branchName:"", _typeVN:typeLabel };
+      return m
+        ? { foodName: m[1].trim(), qty: +m[2], statusType: "", branchName: "", _typeVN: typeLabel }
+        : { foodName: s, qty: 1, statusType: "", branchName: "", _typeVN: typeLabel };
     });
   };
 
+  function styleDataRow(row) {
+    row.eachCell((cell, colNumber) => {
+      cell.alignment = { vertical: 'top', wrapText: true };
+      cell.border = thin;
+    });
+  }
+
+  // Data start from row 3
+  let rIdx = 3;
+  const totalBlockRanges = [];
+
+  // ====== Vẽ dữ liệu từng bộ phận ======
   for (const g of deptGroups) {
     const deptStart = rIdx;
 
-    // --- USERS ---
+    // USERS
     for (const u of g.users) {
       const dm = detailsMap?.get(u.userID);
-      const perDay = {1:[],2:[],3:[],4:[],5:[],6:[],7:[]};
-      if (dm){
-        for (let d=1; d<=7; d++) perDay[d] = dm.days[d] || [];
+      const perDay = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+      if (dm) {
+        for (let d = 1; d <= 7; d++) perDay[d] = dm.days[d] || [];
       } else {
-        const typeLabel = weekType==='all' ? "—" : ({re:"Ca ngày",ws:"Đi ca",ot:"Tăng ca"}[weekType]||"—");
-        for (let d=1; d<=7; d++){
-          perDay[d] = parseFallback(u.days[d]||"", typeLabel);
-        }
+        const typeLabel = weekType === 'all' ? "—" : ({ re: "Ca ngày", ws: "Đi ca", ot: "Tăng ca" }[weekType] || "—");
+        for (let d = 1; d <= 7; d++) perDay[d] = parseFallback(u.days[d] || "", typeLabel);
       }
 
-      const maxRows = Math.max(1, ...[1,2,3,4,5,6,7].map(d => perDay[d].length||0));
+      const maxRows = Math.max(1, ...[1, 2, 3, 4, 5, 6, 7].map(d => perDay[d].length || 0));
       const userStart = rIdx;
 
-      for (let rr=0; rr<maxRows; rr++){
-        const row = new Array(2+7*3).fill("");
-        if (rr===0){ row[0]=g.name; row[1]=u.fullName; }
-        for (let d=0; d<7; d++){
-          const items = perDay[d+1];
-          const base = 2 + d*3;
-          if (items.length > rr){
+      for (let rr = 0; rr < maxRows; rr++) {
+        const rowArr = new Array(2 + 7 * 3).fill("");
+        if (rr === 0) { rowArr[0] = g.name; rowArr[1] = u.fullName; }
+        for (let d = 0; d < 7; d++) {
+          const items = perDay[d + 1];
+          const base = 2 + d * 3;
+          if (items.length > rr) {
             const it = items[rr];
-            row[base+0] = it.foodName + (it.branchName ? ` (${it.branchName})` : "");
-            row[base+1] = it.qty ?? "";
-            row[base+2] = statusToVN(it.statusType) || it._typeVN || "—";
+            rowArr[base + 0] = it.foodName + (it.branchName ? ` (${it.branchName})` : "");
+            rowArr[base + 1] = it.qty ?? "";
+            rowArr[base + 2] = statusToVN(it.statusType) || it._typeVN || "—";
           }
         }
-        sheetRows.push(row);
+        const row = ws.addRow(rowArr);
+        styleDataRow(row);
         rIdx++;
       }
-      if (maxRows>1){
-        // merge “Họ tên” theo user
-        merges.push({ s:{r:userStart,c:1}, e:{r:userStart+maxRows-1,c:1} });
+      if (maxRows > 1) {
+        ws.mergeCells(userStart, 2, rIdx - 1, 2); // merge cột "Họ tên"
       }
     }
 
-    // --- TỔNG TỪNG MÓN (BỘ PHẬN) — mỗi món 1 hàng ---
+    // TỔNG (bộ phận)
     const grpTotals = groupTotalsByDay.get(g.name) || {}; // day -> [{foodName,branchName,statusType,qty}]
     const perDayLists = [];
     let maxLenAcrossDays = 0;
-    for (let d=1; d<=7; d++){
+    for (let d = 1; d <= 7; d++) {
       const list = (grpTotals[d] || []).slice();
       perDayLists[d] = list;
       if (list.length > maxLenAcrossDays) maxLenAcrossDays = list.length;
     }
 
     const totalStart = rIdx;
-    for (let i=0; i<Math.max(1,maxLenAcrossDays); i++){
-      const row = new Array(2+7*3).fill("");
-      // ✅ đặt “Họ tên” = “Tổng” ở dòng đầu tiên của block tổng
-      if (i===0) {
-        row[1] = "Tổng";
-      }
-      for (let d=1; d<=7; d++){
+    for (let i = 0; i < Math.max(1, maxLenAcrossDays); i++) {
+      const rowArr = new Array(2 + 7 * 3).fill("");
+      if (i === 0) rowArr[1] = "Tổng";
+      for (let d = 1; d <= 7; d++) {
         const it = (perDayLists[d] || [])[i];
         if (!it) continue;
-        const base = 2 + (d-1)*3;
-        row[base+0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
-        row[base+1] = it.qty ?? "";
-        row[base+2] = statusToVN(it.statusType);
+        const base = 2 + (d - 1) * 3;
+        rowArr[base + 0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
+        rowArr[base + 1] = it.qty ?? "";
+        rowArr[base + 2] = statusToVN(it.statusType);
       }
-      sheetRows.push(row);
+      const row = ws.addRow(rowArr);
+      styleDataRow(row);
       rIdx++;
     }
-    const totalEnd = rIdx-1;
+    const totalEnd = rIdx - 1;
 
-    // ✅ merge “Bộ phận” phủ cả block phòng (users + tổng)
-    merges.push({ s:{r:deptStart,c:0}, e:{r:totalEnd,c:0} });
-    // ✅ merge “Họ tên” = “Tổng” cho toàn bộ các hàng tổng của phòng
-    merges.push({ s:{r:totalStart,c:1}, e:{r:totalEnd,c:1} });
+    // Merge “Bộ phận” phủ cả block phòng (users + tổng)
+    ws.mergeCells(deptStart, 1, totalEnd, 1);
+    // Merge “Họ tên” = “Tổng” cho block tổng của phòng
+    ws.mergeCells(totalStart, 2, totalEnd, 2);
 
     totalBlockRanges.push([totalStart, totalEnd]);
   }
 
-  // --- TỔNG TOÀN BỘ — mỗi món 1 hàng ---
+  // ====== TỔNG TOÀN BỘ ======
   const allPerDay = [];
   let allMax = 0;
-  for (let d=1; d<=7; d++){
+  for (let d = 1; d <= 7; d++) {
     const list = (totalsByDayAll?.[d] || []).slice();
     allPerDay[d] = list;
     if (list.length > allMax) allMax = list.length;
   }
   const grandStart = rIdx;
-  for (let i=0; i<Math.max(1,allMax); i++){
-    const row = new Array(2+7*3).fill("");
-    if (i===0) {
-      // ✅ “Họ tên” = “Tổng” cho block tổng toàn bộ
-      row[1] = "Tổng";
-      // cột 0 bạn có thể để “Toàn bộ” (tuỳ thích). Nếu muốn:
-      row[0] = "Toàn bộ";
-    }
-    for (let d=1; d<=7; d++){
+  for (let i = 0; i < Math.max(1, allMax); i++) {
+    const rowArr = new Array(2 + 7 * 3).fill("");
+    if (i === 0) { rowArr[1] = "Tổng"; rowArr[0] = "Toàn bộ"; }
+    for (let d = 1; d <= 7; d++) {
       const it = (allPerDay[d] || [])[i];
       if (!it) continue;
-      const base = 2 + (d-1)*3;
-      row[base+0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
-      row[base+1] = it.qty ?? "";
-      row[base+2] = statusToVN(it.statusType);
+      const base = 2 + (d - 1) * 3;
+      rowArr[base + 0] = `${it.foodName}${it.branchName ? ` (${it.branchName})` : ""}`;
+      rowArr[base + 1] = it.qty ?? "";
+      rowArr[base + 2] = statusToVN(it.statusType);
     }
-    sheetRows.push(row);
+    const row = ws.addRow(rowArr);
+    styleDataRow(row);
     rIdx++;
   }
-  const grandEnd = rIdx-1;
+  const grandEnd = rIdx - 1;
 
-  // ✅ merge “Họ tên” = “Tổng” cho toàn bộ khối tổng toàn bộ
-  merges.push({ s:{r:grandStart,c:1}, e:{r:grandEnd,c:1} });
-  // (tuỳ chọn) merge “Toàn bộ” ở cột Bộ phận nếu muốn hiển thị 1 ô lớn:
-  merges.push({ s:{r:grandStart,c:0}, e:{r:grandEnd,c:0} });
-
+  ws.mergeCells(grandStart, 2, grandEnd, 2);
+  ws.mergeCells(grandStart, 1, grandEnd, 1);
   totalBlockRanges.push([grandStart, grandEnd]);
 
-  // --- Render + style ---
-  const ws = XLSX.utils.aoa_to_sheet(sheetRows);
-  ws["!merges"] = merges;
+  // ====== Tô màu xen kẽ theo NHÓM THỨ (3 cột / ngày) ======
+const groupFillA = 'FFEAF3FF'; // xanh nhạt (đậm hơn trước)
+const groupFillB = 'FFFFF0E6'; // cam kem nhạt (đậm hơn trước)
+const lastRow = ws.lastRow.number;
 
-  const cols = [{wch:22},{wch:24}];
-  for (let i=0;i<7;i++) cols.push({wch:26},{wch:10},{wch:12});
-  ws["!cols"] = cols;
+// helper: đảm bảo cell tồn tại và có value '' để fill chắc hiển thị
+function ensureCell(r, c) {
+  const row = ws.getRow(r);
+  const cell = row.getCell(c);
+  if (cell.value === undefined || cell.value === null) cell.value = '';
+  return cell;
+}
 
-  const BORDER = { style:"thin", color:{rgb:"E5E7EB"} };
-  const headTop = { font:{bold:true}, alignment:{horizontal:"center",vertical:"center",wrapText:true}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER}, fill:{fgColor:{rgb:"E9F2FF"}} };
-  const headSub = { font:{bold:true}, alignment:{horizontal:"center",vertical:"center"}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER}, fill:{fgColor:{rgb:"F4F8FF"}} };
-  const cell =    { alignment:{vertical:"top",wrapText:true}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER} };
-  const zebraA =  { fill:{fgColor:{rgb:"FFFFFF"}} };
-  const zebraB =  { fill:{fgColor:{rgb:"FAFAFF"}} };
-  const rowBold = { font:{bold:true}, fill:{fgColor:{rgb:"FFF4E5"}}, border:{top:BORDER,left:BORDER,right:BORDER,bottom:BORDER} };
+  for (let i = 0; i < 7; i++) {
+    const startCol = 3 + i * 3;  // (Món)
+    const endCol   = startCol + 2; // (Loại)
+    const color = (i % 2 === 0) ? groupFillA : groupFillB;
 
-  ws["!rows"] = ws["!rows"] || [];
-  ws["!rows"][0] = { hpt: 26 };
-  ws["!rows"][1] = { hpt: 22 };
+    // Tô từ hàng 3 (dữ liệu) đến hết; không đè header đã có màu riêng
+    for (let r = 3; r <= lastRow; r++) {
+      for (let c = startCol; c <= endCol; c++) {
+        const cell = ensureCell(r, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+      }
+    }
 
-  const range = XLSX.utils.decode_range(ws["!ref"]);
-  for (let r=0; r<=range.e.r; r++){
-    for (let c=0; c<=range.e.c; c++){
-      const a = XLSX.utils.encode_cell({r,c});
-      ws[a] = ws[a] || { v:"" };
-      if (r===0) ws[a].s = headTop;
-      else if (r===1) ws[a].s = headSub;
-      else {
-        const isB = (r % 2) === 0;
-        ws[a].s = { ...cell, ...(isB ? zebraB : zebraA) };
+    for (let r = 1; r <= lastRow; r++) {
+    // trái nhóm
+    {
+      const cellL = ensureCell(r, startCol);
+      cellL.border = {
+        top: cellL.border?.top || { style: 'thin' },
+        left: { style: 'medium' }, // đường chia nhóm rõ
+        bottom: cellL.border?.bottom || { style: 'thin' },
+        right: cellL.border?.right || { style: 'thin' },
+      };
+    }
+    // phải nhóm
+    {
+      const cellR = ensureCell(r, endCol);
+      cellR.border = {
+        top: cellR.border?.top || { style: 'thin' },
+        left: cellR.border?.left || { style: 'thin' },
+        bottom: cellR.border?.bottom || { style: 'thin' },
+        right: { style: 'medium' }, // đường chia nhóm rõ
+      };
+    }
+  }
+  }
+  
+
+  // ====== Style block TỔNG (đậm + nền vàng nhạt) ======
+  const rowBoldFill = 'FFFFF4E5';
+  for (const [rs, re] of totalBlockRanges) {
+    for (let r = rs; r <= re; r++) {
+      ws.getRow(r).eachCell((cell) => {
+        cell.font = { ...(cell.font || {}), bold: true };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBoldFill } };
+        cell.border = thin;
+      });
+    }
+  }
+
+  // Bảo đảm border + alignment cho toàn sheet
+  const lastCol = 2 + 7 * 3;
+  for (let r = 3; r <= lastRow; r++) {
+    for (let c = 1; c <= lastCol; c++) {
+      const cell = ws.getRow(r).getCell(c);
+      cell.border = cell.border || thin;
+      if (r <= 2) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      } else {
+        cell.alignment = cell.alignment || { vertical: 'top', wrapText: true };
       }
     }
   }
 
-  // Bôi đậm toàn bộ các block tổng (nhiều dòng)
-  for (const [rs, re] of totalBlockRanges){
-    for (let r=rs; r<=re; r++){
-      for (let c=0; c<=range.e.c; c++){
-        const a = XLSX.utils.encode_cell({r,c});
-        ws[a].s = rowBold;
-      }
-    }
-  }
-
-  XLSX.utils.book_append_sheet(wb, ws, `Tuan_${toDDMM(weekDates[0])}`);
-  const suffix = weekType==='all' ? 'ALL' : weekType.toUpperCase();
-  const buf = XLSX.write(wb, { bookType:"xlsx", type:"array" });
+  // Xuất file
+  const suffix = weekType === 'all' ? 'ALL' : weekType.toUpperCase();
+  const buf = await wb.xlsx.writeBuffer();
   saveAs(new Blob([buf]), `BaoCaoTuan_${suffix}_${toDDMM(weekDates[0])}.xlsx`);
 }
+
 
   /* ====== Render ====== */
   const monthVNLabel = useMemo(() => {

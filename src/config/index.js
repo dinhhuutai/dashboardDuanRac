@@ -1,6 +1,7 @@
 import routes from './routes';
 
 //export const BASE_URL = 'http://localhost:5000';
+//export const BASE_URL = 'http://10.84.40.150:5000';    // Sử dụng trên máy mac
 //export const BASE_URL = 'http://thlasohoa-ap-env.eba-qv9yn5kt.ap-southeast-2.elasticbeanstalk.com';
 export const BASE_URL = 'https://api.thuanhunglongan.com';
 

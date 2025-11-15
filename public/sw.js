@@ -1,10 +1,9 @@
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-console.log('[SW] loaded v2');
+console.log('[SW] loaded v3');
 
 self.addEventListener('push', (event) => {
-  console.log('[SW] push event', event?.data ? 'has data' : 'no data');
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
@@ -13,74 +12,65 @@ self.addEventListener('push', (event) => {
     data = {};
   }
 
-  // Chuẩn hóa url: nếu có, decode và đảm bảo bắt đầu bằng http/https
-  let url = data.url || '/';
+  // Chuẩn hoá URL an toàn
+  let rawUrl = data.url || '/';
+  try { rawUrl = decodeURIComponent(rawUrl); } catch {}
+  try { rawUrl = decodeURIComponent(rawUrl); } catch {} // nếu server encode 2 lần
+
+  // Tạo absolute URL từ origin của SW (nếu rawUrl là relative)
+  let absUrl;
   try {
-    // nếu url chứa encoded component (chúng ta encode 2 lần server-side), try decode once
-    url = decodeURIComponent(url);
-  } catch (e) {
-    // ignore decode errors
-  }
-  // Nếu thiếu scheme, thêm origin (nếu bạn muốn mở nội bộ)
-  if (!/^https?:\/\//i.test(url)) {
-    // thay bằng domain của bạn nếu cần; mặc định mở relative -> sẽ dẫn tới origin hiện tại
-    // ví dụ: url = 'https://noibo.thuanhunglongan.com' + url;
-    // để an toàn, giữ nguyên relative path
+    absUrl = new URL(rawUrl, self.location.origin).href;
+  } catch {
+    absUrl = self.location.origin + '/'; // fallback
   }
 
   const title = data.title || 'THLA';
   const options = {
     body: data.body || '',
-    // bạn có thể bật icon/badge nếu đã chắc chắn đường dẫn tồn tại
     // icon: data.icon || '/icons/icon-192.png',
     // badge: data.badge || '/icons/badge-72.png',
-    data: { url }, // quan trọng: lưu url vào notification.data
+    tag: data.tag || 'lunch-weekly-menu',
+    renotify: !!data.renotify,
     requireInteraction: data.requireInteraction === true || data.requireInteraction === 'true',
-    tag: data.tag
+    timestamp: Date.now(),
+    data: { url: absUrl },
+    // actions: [{ action: 'open', title: 'Xem thực đơn' }], // tuỳ chọn
   };
 
-  event.waitUntil((async () => {
-    try {
-      await self.registration.showNotification(title, options);
-      console.log('[SW] showNotification OK', options);
-    } catch (err) {
-      console.error('[SW] showNotification error', err, 'permission=', Notification.permission);
-    }
-  })());
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification && event.notification.data && event.notification.data.url) || '/';
-  console.log('[SW] notificationclick open url=', url);
+  const targetUrl = (event.notification?.data?.url) || (self.location.origin + '/');
 
   event.waitUntil((async () => {
     try {
-      const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const all = await clients.matchAll({ type: 'window', includeUncontrolled: true });
 
-      // Prioritize focusing an existing tab that already has the target URL (same origin)
-      for (const client of allClients) {
+      const target = new URL(targetUrl);
+      // 1) Ưu tiên tab cùng origin
+      for (const c of all) {
         try {
-          // Some clients have .url property; compare pathname+search to detect same page
-          if (client.url && (client.url === url || client.url.startsWith(url) || url.startsWith(client.url))) {
-            client.focus();
+          const cu = new URL(c.url);
+          if (cu.origin === target.origin) {
+            // Nếu khác path, thử điều hướng (Chrome/Edge hỗ trợ)
+            if ('navigate' in c && (c.url !== targetUrl)) {
+              await c.navigate(targetUrl);
+            }
+            await c.focus();
             return;
           }
-        } catch (e) { /* ignore cross-origin / read errors */ }
+        } catch {}
       }
 
-      // If none found, open a new window/tab with absolute url
-      // Ensure url is absolute; if it's relative, open relative to current origin
-      let openUrl = url;
-      if (!/^https?:\/\//i.test(openUrl)) {
-        // use your app origin (change if your SW is served from different origin)
-        const origin = self.location && self.location.origin ? self.location.origin : 'https://noibo.thuanhunglongan.com';
-        if (openUrl.startsWith('/')) openUrl = origin + openUrl;
-        else openUrl = origin + '/' + openUrl;
-      }
-      await clients.openWindow(openUrl);
+      // 2) Không có tab phù hợp => mở tab mới
+      await clients.openWindow(targetUrl);
     } catch (err) {
       console.error('[SW] notificationclick error', err);
+      // Fallback cuối
+      await clients.openWindow(targetUrl);
     }
   })());
 });
