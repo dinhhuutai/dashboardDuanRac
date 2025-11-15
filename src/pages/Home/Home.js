@@ -91,6 +91,7 @@ function Home() {
     { key: 'ban',   name: 'Máy in bàn',     deptId: null },
     { key: 'robot', name: 'Máy in robot',   deptId: null },
     { key: 'mau',   name: 'Mẫu',            deptId: 24, fixedLine: 68 },
+    { key: 'loep',  name: 'Logo - ép',      deptId: 21, fixedLine: 69 },
     { key: 'ck',    name: 'Chụp khuôn',     deptId: 25 },
     { key: 'kcs',   name: 'KCS',            deptId: 26 },
     { key: 'sh',    name: 'Sửa hàng',       deptId: 27 },
@@ -642,6 +643,10 @@ const finishWeighImmediate = (payload) => {
 <WeighSelectionSummaryModal
   isOpen={isSummaryOpen}
   onClose={() => setSummaryOpen(false)}
+  onBack={() => {
+    setSummaryOpen(false);
+    setWeighModalOpen(true); // mở lại modal cân trước đó
+  }}
   trashId={selectedIds.trashId}
   departmentId={selectedIds.departmentId}
   lineId={selectedIds.lineId}

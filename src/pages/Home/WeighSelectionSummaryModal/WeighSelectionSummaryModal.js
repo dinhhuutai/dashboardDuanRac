@@ -621,6 +621,7 @@ Modal.setAppElement('#root');
 export default function WeighSelectionSummaryModal({
   isOpen,
   onClose,
+  onBack,
   trashId,      // trashTypeId (bắt buộc)
   departmentId, // departmentID (có thể null)
   lineId,       // unitID (có thể null)
@@ -856,6 +857,11 @@ export default function WeighSelectionSummaryModal({
   const footerBarCls =
     'px-4 py-3 border-t border-slate-200 bg-white/80 shrink-0 flex justify-between';
 
+      const handleBack = () => {
+    if (typeof onBack === 'function') return onBack();
+    if (typeof onClose === 'function') return onClose();
+  };
+
   return (
     <>
       {/* MAIN */}
@@ -983,17 +989,33 @@ export default function WeighSelectionSummaryModal({
         </div>
 
         {/* Footer (cố định) */}
-        <div className={footerBarCls}>
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
-            Đóng
-          </button>
-          <button
-            onClick={handleCheckAndConfirm}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow hover:from-emerald-700 hover:to-teal-700"
-            disabled={loading}
-          >
-            {loading ? 'Đang lưu…' : 'Xác nhận'}
-          </button>
+                <div className={footerBarCls + ' items-center'}>
+          {/* Left: Quay lại */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBack}
+              className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 inline-flex items-center gap-2"
+            >
+              <span aria-hidden>←</span> Quay lại
+            </button>
+          </div>
+
+         {/* Right: Đóng + Xác nhận */}
+          <div className="flex items-center gap-2">
+           <button
+              onClick={onClose}
+             className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
+            >
+              Đóng
+            </button>
+            <button
+              onClick={handleCheckAndConfirm}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow hover:from-emerald-700 hover:to-teal-700"
+              disabled={loading}
+            >
+              {loading ? 'Đang lưu…' : 'Xác nhận'}
+            </button>
+          </div>
         </div>
       </Modal>
 
