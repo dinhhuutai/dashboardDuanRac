@@ -620,6 +620,8 @@ Modal.setAppElement('#root');
 
 export default function WeighSelectionSummaryModal({
   isOpen,
+  setSummaryOpen,
+  openWeigh,
   onClose,
   onBack,
   trashId,      // trashTypeId (bắt buộc)
@@ -1279,7 +1281,11 @@ export default function WeighSelectionSummaryModal({
             {messageModal.message}
           </p>
           <div className="flex justify-end pt-4">
-            <button onClick={() => setMessageModal(null)} className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+            <button onClick={() => {
+                setMessageModal(null);
+                setSummaryOpen(false);
+                openWeigh();
+            }} className="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
               Đóng
             </button>
           </div>

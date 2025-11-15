@@ -474,7 +474,7 @@ const finishWeighImmediate = (payload) => {
              active:scale-[.98] transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2
              ring-1 ring-white/20 focus:outline-none focus:ring-4 focus:ring-sky-300/40"
 >
-  {isLoadingWeigh ? <Spinner/> : '⚖️ Cân rác'}
+  {isLoadingWeigh ? <Spinner/> : 'Cân rác (chọn)'}
 </button>
 
 
@@ -486,7 +486,7 @@ const finishWeighImmediate = (payload) => {
                             text-white font-semibold shadow-lg shadow-amber-500/30
                             hover:from-amber-600 hover:to-yellow-600 active:scale-[.98] transition"
                 >
-                  📷 Quét mã QR
+                  Cân rác (Quét QR)
                 </button>
               }
 
@@ -642,6 +642,8 @@ const finishWeighImmediate = (payload) => {
 
 <WeighSelectionSummaryModal
   isOpen={isSummaryOpen}
+  setSummaryOpen={setSummaryOpen}
+  openWeigh={openWeigh}
   onClose={() => setSummaryOpen(false)}
   onBack={() => {
     setSummaryOpen(false);
