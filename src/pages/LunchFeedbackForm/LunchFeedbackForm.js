@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { FaStar, FaRegStar, FaCloudUploadAlt, FaTimes, FaCheck } from 'react-icons/fa';
 import companyLogo from '~/assets/imgs/logoAdmin.png';
+import http from '~/api/http'; 
 
 /**
  * Modal component (reusable) — modern style
@@ -139,47 +140,60 @@ export default function LunchFeedbackForm({
   }
   function removeImage(i) { setImages(prev => prev.filter((_, idx) => idx !== i)); }
 
-  async function doSubmit() {
+    async function doSubmit() {
     setConfirmOpen(false);
     setSubmitting(true);
+
     try {
       const fd = new FormData();
+      // category cố định cho "Đánh giá bữa trưa"
       fd.append('suggestionCategorieId', '12');
 
-      // NOTE: send text as-is (user already has prefix in textarea)
-      fd.append('content', text.trim());
+      // gửi nội dung như user nhập (đã có prefix "Món {id}: " nếu có)
+      fd.append('content', (text || '').trim());
 
-      fd.append('wantContact', String(wantContact));
-      fd.append('sender_name', name);
-      fd.append('sender_department', dept);
-      fd.append('sender_phone', phone);
-      fd.append('rating', String(rating));
+      // giống bên FeedbackFlow: wantContact là boolean
+      fd.append('wantContact', wantContact);
 
+      // nếu cho liên hệ thì mới gửi info (cho sạch dữ liệu)
+      if (wantContact) {
+        fd.append('sender_name', name || '');
+        fd.append('sender_department', dept || '');
+        fd.append('sender_phone', phone || '');
+      }
+
+      // ảnh
       images.forEach(f => fd.append('images', f));
 
-      const res = await fetch('/api/suggestions/submit', {
-        method: 'POST',
-        body: fd
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || 'Lỗi server');
+      // 👇 giống bên dưới: dùng http.post
+      const res = await http.post('/api/suggestions/submit', fd);
+      const data = res.data;
 
+      if (!data?.success) {
+        throw new Error(data?.message || 'Gửi góp ý thất bại');
+      }
+
+      // thành công
       setInfoIsError(false);
       setInfoTitle('Gửi thành công');
       setInfoMessage('Cảm ơn bạn! Đánh giá đã được gửi.');
       setInfoOpen(true);
 
-      // reset but keep prefix for convenience
+      // reset form nhưng giữ prefix "Món {id}: "
       const idToKeep = qidFid || propFid || '';
       const prefix = idToKeep ? `Món ${idToKeep}: ` : '';
       setText(prefix);
       setImages([]);
       setRating(5);
+      // tuỳ em muốn có reset name/phone hay không:
+      // setName('');
+      // setDept('');
+      // setPhone('');
     } catch (err) {
       console.error(err);
       setInfoIsError(true);
       setInfoTitle('Gửi thất bại');
-      setInfoMessage('Gửi thất bại: ' + (err.message || 'Lỗi'));
+      setInfoMessage('Gửi thất bại: ' + (err?.message || 'Lỗi'));
       setInfoOpen(true);
     } finally {
       setSubmitting(false);
