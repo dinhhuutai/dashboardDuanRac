@@ -13,6 +13,7 @@ export default function TaskImageViewerOverlay({
   onDotClick,
   onRequestDeleteCurrent,
   deletingAttachment,
+  user
 }) {
   if (!open || !images || images.length === 0) return null;
 
@@ -23,14 +24,18 @@ export default function TaskImageViewerOverlay({
     <div className="fixed inset-0 z-[80] bg-black/80 flex flex-col">
       {/* Thanh trên: xoá + đóng */}
       <div className="flex justify-between items-center px-4 pt-3">
-        <button
-          type="button"
-          className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 text-xs text-red-100 hover:bg-red-500/70 hover:text-white border border-red-300/40"
-          onClick={onRequestDeleteCurrent}
-          disabled={deletingAttachment}
-        >
-          {deletingAttachment ? "Đang xoá…" : "🗑 Xoá hình này"}
-        </button>
+        {
+          user?.login?.currentUser?.userID === activeImage?.createdBy ?
+          <button
+            type="button"
+            className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 text-xs text-red-100 hover:bg-red-500/70 hover:text-white border border-red-300/40"
+            onClick={onRequestDeleteCurrent}
+            disabled={deletingAttachment}
+          >
+            {deletingAttachment ? "Đang xoá…" : "🗑 Xoá hình này"}
+          </button> :
+          <div></div>
+        }
 
         <button
           type="button"

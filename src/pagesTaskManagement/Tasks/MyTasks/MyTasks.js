@@ -11,8 +11,14 @@ import CalendarView from "./CalendarView";
 import BoardView from "./BoardView";
 import CreateTaskButton from "./CreateTaskModal";
 import TaskDetailModal from "./TaskDetailModal";
+import { useSelector } from "react-redux";
+import { userSelector } from "~/redux/selectors";
 
 export default function MyTasks() {
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState(tmp);
+  useEffect(() => { setUser(tmp); }, [tmp]);
+
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +31,8 @@ export default function MyTasks() {
   const [priority, setPriority] = useState(null);
   const [search, setSearch] = useState("");
   const [startDateFilter, setStartDateFilter] = useState(""); // 👈 lọc theo ngày bắt đầu
+
+  const [showCreatedForOthers, setShowCreatedForOthers] = useState(false);
 
   // phân trang
   const [page, setPage] = useState(1);
@@ -62,6 +70,16 @@ export default function MyTasks() {
     setDate(today);
   }, []);
 
+    useEffect(() => {
+    if (view === "list") loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, status, priority, search, page, startDateFilter, showCreatedForOthers]);
+
+  useEffect(() => {
+    if (view === "board") loadBoard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, status, priority, search, startDateFilter, showCreatedForOthers]);
+
   /* ================== LOAD DATA ================== */
 
   useEffect(() => {
@@ -89,7 +107,8 @@ export default function MyTasks() {
           search,
           page,
           pageSize,
-          startDateFilter: startDateFilter || undefined, // 👈 gửi sang BE
+          startDateFilter: startDateFilter || undefined,
+          createdForOthers: showCreatedForOthers ? "1" : "0",
         },
       });
       setRows(res.data?.data || []);
@@ -110,6 +129,7 @@ export default function MyTasks() {
             priority,
             search,
             startDateFilter: startDateFilter || undefined,
+            createdForOthers: showCreatedForOthers ? "1" : "0",
           },
         }
       );
@@ -150,35 +170,53 @@ export default function MyTasks() {
     });
   }, []);
 
-  const filterHint = useMemo(() => {
-    if (startDateFilter) {
-      const d = new Date(startDateFilter);
-      const lbl = d.toLocaleDateString("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+    const filterHint = useMemo(() => {
+      const baseDateText = (() => {
+        if (startDateFilter) {
+          const d = new Date(startDateFilter);
+          const lbl = d.toLocaleDateString("vi-VN", {
+            weekday: "long",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+          return (
+            <>
+              Đang lọc theo <b>ngày bắt đầu: {lbl}</b>. Hiển thị tất cả công
+              việc có ngày bắt đầu đúng ngày này.
+            </>
+          );
+        }
+
+        return (
+          <>
+            Đang hiển thị{" "}
+            <b>các công việc bắt đầu ngày {todayLabel}</b> và{" "}
+            <b>các công việc chưa hoàn thành của những ngày trước</b>, được sắp
+            xếp theo mức độ ưu tiên:{" "}
+            <b>Khẩn cấp → Cao → Bình thường → Thấp</b>.
+          </>
+        );
+      })();
+
+      if (showCreatedForOthers) {
+        return (
+          <>
+            Đang xem <b>các công việc bạn là người tạo</b> (giao cho user khác),
+            với quy tắc lọc ngày giống phía dưới. {baseDateText}
+          </>
+        );
+      }
+
       return (
         <>
-          Đang lọc theo <b>ngày bắt đầu: {lbl}</b>. Hiển thị tất cả công việc
-          có ngày bắt đầu đúng ngày này.
+          Đang xem <b>các công việc được giao cho bạn</b>. {baseDateText}
         </>
       );
-    }
-
-    return (
-      <>
-        Đang hiển thị{" "}
-        <b>các công việc bắt đầu ngày {todayLabel}</b> và{" "}
-        <b>các công việc chưa hoàn thành của những ngày trước</b>, được sắp xếp
-        theo mức độ ưu tiên: <b>Khẩn cấp → Cao → Bình thường → Thấp</b>.
-      </>
-    );
-  }, [todayLabel, startDateFilter]);
+    }, [todayLabel, startDateFilter, showCreatedForOthers]);
 
   return (
-    <div className="min-h-screen bg-slate-50 px-3 py-4 md:px-6 md:py-6">
+    <div className="min-h-screen">
       <style>{styles}</style>
 
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-5">
@@ -238,93 +276,137 @@ export default function MyTasks() {
           </div>
 
           {/* Bộ lọc list/board */}
-          {view !== "calendar" && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
-              <div>
-                <LabelSmall>Trạng thái</LabelSmall>
-                <Select
-                  options={[
-                    { value: "todo", label: "Cần làm" },
-                    { value: "doing", label: "Đang làm" },
-                    { value: "review", label: "Chờ duyệt" },
-                    { value: "done", label: "Hoàn thành" },
-                  ]}
-                  onChange={(o) => {
-                    setPage(1);
-                    setStatus(o?.value ?? null);
-                  }}
-                  isClearable
-                  placeholder="Tất cả"
-                />
-              </div>
-              <div>
-                <LabelSmall>Ưu tiên</LabelSmall>
-                <Select
-                  options={[
-                    { value: "low", label: "Thấp" },
-                    { value: "normal", label: "Bình thường" },
-                    { value: "high", label: "Cao" },
-                    { value: "urgent", label: "Khẩn cấp" },
-                  ]}
-                  onChange={(o) => {
-                    setPage(1);
-                    setPriority(o?.value ?? null);
-                  }}
-                  isClearable
-                  placeholder="Tất cả"
-                />
-              </div>
-              <div>
-                <LabelSmall>Lọc theo ngày bắt đầu</LabelSmall>
-                <input
-                  type="date"
-                  className="inset w-full px-3 py-2 text-sm outline-none"
-                  value={startDateFilter}
-                  onChange={(e) => {
-                    setPage(1);
-                    setStartDateFilter(e.target.value || "");
-                  }}
-                />
-                {startDateFilter && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPage(1);
-                      setStartDateFilter("");
-                    }}
-                    className="
-                      mt-1 inline-flex items-center gap-1.5
-                      rounded-full border border-sky-200
-                      bg-sky-50/60 px-2.5 py-1
-                      text-[11px] font-medium text-sky-700
-                      shadow-sm
-                      hover:bg-sky-100 hover:border-sky-300
-                      active:scale-[0.98]
-                      transition
-                    "
-                  >
-                    <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-600 text-[9px] text-white">
-                      ↺
-                    </span>
-                    <span>Xoá lọc ngày, quay về mặc định</span>
-                  </button>
-                )}
-              </div>
-              <div>
-                <LabelSmall>Tìm theo tiêu đề</LabelSmall>
-                <input
-                  type="text"
-                  className="inset w-full px-3 py-2 text-sm outline-none"
-                  value={search}
-                  onChange={(e) => {
-                    setPage(1);
-                    setSearch(e.target.value);
-                  }}
-                  placeholder="Nhập một phần tên công việc…"
-                />
-              </div>
-            </div>
-          )}
+{view !== "calendar" && (
+  <div className="space-y-3 pt-1">
+    {/* Hàng 1: 4 filter chính */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div>
+        <LabelSmall>Trạng thái</LabelSmall>
+        <Select
+          options={[
+            { value: "todo", label: "Cần làm" },
+            { value: "doing", label: "Đang làm" },
+            { value: "review", label: "Chờ duyệt" },
+            { value: "done", label: "Hoàn thành" },
+          ]}
+          onChange={(o) => {
+            setPage(1);
+            setStatus(o?.value ?? null);
+          }}
+          isClearable
+          placeholder="Tất cả"
+        />
+      </div>
+
+      <div>
+        <LabelSmall>Ưu tiên</LabelSmall>
+        <Select
+          options={[
+            { value: "low", label: "Thấp" },
+            { value: "normal", label: "Bình thường" },
+            { value: "high", label: "Cao" },
+            { value: "urgent", label: "Khẩn cấp" },
+          ]}
+          onChange={(o) => {
+            setPage(1);
+            setPriority(o?.value ?? null);
+          }}
+          isClearable
+          placeholder="Tất cả"
+        />
+      </div>
+
+      <div>
+        <LabelSmall>Lọc theo ngày bắt đầu</LabelSmall>
+        <input
+          type="date"
+          className="inset w-full px-3 py-2 text-sm outline-none"
+          value={startDateFilter}
+          onChange={(e) => {
+            setPage(1);
+            setStartDateFilter(e.target.value || "");
+          }}
+        />
+        {startDateFilter && (
+          <button
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setStartDateFilter("");
+            }}
+            className="
+              mt-1 inline-flex items-center gap-1.5
+              rounded-full border border-sky-200
+              bg-sky-50/60 px-2.5 py-1
+              text-[11px] font-medium text-sky-700
+              hover:bg-sky-100 hover:border-sky-300
+              active:scale-[0.98]
+              transition
+            "
+          >
+            <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-600 text-[9px] text-white">
+              ↺
+            </span>
+            <span>Xoá lọc ngày, quay về mặc định</span>
+          </button>
+        )}
+      </div>
+
+      <div>
+        <LabelSmall>Tìm theo tiêu đề</LabelSmall>
+        <input
+          type="text"
+          className="inset w-full px-3 py-2 text-sm outline-none"
+          value={search}
+          onChange={(e) => {
+            setPage(1);
+            setSearch(e.target.value);
+          }}
+          placeholder="Nhập một phần tên công việc…"
+        />
+      </div>
+    </div>
+
+    {/* Hàng 2: Toggle "Công việc tôi tạo cho user khác" */}
+    <div className="flex items-center justify-start md:justify-end">
+      <button
+        type="button"
+        onClick={() => {
+          setPage(1);
+          setShowCreatedForOthers(!showCreatedForOthers);
+        }}
+        className="inline-flex items-center gap-2 text-xs text-slate-600"
+        role="switch"
+        aria-checked={showCreatedForOthers}
+      >
+        <span className="text-[13px] md:text-xs">
+          Công việc tôi tạo cho user khác
+        </span>
+
+        {/* Switch phẳng, không shadow */}
+        <span
+          className={`
+            relative inline-flex h-5 w-9 items-center rounded-full border
+            transition-colors duration-200
+            ${
+              showCreatedForOthers
+                ? "bg-emerald-500 border-emerald-500"
+                : "bg-slate-200 border-slate-300"
+            }
+          `}
+        >
+          <span
+            className={`
+              inline-block h-4 w-4 rounded-full bg-white transform
+              transition-transform duration-200
+              ${showCreatedForOthers ? "translate-x-4" : "translate-x-0"}
+            `}
+          />
+        </span>
+      </button>
+    </div>
+  </div>
+)}
 
           {/* Bộ lọc lịch */}
           {view === "calendar" && (
@@ -402,6 +484,7 @@ export default function MyTasks() {
             else if (view === "board") loadBoard();
             else loadCalendar();
           }}
+          user={user}
         />
       )}
     </div>

@@ -34,12 +34,16 @@ export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCre
         >
           <Menu className="h-5 w-5" />
         </button> :
-        <button
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white hover:shadow-sm"
-          aria-label="Mở menu"
-        >
-          <div className="h-5 w-5"></div>
-        </button>
+        <div className="inline-flex items-center gap-2 font-semibold">
+          <Link
+            to={phase === 'work' ? config.routes.taskManagementDashboard : config.routes.taskManagementProjectList}
+            className="flex items-center gap-3 group pr-[10px]"
+            aria-label="Trang phân tích"
+          >
+            <img alt="logo" src={logo} className="h-9 w-auto object-contain" />
+          </Link>
+          <span>{phase === 'work' ? 'QL Công Việc' : 'QL Dự Án'}</span>
+        </div>
       }
 
       {/* Brand */}
@@ -55,7 +59,7 @@ export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCre
       </div>
 
       {/* Phase switcher */}
-      <div className="ml-2">
+      <div className="ml-2 md:block hidden">
         <PhaseSwitcher phase={phase} onChange={onPhaseChange} />
       </div>
 

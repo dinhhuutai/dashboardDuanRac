@@ -16,6 +16,27 @@ export const reloadPermissions = createAsyncThunk(
   }
 );
 
+// Lấy role trong module Quản lý công việc
+export const fetchTaskManagerRole = createAsyncThunk(
+  "auth/fetchTaskManagerRole",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await http.get(
+        `${BASE_URL}/api/task-management/me/role`
+      );
+      if (res.data?.success) {
+        // data: null hoặc { roleId, code, name, userRoleId }
+        return res.data.data;
+      }
+      return rejectWithValue(
+        res.data?.message || "Cannot load task manager role"
+      );
+    } catch (e) {
+      return rejectWithValue(e?.response?.data?.message || e.message);
+    }
+  }
+);
+
 
 export default createSlice({
     name: 'auth',
@@ -32,7 +53,9 @@ export default createSlice({
                 modules: [], // [{moduleId, name, role}]
                 // map moduleId -> array features
                 featuresByModule: {} // { [moduleId]: [{featureId, code, name, defaultAllowed, overridden, effectiveAllowed}] }
-            }
+            },
+
+            roleTaskManager: null,
         }
     },
     reducers: {
@@ -47,6 +70,13 @@ export default createSlice({
             // ⬇️ nếu API login trả luôn permissions, set vào luôn
             if (action.payload.permissions) {
                 state.login.permissions = action.payload.permissions;
+            }
+
+            // nếu login API sau này trả luôn roleTaskManager thì set vào
+            if (action.payload.roleTaskManager) {
+                state.login.roleTaskManager = action.payload.roleTaskManager;
+            } else {
+                state.login.roleTaskManager = null;
             }
         },
         loginFailed: (state) => {
@@ -80,6 +110,14 @@ export default createSlice({
         builder
         .addCase(reloadPermissions.fulfilled, (state, action) => {
             state.login.permissions = action.payload || { modules: [], featuresByModule: {} };
+        })
+        .addCase(fetchTaskManagerRole.fulfilled, (state, action) => {
+            // action.payload: null hoặc { roleId, code, name, userRoleId }
+            state.login.roleTaskManager = action.payload;
+        })
+        .addCase(fetchTaskManagerRole.rejected, (state) => {
+            // lỗi thì coi như không có role
+            state.login.roleTaskManager = null;
         });
     }
 })

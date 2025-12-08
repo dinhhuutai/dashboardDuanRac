@@ -114,10 +114,26 @@ import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
 import N20th11 from '~/pages/N20th11';
 
 import TaskManagementDashboard from '~/pagesTaskManagement/Tasks/Dashboard';
+
 import TaskManagementMyTasks from '~/pagesTaskManagement/Tasks/MyTasks';
+import TaskManagementTeamTasks from '~/pagesTaskManagement/Tasks/TeamTasks';
+import TaskManagementDepartmentTasks from '~/pagesTaskManagement/Tasks/DepartmentTasks';
+import TaskManagementCompanyTasks from '~/pagesTaskManagement/Tasks/CompanyTasks';
 
 import TaskManagementProjectList from '~/pagesTaskManagement/Projects/ProjectList';
 import TaskManagementProjectOverview from '~/pagesTaskManagement/Projects/ProjectOverview';
+
+import AdminTaskManagementDashboard from '~/pagesTaskManagementAdmin/Menu/Dashboard';
+
+import AdminTaskManagementReportByEmployee from '~/pagesTaskManagementAdmin/Menu/ReportByEmployee';
+import AdminTaskManagementReportByProject from '~/pagesTaskManagementAdmin/Menu/ReportByProeject';
+import AdminTaskManagementReportByStatus from '~/pagesTaskManagementAdmin/Menu/ReportByStatus';
+
+import AdminTaskManagementDepartments from '~/pagesTaskManagementAdmin/Manage/Departments';
+import AdminTaskManagementRoles from '~/pagesTaskManagementAdmin/Manage/Roles';
+import AdminTaskManagementStatuses from '~/pagesTaskManagementAdmin/Manage/Statuses';
+import AdminTaskManagementTeams from '~/pagesTaskManagementAdmin/Manage/Teams';
+import AdminTaskManagementUserRoles from '~/pagesTaskManagementAdmin/Manage/UserRoles';
 
 
 const routesTaskManagement = [
@@ -127,9 +143,28 @@ const routesTaskManagement = [
     login: true,
     module: 'quanlycongviec',
   },
+
   {
     path: config.routes.taskManagementMyTasks,
     component: TaskManagementMyTasks,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementTeamTasks,
+    component: TaskManagementTeamTasks,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementDepartmentTasks,
+    component: TaskManagementDepartmentTasks,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementCompanyTasks,
+    component: TaskManagementCompanyTasks,
     login: true,
     module: 'quanlycongviec',
   },
@@ -145,6 +180,54 @@ const routesTaskManagement = [
     component: TaskManagementProjectOverview,
     login: true,
     module: 'quanlycongviec',
+  },
+]
+
+export const routesTaskManagementAdmin = [
+  {
+    path: config.routes.adminTaskManagementDashboard,
+    component: AdminTaskManagementDashboard,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementDepartments,
+    component: AdminTaskManagementDepartments,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementTeams,
+    component: AdminTaskManagementTeams,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementRoles,
+    component: AdminTaskManagementRoles,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementUserRoles,
+    component: AdminTaskManagementUserRoles,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementStatuses,
+    component: AdminTaskManagementStatuses,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementReportByEmployee,
+    component: AdminTaskManagementReportByEmployee,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementReportByProject,
+    component: AdminTaskManagementReportByProject,
+    login: true,
+  },
+  {
+    path: config.routes.adminTaskManagementReportByStatus,
+    component: AdminTaskManagementReportByStatus,
+    login: true,
   },
 ]
 

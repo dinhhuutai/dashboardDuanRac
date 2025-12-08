@@ -4,6 +4,8 @@ import AsyncSelect from "react-select/async";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 import { LabelSmall } from "./TaskUI";
+import { useSelector } from "react-redux";
+import { userRoleTaskManager } from "~/redux/selectors";
 
 export default function CreateTaskButton({ onCreated }) {
   const [open, setOpen] = useState(false);
@@ -23,6 +25,7 @@ export default function CreateTaskButton({ onCreated }) {
           hover:from-indigo-600 hover:to-violet-600
           active:scale-[.98]
           transition
+          whitespace-nowrap
         "
         onClick={() => setOpen(true)}
       >
@@ -54,6 +57,21 @@ function getDayPartLabel(value) {
 
 function CreateTaskModal({ onClose, onCreated }) {
   const todayStr = new Date().toISOString().slice(0, 10);
+
+  // 🔹 Lấy role trong module QL công việc
+  const roleTaskManager = useSelector(userRoleTaskManager);
+  const roleCode = roleTaskManager?.code; // vd: bangiamdoc, giamdocnhamay...
+
+  // Những role được phép chọn người nhận khác
+  const allowedAssignRoles = [
+    "bangiamdoc",
+    "giamdocnhamay",
+    "truongphong",
+    "phophong",
+    "totruong",
+  ];
+
+  const canPickAssignees = !!roleCode && allowedAssignRoles.includes(roleCode);
 
   // form state
   const [title, setTitle] = useState("");
@@ -165,7 +183,9 @@ function CreateTaskModal({ onClose, onCreated }) {
       setSaving(true);
       setUploadPercent(0);
 
-      const assignees = (assigneeOptions || []).map((o) => o.value);
+      const assignees = canPickAssignees
+        ? (assigneeOptions || []).map((o) => o.value)
+        : [];
 
       const form = new FormData();
       form.append("projectId", projectOption ? projectOption.value : "");
@@ -408,51 +428,61 @@ function CreateTaskModal({ onClose, onCreated }) {
 
           {/* Người nhận */}
           <div className="md:col-span-2">
-            <LabelSmall>Người nhận công việc (tùy chọn)</LabelSmall>
-            <AsyncSelect
-              isMulti
-              cacheOptions
-              defaultOptions={false}
-              loadOptions={loadUserOptions}
-              value={assigneeOptions}
-              onChange={(opts) => setAssigneeOptions(opts || [])}
-              inputValue={assigneeInput}
-              onInputChange={(value, { action }) => {
-                if (action === "input-change") {
-                  setAssigneeInput(value);
-                }
-              }}
-              menuIsOpen={
-                assigneeInput.startsWith("@") &&
-                assigneeInput.trim().length > 1
-              }
-              placeholder="Gõ @tên để tìm, chọn nhiều người nhận…"
-              classNamePrefix="react-select"
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  minHeight: 40,
-                  borderRadius: 12,
-                  borderColor: "#e2e8f0",
-                  boxShadow: "none",
-                  fontSize: 13,
-                }),
-                menu: (base) => ({
-                  ...base,
-                  fontSize: 13,
-                  zIndex: 9999,
-                }),
-                multiValue: (base) => ({
-                  ...base,
-                  borderRadius: 9999,
-                  backgroundColor: "#eef2ff",
-                }),
-              }}
-            />
-            <div className="mt-1 text-[11px] text-slate-500">
-              Bạn gõ <b>@tên</b> giống Zalo để tìm nhanh. Nếu để trống,
-              hệ thống sẽ tự gán công việc cho chính bạn.
-            </div>
+            <LabelSmall>Người nhận công việc</LabelSmall>
+
+            {canPickAssignees ? (
+              <>
+                <AsyncSelect
+                  isMulti
+                  cacheOptions
+                  defaultOptions={false}
+                  loadOptions={loadUserOptions}
+                  value={assigneeOptions}
+                  onChange={(opts) => setAssigneeOptions(opts || [])}
+                  inputValue={assigneeInput}
+                  onInputChange={(value, { action }) => {
+                    if (action === "input-change") {
+                      setAssigneeInput(value);
+                    }
+                  }}
+                  menuIsOpen={
+                    assigneeInput.startsWith("@") &&
+                    assigneeInput.trim().length > 1
+                  }
+                  placeholder="Gõ @tên để tìm, chọn nhiều người nhận…"
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: 40,
+                      borderRadius: 12,
+                      borderColor: "#e2e8f0",
+                      boxShadow: "none",
+                      fontSize: 13,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      fontSize: 13,
+                      zIndex: 9999,
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      borderRadius: 9999,
+                      backgroundColor: "#eef2ff",
+                    }),
+                  }}
+                />
+                <div className="mt-1 text-[11px] text-slate-500">
+                  Bạn gõ <b>@tên</b> giống Zalo để tìm nhanh. Nếu để trống,
+                  hệ thống sẽ tự gán công việc cho chính bạn.
+                </div>
+              </>
+            ) : (
+              <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+                Bạn đang ở vai trò <b>nhân viên</b>. Công việc tạo mới sẽ tự
+                động gán cho chính bạn.
+              </div>
+            )}
           </div>
 
           {/* File đính kèm */}

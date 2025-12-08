@@ -55,12 +55,12 @@ export default function TaskManagementLayout({
           }}
         >
           {/* Page Content Slot */}
-          <div className="py-4 md:py-6">{children}</div>
+          <div className="py-2 md:py-4">{children}</div>
         </main>
       </div>
 
       {/* Mobile Bottom Tab */}
-      <MobileBottomBar />
+      <MobileBottomBar phase={phase} onPhaseChange={setPhase} />
 
       {/* Mobile Sidebar Sheet */}
       <AnimatePresence>

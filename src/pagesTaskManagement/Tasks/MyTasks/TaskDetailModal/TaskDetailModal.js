@@ -9,6 +9,8 @@ import TaskEditSection from "./TaskEditSection";
 import TaskDeleteConfirmModal from "./TaskDeleteConfirmModal";
 import AttachmentDeleteConfirmModal from "./AttachmentDeleteConfirmModal";
 import TaskImageViewerOverlay from "./TaskImageViewerOverlay";
+import AttachmentPreviewModal from "./AttachmentPreviewModal";
+import TaskCommentsPanel from "./TaskCommentsPanel";
 
 const statusOptions = [
   { value: "todo", label: "Cần làm" },
@@ -17,7 +19,7 @@ const statusOptions = [
   { value: "done", label: "Hoàn thành" },
 ];
 
-export default function TaskDetailModal({ taskId, onClose, onChanged }) {
+export default function TaskDetailModal({ taskId, onClose, onChanged, user }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -47,11 +49,102 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
     index: 0,
   });
 
+  const [previewAttachment, setPreviewAttachment] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState("");
+
   useEffect(() => {
     if (!taskId) return;
     loadDetail();
+    loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
+
+  const commentsCount = useMemo(() => {
+  if (!comments || !comments.length) return 0;
+  return comments.reduce(
+    (sum, c) => sum + 1 + ((c.replies && c.replies.length) || 0),
+    0
+  );
+}, [comments]);
+
+async function loadComments() {
+  if (!taskId) return;
+  setCommentsLoading(true);
+  setCommentsError("");
+  try {
+    const res = await http.get(
+      `${BASE_URL}/api/task-management/${taskId}/comments`
+    );
+    setComments(res.data?.data || []);
+  } catch (e) {
+    console.error("load comments error", e);
+    setCommentsError("Không tải được bình luận.");
+  } finally {
+    setCommentsLoading(false);
+  }
+}
+
+function toggleCommentsOpen() {
+  setCommentsOpen((prev) => {
+    const next = !prev;
+    if (next) {
+      loadComments();
+    }
+    return next;
+  });
+}
+
+async function handleAddComment(body, onDone) {
+  if (!taskId) return;
+  try {
+    await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
+      body,
+    });
+    await loadComments();
+    onDone && onDone();
+  } catch (e) {
+    console.error("add comment error", e);
+    setCommentsError("Gửi bình luận thất bại.");
+  }
+}
+
+async function handleReplyComment(parentCommentId, body, onDone) {
+  if (!taskId) return;
+  try {
+    await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
+      body,
+      parentCommentId,
+    });
+    await loadComments();
+    onDone && onDone();
+  } catch (e) {
+    console.error("reply comment error", e);
+    setCommentsError("Gửi phản hồi thất bại.");
+  }
+}
+
+// bên trên, sau handleReplyComment:
+async function handleDeleteComment(commentId, onDone) {
+  if (!taskId) return;
+  try {
+    await http.delete(
+      `${BASE_URL}/api/task-management/comments/${commentId}`
+    );
+    await loadComments();
+    onDone && onDone();
+  } catch (e) {
+    console.error("delete comment error", e);
+    setCommentsError("Xoá bình luận thất bại.");
+    onDone && onDone();
+  }
+}
 
   async function loadDetail() {
     setLoading(true);
@@ -59,6 +152,7 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
     try {
       const res = await http.get(`${BASE_URL}/api/task-management/${taskId}`);
       const data = res.data?.data;
+
       setTask(data || null);
 
       if (data) {
@@ -332,6 +426,34 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
     });
   }
 
+  async function openPreviewAttachment(att) {
+  setPreviewAttachment(att);
+  setPreviewUrl("");
+  setPreviewError("");
+  setPreviewLoading(true);
+
+  try {
+    const res = await http.get(
+      `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/download`
+    );
+    const url = res.data?.url;
+    if (!url) throw new Error("Không có signedUrl");
+    setPreviewUrl(url);
+  } catch (e) {
+    console.error("preview attachment error", e);
+    setPreviewError("Không tải được file xem trước.");
+  } finally {
+    setPreviewLoading(false);
+  }
+}
+
+function closePreviewAttachment() {
+  setPreviewAttachment(null);
+  setPreviewUrl("");
+  setPreviewError("");
+  setPreviewLoading(false);
+}
+
   if (!taskId) return null;
 
   const safeProgress =
@@ -355,7 +477,7 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
       />
 
       {/* modal chính */}
-      <div className="absolute inset-x-3 md:inset-x-0 top-6 mx-auto max-w-3xl card p-4 md:p-6">
+      <div className="absolute inset-x-3 md:inset-x-0 top-6 mx-auto max-w-3xl card p-4 md:p-6 overflow-hidden">
         {/* header */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
           <div className="min-w-0">
@@ -386,13 +508,34 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end">
-            <button
-              onClick={askDelete}
-              disabled={deleting}
-              className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100 disabled:opacity-60"
-            >
-              {deleting ? "Đang xoá…" : "Xoá (ẩn)"}
-            </button>
+            {
+              (task?.assignees?.some(a => a.userID === user?.login?.currentUser?.userID) || user?.login?.currentUser?.userID === task?.createdBy) &&
+              <button
+                type="button"
+                onClick={toggleCommentsOpen}
+                className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100"
+              >
+                <span className="mr-1">💬</span>
+                <span>Bình luận</span>
+                {commentsCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-sky-600 text-[10px] text-white px-1">
+                    {commentsCount}
+                  </span>
+                )}
+              </button>
+            }
+
+            {
+              user?.login?.currentUser?.userID === task?.createdBy &&
+              <button
+                onClick={askDelete}
+                disabled={deleting}
+                className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100 disabled:opacity-60"
+              >
+                {deleting ? "Đang xoá…" : "Xoá công việc"}
+              </button>
+            }
+
             <button
               className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
               onClick={onClose}
@@ -400,6 +543,7 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
               Đóng
             </button>
           </div>
+
         </div>
 
         {error && (
@@ -438,6 +582,10 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
                 onDownloadAttachment={handleDownloadAttachment}
                 onAskDeleteAttachment={askDeleteAttachment}
                 onOpenImageViewerIndex={openImageViewerIndex}
+                onPreviewAttachment={openPreviewAttachment}
+                user={user}
+                userIdTaskTodo={task.assignees}
+                userIdTaskCreate={task.createdBy}
               />
 
               <TaskEditSection
@@ -470,13 +618,16 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
               >
                 Hủy
               </button>
-              <button
-                disabled={saving}
-                className="inline-flex items-center rounded-full border border-emerald-500 bg-emerald-600 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-emerald-500"
-                onClick={handleSave}
-              >
-                {saving ? "Đang lưu…" : "Lưu thay đổi"}
-              </button>
+              {
+                (task?.assignees?.some(a => a.userID === user?.login?.currentUser?.userID) || user?.login?.currentUser?.userID === task?.createdBy) &&
+                <button
+                  disabled={saving}
+                  className="inline-flex items-center rounded-full border border-emerald-500 bg-emerald-600 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-emerald-500"
+                  onClick={handleSave}
+                >
+                  {saving ? "Đang lưu…" : "Lưu thay đổi"}
+                </button>
+              }
             </div>
           </>
         )}
@@ -493,6 +644,20 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
           deleting={deletingAttachment}
           onCancel={() => setAttachmentToDelete(null)}
           onConfirm={handleDeleteAttachmentConfirmed}
+        />
+
+        {/* Panel bình luận – chỉ render khi mở */}
+        <TaskCommentsPanel
+          open={commentsOpen}
+          comments={comments}
+          loading={commentsLoading}
+          error={commentsError}
+          onClose={() => setCommentsOpen(false)}
+          onRetry={loadComments}
+          onAddComment={handleAddComment}
+          onReplyComment={handleReplyComment}
+          onDeleteComment={handleDeleteComment}
+          user={user}
         />
       </div>
 
@@ -512,6 +677,18 @@ export default function TaskDetailModal({ taskId, onClose, onChanged }) {
           }
         }}
         deletingAttachment={deletingAttachment}
+        user={user}
+      />
+
+      <AttachmentPreviewModal
+        attachment={previewAttachment}
+        url={previewUrl}
+        loading={previewLoading}
+        error={previewError}
+        onClose={closePreviewAttachment}
+        onRetry={() => {
+            if (previewAttachment) openPreviewAttachment(previewAttachment);
+        }}
       />
     </div>
   );

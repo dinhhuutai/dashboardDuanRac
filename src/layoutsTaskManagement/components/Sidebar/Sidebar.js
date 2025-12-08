@@ -4,29 +4,114 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import {
   ChevronDown,
-  CheckSquare,   // icon nhóm: Công việc/Tổng quan
-  Users,         // icon nhóm: Theo phạm vi tổ chức
-  LayoutGrid,    // icon nhóm: Chế độ xem
-  BarChart3,     // icon nhóm: Báo cáo & thông báo
+  CheckSquare,
+  Users,
+  LayoutGrid,
+  BarChart3,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { userRoleTaskManager } from "~/redux/selectors";
 import config from "~/config";
 
 export default function Sidebar({ phase, onNavigate }) {
+  
+  const roleTaskManager = useSelector(userRoleTaskManager);
+  const roleCode = roleTaskManager?.code; // vd: bangiamdoc, giamdocnhamay...
+
+  // Tính quyền xem từng mục theo roleCode
+  const {
+    canViewMyTasks,
+    canViewTeamTasks,
+    canViewDepartmentTasks,
+    canViewCompanyTasks,
+  } = useMemo(() => {
+    // mặc định: chỉ cho xem "Công việc của tôi"
+    const base = {
+      canViewMyTasks: true,
+      canViewTeamTasks: false,
+      canViewDepartmentTasks: false,
+      canViewCompanyTasks: false,
+    };
+
+    if (!roleCode) {
+      // chưa load role -> cứ để default cho an toàn
+      return base;
+    }
+
+    switch (roleCode) {
+      case "bangiamdoc":
+      case "giamdocnhamay":
+        return {
+          canViewMyTasks: true,
+          canViewTeamTasks: true,
+          canViewDepartmentTasks: true,
+          canViewCompanyTasks: true,
+        };
+      case "truongphong":
+      case "phophong":
+        return {
+          canViewMyTasks: true,
+          canViewTeamTasks: true,
+          canViewDepartmentTasks: true,
+          canViewCompanyTasks: false,
+        };
+      case "totruong":
+        return {
+          canViewMyTasks: true,
+          canViewTeamTasks: true,
+          canViewDepartmentTasks: false,
+          canViewCompanyTasks: false,
+        };
+      default:
+        return base;
+    }
+  }, [roleCode]);
+  
   if (phase !== "work") return null;
 
   return (
     <div className="sticky top-[76px] flex h-[calc(100dvh-76px)] flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
       {/* Nhóm 1: Tổng quan */}
       <NavSection title="Tổng quan" icon={CheckSquare} defaultOpen>
-        <NavItem label="Bảng điều khiển" to={config.routes.taskManagementDashboard} onNavigate={onNavigate} />
+        <NavItem
+          label="Bảng điều khiển"
+          to={config.routes.taskManagementDashboard}
+          onNavigate={onNavigate}
+        />
       </NavSection>
 
       {/* Nhóm 2: Theo phạm vi tổ chức */}
       <NavSection title="Công việc theo phạm vi" icon={Users} defaultOpen>
-        <NavItem label="Công việc của tôi" to={config.routes.taskManagementMyTasks} onNavigate={onNavigate} />
-        <NavItem label="Theo nhóm" to={config} onNavigate={onNavigate} />
-        <NavItem label="Theo phòng ban" to={config} onNavigate={onNavigate} />
-        <NavItem label="Toàn công ty" to={config} onNavigate={onNavigate} />
+        {/* luôn có */}
+        <NavItem
+          label="Công việc của tôi"
+          to={config.routes.taskManagementMyTasks}
+          onNavigate={onNavigate}
+        />
+
+        {canViewTeamTasks && (
+          <NavItem
+            label="Theo nhóm"
+            to={config.routes.taskManagementTeamTasks}
+            onNavigate={onNavigate}
+          />
+        )}
+
+        {canViewDepartmentTasks && (
+          <NavItem
+            label="Theo phòng ban"
+            to={config.routes.taskManagementDepartmentTasks}
+            onNavigate={onNavigate}
+          />
+        )}
+
+        {canViewCompanyTasks && (
+          <NavItem
+            label="Toàn công ty"
+            to={config.routes.taskManagementCompanyTasks}
+            onNavigate={onNavigate}
+          />
+        )}
       </NavSection>
 
       {/* Nhóm 3: Chế độ xem */}
@@ -40,7 +125,6 @@ export default function Sidebar({ phase, onNavigate }) {
         <NavItem label="Báo cáo" to={config} onNavigate={onNavigate} />
         <NavItem label="Hộp thư & Thông báo" to={config} onNavigate={onNavigate} />
       </NavSection>
-
     </div>
   );
 }

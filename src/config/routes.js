@@ -120,10 +120,29 @@ const routes = {
   taskManagement: '/task-management',
 
   taskManagementDashboard: '/task-management/dashboard',
+  
   taskManagementMyTasks: '/task-management/my-tasks',
+  taskManagementTeamTasks: '/task-management/team-tasks',
+  taskManagementDepartmentTasks: '/task-management/department-tasks',
+  taskManagementCompanyTasks: '/task-management/company-tasks',
 
   taskManagementProjectList: '/task-management/project-list',
   taskManagementProjectOverview: '/task-management/project-overview',
+
+  adminTaskManagementDashboard: '/admin/task-management/dashboard',
+  
+  adminTaskManagementReportByEmployee: '/admin/task-management/report-by-employee',
+  adminTaskManagementReportByProject: '/admin/task-management/report-by-project',
+  adminTaskManagementReportByStatus: '/admin/task-management/report-by-status',
+  
+  adminTaskManagementDepartments: '/admin/task-management/departments',
+  adminTaskManagementTeams: '/admin/task-management/teams',
+
+  adminTaskManagementRoles: '/admin/task-management/roles',
+  adminTaskManagementUserRoles: '/admin/task-management/user-roles',
+
+  adminTaskManagementStatuses: '/admin/task-management/statuses',
+
 
   dryingCart: '/drying-cart',
 

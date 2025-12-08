@@ -15,6 +15,16 @@ module.exports = {
         md: '0px 8px 12px #221a2d;',
       },
       keyframes: {
+        taskCommentsSlideInFromRight: {
+          '0%': {
+            transform: 'translateX(100%)',
+            opacity: 0,
+          },
+          '100%': {
+            transform: 'translateX(0)',
+            opacity: 1,
+          }
+        },
         rotateBin: {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
@@ -119,6 +129,7 @@ module.exports = {
         },
       },
       animation: {
+        'task-comments-slide-in': 'taskCommentsSlideInFromRight 0.25s ease-out',
         gradientMove: 'gradientMove 6s ease infinite',
         orbit: 'orbit 6s linear infinite',
         superman: 'superman 2s ease-in-out infinite',

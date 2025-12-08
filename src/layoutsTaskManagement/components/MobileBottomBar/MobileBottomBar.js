@@ -1,33 +1,52 @@
-import {
-  FolderKanban,
-  BarChart3,
-  Settings,
-  CheckSquare,
-} from "lucide-react";
+// MobileBottomBar.jsx
+import React from "react";
+import { FolderKanban, CheckSquare } from "lucide-react";
 
-export default function MobileBottomBar() {
+export default function MobileBottomBar({ phase, onPhaseChange }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/60 bg-white/90 backdrop-blur hidden">
-      <div className="mx-auto max-w-screen-sm">
-        <nav className="grid grid-cols-4">
-          <BottomItem icon={CheckSquare} label="Việc" />
-          <BottomItem icon={FolderKanban} label="Dự án" />
-          <BottomItem icon={BarChart3} label="Báo cáo" />
-          <BottomItem icon={Settings} label="Cài đặt" />
-        </nav>
+    <div className="fixed inset-x-0 bottom-3 z-40 md:hidden flex justify-center pointer-events-none">
+      <div className="w-full max-w-screen-sm px-4 pointer-events-auto">
+        {/* Thanh bo tròn chính – pastel + neumorphism */}
+        <div className="rounded-[999px] border border-white/70 bg-gradient-to-r from-indigo-50 via-sky-50 to-purple-50 shadow-[0_12px_30px_rgba(15,23,42,0.15)] px-2 py-2 flex gap-2">
+          <NeumorphicTab
+            active={phase === "work"}
+            onClick={() => onPhaseChange("work")}
+            icon={CheckSquare}
+            label="Công việc"
+          />
+          <NeumorphicTab
+            active={phase === "projects"}
+            onClick={() => onPhaseChange("projects")}
+            icon={FolderKanban}
+            label="Dự án"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-function BottomItem({ icon: Icon, label }) {
+function NeumorphicTab({ active, onClick, icon: Icon, label }) {
+  const base =
+    "flex-1 flex items-center justify-center gap-1.5 rounded-[999px] px-4 py-2 text-[11px] sm:text-xs font-medium transition-all duration-200";
+
+  const activeStyle =
+    "bg-white/90 text-slate-800 shadow-[4px_4px_10px_rgba(148,163,184,0.55),-4px_-4px_10px_rgba(255,255,255,0.95)]";
+  const inactiveStyle =
+    "bg-transparent text-slate-500 shadow-[2px_2px_6px_rgba(148,163,184,0.4),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-white/60";
+
   return (
-    <a
-      href="#"
-      className="flex flex-col items-center justify-center gap-1 py-2 text-xs text-slate-600 hover:bg-slate-50"
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${base} ${active ? activeStyle : inactiveStyle}`}
     >
-      <Icon className="h-5 w-5" />
-      {label}
-    </a>
+      <Icon
+        className={`h-5 w-5 ${
+          active ? "text-indigo-500" : "text-slate-400"
+        }`}
+      />
+      <span>{label}</span>
+    </button>
   );
 }

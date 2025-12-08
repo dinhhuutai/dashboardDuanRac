@@ -8,7 +8,8 @@ import {
   routesSuggest, 
   routesProductionAdmin, 
   routesCalculateSalaryAdmin,
-  routesFormAdmin, 
+  routesFormAdmin,
+  routesTaskManagementAdmin,
 } from "./routes";
 
 import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
@@ -26,6 +27,8 @@ import DefaultLayoutAdminCalculateSalary from "./layoutCalculateSalaryAdmin/Defa
 import DefaultLayoutAdminForm from "./layoustFormAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutTaskManagement from "./layoutsTaskManagement/DefaultLayout";
+
+import DefaultLayoutAdminTaskManagement from "./layoutsTaskManagementAdmin/DefaultLayoutAdmin";
 
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
@@ -261,6 +264,30 @@ function App() {
                 <DefaultLayoutAdminForm>
                   <route.component />
                 </DefaultLayoutAdminForm>
+              }
+            />
+          ))}
+        </Route>
+
+        
+        {/* ====== ADMIN QUAN LY CÔNG VIỆC (module congviec, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="qlcongviec"
+              fallbackName="Quản lý công việc"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesTaskManagementAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminTaskManagement>
+                  <route.component />
+                </DefaultLayoutAdminTaskManagement>
               }
             />
           ))}
