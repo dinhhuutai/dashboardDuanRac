@@ -18,6 +18,8 @@ export default function Sidebar({ phase, onNavigate }) {
   const roleTaskManager = useSelector(userRoleTaskManager);
   const roleCode = roleTaskManager?.code; // vd: bangiamdoc, giamdocnhamay...
 
+  console.log(roleTaskManager);
+
   // Tính quyền xem từng mục theo roleCode
   const {
     canViewMyTasks,
@@ -43,22 +45,22 @@ export default function Sidebar({ phase, onNavigate }) {
       case "giamdocnhamay":
         return {
           canViewMyTasks: true,
-          canViewTeamTasks: true,
-          canViewDepartmentTasks: true,
+          canViewTeamTasks: roleTaskManager.cv_team !== null ? true : false,
+          canViewDepartmentTasks:  roleTaskManager.cv_department !== null ? true : false,
           canViewCompanyTasks: true,
         };
       case "truongphong":
       case "phophong":
         return {
           canViewMyTasks: true,
-          canViewTeamTasks: true,
-          canViewDepartmentTasks: true,
+          canViewTeamTasks: roleTaskManager.cv_team !== null ? true : false,
+          canViewDepartmentTasks:  roleTaskManager.cv_department !== null ? true : false,
           canViewCompanyTasks: false,
         };
       case "totruong":
         return {
           canViewMyTasks: true,
-          canViewTeamTasks: true,
+          canViewTeamTasks: roleTaskManager.cv_team !== null ? true : false,
           canViewDepartmentTasks: false,
           canViewCompanyTasks: false,
         };
@@ -91,7 +93,7 @@ export default function Sidebar({ phase, onNavigate }) {
 
         {canViewTeamTasks && (
           <NavItem
-            label="Theo nhóm"
+            label="Công việc của nhóm"
             to={config.routes.taskManagementTeamTasks}
             onNavigate={onNavigate}
           />
@@ -99,7 +101,7 @@ export default function Sidebar({ phase, onNavigate }) {
 
         {canViewDepartmentTasks && (
           <NavItem
-            label="Theo phòng ban"
+            label="Công việc của phòng"
             to={config.routes.taskManagementDepartmentTasks}
             onNavigate={onNavigate}
           />

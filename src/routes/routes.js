@@ -180,6 +180,7 @@ const routesTaskManagement = [
     component: TaskManagementProjectOverview,
     login: true,
     module: 'quanlycongviec',
+    addId: true,
   },
 ]
 

@@ -34,7 +34,7 @@ export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCre
         >
           <Menu className="h-5 w-5" />
         </button> :
-        <div className="inline-flex items-center gap-2 font-semibold">
+        <div className="md:hidden inline-flex items-center gap-2 font-semibold">
           <Link
             to={phase === 'work' ? config.routes.taskManagementDashboard : config.routes.taskManagementProjectList}
             className="flex items-center gap-3 group pr-[10px]"

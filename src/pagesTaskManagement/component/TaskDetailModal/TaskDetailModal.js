@@ -509,7 +509,6 @@ function closePreviewAttachment() {
 
           <div className="flex flex-wrap gap-2 justify-end">
             {
-              (task?.assignees?.some(a => a.userID === user?.login?.currentUser?.userID) || user?.login?.currentUser?.userID === task?.createdBy) &&
               <button
                 type="button"
                 onClick={toggleCommentsOpen}
@@ -658,6 +657,7 @@ function closePreviewAttachment() {
           onReplyComment={handleReplyComment}
           onDeleteComment={handleDeleteComment}
           user={user}
+          task={task}
         />
       </div>
 

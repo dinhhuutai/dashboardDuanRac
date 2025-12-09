@@ -412,40 +412,56 @@ function TaskCard({ item, onTaskClick }) {
         </div>
       </div>
 
-      {/* Info: tạo, giao, bắt đầu / hoàn thành */}
-      <div className="mt-0.5 flex flex-col gap-1 text-[11px] text-slate-500">
-        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          {item.createdByName && (
-            <span className="truncate max-w-[70%]">
-              <span className="font-medium text-slate-600">Tạo:</span>{" "}
-              {item.createdByName}
-            </span>
-          )}
-          {item.assigneeNames && (
-            <span className="truncate max-w-[70%]">
-              <span className="font-medium text-slate-600">Giao cho:</span>{" "}
-              {item.assigneeNames}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          {startLabel && (
-            <span>
-              <span className="font-medium text-slate-600">Bắt đầu:</span>{" "}
-              {startLabel}
-              {startTimeLabel && (
-                <span className="text-slate-400"> ({startTimeLabel})</span>
-              )}
-            </span>
-          )}
-          {completedLabel && (
-            <span>
-              <span className="font-medium text-slate-600">Hoàn thành:</span>{" "}
-              {completedLabel}
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Info: thực hiện, tạo, bắt đầu / hoàn thành */}
+<div className="mt-0.5 flex flex-col gap-1 text-[11px] text-slate-500">
+  {/* Dòng 1: Thực hiện (nổi bật) + Tạo */}
+  <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+    {item.assigneeNames && (
+      <span
+        className="
+          inline-flex items-center gap-1
+          px-2 py-[2px]
+          rounded-full
+          bg-indigo-50
+          text-[11px] text-indigo-700
+          border border-indigo-100
+          max-w-full
+        "
+      >
+        <span className="font-semibold">Thực hiện:</span>
+        <span className="font-medium truncate max-w-[180px] md:max-w-[220px]">
+          {item.assigneeNames}
+        </span>
+      </span>
+    )}
+
+    {item.createdByName && (
+      <span className="truncate max-w-[70%]">
+        <span className="font-medium text-slate-600">Tạo:</span>{" "}
+        {item.createdByName}
+      </span>
+    )}
+  </div>
+
+  {/* Dòng 2: Bắt đầu / Hoàn thành */}
+  <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+    {startLabel && (
+      <span>
+        <span className="font-medium text-slate-600">Bắt đầu:</span>{" "}
+        {startLabel}
+        {startTimeLabel && (
+          <span className="text-slate-400"> ({startTimeLabel})</span>
+        )}
+      </span>
+    )}
+    {completedLabel && (
+      <span>
+        <span className="font-medium text-slate-600">Hoàn thành:</span>{" "}
+        {completedLabel}
+      </span>
+    )}
+  </div>
+</div>
 
       {/* Thanh tiến độ */}
       <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">

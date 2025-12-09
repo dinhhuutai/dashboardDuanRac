@@ -205,50 +205,55 @@ export default function ListView({
                     </div>
                   </div>
 
-                  {/* Info: tạo, giao, bắt đầu, hoàn thành */}
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
-                    {r.createdByName && (
-                      <span>
-                        <span className="font-medium text-slate-600">
-                          Tạo:
-                        </span>{" "}
-                        {r.createdByName}
-                      </span>
-                    )}
+                  {/* Info: thực hiện, tạo, bắt đầu, hoàn thành */}
+<div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-500">
+  {/* 👉 NỔI BẬT: người thực hiện */}
+  {r.assigneeNames && (
+    <span
+      className="
+        inline-flex items-center gap-1
+        px-2 py-[2px]
+        rounded-full
+        bg-indigo-50
+        text-[11px] text-indigo-700
+        border border-indigo-100
+        max-w-full
+      "
+    >
+      <span className="font-semibold">Thực hiện:</span>
+      <span className="font-medium truncate max-w-[220px] md:max-w-xs">
+        {r.assigneeNames}
+      </span>
+    </span>
+  )}
 
-                    {r.assigneeNames && (
-                      <span>
-                        <span className="font-medium text-slate-600">
-                          Giao cho:
-                        </span>{" "}
-                        {r.assigneeNames}
-                      </span>
-                    )}
+  {/* Người tạo (bình thường hơn) */}
+  {r.createdByName && (
+    <span>
+      <span className="font-medium text-slate-600">Tạo:</span>{" "}
+      {r.createdByName}
+    </span>
+  )}
 
-                    {startLabel && (
-                      <span>
-                        <span className="font-medium text-slate-600">
-                          Bắt đầu:
-                        </span>{" "}
-                        {startLabel}
-                        {startTimeLabel && (
-                          <span className="text-slate-400">
-                            {" "}
-                            ({startTimeLabel})
-                          </span>
-                        )}
-                      </span>
-                    )}
+  {/* Ngày bắt đầu */}
+  {startLabel && (
+    <span>
+      <span className="font-medium text-slate-600">Bắt đầu:</span>{" "}
+      {startLabel}
+      {startTimeLabel && (
+        <span className="text-slate-400"> ({startTimeLabel})</span>
+      )}
+    </span>
+  )}
 
-                    {completedLabel && (
-                      <span>
-                        <span className="font-medium text-slate-600">
-                          Hoàn thành:
-                        </span>{" "}
-                        {completedLabel}
-                      </span>
-                    )}
-                  </div>
+  {/* Ngày hoàn thành */}
+  {completedLabel && (
+    <span>
+      <span className="font-medium text-slate-600">Hoàn thành:</span>{" "}
+      {completedLabel}
+    </span>
+  )}
+</div>
 
                   {/* Thanh tiến độ */}
                   <div className="mt-1 w-full md:w-[70%] flex items-center gap-2 text-[11px] text-slate-500">

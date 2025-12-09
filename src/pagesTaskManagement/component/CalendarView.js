@@ -175,51 +175,55 @@ export default function CalendarView({ loading, rows, onTaskClick }) {
                             </div>
                           </div>
 
-                          {/* Info: tạo, giao, bắt đầu / hoàn thành */}
                           <div className="mt-0.5 flex flex-col gap-0.5 text-[11px] text-slate-500">
-                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                              {it.createdByName && (
-                                <span className="truncate max-w-[100%]">
-                                  <span className="font-medium text-slate-600">
-                                    Tạo:
-                                  </span>{" "}
-                                  {it.createdByName}
-                                </span>
-                              )}
-                              {it.assigneeNames && (
-                                <span className="truncate max-w-[100%]">
-                                  <span className="font-medium text-slate-600">
-                                    Giao cho:
-                                  </span>{" "}
-                                  {it.assigneeNames}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                              {startLabel && (
-                                <span>
-                                  <span className="font-medium text-slate-600">
-                                    Bắt đầu:
-                                  </span>{" "}
-                                  {startLabel}
-                                  {startTimeLabel && (
-                                    <span className="text-slate-400">
-                                      {" "}
-                                      ({startTimeLabel})
-                                    </span>
-                                  )}
-                                </span>
-                              )}
-                              {completedLabel && (
-                                <span>
-                                  <span className="font-medium text-slate-600">
-                                    Hoàn thành:
-                                  </span>{" "}
-                                  {completedLabel}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+  {/* Dòng 1: Thực hiện (nổi bật) + Tạo */}
+  <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+    {it.assigneeNames && (
+      <span
+        className="
+          inline-flex items-center gap-1
+          px-2 py-[2px]
+          rounded-full
+          bg-indigo-50
+          text-[11px] text-indigo-700
+          border border-indigo-100
+          max-w-full
+        "
+      >
+        <span className="font-semibold">Thực hiện:</span>
+        <span className="font-medium truncate max-w-[180px] md:max-w-[220px]">
+          {it.assigneeNames}
+        </span>
+      </span>
+    )}
+
+    {it.createdByName && (
+      <span className="truncate max-w-[100%]">
+        <span className="font-medium text-slate-600">Tạo:</span>{" "}
+        {it.createdByName}
+      </span>
+    )}
+  </div>
+
+  {/* Dòng 2: Bắt đầu / Hoàn thành */}
+  <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+    {startLabel && (
+      <span>
+        <span className="font-medium text-slate-600">Bắt đầu:</span>{" "}
+        {startLabel}
+        {startTimeLabel && (
+          <span className="text-slate-400"> ({startTimeLabel})</span>
+        )}
+      </span>
+    )}
+    {completedLabel && (
+      <span>
+        <span className="font-medium text-slate-600">Hoàn thành:</span>{" "}
+        {completedLabel}
+      </span>
+    )}
+  </div>
+</div>
 
                           {/* Thanh tiến độ */}
                           <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">

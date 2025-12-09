@@ -5,12 +5,12 @@ import Select from "react-select";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 
-import { LabelSmall, ViewChip } from "./TaskUI";
-import ListView from "./ListView";
-import CalendarView from "./CalendarView";
-import BoardView from "./BoardView";
-import CreateTaskButton from "./CreateTaskModal";
-import TaskDetailModal from "./TaskDetailModal";
+import { LabelSmall, ViewChip } from "../../component/TaskUI";
+import ListView from "../../component/ListView";
+import CalendarView from "../../component/CalendarView";
+import BoardView from "../../component/BoardView";
+import CreateTaskButton from "../../component/CreateTaskModal";
+import TaskDetailModal from "../../component/TaskDetailModal";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";
 
