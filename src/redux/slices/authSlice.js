@@ -79,6 +79,12 @@ export default createSlice({
                 state.login.roleTaskManager = null;
             }
         },
+        changePasswordFirstLogin: (state) => {
+          state.login.currentUser.hasChangedPassword = true;
+        },
+        firstLoginGift: (state) => {
+          state.login.currentUser.firstLoginGiftClaimed = true;
+        },
         loginFailed: (state) => {
             state.login.isFetching = false;
             state.login.error = true;

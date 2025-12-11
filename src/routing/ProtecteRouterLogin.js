@@ -15,7 +15,8 @@ function ProtecteRouterLogin() {
 
   // 2) Chỉ auto-redirect ngay SAU khi đăng nhập
   const justLoggedIn = location.state?.from === 'login';
-  if (justLoggedIn) {
+  console.log(login.currentUser.hasChangedPassword)
+  if (justLoggedIn && login.currentUser.hasChangedPassword) {
     const modules = login?.permissions?.modules || [];
     let to = config.routes.homeMain;
 

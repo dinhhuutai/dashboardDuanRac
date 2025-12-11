@@ -1,4 +1,4 @@
-// src/pages/Home/LuckyGiftModal.jsx
+// src/pages/Home/FirstLoginGiftModal.jsx
 import React, { useState } from "react";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
@@ -114,11 +114,10 @@ function pickNinePrizes() {
   return [...picked8, losePrize];
 }
 
-export default function LuckyGiftModal({ isOpen, onClose }) {
+export default function FirstLoginGiftModal({ isOpen, onClose }) {
   const [phase, setPhase] = useState("intro"); // intro | spinning | choose | result
   const [hiddenMode, setHiddenMode] = useState(false); // true = thẻ đang úp
 
-  // bộ 9 phần quà cho một lượt chơi
   const [roundPrizes, setRoundPrizes] = useState(() => pickNinePrizes());
   const [displayPrizes, setDisplayPrizes] = useState(() => roundPrizes);
 
@@ -130,11 +129,10 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
   const [spinTick, setSpinTick] = useState(0);
   const [spinProgress, setSpinProgress] = useState(0); // 0 → 1 trong 5s
 
-  // offset random cho chuyển động xoáo bài
   const [randomOffsets] = useState(() =>
     Array.from({ length: 9 }, () => ({
-      baseX: (Math.random() * 2 - 1) * 20, // -20 → 20
-      baseY: (Math.random() * 2 - 1) * 20, // -20 → 20
+      baseX: (Math.random() * 2 - 1) * 20,
+      baseY: (Math.random() * 2 - 1) * 20,
       phase: Math.random() * Math.PI * 2,
     }))
   );
@@ -145,7 +143,7 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
     if (phase !== "intro") return;
 
     setPhase("spinning");
-    setHiddenMode(true); // úp toàn bộ thẻ
+    setHiddenMode(true);
     setSpinTick(0);
     setSpinProgress(0);
 
@@ -153,7 +151,6 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
     const start = performance.now();
 
     const id = setInterval(() => {
-      // chỉ xáo 8 thẻ đầu, thẻ cuối (may mắn lần sau) đứng yên
       const nonLose = current.slice(0, current.length - 1);
       const loseCard = current[current.length - 1];
 
@@ -173,7 +170,7 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
     setTimeout(() => {
       clearInterval(id);
       setShuffleTimerId(null);
-      setPhase("choose"); // cho chọn
+      setPhase("choose");
     }, SPIN_DURATION_MS);
   };
 
@@ -185,7 +182,7 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
     setClaiming(true);
 
     try {
-      // backend: đánh dấu luckyGiftClaimed = 1, luôn trả "Chúc bạn may mắn lần sau"
+      // có thể dùng lại API claim chung nếu muốn hiện message từ server
       const res = await http.post(`${BASE_URL}/api/lucky-gift/claim`, {
         prizeKey: prize.key,
       });
@@ -194,7 +191,7 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
         res.data?.data?.luckyGiftResult || "Chúc bạn may mắn lần sau";
       setFinalResult(msg);
     } catch (err) {
-      console.error("Claim lucky gift error:", err);
+      console.error("Claim first login gift error:", err);
       setFinalResult("Chúc bạn may mắn lần sau");
     } finally {
       setClaiming(false);
@@ -205,12 +202,10 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
     if (shuffleTimerId) clearInterval(shuffleTimerId);
     setShuffleTimerId(null);
 
-    // random bộ 9 quà mới, cuối vẫn là "may mắn lần sau"
     const nextRound = pickNinePrizes();
     setRoundPrizes(nextRound);
     setDisplayPrizes(nextRound);
 
-    // reset state
     setPhase("intro");
     setHiddenMode(false);
     setSelectedPrizeKey(null);
@@ -226,13 +221,13 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-3">
       <div className="relative w-full max-w-sm sm:max-w-md rounded-2xl bg-gradient-to-br from-slate-50 via-white to-sky-50 shadow-2xl p-4 sm:p-5 border border-slate-200/70">
-        {/* deco confetti góc trên */}
+        {/* deco */}
         <div className="pointer-events-none absolute inset-0 opacity-40 mix-blend-soft-light">
           <div className="absolute -top-6 -left-6 w-16 h-16 bg-pink-300/40 rounded-full blur-2xl" />
           <div className="absolute -bottom-6 -right-4 w-16 h-16 bg-sky-300/40 rounded-full blur-2xl" />
         </div>
 
-        {/* nút đóng */}
+        {/* close */}
         <button
           type="button"
           onClick={handleClose}
@@ -241,21 +236,22 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
           ✕
         </button>
 
-        {/* header */}
+        {/* header – ĐỔI LỜI CHO LẦN ĐẦU ĐĂNG NHẬP  */}
         <div className="relative text-center mb-3 mt-1">
-          <div className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 border border-amber-200 text-[10px] uppercase tracking-wide font-semibold text-amber-700">
-            <span className="text-[11px]">🛠️</span>
-            <span>Bug Hunter Reward</span>
+          <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 border border-emerald-200 text-[10px] uppercase tracking-wide font-semibold text-emerald-700">
+            <span className="text-[11px]">🎉</span>
+            <span>Welcome Gift</span>
           </div>
           <h2 className="text-base sm:text-lg font-bold mt-2 mb-1 text-slate-800">
-            Quà sửa lỗi hệ thống
+            Quà chào mừng lần đầu đăng nhập
           </h2>
           <p className="text-[11px] sm:text-xs text-gray-600">
-            Minigame vui là chính - quà là... hên xui 😄
+            Bạn đã đổi mật khẩu thành công rồi. Quay một vòng chọn quà vui để
+            chào mừng lần đầu vào hệ thống nội bộ nhé 😄
           </p>
         </div>
 
-        {/* khung bao lưới thẻ – thêm glow khi spinning */}
+        {/* grid + hiệu ứng */}
         <div
           className={`relative mt-2 rounded-2xl border bg-white/80 p-2 sm:p-2.5 ${
             isSpinning
@@ -300,7 +296,8 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
 
           {phase === "choose" && (
             <p className="text-[11px] sm:text-xs text-gray-600 text-center">
-              Chọn <span className="font-semibold">1 thẻ</span> mà bạn thấy may mắn nhất ✨
+              Chọn <span className="font-semibold">1 thẻ</span> mà bạn thấy may
+              mắn nhất để nhận quà chào mừng ✨
             </p>
           )}
 
@@ -311,7 +308,8 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
                 {finalResult || "Chúc bạn may mắn lần sau"}
               </div>
               <p className="text-[10px] text-gray-500">
-                Tinh thần là chính, vật chất tính sau nha 😆
+                Dù quà gì thì cũng chúc bạn có trải nghiệm thật vui với hệ thống
+                nha 😆
               </p>
               <button
                 type="button"
@@ -324,7 +322,8 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
           )}
 
           <p className="mt-1 text-[9px] text-gray-400 text-center">
-            *Tất cả phần quà chỉ mang tính chất minh hoạ, không có giá trị quy đổi.
+            *Phần quà mang tính chất vui vẻ, chào mừng lần đầu đăng nhập – không
+            có giá trị quy đổi.
           </p>
         </div>
       </div>
@@ -332,6 +331,7 @@ export default function LuckyGiftModal({ isOpen, onClose }) {
   );
 }
 
+// ================== PrizeGrid giữ nguyên logic của LuckyGiftModal ==================
 function PrizeGrid({
   prizes,
   hiddenMode,
@@ -345,21 +345,14 @@ function PrizeGrid({
   const canPick = phase === "choose";
   const isSpinning = phase === "spinning";
 
-  // ================== MODE SPINNING: xào bài 3D ==================
   if (isSpinning) {
     const p = spinProgress || 0;
 
-    // Timeline:
-    // 0.00 → 0.30: từng thẻ chạy ra tạo vòng tròn
-    // 0.30 → 0.65: vòng tròn xoay như cuộn băng keo (3D)
-    // 0.65 → 0.82: gom từng tấm về chồng giữa
-    // 0.82 → 1.00: phát từng tấm ra lưới 3x3
     const RING_BUILD_END = 0.3;
     const RING_SPIN_END = 0.65;
     const STACK_END = 0.82;
     const DEAL_END = 1.0;
 
-    // easing mượt
     const smooth = (t) => t * t * (3 - 2 * t);
 
     return (
@@ -371,16 +364,13 @@ function PrizeGrid({
           const colorClass =
             HIDDEN_COLORS[card.key] || "from-indigo-400 to-indigo-600";
 
-          // Góc cố định cho mỗi thẻ trên vòng
           const baseAngle = ((2 * Math.PI) / prizes.length) * idx;
 
-          // Vị trí đích trên lưới 3x3
-          const col = idx % 3; // 0,1,2
-          const row = Math.floor(idx / 3); // 0,1,2
-          const targetX = (col - 1) * 70; // -70,0,70
-          const targetY = (row - 1) * 80; // -80,0,80
+          const col = idx % 3;
+          const row = Math.floor(idx / 3);
+          const targetX = (col - 1) * 70;
+          const targetY = (row - 1) * 80;
 
-          // offset nhỏ cho mỗi thẻ để đỡ đều quá
           const cfg =
             randomOffsets?.[idx % randomOffsets.length] || {
               baseX: 0,
@@ -397,10 +387,8 @@ function PrizeGrid({
           let scale = 1;
           let zIndex = 10 + idx;
 
-          // ========== STAGE 1: build vòng tròn ==========
           if (p <= RING_BUILD_END) {
-            const progresStage = p / RING_BUILD_END; // 0→1
-            // delay nhẹ cho từng thẻ => chạy nối đuôi
+            const progresStage = p / RING_BUILD_END;
             const delay = idx * 0.06;
             const local = Math.min(
               Math.max(progresStage - delay, 0) / (1 - delay || 0.0001),
@@ -419,46 +407,33 @@ function PrizeGrid({
             rotX = 15 * (1 - e);
             rotZ = (idx - prizes.length / 2) * (1 - e) * 4;
             scale = 0.85 + 0.15 * e;
-          }
-
-          // ========== STAGE 2: vòng tròn xoay như cuộn băng keo ==========
-          else if (p > RING_BUILD_END && p <= RING_SPIN_END) {
+          } else if (p > RING_BUILD_END && p <= RING_SPIN_END) {
             const stageP =
-              (p - RING_BUILD_END) / (RING_SPIN_END - RING_BUILD_END); // 0→1
+              (p - RING_BUILD_END) / (RING_SPIN_END - RING_BUILD_END);
 
-            // số vòng quay
             const spinTurns = 3;
             const spinAngle =
               stageP * spinTurns * 2 * Math.PI + spinTick * 0.2;
 
-            // bán kính cố định
             const radius = 80;
             const angle = baseAngle + spinAngle;
 
-            // vòng elip (x,y)
             x = Math.cos(angle) * radius;
             y = Math.sin(angle) * radius * 0.6;
 
-            // chiều sâu 3D (cuộn băng keo)
-            const depth = Math.sin(angle); // -1 → 1
-            z = depth * 80; // dịch ra sau / trước màn hình
-            scale = 0.8 + ((depth + 1) / 2) * 0.2; // thẻ phía trước to hơn
+            const depth = Math.sin(angle);
+            z = depth * 80;
+            scale = 0.8 + ((depth + 1) / 2) * 0.2;
 
-            // xoay như thẻ gắn trên cuộn
-            rotY = depth * 65; // quay quanh trục Y
+            rotY = depth * 65;
             rotX = Math.cos(angle * 0.7 + cfg.phase) * 10;
             rotZ = Math.sin(angle * 1.3 + cfg.phase) * 6;
 
-            // Thẻ phía trước: zIndex cao hơn
             zIndex = 100 + Math.round((depth + 1) * 20);
-          }
-
-          // ========== STAGE 3: gom từng tấm về chồng giữa ==========
-          else if (p > RING_SPIN_END && p <= STACK_END) {
+          } else if (p > RING_SPIN_END && p <= STACK_END) {
             const stageP =
-              (p - RING_SPIN_END) / (STACK_END - RING_SPIN_END); // 0→1
+              (p - RING_SPIN_END) / (STACK_END - RING_SPIN_END);
 
-            // vị trí xuất phát (trên vòng)
             const radius = 80;
             const angle = baseAngle + spinTick * 0.2;
             const startX = Math.cos(angle) * radius;
@@ -466,14 +441,12 @@ function PrizeGrid({
             const startDepth = Math.sin(angle);
             const startZ = startDepth * 60;
 
-            // tâm chồng bài (chút lệch)
             const centerX = cfg.baseX * 0.4;
             const centerY = cfg.baseY * 0.4;
             const centerZ = 0;
 
-            // mỗi thẻ bay vào chồng ở thời điểm khác nhau
             const window = 0.7;
-            const step = (window / prizes.length) || 0.0001;
+            const step = window / prizes.length || 0.0001;
             const cardStart = step * idx;
             const cardEnd = cardStart + step;
 
@@ -496,22 +469,17 @@ function PrizeGrid({
             rotZ = (idx - prizes.length / 2) * (1 - e) * 3;
             scale = 0.9 + 0.1 * e;
 
-            zIndex = 200 + idx; // chồng lên nhau
-          }
-
-          // ========== STAGE 4: phát từng tấm ra lưới ==========
-          else {
+            zIndex = 200 + idx;
+          } else {
             const stageP =
-              (p - STACK_END) / (DEAL_END - STACK_END || 0.0001); // 0→1
+              (p - STACK_END) / (DEAL_END - STACK_END || 0.0001);
 
-            // vị trí chồng
             const stackX = cfg.baseX * 0.4;
             const stackY = cfg.baseY * 0.4;
             const stackZ = 0;
 
-            // mỗi thẻ có "slot" riêng để bay ra
             const window = 0.85;
-            const step = (window / prizes.length) || 0.0001;
+            const step = window / prizes.length || 0.0001;
             const cardStart = step * idx;
             const cardEnd = cardStart + step;
 
@@ -527,7 +495,7 @@ function PrizeGrid({
 
             x = stackX + (targetX - stackX) * e;
             y = stackY + (targetY - stackY) * e;
-            z = stackZ - 30 * (1 - e); // lúc mới bay ra hơi nổi lên
+            z = stackZ - 30 * (1 - e);
 
             rotY = (1 - e) * 25;
             rotX = (1 - e) * 10;
@@ -550,7 +518,7 @@ function PrizeGrid({
             <button
               key={card.key}
               type="button"
-              disabled={true}
+              disabled
               style={{
                 transform,
                 transition: "transform 0.08s linear",
@@ -564,9 +532,7 @@ function PrizeGrid({
             >
               <div className="flex flex-col items-center">
                 <div className="text-lg mb-0.5">❓</div>
-                <div className="font-semibold leading-tight">
-                  Chọn tôi đi
-                </div>
+                <div className="font-semibold leading-tight">Chọn tôi đi</div>
               </div>
             </button>
           );
@@ -575,7 +541,7 @@ function PrizeGrid({
     );
   }
 
-  // ================== CÁC MODE KHÁC: intro / choose / result – lưới bình thường ==================
+  // intro / choose / result – lưới bình thường
   return (
     <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
       {prizes.map((p) => {
@@ -602,7 +568,6 @@ function PrizeGrid({
               }
             `}
           >
-            {/* intro: hiện quà thật */}
             {!hiddenMode && phase === "intro" && (
               <div className="flex flex-col items-center px-1">
                 <div className="text-lg mb-0.5">{p.emoji}</div>
@@ -612,17 +577,13 @@ function PrizeGrid({
               </div>
             )}
 
-            {/* choose: mặt sau */}
             {hiddenMode && phase === "choose" && (
               <div className="flex flex-col items-center">
                 <div className="text-lg mb-0.5">❓</div>
-                <div className="font-semibold leading-tight">
-                  Chọn tôi đi
-                </div>
+                <div className="font-semibold leading-tight">Chọn tôi đi</div>
               </div>
             )}
 
-            {/* result: chỉ thẻ được chọn hiện thông điệp */}
             {phase === "result" && (
               <>
                 {isSelected ? (
@@ -645,5 +606,3 @@ function PrizeGrid({
     </div>
   );
 }
-
-
