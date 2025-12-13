@@ -42,28 +42,36 @@ import config from "./config";
 import RequireModule from "./routing/RequireModule";
 import { reloadPermissions } from "./redux/slices/authSlice";
 
-function App() {
-  const tmp = useSelector(userSelector);
-  const [user, setUser] = useState(tmp);
-  useEffect(() => { setUser(tmp); }, [tmp]);
+import usePresencePing from "./hooks/usePresencePing";
+
+import usePageView from "./hooks/usePageView";
+
+function AppRoutes({ user }) {
+  
+  const isLoggedIn = !!user?.login?.currentUser;
+
+  usePresencePing(isLoggedIn);
+  usePageView(isLoggedIn); 
 
   const dispatch = useDispatch();
 
   useEffect(() => {
     const onFocus = () => dispatch(reloadPermissions());
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') dispatch(reloadPermissions());
-    });
+    const onVis = () => {
+      if (document.visibilityState === "visible") dispatch(reloadPermissions());
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+
     return () => {
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onFocus);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [dispatch]);
 
 
   return (
-    <Router>
       <Routes>
         {/* Login */}
         <Route
@@ -293,6 +301,17 @@ function App() {
           ))}
         </Route>
       </Routes>
+  );
+}
+
+function App() {
+  const tmp = useSelector(userSelector);
+  const [user, setUser] = useState(tmp);
+  useEffect(() => setUser(tmp), [tmp]);
+
+  return (
+    <Router>
+      <AppRoutes user={user} />
     </Router>
   );
 }

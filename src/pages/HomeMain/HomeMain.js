@@ -27,6 +27,7 @@
 
 // import Module from "../Module";
 // import UserModuleAccess from "../UserModuleAccess";
+// import UsageDashboard from "../UsageDashboard";
 
 // import MidAutumnLanternBackground from "~/components/UiBackground/BgTrungThu";
 // import ChristmasSceneBackground from "~/components/UiBackground/BgNoel";
@@ -39,6 +40,7 @@
 // import CreateAccountCard from "./CreateAccountCard";
 // import UsersAdminPanel from "./UsersAdminPanel";
 // import ProfileSettingsCard from "./ProfileSettingsCard";
+
 // // import ThemeToggle from "./components/ThemeToggle";
 
 // import LuckyGiftModal from "./LuckyGiftModal";
@@ -313,9 +315,9 @@
 //         onClose={() => {
 //           setShowPasswordSuccessModal(false);
 //           // Nếu user chưa nhận quà lần đầu thì mở modal quà lần đầu
-//           if (!user.firstLoginGiftClaimed) {
-//             setShowFirstLoginGiftModal(true);
-//           }
+//           // if (!user.firstLoginGiftClaimed) {
+//           //   setShowFirstLoginGiftModal(true);
+//           // }
 //         }}
 //       />
 
@@ -392,7 +394,9 @@
 //               <img src={logo} alt="logo" className="h-8 w-auto" />
 //               <span className="hidden sm:block text-sm sm:text-base font-semibold text-slate-800 capitalize">
 //                 {view === "home"
-//                   ? "Home"
+//                   ? "Trang chủ"
+//                   : view === "dashboard"
+//                   ? "Thống kê truy cập"
 //                   : view === "create"
 //                   ? "Tạo tài khoản"
 //                   : view === "settings"
@@ -551,6 +555,16 @@
 //                   <FiHome />
 //                 </NavIcon>
 
+//                 {(user.username === "dinhhuutai" || user.username === "thaonguyen") && (
+//                   <NavIcon
+//                     active={view === "dashboard"}
+//                     title="Dashboard"
+//                     onClick={() => setView("dashboard")}
+//                   >
+//                     <FiIcons.FiBarChart2 />
+//                   </NavIcon>
+//                 )}
+
 //                 {(user.username === "dinhhuutai" ||
 //                   user.username === "thaonguyen") && (
 //                   <NavIcon
@@ -614,6 +628,8 @@
 //                     })}
 //                   </div>
 //                 ))}
+
+//               {view === "dashboard" && <UsageDashboard />}
 
 //               {view === "modules" && <Module />}
 
