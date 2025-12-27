@@ -65,15 +65,14 @@ export default function ChristmasSceneBackground({
   giftEveryMs={1400}
   maxGifts={36}
   santaSrc={satanImg}        // ⬅️ truyền ảnh vào đây
-  santaWidth={60}           // tuỳ chỉnh kích thước
+  santaWidth={80}           // tuỳ chỉnh kích thước
   // Bay trong dải rất cao: 1vh..9vh
   minTopVH={2}
   maxTopVH={14}
 />
 
-
       {/* Snow */}
-      <div className="absolute inset-0 pointer-events-none z-[99]">
+      <div className="absolute inset-0 pointer-events-none z-[110]">
         {particles.map((p, i) => (
           <div
             key={i}
@@ -159,10 +158,13 @@ export default function ChristmasSceneBackground({
           from { transform: translateY(0) }
           to   { transform: translateY(-2px) }
         }
-        @keyframes tree-sway {
-          from { transform: rotate(-0.4deg) }
-          to   { transform: rotate(0.4deg) }
-        }
+        @keyframes tree-wind {
+  0%   { transform: rotate(-0.6deg) translateY(0) skewX(-0.2deg); }
+  25%  { transform: rotate( 0.9deg) translateY(-1px) skewX( 0.3deg); }
+  50%  { transform: rotate(-0.3deg) translateY(0) skewX(-0.15deg); }
+  75%  { transform: rotate( 0.7deg) translateY(-1px) skewX( 0.25deg); }
+  100% { transform: rotate(-0.6deg) translateY(0) skewX(-0.2deg); }
+}
         @keyframes blink {
           0%, 100% { opacity: .2 }
           50%      { opacity: 1 }
@@ -700,8 +702,10 @@ function SnowmanSVG({ width = 110, height = 132 }) {
       <circle cx="140" cy="175" r="55" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="1" />
       <circle cx="140" cy="120" r="40" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="1" />
 
-      <circle cx="152" cy="112" r="3.5" fill="#222" />
-      <circle cx="132" cy="112" r="3.5" fill="#222" />
+      <circle cx="152" cy="112" r="3.5" fill="#222" /> {/* mắt phải bình thường */}
+
+{/* mắt trái nháy */}
+<circle className="eye-wink" cx="132" cy="112" r="3.5" fill="#222" />
 
       <path d="M146,120 L168,124 L146,128 Z" fill="#f98937" stroke="#dc6f1f" strokeWidth="1" />
 
@@ -713,8 +717,27 @@ function SnowmanSVG({ width = 110, height = 132 }) {
 
       {[160,175,190].map((y,i)=>( <circle key={i} cx="140" cy={y-10} r="3.2" fill="#2b2b2b" /> ))}
 
-      <path d="M90,145 C70,138 58,134 46,132" stroke="#6e5034" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M185,145 C202,138 214,134 226,132" stroke="#6e5034" strokeWidth="4" fill="none" strokeLinecap="round" />
+      {/* tay trái (nhẹ) */}
+<g className="arm arm-left">
+  <path
+    d="M90,145 C70,138 58,134 46,132"
+    stroke="#6e5034"
+    strokeWidth="4"
+    fill="none"
+    strokeLinecap="round"
+  />
+</g>
+
+{/* tay phải (vẫy) */}
+<g className="arm arm-right">
+  <path
+    d="M185,145 C202,138 214,134 226,132"
+    stroke="#6e5034"
+    strokeWidth="4"
+    fill="none"
+    strokeLinecap="round"
+  />
+</g>
 
       <g transform="translate(140,96)">
         <ellipse cx="0" cy="0" rx="34" ry="6" fill="#111" />
@@ -724,6 +747,47 @@ function SnowmanSVG({ width = 110, height = 132 }) {
       </g>
 
       <ellipse cx="120" cy="175" rx="36" ry="18" fill="url(#shadowGrad)" opacity=".22" />
+    
+    <style>{`
+  /* tay vẫy */
+  .arm {
+    transform-box: fill-box;
+    transform-origin: 90% 20%;
+    will-change: transform;
+  }
+  .arm-left {
+    animation: arm-sway 4.2s ease-in-out infinite;
+    opacity: .95;
+  }
+  .arm-right {
+    transform-origin: 10% 20%;
+    animation: arm-wave 2.6s ease-in-out infinite;
+  }
+
+  @keyframes arm-sway {
+    0%,100% { transform: rotate(-2deg); }
+    50%     { transform: rotate( 2deg); }
+  }
+  @keyframes arm-wave {
+    0%,100% { transform: rotate( 6deg); }
+    50%     { transform: rotate(-10deg); }
+  }
+
+  /* mắt nháy kiểu “wink” theo nhịp (thỉnh thoảng) */
+  .eye-wink {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: wink 5.5s ease-in-out infinite;
+  }
+  @keyframes wink {
+    0%, 86%, 100% { transform: scaleY(1); opacity: 1; }
+    88%           { transform: scaleY(0.15); opacity: .9; }
+    90%           { transform: scaleY(1); opacity: 1; }
+    92%           { transform: scaleY(0.15); opacity: .9; }
+    94%           { transform: scaleY(1); opacity: 1; }
+  }
+`}</style>
+
     </svg>
   );
 }
@@ -731,8 +795,8 @@ function SnowmanSVG({ width = 110, height = 132 }) {
 /* ---------- Pine Tree + Gifts (Bottom-Left) ---------- */
 function PineTreeBL({
   scale = 1.15,
-  leftPct = 3,     // sát mép trái
-  bottomPct = 4,   // đứng trên tuyết
+  leftPct = 3,
+  bottomPct = 4,
 }) {
   const base = 150 * scale;
   return (
@@ -743,8 +807,7 @@ function PineTreeBL({
         bottom: `${bottomPct}%`,
         width: base,
         height: base * 1.2,
-        transformOrigin: "50% 100%",
-        animation: "tree-sway 5s ease-in-out 0s infinite alternate",
+        willChange: "transform",
       }}
     >
       <PineTreeSVG width={base} height={base * 1.2} />
@@ -774,62 +837,101 @@ function PineTreeSVG({ width = 180, height = 210 }) {
         </linearGradient>
       </defs>
 
-      {/* Bóng dưới gốc cây */}
-      <ellipse cx="95" cy="238" rx="55" ry="10" fill="rgba(0,0,0,.18)" />
+      {/* ✅ CHỈ CÂY LẮC (không gồm quà) */}
+      <g className="treeOnly">
+        {/* Bóng dưới gốc cây */}
+        <ellipse cx="95" cy="238" rx="55" ry="10" fill="rgba(0,0,0,.18)" />
 
-      {/* Thân cây */}
-      <rect x="86" y="200" width="18" height="30" rx="3" fill="url(#trunk)" />
+        {/* Thân cây */}
+        <rect x="86" y="200" width="18" height="30" rx="3" fill="url(#trunk)" />
 
-      {/* Tầng 3 (dưới) */}
-      <path d="M30,180 L160,180 L95,120 Z" fill="url(#leaf1)" />
-      <path d="M60,168 C85,160 105,160 130,168 Q95,170 60,168 Z" fill="url(#snowCap)" opacity=".95" />
-      {/* Tầng 2 (giữa) */}
-      <path d="M45,150 L145,150 L95,98 Z" fill="url(#leaf2)" />
-      <path d="M70,140 C88,134 102,134 120,140 Q95,142 70,140 Z" fill="url(#snowCap)" opacity=".95" />
-      {/* Tầng 1 (trên) */}
-      <path d="M60,124 L130,124 L95,82 Z" fill="url(#leaf1)" />
-      <path d="M78,116 C90,112 100,112 112,116 Q95,118 78,116 Z" fill="url(#snowCap)" opacity=".95" />
+        {/* Tầng 3 (dưới) */}
+        <path d="M30,180 L160,180 L95,120 Z" fill="url(#leaf1)" />
+        <path d="M60,168 C85,160 105,160 130,168 Q95,170 60,168 Z" fill="url(#snowCap)" opacity=".95" />
 
-      {/* Sao trên đỉnh */}
-      <g transform="translate(95,74)">
-        <polygon
-          points="0,-14 4,-4 14,0 4,4 0,14 -4,4 -14,0 -4,-4"
-          fill="#ffd35a"
-          opacity=".95"
-        />
+        {/* Tầng 2 (giữa) */}
+        <path d="M45,150 L145,150 L95,98 Z" fill="url(#leaf2)" />
+        <path d="M70,140 C88,134 102,134 120,140 Q95,142 70,140 Z" fill="url(#snowCap)" opacity=".95" />
+
+        {/* Tầng 1 (trên) */}
+        <path d="M60,124 L130,124 L95,82 Z" fill="url(#leaf1)" />
+        <path d="M78,116 C90,112 100,112 112,116 Q95,118 78,116 Z" fill="url(#snowCap)" opacity=".95" />
+
+        {/* Sao trên đỉnh */}
+        <g transform="translate(95,74)">
+          <polygon points="0,-14 4,-4 14,0 4,4 0,14 -4,4 -14,0 -4,-4" fill="#ffd35a" opacity=".95" />
+        </g>
+
+        {/* Dây kim tuyến */}
+        <path d="M55,128 C95,140 95,140 135,128" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
+        <path d="M42,154 C95,170 95,170 148,154" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
+        <path d="M30,182 C95,200 95,200 160,182" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
+
+        {/* Bóng trang trí */}
+        {[
+          { x: 80, y: 130, c: "#ff5b5b" },
+          { x: 110, y: 132, c: "#5bc0ff" },
+          { x: 65, y: 158, c: "#ffd35a" },
+          { x: 125, y: 156, c: "#ad8cff" },
+          { x: 95, y: 182, c: "#ff8fb0" },
+        ].map((b, i) => (
+          <circle
+            key={i}
+            cx={b.x}
+            cy={b.y}
+            r="5.5"
+            fill={b.c}
+            style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,.4))" }}
+          />
+        ))}
+
+        {/* Đèn nháy */}
+        {[{ x: 70, y: 170 }, { x: 120, y: 170 }, { x: 95, y: 146 }, { x: 105, y: 188 }].map((d, i) => (
+          <circle
+            key={i}
+            cx={d.x}
+            cy={d.y}
+            r="2.4"
+            fill="#fff"
+            opacity=".8"
+            style={{ animation: `blink ${1.2 + i * 0.2}s ease-in-out ${i * 0.15}s infinite` }}
+          />
+        ))}
       </g>
 
-      {/* Dây kim tuyến (garland) */}
-      <path d="M55,128 C95,140 95,140 135,128" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
-      <path d="M42,154 C95,170 95,170 148,154" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
-      <path d="M30,182 C95,200 95,200 160,182" stroke="#ffd35a" strokeWidth="3" fill="none" opacity=".85" />
-
-      {/* Bóng trang trí */}
-      {[{x:80,y:130,c:'#ff5b5b'},{x:110,y:132,c:'#5bc0ff'},{x:65,y:158,c:'#ffd35a'},{x:125,y:156,c:'#ad8cff'},{x:95,y:182,c:'#ff8fb0'}].map((b,i)=>(
-        <circle key={i} cx={b.x} cy={b.y} r="5.5" fill={b.c} style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,.4))" }} />
-      ))}
-
-      {/* Đèn nháy nhẹ (blink) */}
-      {[{x:70,y:170},{x:120,y:170},{x:95,y:146},{x:105,y:188}].map((d,i)=>(
-        <circle key={i} cx={d.x} cy={d.y} r="2.4" fill="#fff" opacity=".8" style={{ animation: `blink ${1.2 + i*0.2}s ease-in-out ${i*0.15}s infinite` }} />
-      ))}
-
-      {/* Hộp quà dưới gốc */}
-      {/* Quà 1 */}
+      {/* ✅ HỘP QUÀ KHÔNG LẮC */}
       <rect x="28" y="206" width="36" height="26" rx="2" fill="#ff6b6b" />
       <rect x="44" y="206" width="4" height="26" fill="#fff3" />
       <rect x="28" y="218" width="36" height="4" fill="#fff3" />
       <rect x="38" y="200" width="16" height="8" rx="2" fill="#ff6b6b" />
-      {/* Quà 2 */}
+
       <rect x="62" y="212" width="32" height="20" rx="2" fill="#4dabf7" />
       <rect x="76" y="212" width="4" height="20" fill="#fff3" />
       <rect x="62" y="222" width="32" height="4" fill="#fff3" />
       <rect x="70" y="206" width="16" height="8" rx="2" fill="#4dabf7" />
-      {/* Quà 3 (nhỏ) */}
+
       <rect x="96" y="214" width="22" height="18" rx="2" fill="#ffd166" />
       <rect x="106" y="214" width="3" height="18" fill="#fff3" />
       <rect x="96" y="223" width="22" height="3" fill="#fff3" />
       <rect x="100" y="208" width="14" height="7" rx="2" fill="#ffd166" />
+
+      {/* CSS ngay trong SVG để chỉ lắc group treeOnly */}
+      <style>{`
+        .treeOnly {
+          transform-box: fill-box;
+          transform-origin: 50% 100%;
+          animation: tree-wind-strong 3.8s ease-in-out infinite;
+          will-change: transform;
+        }
+
+        @keyframes tree-wind-strong {
+          0%   { transform: rotate(-1.4deg) skewX(-0.35deg) translateY(0); }
+          25%  { transform: rotate( 2.0deg) skewX( 0.55deg) translateY(-1px); }
+          50%  { transform: rotate(-0.9deg) skewX(-0.25deg) translateY(0); }
+          75%  { transform: rotate( 1.6deg) skewX( 0.45deg) translateY(-1px); }
+          100% { transform: rotate(-1.4deg) skewX(-0.35deg) translateY(0); }
+        }
+      `}</style>
     </svg>
   );
 }
