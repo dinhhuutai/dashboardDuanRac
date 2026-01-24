@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import avatarImg from '~/assets/imgs/favorite-5.jpg';
+import avatarImg from '~/assets/imgs/avatar-main.jpg';
 import coverPhoto from '~/assets/imgs/coverPhoto.png';
 import config from '~/config';
 import { userSelector } from '~/redux/selectors';
 import authSlice from '~/redux/slices/authSlice';
 import http from '~/api/http';
+import { FaThLarge } from 'react-icons/fa';
 
 function User() {
   const tmp = useSelector(userSelector);
@@ -48,6 +49,28 @@ function User() {
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,7,18,.25),rgba(3,7,18,.55))]" />
         <div className="absolute inset-0 shadow-[inset_0_-120px_160px_-100px_rgba(2,6,23,.6)]" />
+
+        {/* Nút quay lại trang ứng dụng */}
+<button
+  onClick={() => navigate(config.routes.homeMain)}
+  className="
+    md:hidden
+    absolute top-4 right-4 z-20
+    h-11 w-11 rounded-full
+    grid place-items-center
+    text-white
+    bg-white/25 border border-white/40
+    backdrop-blur
+    hover:bg-white/35
+    active:scale-95
+    transition
+  "
+  aria-label="Chọn ứng dụng"
+  title="Quay lại trang ứng dụng"
+>
+  <FaThLarge className="text-lg" />
+</button>
+
       </section>
 
       {/* Card */}

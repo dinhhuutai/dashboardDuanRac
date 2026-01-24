@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { BsBoxArrowRight } from "react-icons/bs";
-import avatar from "~/assets/imgs/favorite-5.jpg";
+import avatar from "~/assets/imgs/avatar-main.jpg";
 import authSlice from "~/redux/slices/authSlice";
 import config from "~/config";
 import http from '~/api/http';

@@ -353,7 +353,7 @@ function Sidebar() {
         }
 
         {/* ===== CTA vui vui (giữ nguyên điều kiện) ===== */}
-        {
+        {/* {
           ACTION_PAGE_NOTIFY_TRASH &&
           <div className="pt-3 pb-2 px-1 flex justify-center">
             <button
@@ -376,7 +376,7 @@ function Sidebar() {
               QrCode xuất excel
             </button>
           </div>
-        }
+        } */}
       </div>
     </aside>
   );

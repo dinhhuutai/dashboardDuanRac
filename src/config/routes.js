@@ -146,6 +146,12 @@ const routes = {
 
   dryingCart: '/drying-cart',
 
+  bmi: '/bmi',
+  bmiCheck: '/bmi/check',
+  bmiPlan: '/bmi/plan',
+  bmiDashboard: '/bmi/dashboard',
+  bmiProfile: '/bmi/profile',
+
 };
 
 export default routes;

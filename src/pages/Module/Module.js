@@ -36,7 +36,7 @@ const ALLOWED_ICON_NAMES = [
   "FiMail","FiInbox","FiBell","FiMessageSquare","FiPhone","FiSmartphone","FiMonitor","FiGlobe",
   "FiMap","FiMapPin","FiTruck","FiTrendingUp","FiTrendingDown","FiPieChart","FiBarChart2","FiDollarSign",
   "FiShoppingCart","FiTrash2","FiDatabase","FiBook","FiBookmark","FiBriefcase","FiCalendar","FiClock",
-  "FiImage","FiCamera","FiEdit2","FiPenTool","FiSearch","FiAlertTriangle","FiActivity","FiLayers"
+  "FiImage","FiCamera","FiEdit2","FiPenTool","FiSearch","FiAlertTriangle","FiActivity","FiLayers", "FiHeart"
 ];
 
 /* Lọc ra những icon thực sự tồn tại trong react-icons/fi (phòng lỗi chính tả) */
@@ -90,7 +90,7 @@ function Module() {
   const [iconQuery, setIconQuery] = useState("");
   const filteredIconOptions =
     iconQuery.trim() === ""
-      ? ICON_OPTIONS.slice(0, 50)
+      ? ICON_OPTIONS.slice(0, 60)
       : ICON_OPTIONS.filter((n) => n.toLowerCase().includes(iconQuery.toLowerCase())).slice(0, 50);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);

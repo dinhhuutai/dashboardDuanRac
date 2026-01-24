@@ -10,6 +10,7 @@ const MODULEID = {
     SANXUAT: 8,
     BIEUMAUNOIBO: 9,
     XEPHOIVAI: 10,
+    BMI: 11,
 }
 
 

@@ -1043,7 +1043,7 @@ setLastSavedByType(prev => {
         </div>
       ) : (
         // Màn chọn món
-        <div className="w-full p-6 mx-[10px] lg:w-[calc(100vw-350px)]">
+        <div className="w-full p-6 mx-[10px]">
           <Swiper
             onSwiper={(s) => (swiperRef.current = s)}
             ref={swiperRef}

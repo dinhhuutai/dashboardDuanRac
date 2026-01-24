@@ -12,10 +12,16 @@ import {
   routesTaskManagementAdmin,
 } from "./routes";
 
+import ScrollToTop from "./components/ScrollToTop";
+
 import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
 import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
 import DefaultLayoutAdminInk from "./layoutsInkWeighAdmin/DefaultLayoutAdmin";
 import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmin";
+
+import DefaultLayoutSuggest from "./layoutsSuggestion/DefaultLayout";
+
+import DefaultLayoutCalculateSalary from "./layoutCalculateSalary/DefaultLayout";
 
 import DefaultLayoutLunchOrder from "./layoutsLunchOrder/DefaultLayout";
 import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutAdmin';
@@ -29,6 +35,8 @@ import DefaultLayoutAdminForm from "./layoustFormAdmin/DefaultLayoutAdmin";
 import DefaultLayoutTaskManagement from "./layoutsTaskManagement/DefaultLayout";
 
 import DefaultLayoutAdminTaskManagement from "./layoutsTaskManagementAdmin/DefaultLayoutAdmin";
+
+import DefaultLayoutBMI from "./layoutsBMI/DefaultLayout";
 
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
@@ -92,7 +100,14 @@ function AppRoutes({ user }) {
                 route.isLogin
                   ? <route.component />
                   : !route.isLogin && !route.login
-                    ? <route.component />
+                    ? ( 
+                        route.module === 'suggestion' ? (
+                          <DefaultLayoutSuggest>
+                            <route.component />
+                          </DefaultLayoutSuggest>
+                        ) :
+                        <route.component />
+                      ) 
                     : route.module === 'datcom' ? (
                       <DefaultLayoutLunchOrder>
                         <route.component />
@@ -101,6 +116,14 @@ function AppRoutes({ user }) {
                       <DefaultLayoutTaskManagement>
                         <route.component />
                       </DefaultLayoutTaskManagement>
+                    ) : route.module === 'bmi' ? (
+                      <DefaultLayoutBMI>
+                        <route.component />
+                      </DefaultLayoutBMI>
+                    ) : route.module === 'tinhluong' ? (
+                      <DefaultLayoutCalculateSalary>
+                        <route.component />
+                      </DefaultLayoutCalculateSalary>
                     ) : (
                       <DefaultLayoutTrashWeight>
                         <route.component />
@@ -311,6 +334,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <AppRoutes user={user} />
     </Router>
   );

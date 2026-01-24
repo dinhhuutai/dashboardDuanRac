@@ -14,7 +14,7 @@ import * as FiIcons from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import avatar from "~/assets/imgs/favorite-5.jpg";
+import avatar from "~/assets/imgs/avatar-main.jpg";
 import logo from "~/assets/imgs/logoAdmin.png";
 import config, { BASE_URL } from "~/config";
 import { userSelector } from "~/redux/selectors";
@@ -62,7 +62,7 @@ function HomeMain() {
   const [showPasswordSuccessModal, setShowPasswordSuccessModal] =
     useState(false);
 
-  const [theme, setTheme] = useState("noel");
+  const [theme, setTheme] = useState("normal");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -294,7 +294,12 @@ function HomeMain() {
       rou = config.routes.adminTaskManagementDashboard;
     } else if (m.moduleId === MODULEID.XEPHOIVAI && role === "user") {
       rou = config.routes.dryingCart;
+    } else if (m.moduleId === MODULEID.BMI && role === "user") {
+      rou = config.routes.bmi;
+    } else if (m.moduleId === MODULEID.BMI && role === "admin") {
+      //rou = config.routes.bmi;
     }
+
     navigate(rou);
   };
 
@@ -319,26 +324,6 @@ function HomeMain() {
           //   setShowFirstLoginGiftModal(true);
           // }
         }}
-      />
-
-      {/* Lucky gift lần đầu đăng nhập (dùng lại LuckyGiftModal) */}
-      <FirstLoginGiftModal
-        isOpen={showFirstLoginGiftModal}
-        onClose={async () => {
-          setShowFirstLoginGiftModal(false);
-          try {
-            dispatch(authSlice.actions.firstLoginGift());
-            await http.post(`${BASE_URL}/api/auth/first-login-gift-claim`);
-          } catch (err) {
-            console.error("first-login-gift-claim error:", err);
-          }
-        }}
-      />
-
-      {/* Lucky gift hệ thống (cũ) */}
-      <LuckyGiftModal
-        isOpen={showLuckyGiftModal}
-        onClose={() => setShowLuckyGiftModal(false)}
       />
 
       {/* Background theo theme */}
@@ -555,7 +540,7 @@ function HomeMain() {
                   <FiHome />
                 </NavIcon>
 
-                {(user.username === "dinhhuutai" || user.username === "thaonguyen") && (
+                {(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") && (
                   <NavIcon
                     active={view === "dashboard"}
                     title="Dashboard"
@@ -566,6 +551,7 @@ function HomeMain() {
                 )}
 
                 {(user.username === "dinhhuutai" ||
+                user.username === "hhnhan" ||
                   user.username === "thaonguyen") && (
                   <NavIcon
                     active={view === "users"}
@@ -577,6 +563,7 @@ function HomeMain() {
                 )}
 
                 {(user.username === "dinhhuutai" ||
+                user.username === "hhnhan" ||
                   user.username === "thaonguyen") && (
                   <NavIcon
                     active={view === "modules"}
@@ -588,6 +575,7 @@ function HomeMain() {
                 )}
 
                 {(user.username === "dinhhuutai" ||
+                user.username === "hhnhan" ||
                   user.username === "thaonguyen") && (
                   <NavIcon
                     active={view === "access"}

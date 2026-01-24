@@ -11,7 +11,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BsChevronDown, BsBoxArrowRight, BsBoxArrowLeft } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import avatar from "~/assets/imgs/favorite-5.jpg";
+import avatar from "~/assets/imgs/avatar-main.jpg";
 import { userSelector } from "~/redux/selectors";
 import authSlice from "~/redux/slices/authSlice";
 import config from "~/config";

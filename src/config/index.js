@@ -3,7 +3,8 @@ import routes from './routes';
 export const BASE_URL = 'http://localhost:5000';
 //export const BASE_URL = 'http://thlasohoa-ap-env.eba-qv9yn5kt.ap-southeast-2.elasticbeanstalk.com';
 //export const BASE_URL = 'https://api.thuanhunglongan.com';
-//export const BASE_URL = 'http://171.244.143.18:5000';
+//export const BASE_URL = 'http://api.thuanhunglongan.com';
+//export const BASE_URL = 'http://171.237.176.73:5000';
 //export const BASE_URL = 'http://10.84.40.34:5000';
 
 //export const BASE_URL_SERVER_THLA = 'http://10.84.40.34:5000';

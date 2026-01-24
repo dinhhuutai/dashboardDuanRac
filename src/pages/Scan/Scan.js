@@ -3,11 +3,12 @@ import QrScanner from 'qr-scanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { userSelector, weightSelector } from '~/redux/selectors';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import { BASE_URL } from '~/config/index';
 import mqtt from 'mqtt';
 import http from '~/api/http';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
 const MQTT_TOPIC = 'thla/canrac';
@@ -46,6 +47,8 @@ function Scan() {
   const [confirmedData, setConfirmedData] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [alreadyWeighedData, setAlreadyWeighedData] = useState(null);
+
+  const navigate = useNavigate();
 
   // MQTT live weight
   useEffect(() => {
@@ -296,10 +299,34 @@ function Scan() {
 
   // ---------- UI ----------
   return (
-    <div className="relative min-h-[100dvh] w-full bg-gradient-to-b from-sky-50 via-white to-emerald-50">
+    <div className="relative min-h-screen w-full bg-gradient-to-b from-sky-50 via-white to-emerald-50">
+      
+      {/* 🔙 Back button */}
+<button
+  onClick={() => navigate(-1)} // hoặc navigate('/home')
+  className="
+    fixed top-4 left-4 z-[10000]
+    flex items-center gap-2
+    rounded-full
+    bg-white/80 backdrop-blur-md
+    border border-white
+    px-3 py-2
+    text-slate-700
+    shadow-[0_8px_24px_rgba(2,6,23,.15)]
+    hover:bg-white
+    active:scale-[0.96]
+    transition
+  "
+  aria-label="Quay về"
+>
+  <FaArrowLeft className="text-sm" />
+  <span className="text-sm font-medium hidden sm:inline">
+    Quay về
+  </span>
+</button>
+
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-[28rem] w-[28rem] rounded-full bg-sky-200/50 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 -right-28 h-[32rem] w-[32rem] rounded-full bg-emerald-200/50 blur-3xl" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
         {/* Header */}

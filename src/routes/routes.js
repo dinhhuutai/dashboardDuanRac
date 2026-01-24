@@ -135,6 +135,44 @@ import AdminTaskManagementStatuses from '~/pagesTaskManagementAdmin/Manage/Statu
 import AdminTaskManagementTeams from '~/pagesTaskManagementAdmin/Manage/Teams';
 import AdminTaskManagementUserRoles from '~/pagesTaskManagementAdmin/Manage/UserRoles';
 
+import BMI from '~/pagesBMI/BMI';
+import BMICheck from '~/pagesBMI/Check';
+import BMIDashboard from '~/pagesBMI/Dashboard';
+import BMIPlan from '~/pagesBMI/Plan';
+import BMIProfile from '~/pagesBMI/Profile';
+
+const routesBMI = [
+  {
+    path: config.routes.bmi,
+    component: BMI,
+    login: true,
+    module: 'bmi',
+  },
+  {
+    path: config.routes.bmiCheck,
+    component: BMICheck,
+    login: true,
+    module: 'bmi',
+  },
+  {
+    path: config.routes.bmiDashboard,
+    component: BMIDashboard,
+    login: true,
+    module: 'bmi',
+  },
+  {
+    path: config.routes.bmiPlan,
+    component: BMIPlan,
+    login: true,
+    module: 'bmi',
+  },
+  {
+    path: config.routes.bmiProfile,
+    component: BMIProfile,
+    login: true,
+    module: 'bmi',
+  },
+]
 
 const routesTaskManagement = [
   {
@@ -143,7 +181,6 @@ const routesTaskManagement = [
     login: true,
     module: 'quanlycongviec',
   },
-
   {
     path: config.routes.taskManagementMyTasks,
     component: TaskManagementMyTasks,
@@ -255,12 +292,14 @@ export const routes = [
     component: Feedback,
     login: false,
     isLogin: false,
+    module: 'suggestion',
   },
   {
     path: config.routes.feedback1,
     component: Feedback1,
     login: false,
     isLogin: false,
+    module: 'suggestion',
   },
   {
     path: config.routes.feedbackLunch,
@@ -363,6 +402,8 @@ export const routes = [
   },
 
   ...routesTaskManagement,
+
+  ...routesBMI,
 
 ];
 

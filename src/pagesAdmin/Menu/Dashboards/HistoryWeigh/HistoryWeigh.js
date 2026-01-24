@@ -74,6 +74,11 @@ function HistoryWeigh() {
 
   const [messageModal, setMessageModal] = useState(null);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+const refetchCurrentPage = () => setRefreshKey((k) => k + 1);
+
+const [weightInput, setWeightInput] = useState('');
+
   // trong component
 const [dropdowns, setDropdowns] = useState({
   userNames: [], departmentNames: [], unitNames: [], trashNames: [], workShifts: []
@@ -152,7 +157,7 @@ const [dropdowns, setDropdowns] = useState({
 
     load();
     return () => controller.abort();
-  }, [date, currentPage, pageSize, debouncedFilters]); // missingFilter nếu đã đẩy xuống server thì thêm vào đây
+  }, [date, currentPage, pageSize, debouncedFilters, refreshKey]); // missingFilter nếu đã đẩy xuống server thì thêm vào đây
 
   // ======= Lọc "thiếu ngày/ca" nhẹ trên 1 trang (FE) =======
   const pageData = useMemo(() => {
@@ -188,28 +193,48 @@ const [dropdowns, setDropdowns] = useState({
     return `${day}-${m}-${y}`;
   };
 
-  // Gọi lại trang hiện tại (dùng sau PUT/DELETE)
-  const refetchCurrentPage = () => setCurrentPage((p) => p);
-
   // ======= Xoá bản ghi =======
   const handleDelete = async () => {
-    if (!deleteItem) return;
-    setDeleting(true);
-    try {
-      await http.delete(`${BASE_URL}/history/delete/${deleteItem.weighingID}`);
-      // Nếu xoá xong mà trang hiện tại chỉ còn 1 bản ghi -> lùi trang (nếu có)
-      if (data.length === 1 && currentPage > 1) {
-        setCurrentPage((p) => p - 1);
-      } else {
-        refetchCurrentPage();
-      }
-    } catch (err) {
-      // silent
-    } finally {
-      setDeleting(false);
-      setDeleteItem(null);
+  if (!deleteItem) return;
+  setDeleting(true);
+
+  // backup để rollback nếu xóa lỗi
+  const backup = data;
+
+  // 1) Optimistic: xóa ngay khỏi UI
+  setData((prev) => prev.filter((x) => x.weighingID !== deleteItem.weighingID));
+  setServerTotal((t) => Math.max(0, t - 1)); // giảm tổng lượt tạm thời
+
+  try {
+    await http.delete(`${BASE_URL}/history/delete/${deleteItem.weighingID}`);
+
+    // 2) Nếu sau khi xóa mà trang hiện tại hết dữ liệu -> lùi trang
+    const remaining = data.length - 1;
+    if (remaining <= 0 && currentPage > 1) {
+      setCurrentPage((p) => p - 1); // đổi page => useEffect tự fetch
+    } else {
+      refetchCurrentPage(); // fetch lại summary/tổng chính xác
     }
-  };
+  } catch (err) {
+    // 3) Rollback UI nếu xóa fail
+    setData(backup);
+    setServerTotal((t) => t + 1);
+    setMessageModal({ type: 'error', message: '❌ Xoá thất bại, vui lòng thử lại!' });
+  } finally {
+    setDeleting(false);
+    setDeleteItem(null);
+  }
+};
+
+useEffect(() => {
+  if (confirmedData) {
+    setWeightInput(
+      confirmedData.weightKg !== null && confirmedData.weightKg !== undefined
+        ? String(confirmedData.weightKg).replace('.', ',')
+        : ''
+    );
+  }
+}, [confirmedData]);
 
   // ======= Xuất Excel (trang hiện tại) =======
   const exportToExcel = () => {
@@ -608,16 +633,17 @@ const [dropdowns, setDropdowns] = useState({
             <div className="text-sm">
               <label className="block mb-1 font-semibold">⚖️ Khối lượng:</label>
               <input
-                type="text" inputMode="decimal"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={confirmedData.weightKg}
-                onChange={(e) =>
-                  setConfirmedData({
-                    ...confirmedData,
-                    weightKg: parseFloat(e.target.value.replace(',', '.')) || 0,
-                  })
-                }
-              />
+  type="text"
+  inputMode="decimal"
+  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+  value={weightInput}
+  onChange={(e) => {
+    const v = e.target.value;
+    // chỉ chặn ký tự không hợp lệ
+    if (!/^[0-9]*([.,]?[0-9]*)?$/.test(v)) return;
+    setWeightInput(v);
+  }}
+/>
             </div>
 
             <div className="text-sm">
@@ -699,27 +725,44 @@ const [dropdowns, setDropdowns] = useState({
 
               <button
                 onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    const res = await http.put(`${BASE_URL}/trash-weighings/${confirmedData.weighingID}`, {
-                      ...confirmedData,
-                      workShift: isWorkShift ? confirmedData.workShift || 'ca1' : null,
-                      workDate: isWorkDate ? confirmedData.workDate : null,
-                      updatedBy: user.userID,
-                    });
-                    if (res.status === 200) {
-                      setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu cân rác thành công!' });
-                      refetchCurrentPage();
-                    } else {
-                      setMessageModal({ type: 'error', message: '❌ Lỗi cập nhật!' });
-                    }
-                  } catch (err) {
-                    setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
-                  } finally {
-                    setEditModalVisible(false);
-                    setIsSaving(false);
-                  }
-                }}
+  setIsSaving(true);
+  try {
+    const weightKgParsed = Number.parseFloat(String(weightInput).replace(',', '.'));
+    const weightKg = Number.isFinite(weightKgParsed) ? weightKgParsed : 0;
+
+    const payload = {
+      ...confirmedData,
+      weightKg,
+      workShift: isWorkShift ? (confirmedData.workShift || 'ca1') : null,
+      workDate: isWorkDate ? confirmedData.workDate : null,
+      updatedBy: user.userID,
+    };
+
+    const res = await http.put(
+      `${BASE_URL}/trash-weighings/${confirmedData.weighingID}`,
+      payload
+    );
+
+    if (res.status === 200) {
+      // ✅ Optimistic update: update ngay trên bảng
+      setData((prev) =>
+        prev.map((x) =>
+          x.weighingID === payload.weighingID ? { ...x, ...payload } : x
+        )
+      );
+
+      setMessageModal({ type: 'success', message: '✅ Đã chỉnh sửa dữ liệu cân rác thành công!' });
+      refetchCurrentPage();
+    } else {
+      setMessageModal({ type: 'error', message: '❌ Lỗi cập nhật!' });
+    }
+  } catch (err) {
+    setMessageModal({ type: 'error', message: '❌ Không thể kết nối server!' });
+  } finally {
+    setEditModalVisible(false);
+    setIsSaving(false);
+  }
+}}
                 className="px-4 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700"
               >
                 {isSaving ? (
