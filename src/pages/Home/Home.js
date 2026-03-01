@@ -2042,7 +2042,7 @@ hover:bg-emerald-300
   </div>
 
   {/* Nội dung chính — gọn, không hiển thị ID, không footer */}
-  <div className="p-4 max-h-[70vh] overflow-y-auto">
+  <div className="p-4 pb-[50px] max-h-[70vh] overflow-y-auto">
     {/* Bước 1: Loại rác */}
     {weighStep === 1 && (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

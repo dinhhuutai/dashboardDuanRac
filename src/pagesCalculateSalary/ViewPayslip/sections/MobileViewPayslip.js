@@ -443,7 +443,7 @@
 import React from "react";
 import { FaThLarge, FaSpinner, FaBell, FaBellSlash } from "react-icons/fa";
 
-import avatarPayslip from "~/assets/imgs/avatar_phieuluong.png";
+import avatarPayslip from "~/assets/imgs/avatar-main.jpg";
 import {
   fmtVND,
   companyFromMSNV,
@@ -734,7 +734,7 @@ export default function MobileViewPayslip({
         `}
       >
         {/* Top row */}
-        <div className="relative flex items-center justify-between mt-[40px]">
+        <div className="relative flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
             {/* Avatar */}
             <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
@@ -768,7 +768,7 @@ export default function MobileViewPayslip({
         </div>
 
         {/* ===== CARD CHỈ TÓM TẮT ===== */}
-        <div className="absolute left-4 right-4 top-[130px]">
+        <div className="absolute left-4 right-4 top-[110px]">
           <div className={`rounded-3xl px-4 py-4 ${t.cardBg}`}>
             {/* Title + Bell */}
             <div className="flex items-start gap-3">

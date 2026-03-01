@@ -41,6 +41,8 @@ export default function TaskAttachmentsSection({
               const isMoreTile = idx === 3 && total > 4;
               const url = signedUrlById[att.attachmentId] || "";
 
+              console.log("url: ", signedUrlById[att.attachmentId])
+              console.log("att: ", att.attachmentId)
               return (
                 <button
                   key={att.attachmentId}

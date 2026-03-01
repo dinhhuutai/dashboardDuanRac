@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 
 import logoAdmin from "~/assets/imgs/logoAdmin.png"; // logo cân rác
-import avatarTrash from "~/assets/imgs/avatar_trash.png"; // avatar dùng chung
+import avatarTrash from "~/assets/imgs/avatar-main.jpg"; // avatar dùng chung
 import config from "~/config";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";

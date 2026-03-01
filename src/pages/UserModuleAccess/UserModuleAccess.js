@@ -118,7 +118,8 @@ const SkeletonLine = ({ w = "w-full" }) => <div className={cn("animate-pulse rou
 export default function UserModuleAccessModern() {
   const dispatch = useDispatch();
   const currentUser = useSelector((s) => userSelector(s)?.login?.currentUser);
-  const isSuper = currentUser?.userID === 1 || currentUser?.userID === 3;
+  // const isSuper = currentUser?.userID === 1 || currentUser?.userID === 3 || currentUser?.userID === 4;
+  const isSuper = currentUser?.role === 'admin';
 
   /* ----- Users (left) ----- */
   const [uQ, setUQ] = useState("");
@@ -406,7 +407,7 @@ export default function UserModuleAccessModern() {
             ) : modules.length === 0 ? (
               <EmptyState title="Chưa có module nào" />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 2xl:grid-cols-2 gap-4">
                 {modules.map((m) => {
                   const assigned = draftAssignments[m.moduleId] === "admin" || draftAssignments[m.moduleId] === "user";
                   const role = draftAssignments[m.moduleId] || null;
@@ -416,7 +417,23 @@ export default function UserModuleAccessModern() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <FiShield className="text-indigo-600 shrink-0" />
-                            <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{m.name}</h3>
+                            <div className="relative group min-w-0">
+  <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate cursor-default">
+    {m.name}
+  </h3>
+
+  {/* Tooltip */}
+  <div className="
+    pointer-events-none absolute left-0 top-full mt-1
+    hidden group-hover:block
+    z-50 max-w-xs
+    rounded-lg bg-slate-900 px-3 py-2
+    text-xs text-white shadow-lg
+    whitespace-normal break-words
+  ">
+    {m.name}
+  </div>
+</div>
                           </div>
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{m.description || "—"}</p>
                         </div>

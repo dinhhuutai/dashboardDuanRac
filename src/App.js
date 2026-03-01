@@ -38,6 +38,10 @@ import DefaultLayoutAdminTaskManagement from "./layoutsTaskManagementAdmin/Defau
 
 import DefaultLayoutBMI from "./layoutsBMI/DefaultLayout";
 
+import DefaultLayoutInkCovPerOnFilm from "./layoutsInkCovPerOnFilm/DefaultLayout";
+
+import DefaultLayoutQualityInspection from "./layoutQualityInspectionOQC/DefaultLayout";
+
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -124,6 +128,14 @@ function AppRoutes({ user }) {
                       <DefaultLayoutCalculateSalary>
                         <route.component />
                       </DefaultLayoutCalculateSalary>
+                    ) : route.module === 'inkCovPerOnFilm' ? (
+                      <DefaultLayoutInkCovPerOnFilm>
+                        <route.component />
+                      </DefaultLayoutInkCovPerOnFilm>
+                    ) : route.module === 'qualityInspectionOQC' ? (
+                      <DefaultLayoutQualityInspection>
+                        <route.component />
+                      </DefaultLayoutQualityInspection>
                     ) : (
                       <DefaultLayoutTrashWeight>
                         <route.component />

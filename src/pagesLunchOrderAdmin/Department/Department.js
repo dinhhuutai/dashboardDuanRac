@@ -70,6 +70,16 @@ export default function DepartmentManager() {
     fetchDepartments();
   }, []);
 
+  useEffect(() => {
+  if (notice.open) {
+    const t = setTimeout(() => {
+      setNotice((prev) => ({ ...prev, open: false }));
+    }, 600); // 1 giây
+
+    return () => clearTimeout(t);
+  }
+}, [notice.open]);
+
   async function fetchDepartments() {
     setLoading(true);
     try {
@@ -182,8 +192,20 @@ export default function DepartmentManager() {
                 <button onClick={() => setModalOpen(false)} className="p-2 hover:bg-slate-100 rounded"><FaTimes /></button>
               </div>
               <div className="px-5 py-4 space-y-4">
-                <input type="text" placeholder="Tên bộ phận" className="border rounded-lg px-3 py-2 w-full"
-                  value={form.departmentName} onChange={(e) => setForm({ ...form, departmentName: e.target.value })} />
+                <input
+  type="text"
+  placeholder="Tên bộ phận"
+  className="border rounded-lg px-3 py-2 w-full"
+  value={form.departmentName}
+  onChange={(e) =>
+    setForm({ ...form, departmentName: e.target.value })
+  }
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !saving) {
+      handleSave();
+    }
+  }}
+/>
               </div>
               <div className="border-t px-5 py-3 flex justify-end gap-3">
                 <button onClick={() => setModalOpen(false)} className="px-4 py-2 bg-slate-200 rounded-xl hover:bg-slate-300">Hủy</button>

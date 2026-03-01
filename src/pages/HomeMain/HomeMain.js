@@ -298,6 +298,10 @@ function HomeMain() {
       rou = config.routes.bmi;
     } else if (m.moduleId === MODULEID.BMI && role === "admin") {
       //rou = config.routes.bmi;
+    } else if (m.moduleId === MODULEID.inkCoveragePercentOnFilm && role === "user") {
+      rou = config.routes.inkCovPerOnFilm;
+    } else if (m.moduleId === MODULEID.qualityInspectionOQC && role === "user") {
+      rou = config.routes.qualityInspectionOQC;
     }
 
     navigate(rou);
@@ -460,8 +464,7 @@ function HomeMain() {
                   tabIndex={-1}
                   className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 backdrop-blur shadow-lg ring-1 ring-slate-200 p-1 z-50"
                 >
-                  {(user.username === "dinhhuutai" ||
-                    user.username === "thaonguyen") && (
+                  {user?.role === "admin" && (
                     <button
                       onClick={() => {
                         setView("create");
@@ -540,7 +543,10 @@ function HomeMain() {
                   <FiHome />
                 </NavIcon>
 
-                {(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") && (
+                {
+                  //(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") 
+                  user?.role === "admin" 
+                  && (
                   <NavIcon
                     active={view === "dashboard"}
                     title="Dashboard"
@@ -550,9 +556,10 @@ function HomeMain() {
                   </NavIcon>
                 )}
 
-                {(user.username === "dinhhuutai" ||
-                user.username === "hhnhan" ||
-                  user.username === "thaonguyen") && (
+                {
+                  //(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") 
+                  user?.role === "admin" 
+                && (
                   <NavIcon
                     active={view === "users"}
                     title="Người dùng"
@@ -562,9 +569,10 @@ function HomeMain() {
                   </NavIcon>
                 )}
 
-                {(user.username === "dinhhuutai" ||
-                user.username === "hhnhan" ||
-                  user.username === "thaonguyen") && (
+                {
+                  //(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") 
+                  user?.role === "admin" 
+                && (
                   <NavIcon
                     active={view === "modules"}
                     title="Quản lý Modules"
@@ -574,9 +582,10 @@ function HomeMain() {
                   </NavIcon>
                 )}
 
-                {(user.username === "dinhhuutai" ||
-                user.username === "hhnhan" ||
-                  user.username === "thaonguyen") && (
+                {
+                  //(user.username === "dinhhuutai" || user.username === "hhnhan" || user.username === "thaonguyen") 
+                  user?.role === "admin" 
+                && (
                   <NavIcon
                     active={view === "access"}
                     title="Phân quyền"

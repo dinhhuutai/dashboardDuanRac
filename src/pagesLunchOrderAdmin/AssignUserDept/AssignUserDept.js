@@ -235,9 +235,9 @@ export default function UserDepartmentAssign() {
     setConfirm((c) => ({ ...c, loading: true }));
     try {
       const payload = {
-        assignments: Object.entries(assignments).map(([uid, depId]) => ({
-          userId: Number(uid),
-          departmentId: depId,
+        assignments: users.map((u) => ({
+          userId: u.userID,
+          departmentId: assignments[u.userID] ?? null, // 👈 nếu không có thì gửi null
         })),
         updatedBy: user.userID,
       };

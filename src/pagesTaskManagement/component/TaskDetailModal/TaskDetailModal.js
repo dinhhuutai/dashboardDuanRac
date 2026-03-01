@@ -11,6 +11,9 @@ import AttachmentDeleteConfirmModal from "./AttachmentDeleteConfirmModal";
 import TaskImageViewerOverlay from "./TaskImageViewerOverlay";
 import AttachmentPreviewModal from "./AttachmentPreviewModal";
 import TaskCommentsPanel from "./TaskCommentsPanel";
+import AsyncSelect from "react-select/async";
+import { useSelector } from "react-redux";
+import { userRoleTaskManager } from "~/redux/selectors";
 
 const statusOptions = [
   { value: "todo", label: "Cần làm" },
@@ -19,7 +22,26 @@ const statusOptions = [
   { value: "done", label: "Hoàn thành" },
 ];
 
+const allowedAssignRoles = [
+  "bangiamdoc",
+  "giamdocnhamay",
+  "truongphong",
+  "phophong",
+  "totruong",
+];
+
 export default function TaskDetailModal({ taskId, onClose, onChanged, user }) {
+  // ===== Role giống CreateTaskModal =====
+  const roleTaskManager = useSelector(userRoleTaskManager);
+  const roleCode = roleTaskManager?.code;
+
+  const currentUserId = Number(user?.login?.currentUser?.userID);
+
+  // ===== Assignee (MULTI giống CreateTaskModal) =====
+  const [assigneeOptions, setAssigneeOptions] = useState([]); // array
+  const [assigneeInput, setAssigneeInput] = useState("");
+
+  // ===== State =====
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -44,10 +66,7 @@ export default function TaskDetailModal({ taskId, onClose, onChanged, user }) {
   const [attachmentToDelete, setAttachmentToDelete] = useState(null);
   const [deletingAttachment, setDeletingAttachment] = useState(false);
 
-  const [imageViewer, setImageViewer] = useState({
-    open: false,
-    index: 0,
-  });
+  const [imageViewer, setImageViewer] = useState({ open: false, index: 0 });
 
   const [previewAttachment, setPreviewAttachment] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -59,6 +78,18 @@ export default function TaskDetailModal({ taskId, onClose, onChanged, user }) {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState("");
 
+  // ===== Quyền đổi assignee =====
+  const canEditAssignee = useMemo(() => {
+    if (!task) return false;
+    const createdBy = Number(task.createdBy);
+    return (
+      Number.isFinite(currentUserId) &&
+      createdBy === currentUserId &&
+      !!roleCode &&
+      allowedAssignRoles.includes(roleCode)
+    );
+  }, [task, currentUserId, roleCode]);
+
   useEffect(() => {
     if (!taskId) return;
     loadDetail();
@@ -67,84 +98,81 @@ export default function TaskDetailModal({ taskId, onClose, onChanged, user }) {
   }, [taskId]);
 
   const commentsCount = useMemo(() => {
-  if (!comments || !comments.length) return 0;
-  return comments.reduce(
-    (sum, c) => sum + 1 + ((c.replies && c.replies.length) || 0),
-    0
-  );
-}, [comments]);
-
-async function loadComments() {
-  if (!taskId) return;
-  setCommentsLoading(true);
-  setCommentsError("");
-  try {
-    const res = await http.get(
-      `${BASE_URL}/api/task-management/${taskId}/comments`
+    if (!comments || !comments.length) return 0;
+    return comments.reduce(
+      (sum, c) => sum + 1 + ((c.replies && c.replies.length) || 0),
+      0
     );
-    setComments(res.data?.data || []);
-  } catch (e) {
-    console.error("load comments error", e);
-    setCommentsError("Không tải được bình luận.");
-  } finally {
-    setCommentsLoading(false);
-  }
-}
+  }, [comments]);
 
-function toggleCommentsOpen() {
-  setCommentsOpen((prev) => {
-    const next = !prev;
-    if (next) {
-      loadComments();
+  async function loadComments() {
+    if (!taskId) return;
+    setCommentsLoading(true);
+    setCommentsError("");
+    try {
+      const res = await http.get(
+        `${BASE_URL}/api/task-management/${taskId}/comments`
+      );
+      setComments(res.data?.data || []);
+    } catch (e) {
+      console.error("load comments error", e);
+      setCommentsError("Không tải được bình luận.");
+    } finally {
+      setCommentsLoading(false);
     }
-    return next;
-  });
-}
+  }
 
-async function handleAddComment(body, onDone) {
-  if (!taskId) return;
-  try {
-    await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
-      body,
+  function toggleCommentsOpen() {
+    setCommentsOpen((prev) => {
+      const next = !prev;
+      if (next) loadComments();
+      return next;
     });
-    await loadComments();
-    onDone && onDone();
-  } catch (e) {
-    console.error("add comment error", e);
-    setCommentsError("Gửi bình luận thất bại.");
   }
-}
 
-async function handleReplyComment(parentCommentId, body, onDone) {
-  if (!taskId) return;
-  try {
-    await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
-      body,
-      parentCommentId,
-    });
-    await loadComments();
-    onDone && onDone();
-  } catch (e) {
-    console.error("reply comment error", e);
-    setCommentsError("Gửi phản hồi thất bại.");
+  async function handleAddComment(body, onDone) {
+    if (!taskId) return;
+    try {
+      await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
+        body,
+      });
+      await loadComments();
+      onDone && onDone();
+    } catch (e) {
+      console.error("add comment error", e);
+      setCommentsError("Gửi bình luận thất bại.");
+    }
   }
-}
 
-// bên trên, sau handleReplyComment:
-async function handleDeleteComment(commentId, onDone) {
-  if (!taskId) return;
-  try {
-    await http.delete(
-      `${BASE_URL}/api/task-management/comments/${commentId}`
-    );
-    await loadComments();
-    onDone && onDone();
-  } catch (e) {
-    console.error("delete comment error", e);
-    setCommentsError("Xoá bình luận thất bại.");
-    onDone && onDone();
+  async function handleReplyComment(parentCommentId, body, onDone) {
+    if (!taskId) return;
+    try {
+      await http.post(`${BASE_URL}/api/task-management/${taskId}/comments`, {
+        body,
+        parentCommentId,
+      });
+      await loadComments();
+      onDone && onDone();
+    } catch (e) {
+      console.error("reply comment error", e);
+      setCommentsError("Gửi phản hồi thất bại.");
+    }
   }
-}
+
+  async function handleDeleteComment(commentId, onDone) {
+    if (!taskId) return;
+    try {
+      await http.delete(
+        `${BASE_URL}/api/task-management/comments/${commentId}`
+      );
+      await loadComments();
+      onDone && onDone();
+    } catch (e) {
+      console.error("delete comment error", e);
+      setCommentsError("Xoá bình luận thất bại.");
+      onDone && onDone();
+    }
+  }
 
   async function loadDetail() {
     setLoading(true);
@@ -154,6 +182,20 @@ async function handleDeleteComment(commentId, onDone) {
       const data = res.data?.data;
 
       setTask(data || null);
+
+      // ===== set assignees (MULTI) =====
+      if (data?.assignees?.length) {
+        setAssigneeOptions(
+          data.assignees.map((a) => ({
+            value: a.userID,
+            label: `${a.fullName} (${a.userName})${
+              a.departmentName ? " - " + a.departmentName : ""
+            }`,
+          }))
+        );
+      } else {
+        setAssigneeOptions([]);
+      }
 
       if (data) {
         setDescription(data.description || "");
@@ -166,6 +208,7 @@ async function handleDeleteComment(commentId, onDone) {
       } else {
         setAttachments([]);
       }
+
       setSignedUrlById({});
     } catch (e) {
       console.error("load task detail error", e);
@@ -185,6 +228,31 @@ async function handleDeleteComment(commentId, onDone) {
     [attachments]
   );
 
+  const loadUserOptions = async (inputValue) => {
+    const raw = (inputValue ?? "").trim();
+    if (!raw.startsWith("@")) return [];
+
+    const q = raw.slice(1).trim();
+    if (!q) return [];
+
+    try {
+      const res = await http.get(
+        `${BASE_URL}/api/task-management/lookup/users`,
+        { params: { q } }
+      );
+
+      return (res.data?.data || []).map((u) => ({
+        value: u.userID,
+        label: `${u.fullName} (${u.userName})${
+          u.departmentName ? " - " + u.departmentName : ""
+        }`,
+      }));
+    } catch (e) {
+      console.error("loadUserOptions error", e);
+      return [];
+    }
+  };
+
   // load signedUrl cho ảnh
   useEffect(() => {
     let cancelled = false;
@@ -201,7 +269,7 @@ async function handleDeleteComment(commentId, onDone) {
           imageAttachments.map(async (att) => {
             try {
               const r = await http.get(
-                `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/download`
+                `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/preview`
               );
               result[att.attachmentId] = r.data?.url || null;
             } catch (err) {
@@ -210,16 +278,13 @@ async function handleDeleteComment(commentId, onDone) {
             }
           })
         );
-        if (!cancelled) {
-          setSignedUrlById((prev) => ({ ...prev, ...result }));
-        }
+        if (!cancelled) setSignedUrlById((prev) => ({ ...prev, ...result }));
       } catch (err) {
         console.error("fetchSignedUrlsForImages error:", err);
       }
     }
 
     fetchSignedUrlsForImages();
-
     return () => {
       cancelled = true;
     };
@@ -229,18 +294,26 @@ async function handleDeleteComment(commentId, onDone) {
     if (!taskId) return;
     setSaving(true);
     setError("");
+
     try {
       const safeProgress =
         Number.isFinite(+progressPercent) && +progressPercent >= 0
           ? Math.min(100, Math.max(0, +progressPercent))
           : 0;
 
-      await http.patch(`${BASE_URL}/api/task-management/${taskId}`, {
+      const payload = {
         description: description?.trim() || null,
         statusCode,
         repeatDaily: !!repeatDaily,
         progressPercent: safeProgress,
-      });
+      };
+
+      // ===== gửi danh sách assignees (MULTI) khi có quyền =====
+      if (canEditAssignee) {
+        payload.assigneeUserId = (assigneeOptions || []).map((o) => o.value);
+      }
+
+      await http.patch(`${BASE_URL}/api/task-management/${taskId}`, payload);
 
       onChanged?.("updated");
       onClose?.();
@@ -280,9 +353,8 @@ async function handleDeleteComment(commentId, onDone) {
 
   function handleRemoveNewFile(idx) {
     setNewFiles((prev) => prev.filter((_, i) => i !== idx));
-    if (newFiles.length === 1 && fileInputRef.current) {
+    if (newFiles.length === 1 && fileInputRef.current)
       fileInputRef.current.value = "";
-    }
   }
 
   async function handleUploadAttachments() {
@@ -298,17 +370,12 @@ async function handleDeleteComment(commentId, onDone) {
         `${BASE_URL}/api/task-management/${taskId}/attachments`,
         fd,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
       setNewFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await loadDetail();
     } catch (e) {
       console.error("upload attachments error", e);
@@ -341,7 +408,6 @@ async function handleDeleteComment(commentId, onDone) {
           const remainingImages = newList.filter((a) =>
             a.mimeType?.startsWith("image/")
           );
-
           if (!remainingImages.length) {
             setImageViewer({ open: false, index: 0 });
           } else {
@@ -350,14 +416,11 @@ async function handleDeleteComment(commentId, onDone) {
                 (x) => x.attachmentId === deletingId
               );
               let newIndex = prevViewer.index;
-
               if (oldIdx >= 0) {
                 if (newIndex > oldIdx) newIndex -= 1;
-                if (newIndex >= remainingImages.length) {
+                if (newIndex >= remainingImages.length)
                   newIndex = remainingImages.length - 1;
-                }
               }
-
               return { ...prevViewer, index: newIndex };
             });
           }
@@ -378,17 +441,22 @@ async function handleDeleteComment(commentId, onDone) {
   async function handleDownloadAttachment(att) {
     try {
       const res = await http.get(
-        `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/download`
+        `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/download`,
+        { responseType: "blob" }
       );
-      const url = res.data?.url;
-      if (!url) throw new Error("Không có signedUrl");
 
+      const blob = new Blob([res.data], {
+        type: res.headers["content-type"] || "application/octet-stream",
+      });
+
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = att.fileName || "";
+      a.download = att.fileName || "download";
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error("download attachment error", e);
       setError("Tải tệp xuống thất bại.");
@@ -412,8 +480,7 @@ async function handleDeleteComment(commentId, onDone) {
     setImageViewer((prev) => {
       const total = imageAttachments.length;
       if (!total) return prev;
-      const nextIndex = (prev.index + 1) % total;
-      return { ...prev, index: nextIndex };
+      return { ...prev, index: (prev.index + 1) % total };
     });
   }
 
@@ -421,38 +488,37 @@ async function handleDeleteComment(commentId, onDone) {
     setImageViewer((prev) => {
       const total = imageAttachments.length;
       if (!total) return prev;
-      const nextIndex = (prev.index - 1 + total) % total;
-      return { ...prev, index: nextIndex };
+      return { ...prev, index: (prev.index - 1 + total) % total };
     });
   }
 
   async function openPreviewAttachment(att) {
-  setPreviewAttachment(att);
-  setPreviewUrl("");
-  setPreviewError("");
-  setPreviewLoading(true);
+    setPreviewAttachment(att);
+    setPreviewUrl("");
+    setPreviewError("");
+    setPreviewLoading(true);
 
-  try {
-    const res = await http.get(
-      `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/download`
-    );
-    const url = res.data?.url;
-    if (!url) throw new Error("Không có signedUrl");
-    setPreviewUrl(url);
-  } catch (e) {
-    console.error("preview attachment error", e);
-    setPreviewError("Không tải được file xem trước.");
-  } finally {
+    try {
+      const res = await http.get(
+        `${BASE_URL}/api/task-management/attachments/${att.attachmentId}/preview`
+      );
+      const url = res.data?.url;
+      if (!url) throw new Error("Không có signedUrl");
+      setPreviewUrl(url);
+    } catch (e) {
+      console.error("preview attachment error", e);
+      setPreviewError("Không tải được file xem trước.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  function closePreviewAttachment() {
+    setPreviewAttachment(null);
+    setPreviewUrl("");
+    setPreviewError("");
     setPreviewLoading(false);
   }
-}
-
-function closePreviewAttachment() {
-  setPreviewAttachment(null);
-  setPreviewUrl("");
-  setPreviewError("");
-  setPreviewLoading(false);
-}
 
   if (!taskId) return null;
 
@@ -508,24 +574,21 @@ function closePreviewAttachment() {
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end">
-            {
-              <button
-                type="button"
-                onClick={toggleCommentsOpen}
-                className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100"
-              >
-                <span className="mr-1">💬</span>
-                <span>Bình luận</span>
-                {commentsCount > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-sky-600 text-[10px] text-white px-1">
-                    {commentsCount}
-                  </span>
-                )}
-              </button>
-            }
+            <button
+              type="button"
+              onClick={toggleCommentsOpen}
+              className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100"
+            >
+              <span className="mr-1">💬</span>
+              <span>Bình luận</span>
+              {commentsCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-sky-600 text-[10px] text-white px-1">
+                  {commentsCount}
+                </span>
+              )}
+            </button>
 
-            {
-              user?.login?.currentUser?.userID === task?.createdBy &&
+            {currentUserId === Number(task?.createdBy) && (
               <button
                 onClick={askDelete}
                 disabled={deleting}
@@ -533,7 +596,7 @@ function closePreviewAttachment() {
               >
                 {deleting ? "Đang xoá…" : "Xoá công việc"}
               </button>
-            }
+            )}
 
             <button
               className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
@@ -542,7 +605,6 @@ function closePreviewAttachment() {
               Đóng
             </button>
           </div>
-
         </div>
 
         {error && (
@@ -562,6 +624,61 @@ function closePreviewAttachment() {
             <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
               <TaskInfoSection task={task} />
 
+              {/* ===== Người thực hiện (MULTI, FIX Enter/No options) ===== */}
+              {canEditAssignee && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <LabelSmall>Người thực hiện công việc</LabelSmall>
+
+                  <AsyncSelect
+                    isMulti
+                    cacheOptions
+                    defaultOptions={false}
+                    loadOptions={loadUserOptions}
+                    value={assigneeOptions}
+                    onChange={(opts) => setAssigneeOptions(opts || [])}
+                    inputValue={assigneeInput}
+                    onInputChange={(value, meta) => {
+                      if (meta.action === "input-change") {
+                        setAssigneeInput(value);
+                      }
+                      if (meta.action === "set-value") {
+                        // chọn xong (Enter/click) -> clear input để khỏi hiện "No options"
+                        setAssigneeInput("");
+                      }
+                      return value;
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Gõ @tên để tìm, chọn nhiều người thực hiện…"
+                    classNamePrefix="react-select"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: 40,
+                        borderRadius: 12,
+                        borderColor: "#e2e8f0",
+                        boxShadow: "none",
+                        fontSize: 13,
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        fontSize: 13,
+                        zIndex: 9999,
+                      }),
+                      multiValue: (base) => ({
+                        ...base,
+                        borderRadius: 9999,
+                        backgroundColor: "#eef2ff",
+                      }),
+                    }}
+                  />
+
+                  <div className="mt-1 text-[11px] text-slate-500">
+                    Bạn gõ <b>@tên</b> để tìm nhanh. Chỉ người tạo công việc và có
+                    quyền quản lý mới được đổi người thực hiện.
+                  </div>
+                </div>
+              )}
+
               <TaskAttachmentsSection
                 imageAttachments={imageAttachments}
                 fileAttachments={fileAttachments}
@@ -574,9 +691,7 @@ function closePreviewAttachment() {
                 onUploadAttachments={handleUploadAttachments}
                 onClearSelection={() => {
                   setNewFiles([]);
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                  }
+                  if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 onDownloadAttachment={handleDownloadAttachment}
                 onAskDeleteAttachment={askDeleteAttachment}
@@ -593,17 +708,11 @@ function closePreviewAttachment() {
                 statusCode={statusCode}
                 onStatusChange={setStatusCode}
                 repeatDaily={repeatDaily}
-                onToggleRepeatDaily={() =>
-                  setRepeatDaily((v) => !v)
-                }
+                onToggleRepeatDaily={() => setRepeatDaily((v) => !v)}
                 safeProgress={safeProgress}
-                onProgressSliderChange={(val) =>
-                  setProgressPercent(val)
-                }
+                onProgressSliderChange={(val) => setProgressPercent(val)}
                 onProgressInputChange={(val) =>
-                  setProgressPercent(
-                    Math.min(100, Math.max(0, +val || 0))
-                  )
+                  setProgressPercent(Math.min(100, Math.max(0, +val || 0)))
                 }
                 statusOptions={statusOptions}
               />
@@ -617,8 +726,9 @@ function closePreviewAttachment() {
               >
                 Hủy
               </button>
-              {
-                (task?.assignees?.some(a => a.userID === user?.login?.currentUser?.userID) || user?.login?.currentUser?.userID === task?.createdBy) &&
+
+              {(task?.assignees?.some((a) => Number(a.userID) === currentUserId) ||
+                currentUserId === Number(task?.createdBy)) && (
                 <button
                   disabled={saving}
                   className="inline-flex items-center rounded-full border border-emerald-500 bg-emerald-600 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-emerald-500"
@@ -626,7 +736,7 @@ function closePreviewAttachment() {
                 >
                   {saving ? "Đang lưu…" : "Lưu thay đổi"}
                 </button>
-              }
+              )}
             </div>
           </>
         )}
@@ -645,7 +755,6 @@ function closePreviewAttachment() {
           onConfirm={handleDeleteAttachmentConfirmed}
         />
 
-        {/* Panel bình luận – chỉ render khi mở */}
         <TaskCommentsPanel
           open={commentsOpen}
           comments={comments}
@@ -672,9 +781,7 @@ function closePreviewAttachment() {
         onNext={nextImage}
         onDotClick={openImageViewerIndex}
         onRequestDeleteCurrent={() => {
-          if (currentImage) {
-            setAttachmentToDelete(currentImage);
-          }
+          if (currentImage) setAttachmentToDelete(currentImage);
         }}
         deletingAttachment={deletingAttachment}
         user={user}
@@ -687,7 +794,7 @@ function closePreviewAttachment() {
         error={previewError}
         onClose={closePreviewAttachment}
         onRetry={() => {
-            if (previewAttachment) openPreviewAttachment(previewAttachment);
+          if (previewAttachment) openPreviewAttachment(previewAttachment);
         }}
       />
     </div>

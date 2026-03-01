@@ -109,6 +109,13 @@ function SidebarMealAdmin() {
             )}
             {VIEW_DEPT_BOARD && (
               <li>
+                <NavLink to={config.routes.adminLunchOrderReportByDay} className={linkClass}>
+                  Suất ăn Theo ngày
+                </NavLink>
+              </li>
+            )}
+            {VIEW_DEPT_BOARD && (
+              <li>
                 <NavLink to={config.routes.adminLunchOrderReport} className={linkClass}>
                   Bảng thống kê
                 </NavLink>

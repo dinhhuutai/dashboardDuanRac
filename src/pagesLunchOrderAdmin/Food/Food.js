@@ -192,6 +192,7 @@ function BranchEditor({ value = [], onChange, disabled }) {
 }
 
 function FoodManager() {
+  const [search, setSearch] = useState("");
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -210,36 +211,46 @@ function FoodManager() {
 
   useEffect(() => { fetchFoods(); }, []);
 
+  const filteredFoods = foods.filter((f) => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return true;
+
+    return (
+      f.foodName?.toLowerCase().includes(keyword) ||
+      f.foodCode?.toLowerCase().includes(keyword)
+    );
+  });
+
   async function fetchFoods() {
-  setLoading(true);
-  try {
-    let res;
+    setLoading(true);
     try {
-      res = await http.get(`${BASE_URL}/api/foods/with-branches`);
-    } catch (e) {
-      // fallback cũ: không có API gộp thì lấy foods rồi gắn branches từng món (tránh crash)
-      const base = await http.get(`${BASE_URL}/api/foods`);
-      const rows = base.data || [];
-      const rowsWithBranches = await Promise.all(
-        rows.map(async (f) => {
-          try {
-            const br = await http.get(`${BASE_URL}/api/foods/${f.foodId}/branches`);
-            return { ...f, branches: br.data || [] };
-          } catch {
-            return { ...f, branches: [] };
-          }
-        })
-      );
-      res = { data: rowsWithBranches };
+      let res;
+      try {
+        res = await http.get(`${BASE_URL}/api/foods/with-branches`);
+      } catch (e) {
+        // fallback cũ: không có API gộp thì lấy foods rồi gắn branches từng món (tránh crash)
+        const base = await http.get(`${BASE_URL}/api/foods`);
+        const rows = base.data || [];
+        const rowsWithBranches = await Promise.all(
+          rows.map(async (f) => {
+            try {
+              const br = await http.get(`${BASE_URL}/api/foods/${f.foodId}/branches`);
+              return { ...f, branches: br.data || [] };
+            } catch {
+              return { ...f, branches: [] };
+            }
+          })
+        );
+        res = { data: rowsWithBranches };
+      }
+      setFoods(res.data || []);
+    } catch (err) {
+      console.error(err);
+      showNotice("error", "Lỗi tải dữ liệu", "Không thể tải danh sách món ăn. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
     }
-    setFoods(res.data || []);
-  } catch (err) {
-    console.error(err);
-    showNotice("error", "Lỗi tải dữ liệu", "Không thể tải danh sách món ăn. Vui lòng thử lại.");
-  } finally {
-    setLoading(false);
   }
-}
 
   const openModal = async (food = null) => {
     setEditFood(food);
@@ -392,8 +403,19 @@ function FoodManager() {
   return (
     <div className="p-6 z-[99]">
       <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200 p-5 shadow-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">{`🍱 Quản lý món ăn (${foods.length})`}</h2>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+          <h2 className="text-2xl font-bold">{`🍱 Quản lý món ăn (${filteredFoods.length}/${foods.length})`}</h2>
+          
+          <div className="flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="🔍 Tìm theo tên hoặc mã món..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
           <button
             onClick={() => openModal()}
             disabled={saving || deletingId}
@@ -411,7 +433,7 @@ function FoodManager() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <AnimatePresence>
-              {foods.map((food) => (
+              {filteredFoods.map((food) => (
                 <motion.div
                   key={food.foodId}
                   layout

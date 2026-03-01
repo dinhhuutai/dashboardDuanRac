@@ -92,6 +92,7 @@ const routes = {
   adminLunchOrderNotOrder: '/admin/lunch-order/not-order',
   adminLunchOrderHistory: '/admin/lunch-order/history',
   adminLunchOrderReport: '/admin/lunch-order/report',
+  adminLunchOrderReportByDay: '/admin/lunch-order/report-by-day',
 
 
   imageCaddi: '/image-caddi',
@@ -152,6 +153,12 @@ const routes = {
   bmiDashboard: '/bmi/dashboard',
   bmiProfile: '/bmi/profile',
 
+  inkCovPerOnFilm: '/ink-coverage-percent-on-film',
+  uploadFileFilm: '/upload-file-film',
+
+  qualityInspectionOQC: '/quality-inspection/oqc/home',
+  qualityInspectionOQCResult: '/quality-inspection/oqc/result',
+  qualityInspectionKCS: '/quality-inspection/kcs', 
 };
 
 export default routes;

@@ -17,7 +17,7 @@ export default function MobileHome({ navigate, bmi }) {
           "px-4 pt-4 pb-[170px]",
         ].join(" ")}
       >
-        <div className="flex items-center justify-between mt-[40px]">
+        <div className="flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-11 w-11 rounded-full bg-white/30 border border-white/45 overflow-hidden shrink-0">
               <img src={avatarBMI} alt="Avatar" className="h-full w-full object-cover" />
@@ -41,7 +41,7 @@ export default function MobileHome({ navigate, bmi }) {
           </button>
         </div>
 
-        <div className="absolute left-4 right-4 top-[130px]">
+        <div className="absolute left-4 right-4 top-[110px]">
           <div className="rounded-2xl bg-white border border-slate-200/70 shadow-[0_10px_22px_rgba(15,23,42,0.12)] px-4 py-4">
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">

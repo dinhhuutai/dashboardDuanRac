@@ -11,6 +11,7 @@ import bg_page from "~/assets/imgs/bg_page_3.png";
 export default function MobileFeedbackFlow({
   tmp,
 
+  avatar,
   // assets
   logo,
   logoFeedback,
@@ -112,10 +113,10 @@ export default function MobileFeedbackFlow({
         `}
       >
         {/* Top row */}
-        <div className="relative flex items-center justify-between mt-[40px]">
+        <div className="relative flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-[40px] w-[40px] rounded-full items-center justify-center flex overflow-hidden bg-white/30 border border-white/40">
-              <img src={logo} alt="Avatar" className="h-[34px] w-[34px] object-cover" />
+              <img src={avatar} alt="Avatar" className="h-[34px] w-[34px] object-cover" />
             </div>
 
             <div className="min-w-0">
@@ -141,7 +142,7 @@ export default function MobileFeedbackFlow({
         </div>
 
         {/* CARD (chứa toàn bộ flow) */}
-        <div className="absolute left-4 right-4 top-[130px]">
+        <div className="absolute left-4 right-4 top-[110px]">
           <div 
             className={`rounded-3xl px-4 py-4 ${cardBg}`}
             style={{
@@ -166,7 +167,7 @@ export default function MobileFeedbackFlow({
                 </div>
               </div>
               <div className="h-[76px] w-[76px] rounded-2xl bg-[#FFF1C2] border border-amber-200/70 grid place-items-center">
-                <img src={logoFeedback} alt="logo" className="h-12 w-12 object-contain" />
+                <img src={logo} alt="logo" className="h-12 w-12 object-contain" />
               </div>
             </div>
 

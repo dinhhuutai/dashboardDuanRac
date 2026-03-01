@@ -11,6 +11,8 @@ const MODULEID = {
     BIEUMAUNOIBO: 9,
     XEPHOIVAI: 10,
     BMI: 11,
+    inkCoveragePercentOnFilm: 12,
+    qualityInspectionOQC: 13,
 }
 
 

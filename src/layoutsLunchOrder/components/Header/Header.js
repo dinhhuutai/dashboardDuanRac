@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 
 import logoAdmin from "~/assets/imgs/logoAdmin.png"; // logo cân rác
-import avatarTrash from "~/assets/imgs/avatar_trash.png"; // avatar dùng chung
+import avatar_datcom from "~/assets/imgs/avatar-main.jpg"; // avatar dùng chung
 import config from "~/config";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";
@@ -164,7 +164,7 @@ function Header() {
               <span
                 className={`h-8 w-8 overflow-hidden rounded-full rounded-2xl`}
                 style={{
-                  backgroundImage: `url(${avatarTrash})`,
+                  backgroundImage: `url(${avatar_datcom})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
                   backgroundPosition: "50% 65%", // chỉnh % nếu cần

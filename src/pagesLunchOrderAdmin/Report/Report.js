@@ -465,13 +465,22 @@ export default function AdminSummaryModern() {
   /* Gom theo bộ phận (để render bảng & Excel) */
   const deptGroups = useMemo(() => {
     const m = new Map();
+
     for (const u of users) {
-      const key = u.departmentName || "Chưa gán";
-      if (!m.has(key)) m.set(key, { name: key, users: [] });
+      // ❌ bỏ qua nếu chưa gán
+      if (u.departmentName === "Chưa gán" || u.departmentName.trim() === "") continue;
+
+      const key = u.departmentName;
+
+      if (!m.has(key)) {
+        m.set(key, { name: key, users: [] });
+      }
+
       m.get(key).users.push(u);
     }
+
     return Array.from(m.values()).sort((a, b) =>
-      (a.name || "").localeCompare(b.name || "")
+      a.name.localeCompare(b.name)
     );
   }, [users]);
 

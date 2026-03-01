@@ -519,6 +519,7 @@
 import { useEffect, useState } from "react";
 import logo from "~/assets/imgs/logoAdmin.png";
 import textThanks from "~/assets/imgs/thankyou_transparent_centered.png";
+import avatar from "~/assets/imgs/avatar-main.jpg";
 import logoFeedback from "~/assets/imgs/logoFeedback.png";
 import bg_page from "~/assets/imgs/bg_page_3.png";
 
@@ -529,7 +530,7 @@ import http from "~/api/http";
 import { useNavigate } from "react-router-dom";
 
 // mobile component
-import MobileFeedbackFlow from "./sectión/MobileFeedbackFlow";
+import MobileFeedbackFlow from "./sections/MobileFeedbackFlow";
 
 // Desktop icons you used
 import { FaArrowLeft, FaPenNib } from "react-icons/fa";
@@ -641,6 +642,7 @@ function FeedbackFlow() {
       {
         tmp?.login?.currentUser?.fullName &&
         <MobileFeedbackFlow
+          avatar={avatar}
           tmp={tmp}
           logo={logo}
           logoFeedback={logoFeedback}

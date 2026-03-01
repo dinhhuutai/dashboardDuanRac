@@ -1,6 +1,7 @@
 import routes from './routes';
 
-export const BASE_URL = 'http://localhost:5000';
+export const BASE_URL = process.env.REACT_APP_BASE_URL;
+//export const BASE_URL = 'http://localhost:5000';
 //export const BASE_URL = 'http://thlasohoa-ap-env.eba-qv9yn5kt.ap-southeast-2.elasticbeanstalk.com';
 //export const BASE_URL = 'https://api.thuanhunglongan.com';
 //export const BASE_URL = 'http://api.thuanhunglongan.com';

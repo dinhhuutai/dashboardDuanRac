@@ -88,6 +88,7 @@ import LunchOrderAssignUserDept from '~/pagesLunchOrderAdmin/AssignUserDept';
 import LunchOrderNotOrder from '~/pagesLunchOrderAdmin/NotOrder';
 import LunchOrderHistory from '~/pagesLunchOrderAdmin/History';
 import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
+import LunchOrderReportByDay from '~/pagesLunchOrderAdmin/ReportByDay';
 
 
 import ImageCaddi from '~/pages/ImageCaddi';
@@ -140,6 +141,43 @@ import BMICheck from '~/pagesBMI/Check';
 import BMIDashboard from '~/pagesBMI/Dashboard';
 import BMIPlan from '~/pagesBMI/Plan';
 import BMIProfile from '~/pagesBMI/Profile';
+
+import InkCovPerOnFilm from '~/pagesInkCovPerOnFilm/InkCovPerOnFilm';
+import uploadFileFilm from '~/pagesInkCovPerOnFilm/uploadFileFilm';
+
+import QualityInspectionOQC from '~/pagesQualityInspectionOQC/Home';
+import QualityInspectionOQCResult from '~/pagesQualityInspectionOQC/Results';
+
+
+const routesQualityInspectionOQC = [
+  {
+    path: config.routes.qualityInspectionOQC,
+    component: QualityInspectionOQC,
+    login: true,
+    module: 'qualityInspectionOQC',
+  },
+  {
+    path: config.routes.qualityInspectionOQCResult,
+    component: QualityInspectionOQCResult,
+    login: true,
+    module: 'qualityInspectionOQC',
+  },
+]
+
+const routesInkCovPerOnFilm = [
+  {
+    path: config.routes.inkCovPerOnFilm,
+    component: InkCovPerOnFilm,
+    login: true,
+    module: 'inkCovPerOnFilm',
+  },
+  {
+    path: config.routes.uploadFileFilm,
+    component: uploadFileFilm,
+    login: true,
+    module: 'inkCovPerOnFilm',
+  },
+]
 
 const routesBMI = [
   {
@@ -404,6 +442,10 @@ export const routes = [
   ...routesTaskManagement,
 
   ...routesBMI,
+
+  ...routesInkCovPerOnFilm,
+
+  ...routesQualityInspectionOQC,
 
 ];
 
@@ -707,6 +749,11 @@ export const routesLunchOrderAdmin = [
   {
     path: config.routes.adminLunchOrderReport,
     component: LunchOrderReport,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderReportByDay,
+    component: LunchOrderReportByDay,
     login: true,
   },
 ]

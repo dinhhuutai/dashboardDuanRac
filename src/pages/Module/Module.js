@@ -36,7 +36,8 @@ const ALLOWED_ICON_NAMES = [
   "FiMail","FiInbox","FiBell","FiMessageSquare","FiPhone","FiSmartphone","FiMonitor","FiGlobe",
   "FiMap","FiMapPin","FiTruck","FiTrendingUp","FiTrendingDown","FiPieChart","FiBarChart2","FiDollarSign",
   "FiShoppingCart","FiTrash2","FiDatabase","FiBook","FiBookmark","FiBriefcase","FiCalendar","FiClock",
-  "FiImage","FiCamera","FiEdit2","FiPenTool","FiSearch","FiAlertTriangle","FiActivity","FiLayers", "FiHeart"
+  "FiImage","FiCamera","FiEdit2","FiPenTool","FiSearch","FiAlertTriangle","FiActivity","FiLayers", "FiHeart",
+  "FiPercent"
 ];
 
 /* Lọc ra những icon thực sự tồn tại trong react-icons/fi (phòng lỗi chính tả) */

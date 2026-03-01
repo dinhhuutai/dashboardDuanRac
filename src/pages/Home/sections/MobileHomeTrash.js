@@ -2,7 +2,7 @@
 import React from "react";
 import { FaThLarge } from "react-icons/fa";
 import config from "~/config";
-import avatarTrash from "~/assets/imgs/avatar_trash.png";
+import avatarTrash from "~/assets/imgs/avatar-main.jpg";
 import Lottie from "lottie-react";
 import trashLottie from "~/assets/lottie/trash.json";
 
@@ -53,7 +53,7 @@ export default function MobileHomeTrash({
         "
       >
         {/* Top row */}
-        <div className="relative flex items-center justify-between mt-[40px]">
+        <div className="relative flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
               <img
@@ -84,7 +84,7 @@ export default function MobileHomeTrash({
         </div>
 
         {/* CARD */}
-        <div className="absolute left-4 right-4 top-[130px]">
+        <div className="absolute left-4 right-4 top-[110px]">
           <div className={`rounded-3xl px-4 py-4 ${cardBg}`}>
             <div className="flex items-center gap-3">
               <div className="flex-1">

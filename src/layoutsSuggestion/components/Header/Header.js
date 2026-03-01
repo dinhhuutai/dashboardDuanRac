@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 
 import logoAdmin from "~/assets/imgs/logoAdmin.png"; // logo cân rác
-import logoFeedback from "~/assets/imgs/logoFeedback.png"; // avatar dùng chung
+import logoFeedback from "~/assets/imgs/avatar-main.jpg"; // avatar dùng chung
 import config from "~/config";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";

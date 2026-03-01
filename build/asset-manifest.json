@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.c1426f5e.css",
-    "main.js": "/static/js/main.2a7b1526.js",
+    "main.css": "/static/css/main.089b99c7.css",
+    "main.js": "/static/js/main.ce72cad2.js",
     "static/js/544.0466a351.chunk.js": "/static/js/544.0466a351.chunk.js",
     "static/js/794.472e9971.chunk.js": "/static/js/794.472e9971.chunk.js",
     "static/js/271.5a7394e8.chunk.js": "/static/js/271.5a7394e8.chunk.js",
@@ -27,7 +27,6 @@
     "static/media/tn8.jpg": "/static/media/tn8.9acbbad80c6c60781eec.jpg",
     "static/media/tn30.jpg": "/static/media/tn30.45fb6dd8cc9329e03651.jpg",
     "static/media/tn23.jpg": "/static/media/tn23.e7d153e515e974388a2f.jpg",
-    "static/media/logo.png": "/static/media/logo.9c6d63cdecc3c0f905ff.png",
     "static/media/tn45.jpg": "/static/media/tn45.3d8207fe3a89e573fc85.jpg",
     "static/media/tn51.jpg": "/static/media/tn51.3d8207fe3a89e573fc85.jpg",
     "static/media/tn52.jpg": "/static/media/tn52.25712223447e3b000306.jpg",
@@ -64,12 +63,14 @@
     "static/media/tn15.jpg": "/static/media/tn15.5158cdc814d1add96bcd.jpg",
     "static/media/tn39.jpg": "/static/media/tn39.9fef6c61e28dc899f35a.jpg",
     "static/media/tn31.jpg": "/static/media/tn31.01698079ddb8679ae875.jpg",
+    "static/media/logo_bmi.png": "/static/media/logo_bmi.052b3e3ae1174345e3c5.png",
     "static/media/tn28.jpg": "/static/media/tn28.ab90f8e1bce629562eb6.jpg",
     "static/media/tn55.jpg": "/static/media/tn55.6c7d7920611d0209e4eb.jpg",
     "static/media/tn26.jpg": "/static/media/tn26.4a5a05335c6d4e98e031.jpg",
     "static/media/tn41.jpg": "/static/media/tn41.e96c6dd98bf90adab270.jpg",
     "static/media/tn33.jpg": "/static/media/tn33.1dafda4794f7de16ec2c.jpg",
     "static/media/tn1.jpg": "/static/media/tn1.f248048294590f29ce47.jpg",
+    "static/media/avatar_bmi.png": "/static/media/avatar_bmi.6e89d0c5bddab8cf2192.png",
     "static/media/tn3.jpg": "/static/media/tn3.d1f15b2a987135efbae8.jpg",
     "static/media/tn4.jpg": "/static/media/tn4.7ff1a5f68b9b7016c025.jpg",
     "static/media/tn17.jpg": "/static/media/tn17.aa19c80d87c1d0fdb9f9.jpg",
@@ -84,7 +85,7 @@
     "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/css/main.c1426f5e.css",
-    "static/js/main.2a7b1526.js"
+    "static/css/main.089b99c7.css",
+    "static/js/main.ce72cad2.js"
   ]
 }
