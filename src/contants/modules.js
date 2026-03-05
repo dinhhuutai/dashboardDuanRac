@@ -13,6 +13,8 @@ const MODULEID = {
     BMI: 11,
     inkCoveragePercentOnFilm: 12,
     qualityInspectionOQC: 13,
+    qualityInspectionKCS: 14,
+    consolidate: 15,
 }
 
 

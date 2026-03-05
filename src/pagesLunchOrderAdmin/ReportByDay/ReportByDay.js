@@ -8,14 +8,12 @@
 //   const [rows, setRows] = useState([]);
 //   const [loading, setLoading] = useState(false);
 
-//   // ===== Set mặc định ngày hôm nay =====
 //   useEffect(() => {
 //     const today = new Date();
 //     const iso = today.toISOString().split("T")[0];
 //     setSelectedDate(iso);
 //   }, []);
 
-//   // ===== Fetch report =====
 //   useEffect(() => {
 //     if (!selectedDate) return;
 
@@ -27,6 +25,8 @@
 //           `${BASE_URL}/api/lunch-order/report/by-date/${selectedDate}`
 //         );
 
+//         console.log(rs.data.data);
+
 //         if (rs.data.success && rs.data.data) {
 //           setFoods(rs.data.data.foods || []);
 //           setRows(rs.data.data.rows || []);
@@ -35,7 +35,7 @@
 //           setRows([]);
 //         }
 //       } catch (err) {
-//         console.error("Fetch report error:", err);
+//         console.error(err);
 //         setFoods([]);
 //         setRows([]);
 //       } finally {
@@ -46,39 +46,67 @@
 //     fetchReport();
 //   }, [selectedDate]);
 
-//   // ===== Build matrix =====
+//   // ===== Flatten food + branch =====
+//   const flatFoods = useMemo(() => {
+//     const result = [];
+
+//     foods.forEach((f) => {
+//       if (!f.branches || f.branches.length === 0) {
+//         result.push({
+//           key: `${f.foodId}_0`,
+//           foodId: f.foodId,
+//           branchId: 0,
+//           label: `${f.foodName} (Không phân loại)`
+//         });
+//       } else {
+//         f.branches.forEach((b) => {
+//           result.push({
+//             key: `${f.foodId}_${b.branchId}`,
+//             foodId: f.foodId,
+//             branchId: b.branchId || 0,
+//             label: b.branchName
+//               ? `${f.foodName} - ${b.branchName}`
+//               : `${f.foodName} (Không phân loại)`
+//           });
+//         });
+//       }
+//     });
+
+//     return result;
+//   }, [foods]);
+
+//   // ===== Build matrix (theo food + branch) =====
 //   const reportMatrix = useMemo(() => {
 //     const map = {};
 
 //     for (const row of rows) {
 //       const dept = row.departmentName || "Chưa gán";
-//       const foodId = row.foodId;
+//       const key = `${row.foodId}_${row.branchId || 0}`;
 
 //       if (!map[dept]) map[dept] = {};
-//       if (!map[dept][foodId]) map[dept][foodId] = 0;
+//       if (!map[dept][key]) map[dept][key] = 0;
 
-//       map[dept][foodId] += row.totalQuantity || 0;
+//       map[dept][key] += row.totalQuantity || 0;
 //     }
 
 //     return map;
 //   }, [rows]);
 
-//   // ===== Lấy danh sách bộ phận từ rows =====
 //   const departments = useMemo(() => {
 //     const setDept = new Set(rows.map(r => r.departmentName || "Chưa gán"));
 //     return Array.from(setDept).sort();
 //   }, [rows]);
 
 //   const getRowTotal = (dept) =>
-//     foods.reduce(
-//       (sum, f) => sum + (reportMatrix?.[dept]?.[f.foodId] || 0),
+//     flatFoods.reduce(
+//       (sum, f) => sum + (reportMatrix?.[dept]?.[f.key] || 0),
 //       0
 //     );
 
-//   const getColumnTotal = (foodId) =>
+//   const getColumnTotal = (key) =>
 //     departments.reduce(
 //       (sum, d) =>
-//         sum + (reportMatrix?.[d]?.[foodId] || 0),
+//         sum + (reportMatrix?.[d]?.[key] || 0),
 //       0
 //     );
 
@@ -88,12 +116,10 @@
 //       0
 //     );
 
-//   // ===== Format header =====
 //   const formatHeader = () => {
 //     if (!selectedDate) return "";
 
 //     const d = new Date(selectedDate);
-
 //     const days = [
 //       "Chủ nhật",
 //       "Thứ 2",
@@ -107,118 +133,176 @@
 //     return `${days[d.getDay()]} - ${d.toLocaleDateString("vi-VN")}`;
 //   };
 
-//   // ===== Disable T7 & CN =====
-//   const isWeekend = (dateStr) => {
-//     const d = new Date(dateStr);
-//     const day = d.getDay();
-//     return day === 0 || day === 6;
-//   };
-
 //   return (
-//     <div className="p-6 bg-white rounded-2xl shadow">
-//       <h2 className="text-xl font-semibold mb-6">
-//         📊 Báo cáo suất ăn - {formatHeader()}
-//       </h2>
+//     <div className="p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+//       <div className="bg-white rounded-3xl shadow-xl p-8">
 
-//       {/* ===== Filter chọn ngày ===== */}
-//       <div className="flex flex-wrap gap-4 mb-6">
-//         <input
-//           type="date"
-//           value={selectedDate}
-//           onChange={(e) => {
-//             if (isWeekend(e.target.value)) {
-//               alert("Chỉ chọn từ Thứ 2 đến Thứ 6");
-//               return;
-//             }
-//             setSelectedDate(e.target.value);
-//           }}
-//           className="border px-3 py-2 rounded-lg"
-//         />
-//       </div>
+//         {/* Header */}
+//         <div className="flex justify-between items-center mb-8">
+//           <h2 className="text-2xl font-bold text-slate-800">
+//             📊 Báo cáo suất ăn
+//             <span className="ml-3 text-lg font-medium text-emerald-600">
+//               {formatHeader()}
+//             </span>
+//           </h2>
 
-//       {/* ===== Table ===== */}
-//       {loading ? (
-//         <div className="text-center py-10 text-slate-500">
-//           Đang tải dữ liệu...
+//           <input
+//   type="date"
+//   value={selectedDate}
+//   onChange={(e) => setSelectedDate(e.target.value)}
+//   onClick={(e) => e.target.showPicker()}
+//   className="border border-slate-300 px-4 py-2 rounded-xl focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+// />
 //         </div>
-//       ) : foods.length === 0 ? (
-//         <div className="text-center py-10 text-slate-400">
-//           Không có dữ liệu
-//         </div>
-//       ) : (
-//         <div className="overflow-auto">
-//           <table className="min-w-full border text-sm">
-//             <thead className="bg-slate-100">
-//               <tr>
-//                 <th className="border px-3 py-2 text-left">
-//                   Bộ phận
-//                 </th>
 
-//                 {foods.map((f) => (
-//                   <th
-//                     key={f.foodId}
-//                     className="border px-3 py-2 text-center"
-//                   >
-//                     {f.foodName}
-//                   </th>
-//                 ))}
+//         {/* Table */}
+//         {loading ? (
+//           <div className="text-center py-16 text-slate-500">
+//             Đang tải dữ liệu...
+//           </div>
+//         ) : flatFoods.length === 0 ? (
+//           <div className="text-center py-16 text-slate-400">
+//             Không có dữ liệu
+//           </div>
+//         ) : (
+// <div className="overflow-auto border rounded-2xl max-h-[85vh]">
+//   <table className="min-w-full text-xs border-collapse">
+//     <thead className="sticky top-0 z-20 bg-white shadow-sm">
 
-//                 <th className="border px-3 py-2 text-center bg-emerald-100">
-//                   Tổng
-//                 </th>
-//               </tr>
-//             </thead>
+//       {/* ===== Header tầng 1 (Food) ===== */}
+//       <tr className="bg-slate-100">
+//         <th
+//           rowSpan={2}
+//           className="sticky left-0 z-30 bg-slate-100 border px-3 py-2 text-left"
+//         >
+//           Bộ phận
+//         </th>
 
-//             <tbody>
-//               {departments.map((dept) => (
-//                 <tr key={dept}>
-//                   <td className="border px-3 py-2 font-medium">
-//                     {dept}
-//                   </td>
+//         {foods.map((f) => (
+//           <th
+//             key={f.foodId}
+//             colSpan={f.branches?.length || 1}
+//             className="border px-3 py-2 text-center font-semibold"
+//           >
+//             {f.foodName}
+//           </th>
+//         ))}
 
-//                   {foods.map((f) => (
-//                     <td
-//                       key={f.foodId}
-//                       className="border px-3 py-2 text-center"
-//                     >
-//                       {reportMatrix?.[dept]?.[f.foodId] || 0}
-//                     </td>
-//                   ))}
+//         <th
+//           rowSpan={2}
+//           className="sticky right-0 z-30 bg-emerald-100 border px-3 py-2 text-center"
+//         >
+//           Tổng
+//         </th>
+//       </tr>
 
-//                   <td className="border px-3 py-2 text-center font-semibold bg-emerald-50">
-//                     {getRowTotal(dept)}
-//                   </td>
-//                 </tr>
-//               ))}
+//       {/* ===== Header tầng 2 (Branch) ===== */}
+//       <tr className="bg-slate-50">
+//         {foods.map((f) =>
+//           f.branches && f.branches.length > 0 ? (
+//             f.branches.map((b) => (
+//               <th
+//                 key={`${f.foodId}_${b.branchId}`}
+//                 className="border px-3 py-2 text-center font-medium"
+//               >
+//                 {b.branchName}
+//               </th>
+//             ))
+//           ) : (
+//             <th
+//               key={`${f.foodId}_empty`}
+//               className="border px-3 py-2 text-center text-slate-400"
+//             >
+//               {/* để trống */}
+//             </th>
+//           )
+//         )}
+//       </tr>
+//     </thead>
 
-//               {/* Tổng cuối bảng */}
-//               <tr className="bg-slate-200 font-semibold">
-//                 <td className="border px-3 py-2">Tổng</td>
+//     <tbody>
+//       {departments.map((dept, index) => (
+//         <tr
+//           key={dept}
+//           className={index % 2 === 0 ? "bg-white" : "bg-slate-50"}
+//         >
+//           <td className="sticky left-0 bg-white border px-3 py-2 font-medium">
+//             {dept}
+//           </td>
 
-//                 {foods.map((f) => (
+//           {foods.map((f) =>
+//             f.branches && f.branches.length > 0 ? (
+//               f.branches.map((b) => {
+//                 const key = `${f.foodId}_${b.branchId}`;
+//                 return (
 //                   <td
-//                     key={f.foodId}
+//                     key={key}
 //                     className="border px-3 py-2 text-center"
 //                   >
-//                     {getColumnTotal(f.foodId)}
+//                     {reportMatrix?.[dept]?.[key] || 0}
 //                   </td>
-//                 ))}
+//                 );
+//               })
+//             ) : (
+//               <td
+//                 key={`${f.foodId}_0`}
+//                 className="border px-3 py-2 text-center"
+//               >
+//                 {reportMatrix?.[dept]?.[`${f.foodId}_0`] || 0}
+//               </td>
+//             )
+//           )}
 
-//                 <td className="border px-3 py-2 text-center bg-emerald-200">
-//                   {getGrandTotal()}
+//           {/* Tổng hàng ngang */}
+//           <td className="sticky right-0 bg-emerald-50 border px-3 py-2 text-center font-semibold">
+//             {getRowTotal(dept)}
+//           </td>
+//         </tr>
+//       ))}
+
+//       {/* ===== Tổng cuối bảng ===== */}
+//       <tr className="bg-slate-200 font-semibold">
+//         <td className="sticky left-0 bg-slate-200 border px-3 py-2">
+//           Tổng
+//         </td>
+
+//         {foods.map((f) =>
+//           f.branches && f.branches.length > 0 ? (
+//             f.branches.map((b) => {
+//               const key = `${f.foodId}_${b.branchId}`;
+//               return (
+//                 <td
+//                   key={key}
+//                   className="border px-3 py-2 text-center"
+//                 >
+//                   {getColumnTotal(key)}
 //                 </td>
-//               </tr>
-//             </tbody>
-//           </table>
-//         </div>
-//       )}
+//               );
+//             })
+//           ) : (
+//             <td
+//               key={`${f.foodId}_0`}
+//               className="border px-3 py-2 text-center"
+//             >
+//               {getColumnTotal(`${f.foodId}_0`)}
+//             </td>
+//           )
+//         )}
+
+//         <td className="sticky right-0 bg-emerald-200 border px-3 py-2 text-center">
+//           {getGrandTotal()}
+//         </td>
+//       </tr>
+//     </tbody>
+//   </table>
+// </div>
+//         )}
+//       </div>
 //     </div>
 //   );
 // }
 
 // export default ReportByDay;
-
-
 
 
 
@@ -232,17 +316,16 @@ function ReportByDay() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Set ngày hôm nay
   useEffect(() => {
     const today = new Date();
-    setSelectedDate(today.toISOString().split("T")[0]);
+    const iso = today.toISOString().split("T")[0];
+    setSelectedDate(iso);
   }, []);
 
-  // Fetch data
   useEffect(() => {
     if (!selectedDate) return;
 
-    const fetchData = async () => {
+    const fetchReport = async () => {
       try {
         setLoading(true);
 
@@ -250,15 +333,8 @@ function ReportByDay() {
           `${BASE_URL}/api/lunch-order/report/by-date/${selectedDate}`
         );
 
-        console.log(rs.data.data)
         if (rs.data.success && rs.data.data) {
-          // 🔥 Đảm bảo branches luôn là array
-          const safeFoods = (rs.data.data.foods || []).map((f) => ({
-            ...f,
-            branches: Array.isArray(f.branches) ? f.branches : [],
-          }));
-
-          setFoods(safeFoods);
+          setFoods(rs.data.data.foods || []);
           setRows(rs.data.data.rows || []);
         } else {
           setFoods([]);
@@ -273,8 +349,29 @@ function ReportByDay() {
       }
     };
 
-    fetchData();
+    fetchReport();
   }, [selectedDate]);
+
+  // ===== Flatten food + branch =====
+  const flatFoods = useMemo(() => {
+    const result = [];
+
+    foods.forEach((f) => {
+      if (!f.branches || f.branches.length === 0) {
+        result.push({
+          key: `${f.foodId}_0`,
+        });
+      } else {
+        f.branches.forEach((b) => {
+          result.push({
+            key: `${f.foodId}_${b.branchId || 0}`,
+          });
+        });
+      }
+    });
+
+    return result;
+  }, [foods]);
 
   // ===== Build matrix =====
   const reportMatrix = useMemo(() => {
@@ -294,198 +391,194 @@ function ReportByDay() {
   }, [rows]);
 
   const departments = useMemo(() => {
-    const setDept = new Set(
-      rows.map((r) => r.departmentName || "Chưa gán")
-    );
+    const setDept = new Set(rows.map((r) => r.departmentName || "Chưa gán"));
     return Array.from(setDept).sort();
   }, [rows]);
 
-  const getCell = (dept, foodId, branchId) =>
-    reportMatrix?.[dept]?.[`${foodId}_${branchId || 0}`] || 0;
+  const getRowTotal = (dept) =>
+    flatFoods.reduce(
+      (sum, f) => sum + (reportMatrix?.[dept]?.[f.key] || 0),
+      0
+    );
 
-  const getRowTotal = (dept) => {
-    let total = 0;
-
-    foods.forEach((food) => {
-      const branches = food.branches || [];
-
-      if (branches.length > 0) {
-        branches.forEach((b) => {
-          total += getCell(dept, food.foodId, b.branchId);
-        });
-      } else {
-        total += getCell(dept, food.foodId, 0);
-      }
-    });
-
-    return total;
-  };
+  const getColumnTotal = (key) =>
+    departments.reduce(
+      (sum, d) => sum + (reportMatrix?.[d]?.[key] || 0),
+      0
+    );
 
   const getGrandTotal = () =>
     departments.reduce((sum, d) => sum + getRowTotal(d), 0);
 
+  const formatHeader = () => {
+    if (!selectedDate) return "";
+
+    const d = new Date(selectedDate);
+    const days = [
+      "Chủ nhật",
+      "Thứ 2",
+      "Thứ 3",
+      "Thứ 4",
+      "Thứ 5",
+      "Thứ 6",
+      "Thứ 7",
+    ];
+
+    return `${days[d.getDay()]} - ${d.toLocaleDateString("vi-VN")}`;
+  };
+
   return (
-    <div className="p-6 bg-white rounded-2xl shadow">
-      <h2 className="text-xl font-semibold mb-6">
-        📊 Báo cáo suất ăn
-      </h2>
+    <div className="p-3 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+      <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
 
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={(e) => setSelectedDate(e.target.value)}
-        className="border px-3 py-2 rounded-lg mb-6"
-      />
+        {/* ===== HEADER ===== */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div>
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-800">
+              📊 Báo cáo suất ăn
+            </h2>
+            <div className="text-emerald-600 font-medium text-sm sm:text-base mt-1">
+              {formatHeader()}
+            </div>
+          </div>
 
-      {loading ? (
-        <div>Đang tải...</div>
-      ) : foods.length === 0 ? (
-        <div>Không có dữ liệu</div>
-      ) : (
-        <div className="overflow-auto">
-          <table className="min-w-full border text-sm">
-            <thead>
-              {/* Header tầng 1 */}
-              <tr className="bg-slate-100">
-                <th rowSpan={2} className="border px-3 py-2">
-                  Bộ phận
-                </th>
+          <input
+  type="date"
+  value={selectedDate}
+  onChange={(e) => setSelectedDate(e.target.value)}
+  onClick={(e) => e.target.showPicker?.()}
+  className="border border-slate-300 px-3 py-2 rounded-xl focus:ring-2 focus:ring-emerald-400 text-sm cursor-pointer w-full sm:w-auto"
+/>
+        </div>
 
-                {foods.map((food) => {
-                  const branches = food.branches || [];
+        {/* ===== TABLE ===== */}
+        {loading ? (
+          <div className="text-center py-12 text-slate-500">
+            Đang tải dữ liệu...
+          </div>
+        ) : flatFoods.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            Không có dữ liệu
+          </div>
+        ) : (
+          <div className="overflow-auto border rounded-xl max-h-[90vh]">
+            <table className="min-w-max w-full text-[11px] sm:text-xs border-collapse">
+              <thead className="sticky top-0 z-20 bg-white shadow-sm">
 
-                  return (
+                {/* Tầng 1 */}
+                <tr className="bg-slate-100">
+                  <th
+                    rowSpan={2}
+                    className="sticky left-0 z-30 bg-slate-100 border px-2 sm:px-3 py-2 text-left min-w-[120px]"
+                  >
+                    Bộ phận
+                  </th>
+
+                  {foods.map((f) => (
                     <th
-                      key={food.foodId}
-                      colSpan={branches.length > 0 ? branches.length : 1}
-                      className="border px-3 py-2 text-center"
+                      key={f.foodId}
+                      colSpan={f.branches?.length || 1}
+                      className="border px-2 sm:px-3 py-2 text-center font-semibold whitespace-nowrap"
                     >
-                      {food.foodName}
+                      {f.foodName}
                     </th>
-                  );
-                })}
+                  ))}
 
-                <th
-                  rowSpan={2}
-                  className="border px-3 py-2 text-center bg-emerald-100"
-                >
-                  Tổng
-                </th>
-              </tr>
+                  <th
+                    rowSpan={2}
+                    className="sticky right-0 z-30 bg-emerald-100 border px-3 py-2 text-center min-w-[70px]"
+                  >
+                    Tổng
+                  </th>
+                </tr>
 
-              {/* Header tầng 2 */}
-              <tr className="bg-slate-50">
-                {foods.map((food) => {
-                  const branches = food.branches || [];
-
-                  if (branches.length > 0) {
-                    return branches.map((b) => (
+                {/* Tầng 2 */}
+                <tr className="bg-slate-50">
+                  {foods.map((f) =>
+                    f.branches && f.branches.length > 0 ? (
+                      f.branches.map((b) => (
+                        <th
+                          key={`${f.foodId}_${b.branchId}`}
+                          className="border px-2 py-2 text-center whitespace-nowrap"
+                        >
+                          {b.branchName}
+                        </th>
+                      ))
+                    ) : (
                       <th
-                        key={`${food.foodId}_${b.branchId}`}
-                        className="border px-3 py-2 text-center"
-                      >
-                        {b.branchName}
-                      </th>
-                    ));
-                  }
+                        key={`${f.foodId}_empty`}
+                        className="border px-2 py-2"
+                      />
+                    )
+                  )}
+                </tr>
+              </thead>
 
-                  return (
-                    <th
-                      key={food.foodId}
-                      className="border px-3 py-2 text-center"
-                    >
-                      {food.foodName}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
+              <tbody>
+                {departments.map((dept, index) => (
+                  <tr
+                    key={dept}
+                    className={index % 2 === 0 ? "bg-white" : "bg-slate-50"}
+                  >
+                    <td className="sticky left-0 bg-white border px-2 sm:px-3 py-2 font-medium min-w-[120px]">
+                      {dept}
+                    </td>
 
-            <tbody>
-              {departments.map((dept) => (
-                <tr key={dept}>
-                  <td className="border px-3 py-2 font-medium">
-                    {dept}
+                    {foods.map((f) =>
+                      f.branches && f.branches.length > 0 ? (
+                        f.branches.map((b) => {
+                          const key = `${f.foodId}_${b.branchId}`;
+                          return (
+                            <td
+                              key={key}
+                              className="border px-2 py-2 text-center"
+                            >
+                              {reportMatrix?.[dept]?.[key] || 0}
+                            </td>
+                          );
+                        })
+                      ) : (
+                        <td
+                          key={`${f.foodId}_0`}
+                          className="border px-2 py-2 text-center"
+                        >
+                          {reportMatrix?.[dept]?.[`${f.foodId}_0`] || 0}
+                        </td>
+                      )
+                    )}
+
+                    <td className="sticky right-0 bg-emerald-50 border px-2 py-2 text-center font-semibold">
+                      {getRowTotal(dept)}
+                    </td>
+                  </tr>
+                ))}
+
+                {/* Tổng cuối */}
+                <tr className="bg-slate-200 font-semibold">
+                  <td className="sticky left-0 bg-slate-200 border px-3 py-2">
+                    Tổng
                   </td>
 
-                  {foods.map((food) => {
-                    const branches = food.branches || [];
+                  {flatFoods.map((f) => (
+                    <td
+                      key={f.key}
+                      className="border px-2 py-2 text-center"
+                    >
+                      {getColumnTotal(f.key)}
+                    </td>
+                  ))}
 
-                    if (branches.length > 0) {
-                      return branches.map((b) => (
-                        <td
-                          key={`${food.foodId}_${b.branchId}`}
-                          className="border px-3 py-2 text-center"
-                        >
-                          {getCell(dept, food.foodId, b.branchId)}
-                        </td>
-                      ));
-                    }
-
-                    return (
-                      <td
-                        key={food.foodId}
-                        className="border px-3 py-2 text-center"
-                      >
-                        {getCell(dept, food.foodId, 0)}
-                      </td>
-                    );
-                  })}
-
-                  <td className="border px-3 py-2 text-center bg-emerald-50 font-semibold">
-                    {getRowTotal(dept)}
+                  <td className="sticky right-0 bg-emerald-200 border px-3 py-2 text-center">
+                    {getGrandTotal()}
                   </td>
                 </tr>
-              ))}
-
-              {/* Grand total */}
-              <tr className="bg-slate-200 font-semibold">
-                <td className="border px-3 py-2">Tổng</td>
-
-                {foods.map((food) => {
-                  const branches = food.branches || [];
-
-                  if (branches.length > 0) {
-                    return branches.map((b) => (
-                      <td
-                        key={`${food.foodId}_${b.branchId}`}
-                        className="border px-3 py-2 text-center"
-                      >
-                        {departments.reduce(
-                          (sum, d) =>
-                            sum +
-                            getCell(d, food.foodId, b.branchId),
-                          0
-                        )}
-                      </td>
-                    ));
-                  }
-
-                  return (
-                    <td
-                      key={food.foodId}
-                      className="border px-3 py-2 text-center"
-                    >
-                      {departments.reduce(
-                        (sum, d) =>
-                          sum + getCell(d, food.foodId, 0),
-                        0
-                      )}
-                    </td>
-                  );
-                })}
-
-                <td className="border px-3 py-2 text-center bg-emerald-200">
-                  {getGrandTotal()}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default ReportByDay;
-

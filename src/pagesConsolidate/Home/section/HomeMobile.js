@@ -9,8 +9,8 @@ export default function MobileHomeOQC({ navigate, tmp }) {
 
   /* ================= STYLE TOKENS ================= */
 
-  const bgMain = "bg-[#EAF6F0]";
-  const cardBg = "bg-[#F8FBFF] border border-sky-200/70";
+  const bgMain = "bg-[#FFF7ED]";
+  const cardBg = "bg-[#FFFBF5] border border-amber-200/70";
 
   /* =============================================== */
 
@@ -20,8 +20,7 @@ export default function MobileHomeOQC({ navigate, tmp }) {
       <div
         className="
           relative
-          bg-gradient-to-br
-          from-sky-400 via-sky-500 to-blue-500
+          bg-gradient-to-br from-orange-400 via-amber-500 to-orange-600
           rounded-b-[46px]
           px-4 pt-4 pb-[200px]
         "
@@ -61,10 +60,10 @@ export default function MobileHomeOQC({ navigate, tmp }) {
         <div className="absolute left-4 right-4 top-[100px]">
           <div className={`rounded-3xl px-4 py-5 ${cardBg}`}>
             {/* TITLE */}
-            <div className="text-[18px] font-bold text-sky-900">
-              🧪 OQC{" "}
-              <span className="text-sky-700 font-semibold">
-                Kiểm tra chất lượng đầu ra
+            <div className="text-[18px] font-bold text-green-900">
+              🧪 Gom hàng{" "}
+              <span className="text-green-700 font-semibold">
+                Sau khi vải khô
               </span>
             </div>
 
@@ -74,30 +73,30 @@ export default function MobileHomeOQC({ navigate, tmp }) {
             </div>
 
             {/* DIVIDER */}
-            <div className="my-4 h-px bg-sky-100" />
+            <div className="my-4 h-px bg-green-100" />
 
             {/* GUIDE */}
             <div className="space-y-3 text-[14px] text-slate-700">
               <div className="flex items-start gap-2">
-  <span className="font-semibold text-sky-600">1.</span>
+                <span className="font-semibold text-green-600">1.</span>
 
-  <span className="text-sky-800 flex items-center gap-1 flex-wrap">
-    Bấm vào biểu tượng
-    <FaQrcode className="text-sky-600 text-base" />
-    <span className="font-semibold text-sky-700">
-      Quét QR
-    </span>
-    ở thanh bên dưới
-  </span>
-</div>
-
-              <div className="flex items-start gap-2">
-                <span className="font-semibold text-sky-600">2.</span>
-                <span>Quét mã QR trên sản phẩm cần kiểm tra</span>
+                <span className="text-green-800 flex items-center gap-1 flex-wrap">
+                  Bấm vào biểu tượng
+                  <FaQrcode className="text-green-600 text-base" />
+                  <span className="font-semibold text-green-700">
+                    Quét QR
+                  </span>
+                  ở thanh bên dưới
+                </span>
               </div>
 
               <div className="flex items-start gap-2">
-                <span className="font-semibold text-sky-600">3.</span>
+                <span className="font-semibold text-green-600">2.</span>
+                <span>Quét mã QR trên sản phẩm cần gom</span>
+              </div>
+
+              {/* <div className="flex items-start gap-2">
+                <span className="font-semibold text-green-600">3.</span>
                 <span>
                   Chọn kết quả{" "}
                   <span className="font-semibold text-green-600">
@@ -108,11 +107,11 @@ export default function MobileHomeOQC({ navigate, tmp }) {
                     Không đạt
                   </span>
                 </span>
-              </div>
+              </div> */}
 
               <div className="flex items-start gap-2">
-                <span className="font-semibold text-sky-600">4.</span>
-                <span>Bấm <b>Xác nhận</b> để hoàn tất kiểm tra</span>
+                <span className="font-semibold text-green-600">3.</span>
+                <span>Bấm <b>Xác nhận</b> để hoàn tất gom hàng</span>
               </div>
             </div>
 

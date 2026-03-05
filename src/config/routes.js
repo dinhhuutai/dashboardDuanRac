@@ -158,7 +158,15 @@ const routes = {
 
   qualityInspectionOQC: '/quality-inspection/oqc/home',
   qualityInspectionOQCResult: '/quality-inspection/oqc/result',
-  qualityInspectionKCS: '/quality-inspection/kcs', 
+  
+  qualityInspectionKCS: '/quality-inspection/kcs',
+  qualityInspectionKCSResult: '/quality-inspection/kcs/result',
+
+  
+  consolidate: '/consolidate',
+  consolidateTickTime: '/consolidate/tick/time',
+  
+  
 };
 
 export default routes;

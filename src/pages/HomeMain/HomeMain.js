@@ -302,6 +302,10 @@ function HomeMain() {
       rou = config.routes.inkCovPerOnFilm;
     } else if (m.moduleId === MODULEID.qualityInspectionOQC && role === "user") {
       rou = config.routes.qualityInspectionOQC;
+    } else if (m.moduleId === MODULEID.qualityInspectionKCS && role === "user") {
+      rou = config.routes.qualityInspectionKCS;
+    } else if (m.moduleId === MODULEID.consolidate && role === "user") {
+      rou = config.routes.consolidate;
     }
 
     navigate(rou);

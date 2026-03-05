@@ -148,6 +148,42 @@ import uploadFileFilm from '~/pagesInkCovPerOnFilm/uploadFileFilm';
 import QualityInspectionOQC from '~/pagesQualityInspectionOQC/Home';
 import QualityInspectionOQCResult from '~/pagesQualityInspectionOQC/Results';
 
+import QualityInspectionKCS from '~/pagesQualityInspectionKCS/Home';
+import QualityInspectionKCSResult from '~/pagesQualityInspectionKCS/Results';
+
+import Consolidate from '~/pagesConsolidate/Home';
+import ConsolidateTickTime from '~/pagesConsolidate/Tick';
+
+
+const routesConsolidate = [
+  {
+    path: config.routes.consolidate,
+    component: Consolidate,
+    login: true,
+    module: 'consolidate',
+  },
+  {
+    path: config.routes.consolidateTickTime,
+    component: ConsolidateTickTime,
+    login: true,
+    module: 'consolidate',
+  },
+]
+
+const routesQualityInspectionKCS = [
+  {
+    path: config.routes.qualityInspectionKCS,
+    component: QualityInspectionKCS,
+    login: true,
+    module: 'qualityInspectionKCS',
+  },
+  {
+    path: config.routes.qualityInspectionKCSResult,
+    component: QualityInspectionKCSResult,
+    login: true,
+    module: 'qualityInspectionKCS',
+  },
+]
 
 const routesQualityInspectionOQC = [
   {
@@ -446,6 +482,10 @@ export const routes = [
   ...routesInkCovPerOnFilm,
 
   ...routesQualityInspectionOQC,
+
+  ...routesQualityInspectionKCS,
+
+  ...routesConsolidate,
 
 ];
 

@@ -845,7 +845,7 @@ export default function ViewPayslip() {
                       <div className="p-4 text-sm space-y-1">
                         <Line k="Lương cơ bản" v={fmtVND(payslip.basicSalary)} />
                         <Line k="Trách nhiệm" v={fmtVND(payslip.responsibility)} />
-                        <Line k="Công hành chánh" v={payslip.conghanhchanh} />
+                        <Line k="Công hành chánh" v={payslip.totalWorkingDays} />
                         <Line k="Công ca đêm" v={payslip.congcadem} />
                         <Line k="Tổng ngày công" v={payslip.totalWorkingDays} />
                         <Line k="Nghỉ lễ" v={payslip.holiday} />

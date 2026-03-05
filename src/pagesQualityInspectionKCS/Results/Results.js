@@ -131,7 +131,7 @@ function Result() {
       await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
         qrCode: qrData,
         result,
-        inspectionType: "OQC", // 🔥 giữ OQC
+        inspectionType: "KCS", // 🔥 giữ KCS
         scanType: scanMode,
       });
 

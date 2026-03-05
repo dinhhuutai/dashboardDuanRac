@@ -31,25 +31,27 @@ export function getDateFromMonday(mondayISO, dayOfWeek1to7) {
 
 export function buildCanModifyDay(weeklyMenu) {
   return (dayOfWeek1to7) => {
-    const mondayISO = weeklyMenu?.weekStartMonday;
-    if (!mondayISO) return false;
-    const target = getDateFromMonday(mondayISO, dayOfWeek1to7);
-    if (!target) return false;
-    const cutoff = new Date(target);
-    cutoff.setHours(9, 0, 0, 0);
-    return new Date() <= cutoff;
+    // const mondayISO = weeklyMenu?.weekStartMonday;
+    // if (!mondayISO) return false;
+    // const target = getDateFromMonday(mondayISO, dayOfWeek1to7);
+    // if (!target) return false;
+    // const cutoff = new Date(target);
+    // cutoff.setHours(9, 0, 0, 0);
+    // return new Date() <= cutoff;
+    return true;
   };
 }
 
 export function buildCanCancelDay(weeklyMenu) {
   return (dayOfWeek1to7) => {
-    const mondayISO = weeklyMenu?.weekStartMonday;
-    if (!mondayISO) return false;
-    const target = getDateFromMonday(mondayISO, dayOfWeek1to7);
-    if (!target) return false;
-    const cutoff = new Date(target);
-    cutoff.setHours(10, 0, 0, 0);
-    return new Date() <= cutoff;
+    // const mondayISO = weeklyMenu?.weekStartMonday;
+    // if (!mondayISO) return false;
+    // const target = getDateFromMonday(mondayISO, dayOfWeek1to7);
+    // if (!target) return false;
+    // const cutoff = new Date(target);
+    // cutoff.setHours(10, 0, 0, 0);
+    // return new Date() <= cutoff;
+    return true;
   };
 }
 

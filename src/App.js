@@ -40,7 +40,11 @@ import DefaultLayoutBMI from "./layoutsBMI/DefaultLayout";
 
 import DefaultLayoutInkCovPerOnFilm from "./layoutsInkCovPerOnFilm/DefaultLayout";
 
-import DefaultLayoutQualityInspection from "./layoutQualityInspectionOQC/DefaultLayout";
+import DefaultLayoutQualityInspectionOQC from "./layoutQualityInspectionOQC/DefaultLayout";
+
+import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/DefaultLayout";
+
+import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
 
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
@@ -133,9 +137,17 @@ function AppRoutes({ user }) {
                         <route.component />
                       </DefaultLayoutInkCovPerOnFilm>
                     ) : route.module === 'qualityInspectionOQC' ? (
-                      <DefaultLayoutQualityInspection>
+                      <DefaultLayoutQualityInspectionOQC>
                         <route.component />
-                      </DefaultLayoutQualityInspection>
+                      </DefaultLayoutQualityInspectionOQC>
+                    ) : route.module === 'qualityInspectionKCS' ? (
+                      <DefaultLayoutQualityInspectionKCS>
+                        <route.component />
+                      </DefaultLayoutQualityInspectionKCS>
+                    ) : route.module === 'consolidate' ? (
+                      <DefaultLayoutConsolidate>
+                        <route.component />
+                      </DefaultLayoutConsolidate>
                     ) : (
                       <DefaultLayoutTrashWeight>
                         <route.component />
