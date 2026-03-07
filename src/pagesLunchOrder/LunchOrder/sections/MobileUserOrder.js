@@ -56,6 +56,25 @@ export default function MobileUserOrderSlide({ navigate, config }) {
     disablePush,
   } = usePushSetup();
 
+  const [weekMode, setWeekMode] = useState("current"); // current | next
+
+  function getMondayOfWeek(baseDate = new Date()) {
+    const d = new Date(baseDate);
+    const day = d.getDay(); // CN=0, T2=1, ...
+    const diff = day === 0 ? -6 : 1 - day; // đưa về thứ 2
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  const selectedMonday = useMemo(() => {
+    const monday = getMondayOfWeek(new Date());
+    if (weekMode === "next") {
+      monday.setDate(monday.getDate() + 7);
+    }
+    return monday;
+  }, [weekMode]);
+
   // Quyền
   const CAN_SECRETARY = useFeatureAllowed(MODULEID.DATCOM, "thukydatcom");
   const isSec = !!CAN_SECRETARY;
@@ -84,8 +103,23 @@ export default function MobileUserOrderSlide({ navigate, config }) {
   const [savingAll, setSavingAll] = useState(false);
   const isSaving = savingDay || savingAll;
 
+  useEffect(() => {
+    setActiveSlide(0);
+    setOrderType("re");
+    setNotice({ open: false, title: "", message: "" });
+
+    setStayOnChooseByType({ re: false, ws: false, ot: false });
+    setEditingDayByType({ re: null, ws: null, ot: null });
+    setResetModeByType({ re: false, ws: false, ot: false });
+
+    if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
+  }, [weekMode]);
+
   // data
-  const data = useLunchData({ userId: tmp?.login?.currentUser?.userID });
+  const data = useLunchData({
+    userId: tmp?.login?.currentUser?.userID,
+    weekStartMonday: selectedMonday,
+  });
   const weeklyMenu = data.weeklyMenu;
 
   // Derived
@@ -504,9 +538,37 @@ export default function MobileUserOrderSlide({ navigate, config }) {
           <div className={`rounded-3xl px-4 py-4 ${t.cardBg}`}>
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <div className={`text-[20px] font-extrabold ${t.title1}`}>
-                  🍱 Đặt cơm <span className={`${t.title2}`}>tuần này</span>
-                </div>
+                <div className="flex items-center gap-3">
+  <div className={`text-[20px] font-extrabold ${t.title1}`}>
+    🍱 Đặt cơm
+  </div>
+
+  <div className="inline-flex rounded-full p-1 bg-[#FFF1C2] border border-amber-300/80">
+    <button
+      type="button"
+      onClick={() => setWeekMode("current")}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+        weekMode === "current"
+          ? "bg-sky-600 text-white shadow-sm"
+          : "text-slate-700"
+      }`}
+    >
+      Tuần này
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setWeekMode("next")}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+        weekMode === "next"
+          ? "bg-sky-600 text-white shadow-sm"
+          : "text-slate-700"
+      }`}
+    >
+      Tuần sau
+    </button>
+  </div>
+</div>
                 <div className="mt-2">
                   <span
                     className={`inline-flex items-center gap-2 text-[12px] font-semibold px-3 py-1 rounded-full ${t.chipBg} ${t.chipText}`}
@@ -619,9 +681,37 @@ export default function MobileUserOrderSlide({ navigate, config }) {
           <div className={`rounded-3xl px-4 py-4 ${t.cardBg}`}>
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <div className={`text-[20px] font-extrabold ${t.title1}`}>
-                  🍱 Đặt cơm <span className={`${t.title2}`}>tuần này</span>
-                </div>
+                <div className="flex items-center gap-3">
+  <div className={`text-[20px] font-extrabold ${t.title1}`}>
+    🍱 Đặt cơm
+  </div>
+
+  <div className="inline-flex rounded-full p-1 bg-[#FFF1C2] border border-amber-300/80">
+    <button
+      type="button"
+      onClick={() => setWeekMode("current")}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+        weekMode === "current"
+          ? "bg-sky-600 text-white shadow-sm"
+          : "text-slate-700"
+      }`}
+    >
+      Tuần này
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setWeekMode("next")}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+        weekMode === "next"
+          ? "bg-sky-600 text-white shadow-sm"
+          : "text-slate-700"
+      }`}
+    >
+      Tuần sau
+    </button>
+  </div>
+</div>
                 <div className="mt-2">
                   <span
                     className={`inline-flex items-center gap-2 text-[12px] font-semibold px-3 py-1 rounded-full ${t.chipBg} ${t.chipText}`}

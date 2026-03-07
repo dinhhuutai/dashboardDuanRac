@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { FaQrcode, FaHome, FaUser } from "react-icons/fa";
+import { FaQrcode, FaHome, FaEdit } from "react-icons/fa";
 import config from "~/config";
 
 const barShell =
@@ -96,7 +96,7 @@ export default function TabBar() {
               <div />
 
               <div className="flex justify-center">
-                <TabItem to={config.routes.consolidate} label="Hồ sơ" icon={<FaUser />} />
+                <TabItem to={config.routes.consolidateManualTime} label="Hồ sơ" icon={<FaEdit />} />
               </div>
 
             </div>

@@ -147,12 +147,15 @@ import uploadFileFilm from '~/pagesInkCovPerOnFilm/uploadFileFilm';
 
 import QualityInspectionOQC from '~/pagesQualityInspectionOQC/Home';
 import QualityInspectionOQCResult from '~/pagesQualityInspectionOQC/Results';
+import QualityInspectionOQCManual from '~/pagesQualityInspectionOQC/Manual';
 
 import QualityInspectionKCS from '~/pagesQualityInspectionKCS/Home';
 import QualityInspectionKCSResult from '~/pagesQualityInspectionKCS/Results';
+import QualityInspectionKCSManual from '~/pagesQualityInspectionKCS/Manual';
 
 import Consolidate from '~/pagesConsolidate/Home';
 import ConsolidateTickTime from '~/pagesConsolidate/Tick';
+import ConsolidateManualTime from '~/pagesConsolidate/Manual';
 
 
 const routesConsolidate = [
@@ -165,6 +168,12 @@ const routesConsolidate = [
   {
     path: config.routes.consolidateTickTime,
     component: ConsolidateTickTime,
+    login: true,
+    module: 'consolidate',
+  },
+  {
+    path: config.routes.consolidateManualTime,
+    component: ConsolidateManualTime,
     login: true,
     module: 'consolidate',
   },
@@ -183,6 +192,12 @@ const routesQualityInspectionKCS = [
     login: true,
     module: 'qualityInspectionKCS',
   },
+  {
+    path: config.routes.qualityInspectionKCSManual,
+    component: QualityInspectionKCSManual,
+    login: true,
+    module: 'qualityInspectionKCS',
+  },
 ]
 
 const routesQualityInspectionOQC = [
@@ -195,6 +210,12 @@ const routesQualityInspectionOQC = [
   {
     path: config.routes.qualityInspectionOQCResult,
     component: QualityInspectionOQCResult,
+    login: true,
+    module: 'qualityInspectionOQC',
+  },
+  {
+    path: config.routes.qualityInspectionOQCManual,
+    component: QualityInspectionOQCManual,
     login: true,
     module: 'qualityInspectionOQC',
   },

@@ -2,8 +2,16 @@
 import http from '~/api/http';
 import { BASE_URL } from '~/config';
 
-export async function apiGetWeeklyMenuLatest() {
-  const res = await http.get(`${BASE_URL}/api/lunch-order/user/weekly-menu-latest`);
+export async function apiGetWeeklyMenuLatest(weekStartMonday) {
+  const res = await http.get(
+    `${BASE_URL}/api/lunch-order/user/weekly-menu-latest`,
+    {
+      params: {
+        weekStartMonday,
+      },
+    }
+  );
+
   return res.data?.data || null;
 }
 

@@ -61,13 +61,23 @@ import { reloadPermissions } from "./redux/slices/authSlice";
 import usePresencePing from "./hooks/usePresencePing";
 
 import usePageView from "./hooks/usePageView";
+import MODULEID from "./contants/modules";
+import HomeMain from "./pages/HomeMain";
 
 function AppRoutes({ user }) {
   
   const isLoggedIn = !!user?.login?.currentUser;
+  const userModules = user?.login?.permissions?.modules || [];
 
   usePresencePing(isLoggedIn);
   usePageView(isLoggedIn); 
+
+  const hasModule = (moduleId) => {
+    return userModules.some(m => m.moduleId === moduleId);
+  };
+  
+  console.log(userModules);
+  console.log(hasModule(MODULEID.CANRAC));
 
   const dispatch = useDispatch();
 
@@ -85,7 +95,6 @@ function AppRoutes({ user }) {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [dispatch]);
-
 
   return (
       <Routes>
@@ -117,9 +126,13 @@ function AppRoutes({ user }) {
                         <route.component />
                       ) 
                     : route.module === 'datcom' ? (
-                      <DefaultLayoutLunchOrder>
-                        <route.component />
-                      </DefaultLayoutLunchOrder>
+                      hasModule(MODULEID.DATCOM) ? (
+                        <DefaultLayoutLunchOrder>
+                          <route.component />
+                        </DefaultLayoutLunchOrder>
+                      ) : (
+                        <Navigate to={config.routes.homeMain} replace />
+                      )
                     ) : route.module === 'quanlycongviec' ? (
                       <DefaultLayoutTaskManagement>
                         <route.component />
@@ -158,6 +171,9 @@ function AppRoutes({ user }) {
           </Route>
         ))}
 
+
+        <Route path="/admin" element={<Navigate to={config.routes.homeMain} replace />} />
+
         {/* ====== ADMIN CÂN RÁC (module waste-weigh, chỉ admin) ====== */}
         <Route
           element={
@@ -168,20 +184,21 @@ function AppRoutes({ user }) {
             />
           }
         >
-          <Route path="/admin" element={<Navigate to={config.routes.adminAnalytics} />} />
-          <Route path="/admin">
             {routesAdmin.map((route, index) => (
               <Route
                 key={index}
                 path={route.addId ? `${route.path}/:id` : route.path}
                 element={
-                  <DefaultLayoutAdmin>
-                    <route.component />
-                  </DefaultLayoutAdmin>
+                  hasModule(MODULEID.CANRAC) ? (
+                    <DefaultLayoutAdmin>
+                      <route.component />
+                    </DefaultLayoutAdmin>
+                  ) : (
+                    <Navigate to={config.routes.homeMain} replace />
+                  )
                 }
               />
             ))}
-          </Route>
         </Route>
 
         {/* ====== ADMIN CÂN MỰC (module ink-weigh, chỉ admin) ====== */}

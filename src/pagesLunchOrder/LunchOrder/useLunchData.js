@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { apiGetWeeklyMenuLatest, apiGetSelections } from "./api/lunchApi";
 import { makeLastSavedInit } from "./constants";
 
-export function useLunchData({ userId }) {
+export function useLunchData({ userId, weekStartMonday }) {
   const [weeklyMenu, setWeeklyMenu] = useState(null);
   const [pageLoading, setPageLoading] = useState(false);
 
@@ -19,11 +19,24 @@ export function useLunchData({ userId }) {
 
   const [lastSavedByType, setLastSavedByType] = useState(makeLastSavedInit());
 
+  function formatYMD(date) {
+    if (!date) return undefined;
+
+    const d = new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${y}-${m}-${day}`;
+  }
+
   useEffect(() => {
     async function load() {
       setPageLoading(true);
       try {
-        const menu = await apiGetWeeklyMenuLatest();
+        const mondayStr = formatYMD(weekStartMonday);
+
+        const menu = await apiGetWeeklyMenuLatest(mondayStr);
         if (!menu) {
           setWeeklyMenu(null);
           return;
@@ -124,7 +137,7 @@ export function useLunchData({ userId }) {
     }
 
     if (userId) load();
-  }, [userId]);
+  }, [userId, weekStartMonday]);
 
   return {
     weeklyMenu,

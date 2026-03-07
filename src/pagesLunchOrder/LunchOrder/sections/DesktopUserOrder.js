@@ -52,6 +52,31 @@ export default function DesktopUserOrderSlide() {
     disablePush,
   } = usePushSetup();
 
+  const [weekMode, setWeekMode] = useState("current"); // current | next
+
+function getMondayOfWeek(baseDate = new Date()) {
+  const d = new Date(baseDate);
+  const day = d.getDay(); // CN=0, T2=1
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+const selectedMonday = useMemo(() => {
+  const monday = getMondayOfWeek(new Date());
+  if (weekMode === "next") monday.setDate(monday.getDate() + 7);
+  return monday;
+}, [weekMode]);
+
+const weekLabel = useMemo(() => {
+  const d = new Date(selectedMonday);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}, [selectedMonday]);
+
   // Quyền
   const CAN_SECRETARY = useFeatureAllowed(MODULEID.DATCOM, "thukydatcom");
   const isSec = !!CAN_SECRETARY;
@@ -81,8 +106,24 @@ export default function DesktopUserOrderSlide() {
   const [savingAll, setSavingAll] = useState(false);
   const isSaving = savingDay || savingAll;
 
+  useEffect(() => {
+  setActiveSlide(0);
+  setOrderType("re");
+  setNotice({ open: false, title: "", message: "" });
+
+  setStayOnChooseByType({ re: false, ws: false, ot: false });
+  setEditingDayByType({ re: null, ws: null, ot: null });
+  setResetModeByType({ re: false, ws: false, ot: false });
+  setEditBackupByType({ re: {}, ws: {}, ot: {} });
+
+  if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
+}, [weekMode]);
+
   // data
-  const data = useLunchData({ userId: tmp?.login?.currentUser?.userID });
+  const data = useLunchData({
+  userId: tmp?.login?.currentUser?.userID,
+  weekStartMonday: selectedMonday,
+});
   const weeklyMenu = data.weeklyMenu;
 
   // Derived
@@ -428,6 +469,40 @@ export default function DesktopUserOrderSlide() {
     }
   }
 
+  const weekToggleNode = (
+  <div className="flex items-center gap-3">
+    <div className="inline-flex rounded-full p-1 bg-white/80 border border-slate-200 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setWeekMode("current")}
+        className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+          weekMode === "current"
+            ? "bg-emerald-500 text-white shadow-sm"
+            : "text-slate-700 hover:bg-slate-100"
+        }`}
+      >
+        Tuần này
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setWeekMode("next")}
+        className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+          weekMode === "next"
+            ? "bg-emerald-500 text-white shadow-sm"
+            : "text-slate-700 hover:bg-slate-100"
+        }`}
+      >
+        Tuần sau
+      </button>
+    </div>
+
+    <div className="text-sm text-slate-600 font-medium whitespace-nowrap">
+      T2: {weekLabel}
+    </div>
+  </div>
+);
+
   // Loading
   if (data.pageLoading)
     return (
@@ -444,19 +519,23 @@ export default function DesktopUserOrderSlide() {
         <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-lime-300/20 blur-3xl" />
 
-        <PushBanner
-          pushChecking={pushChecking}
-          pushReady={pushReady}
-          pushBusy={pushBusy}
-          pushError={pushError}
-          pushStatus={pushStatus}
-          notifPerm={notifPerm}
-          isIOS={isIOS}
-          isStandalone={isStandalone}
-          enablePush={enablePush}
-          disablePush={disablePush}
-          compact={false}
-        />
+        <div className="mx-[10px] mb-3 flex items-center gap-4 flex-wrap">
+  {weekToggleNode}
+
+  <PushBanner
+    pushChecking={pushChecking}
+    pushReady={pushReady}
+    pushBusy={pushBusy}
+    pushError={pushError}
+    pushStatus={pushStatus}
+    notifPerm={notifPerm}
+    isIOS={isIOS}
+    isStandalone={isStandalone}
+    enablePush={enablePush}
+    disablePush={disablePush}
+    compact
+  />
+</div>
 
         <div className="mx-[10px]">
           <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl p-8 md:p-10 shadow-sm">
@@ -501,22 +580,28 @@ export default function DesktopUserOrderSlide() {
         </div>
       )}
 
-      {/* Push compact */}
-      {!pushChecking && !editingBannerVisible && (
-        <PushBanner
-          pushChecking={pushChecking}
-          pushReady={pushReady}
-          pushBusy={pushBusy}
-          pushError={pushError}
-          pushStatus={pushStatus}
-          notifPerm={notifPerm}
-          isIOS={isIOS}
-          isStandalone={isStandalone}
-          enablePush={enablePush}
-          disablePush={disablePush}
-          compact
-        />
-      )}
+      {/* Week toggle + Push compact */}
+{!editingBannerVisible && (
+  <div className="px-6 mb-3 flex items-center gap-4 flex-wrap">
+    {weekToggleNode}
+
+    {!pushChecking && (
+      <PushBanner
+        pushChecking={pushChecking}
+        pushReady={pushReady}
+        pushBusy={pushBusy}
+        pushError={pushError}
+        pushStatus={pushStatus}
+        notifPerm={notifPerm}
+        isIOS={isIOS}
+        isStandalone={isStandalone}
+        enablePush={enablePush}
+        disablePush={disablePush}
+        compact
+      />
+    )}
+  </div>
+)}
 
       <ResetBar visible={!!resetMode} onExit={actions.exitResetMode} />
 

@@ -158,13 +158,16 @@ const routes = {
 
   qualityInspectionOQC: '/quality-inspection/oqc/home',
   qualityInspectionOQCResult: '/quality-inspection/oqc/result',
+  qualityInspectionOQCManual: '/quality-inspection/oqc/manual',
   
   qualityInspectionKCS: '/quality-inspection/kcs',
   qualityInspectionKCSResult: '/quality-inspection/kcs/result',
+  qualityInspectionKCSManual: '/quality-inspection/kcs/manual',
 
   
   consolidate: '/consolidate',
   consolidateTickTime: '/consolidate/tick/time',
+  consolidateManualTime: '/consolidate/manual/time',
   
   
 };

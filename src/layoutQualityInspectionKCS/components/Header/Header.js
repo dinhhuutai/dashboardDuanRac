@@ -1,9 +1,8 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  FaChevronDown,
   FaThLarge,
-  FaUser,
+  FaEdit,
   FaHome,
 } from "react-icons/fa";
 
@@ -112,10 +111,10 @@ function Header() {
             Trang chủ
           </NavLink>
 
-          {/* <NavLink to={config.routes.user} className={navBtn}>
-            <FaUser className="text-[14px]" />
-            Hồ sơ
-          </NavLink> */}
+          <NavLink to={config.routes.qualityInspectionKCSManual} className={navBtn}>
+            <FaEdit className="text-[14px]" />
+            Nhập tay
+          </NavLink>
         </nav>
 
         {/* RIGHT */}

@@ -20,7 +20,7 @@ export default function PushBanner({
 
   if (compact) {
     return (
-      <div className="mx-2 mb-3 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm p-3 flex items-center justify-between">
+      <div className="mx-2 mb-3 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm p-3 flex items-center justify-between flex-1">
         <div className="text-sm text-slate-700">
           {pushReady ? "Đang bật thông báo đặt cơm" : "Bạn có thể bật thông báo để được nhắc khi có menu/khoá menu"}
         </div>
