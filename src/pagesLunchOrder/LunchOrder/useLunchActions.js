@@ -44,6 +44,8 @@ export function useLunchActions({
   // saving
   savingAll,
   setSavingAll,
+
+  CAN_SECRETARY
 }) {
   const clickGuardRef = useRef(0);
 
@@ -411,6 +413,7 @@ export function useLunchActions({
         statusType: orderType,
         selections,
         createdBy: user.fullName,
+        hasSecretary: CAN_SECRETARY,
       });
 
       // update snapshot đã LƯU

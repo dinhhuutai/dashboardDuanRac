@@ -10,6 +10,7 @@ import {
   routesCalculateSalaryAdmin,
   routesFormAdmin,
   routesTaskManagementAdmin,
+  routesMesAdmin,
 } from "./routes";
 
 import ScrollToTop from "./components/ScrollToTop";
@@ -46,6 +47,8 @@ import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/Defa
 
 import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
 
+import DefaultLayoutMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
+
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
@@ -75,9 +78,6 @@ function AppRoutes({ user }) {
   const hasModule = (moduleId) => {
     return userModules.some(m => m.moduleId === moduleId);
   };
-  
-  console.log(userModules);
-  console.log(hasModule(MODULEID.CANRAC));
 
   const dispatch = useDispatch();
 
@@ -360,6 +360,30 @@ function AppRoutes({ user }) {
                 <DefaultLayoutAdminTaskManagement>
                   <route.component />
                 </DefaultLayoutAdminTaskManagement>
+              }
+            />
+          ))}
+        </Route>
+
+        
+        {/* ====== ADMIN MES (module mes, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="mes"
+              fallbackName="MES"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesMesAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutMES>
+                  <route.component />
+                </DefaultLayoutMES>
               }
             />
           ))}

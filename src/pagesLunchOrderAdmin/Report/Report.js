@@ -242,141 +242,166 @@ export default function AdminSummaryModern() {
   }, [debtRowsRaw, debtDaysUnion]);
 
   function exportDebtExcelMonth() {
-    const wb = XLSX.utils.book_new();
+  const wb = XLSX.utils.book_new();
 
-    const styleCenter = {
-      alignment: { horizontal: "center", vertical: "center" },
-    };
-    const styleBoldCenter = { ...styleCenter, font: { bold: true, sz: 14 } };
-    const styleHeader = {
-      font: { bold: true },
-      alignment: { horizontal: "center", vertical: "center", wrapText: true },
-      border: {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      },
-    };
-    const styleCell = {
-      alignment: { horizontal: "center", vertical: "center" },
-      border: {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      },
-    };
-    const styleNum = {
-      ...styleCell,
-      alignment: { horizontal: "right", vertical: "center" },
-      numFmt: "#,##0",
-    };
+  const styleCenter = {
+    alignment: { horizontal: "center", vertical: "center" },
+  };
 
-    const title = "BẢNG TỔNG KẾT CÔNG NỢ";
-    const { y, m } = parseYYYYMM(debtMonth);
-    const monthLabel = `Tháng ${String(m).padStart(2, "0")}/${y}`;
+  const styleBoldCenter = {
+    ...styleCenter,
+    font: { bold: true, sz: 14 },
+  };
 
-    const aoa = [];
-    aoa.push(["", title, ""]);
-    aoa.push(["", monthLabel, ""]);
-    aoa.push([]);
-    aoa.push(["1. Hàng Hóa"]);
-    aoa.push([
-      "STT",
-      "NGÀY",
-      "CƠM TRƯA",
-      "CƠM TĂNG CA",
-      "CƠM ĐI CA",
-      "TỔNG CỘNG",
-      "ĐƠN GIÁ",
-      "THÀNH TIỀN",
-      "GHI CHÚ",
-    ]);
+  const styleHeader = {
+    font: { bold: true },
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+    border: {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" },
+    },
+  };
 
-    let stt = 1,
-      sumLunch = 0,
-      sumOT = 0,
-      sumWS = 0,
-      sumTotal = 0,
-      sumMoney = 0;
+  const styleCell = {
+    alignment: { horizontal: "center", vertical: "center" },
+    border: {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" },
+    },
+  };
 
-    for (const r of debtRows) {
-      const dTxt = toVNDateUTC(r.actualDate);
-      const lunch = +r.lunchQty || 0;
-      const ot = +r.otQty || 0;
-      const ws = +r.wsQty || 0;
-      const tong = lunch + ot + ws;
-      const money = tong * (unitPrice || 0);
+  const styleNum = {
+    ...styleCell,
+    alignment: { horizontal: "right", vertical: "center" },
+    numFmt: "#,##0",
+  };
 
-      sumLunch += lunch;
-      sumOT += ot;
-      sumWS += ws;
-      sumTotal += tong;
-      sumMoney += money;
+  const title = "BẢNG TỔNG KẾT CÔNG NỢ";
+  const { y, m } = parseYYYYMM(debtMonth);
+  const monthLabel = `Tháng ${String(m).padStart(2, "0")}/${y}`;
 
-      aoa.push([stt++, dTxt, lunch, ot, ws, tong, unitPrice, money, ""]);
-    }
+  const aoa = [];
 
-    aoa.push([
-      "",
-      "TỔNG",
-      sumLunch,
-      sumOT,
-      sumWS,
-      sumTotal,
-      unitPrice,
-      sumMoney,
-      "",
-    ]);
+  aoa.push([title]);
+  aoa.push([monthLabel]);
+  aoa.push([]);
+  aoa.push(["1. HÀNG HÓA"]); // tiêu đề mới
+  aoa.push([
+    "STT",
+    "NGÀY",
+    "CƠM TRƯA",
+    "CƠM TĂNG CA",
+    "CƠM ĐI CA",
+    "TỔNG CỘNG",
+    "ĐƠN GIÁ",
+    "THÀNH TIỀN",
+  ]);
 
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws["!merges"] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
-    ];
-    ws["!cols"] = [
-      { wch: 6 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 16 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 14 },
-      { wch: 20 },
-    ];
+  let stt = 1,
+    sumLunch = 0,
+    sumOT = 0,
+    sumWS = 0,
+    sumTotal = 0,
+    sumMoney = 0;
 
-    const range = XLSX.utils.decode_range(ws["!ref"]);
-    for (let c = 0; c <= 7; c++) {
-      const a0 = XLSX.utils.encode_cell({ r: 0, c });
-      const a1 = XLSX.utils.encode_cell({ r: 1, c });
-      ws[a0] = ws[a0] || { v: "" };
-      ws[a0].s = styleBoldCenter;
-      ws[a1] = ws[a1] || { v: "" };
-      ws[a1].s = styleCenter;
-    }
-    for (let c = 0; c <= 7; c++) {
-      const a = XLSX.utils.encode_cell({ r: 4, c });
-      ws[a].s = styleHeader;
-    }
-    for (let r = 5; r <= range.e.r; r++) {
-      for (let c = 0; c <= 7; c++) {
-        const a = XLSX.utils.encode_cell({ r, c });
-        ws[a] = ws[a] || { v: "" };
-        if (c >= 2 && c <= 6) ws[a].s = styleNum;
-        else ws[a].s = styleCell;
-      }
-    }
+  for (const r of debtRows) {
+    const dTxt = toVNDateUTC(r.actualDate);
+    const lunch = +r.lunchQty || 0;
+    const ot = +r.otQty || 0;
+    const ws = +r.wsQty || 0;
+    const tong = lunch + ot + ws;
+    const money = tong * (unitPrice || 0);
 
-    const fileName = `Bang_CongNo_${String(m).padStart(2, "0")}-${y}.xlsx`;
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `CongNo_${String(m).padStart(2, "0")}-${y}`
-    );
-    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([buf]), fileName);
+    sumLunch += lunch;
+    sumOT += ot;
+    sumWS += ws;
+    sumTotal += tong;
+    sumMoney += money;
+
+    aoa.push([stt++, dTxt, lunch, ot, ws, tong, unitPrice, money]);
   }
+
+  aoa.push([
+    "",
+    "TỔNG",
+    sumLunch,
+    sumOT,
+    sumWS,
+    sumTotal,
+    unitPrice,
+    sumMoney,
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } }, // merge HÀNG HÓA
+  ];
+
+  ws["!cols"] = [
+    { wch: 6 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 16 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 14 },
+    { wch: 20 },
+  ];
+
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+
+  // style title
+  for (let c = 0; c <= 7; c++) {
+    const a0 = XLSX.utils.encode_cell({ r: 0, c });
+    const a1 = XLSX.utils.encode_cell({ r: 1, c });
+    const a3 = XLSX.utils.encode_cell({ r: 3, c });
+
+    ws[a0] = ws[a0] || { v: "" };
+    ws[a0].s = styleBoldCenter;
+
+    ws[a1] = ws[a1] || { v: "" };
+    ws[a1].s = styleCenter;
+
+    ws[a3] = ws[a3] || { v: "" };
+    ws[a3].s = styleBoldCenter;
+  }
+
+  // header
+  for (let c = 0; c <= 7; c++) {
+    const a = XLSX.utils.encode_cell({ r: 4, c });
+    ws[a].s = styleHeader;
+  }
+
+  // data
+  for (let r = 5; r <= range.e.r; r++) {
+    for (let c = 0; c <= 7; c++) {
+      const a = XLSX.utils.encode_cell({ r, c });
+      ws[a] = ws[a] || { v: "" };
+
+      if (c >= 2) ws[a].s = styleNum; // số có dấu chấm
+      else ws[a].s = styleCell;
+    }
+  }
+
+  const fileName = `Bang_CongNo_${String(m).padStart(2, "0")}-${y}.xlsx`;
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    `CongNo_${String(m).padStart(2, "0")}-${y}`
+  );
+
+  const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+  saveAs(new Blob([buf]), fileName);
+}
 
   /* ====== B) BÁO CÁO TUẦN ====== */
   const [rows, setRows] = useState([]);      // bảng chuỗi ghép (cũ)

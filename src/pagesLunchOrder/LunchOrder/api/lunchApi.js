@@ -15,8 +15,8 @@ export async function apiGetWeeklyMenuLatest(weekStartMonday) {
   return res.data?.data || null;
 }
 
-export async function apiGetSelections(weeklyMenuId, userId) {
-  const res = await http.get(`${BASE_URL}/api/lunch-order/user/selections/${weeklyMenuId}/${userId}`);
+export async function apiGetSelections(weeklyMenuId, userId, hasSecretary) {
+  const res = await http.get(`${BASE_URL}/api/lunch-order/user/selections/${weeklyMenuId}/${userId}?hasSecretary=${hasSecretary}`);
   return res.data?.data || [];
 }
 

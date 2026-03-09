@@ -169,6 +169,7 @@ const routes = {
   consolidateTickTime: '/consolidate/tick/time',
   consolidateManualTime: '/consolidate/manual/time',
   
+  adminMesDashboard: '/admin/mes/dashboard'
   
 };
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { apiGetWeeklyMenuLatest, apiGetSelections } from "./api/lunchApi";
 import { makeLastSavedInit } from "./constants";
 
-export function useLunchData({ userId, weekStartMonday }) {
+export function useLunchData({ userId, weekStartMonday, hasSecretary }) {
   const [weeklyMenu, setWeeklyMenu] = useState(null);
   const [pageLoading, setPageLoading] = useState(false);
 
@@ -43,7 +43,7 @@ export function useLunchData({ userId, weekStartMonday }) {
         }
         setWeeklyMenu(menu);
 
-        const rows = await apiGetSelections(menu.weeklyMenuId, userId);
+        const rows = await apiGetSelections(menu.weeklyMenuId, userId, hasSecretary);
 
         const entryMap = {};
         (menu.entries || []).forEach((e) => (entryMap[e.weeklyMenuEntryId] = e));

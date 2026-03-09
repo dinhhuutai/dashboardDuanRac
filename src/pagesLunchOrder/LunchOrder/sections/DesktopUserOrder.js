@@ -123,6 +123,7 @@ const weekLabel = useMemo(() => {
   const data = useLunchData({
   userId: tmp?.login?.currentUser?.userID,
   weekStartMonday: selectedMonday,
+  hasSecretary: CAN_SECRETARY,
 });
   const weeklyMenu = data.weeklyMenu;
 
@@ -237,6 +238,8 @@ const weekLabel = useMemo(() => {
 
     savingAll,
     setSavingAll,
+
+    CAN_SECRETARY
   });
 
   // --- Edit per day (giữ nguyên như bạn) ---
@@ -374,6 +377,7 @@ const weekLabel = useMemo(() => {
         statusType: orderType,
         selections,
         createdBy: user.fullName,
+        hasSecretary: CAN_SECRETARY,
       });
 
       // update lastSaved
@@ -470,15 +474,15 @@ const weekLabel = useMemo(() => {
   }
 
   const weekToggleNode = (
-  <div className="flex items-center gap-3">
-    <div className="inline-flex rounded-full p-1 bg-white/80 border border-slate-200 shadow-sm">
+  <div className="flex items-center gap-3 shrink-0">
+    <div className="inline-flex items-center rounded-2xl p-1 bg-white border border-slate-200 shadow-sm">
       <button
         type="button"
         onClick={() => setWeekMode("current")}
-        className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+        className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
           weekMode === "current"
-            ? "bg-emerald-500 text-white shadow-sm"
-            : "text-slate-700 hover:bg-slate-100"
+            ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
+            : "text-slate-700 hover:bg-slate-50"
         }`}
       >
         Tuần này
@@ -487,21 +491,29 @@ const weekLabel = useMemo(() => {
       <button
         type="button"
         onClick={() => setWeekMode("next")}
-        className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+        className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
           weekMode === "next"
-            ? "bg-emerald-500 text-white shadow-sm"
-            : "text-slate-700 hover:bg-slate-100"
+            ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
+            : "text-slate-700 hover:bg-slate-50"
         }`}
       >
         Tuần sau
       </button>
     </div>
 
-    <div className="text-sm text-slate-600 font-medium whitespace-nowrap">
+    <div className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-600 shadow-sm whitespace-nowrap">
       T2: {weekLabel}
     </div>
   </div>
 );
+
+function handleChangeOrderType(k) {
+  setOrderType(k);
+  actions.flushOtherTypes(k);
+  setStayOnChooseByType((p) => ({ ...p, [k]: false }));
+  setEditingDayByType((p) => ({ ...p, [k]: null }));
+  if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
+}
 
   // Loading
   if (data.pageLoading)
@@ -519,22 +531,34 @@ const weekLabel = useMemo(() => {
         <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-lime-300/20 blur-3xl" />
 
-        <div className="mx-[10px] mb-3 flex items-center gap-4 flex-wrap">
-  {weekToggleNode}
+        <div className="mx-[10px] mb-4 rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md px-4 py-3 shadow-sm">
+  <div className="grid grid-cols-[auto_auto_1fr] items-center gap-4">
+    {weekToggleNode}
 
-  <PushBanner
-    pushChecking={pushChecking}
-    pushReady={pushReady}
-    pushBusy={pushBusy}
-    pushError={pushError}
-    pushStatus={pushStatus}
-    notifPerm={notifPerm}
-    isIOS={isIOS}
-    isStandalone={isStandalone}
-    enablePush={enablePush}
-    disablePush={disablePush}
-    compact
-  />
+    <div className="min-w-[320px]">
+      <OrderTypeToggle
+        visible
+        orderType={orderType}
+        onChangeType={handleChangeOrderType}
+      />
+    </div>
+
+    <div className="justify-self-end w-full max-w-[520px]">
+      <PushBanner
+        pushChecking={pushChecking}
+        pushReady={pushReady}
+        pushBusy={pushBusy}
+        pushError={pushError}
+        pushStatus={pushStatus}
+        notifPerm={notifPerm}
+        isIOS={isIOS}
+        isStandalone={isStandalone}
+        enablePush={enablePush}
+        disablePush={disablePush}
+        compact
+      />
+    </div>
+  </div>
 </div>
 
         <div className="mx-[10px]">
@@ -582,24 +606,38 @@ const weekLabel = useMemo(() => {
 
       {/* Week toggle + Push compact */}
 {!editingBannerVisible && (
-  <div className="px-6 mb-3 flex items-center gap-4 flex-wrap">
-    {weekToggleNode}
+  <div className="px-6 mb-4">
+    <div className="rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md px-4 py-3 shadow-sm">
+      <div className="grid grid-cols-[auto_auto_1fr] items-center gap-4">
+        {weekToggleNode}
 
-    {!pushChecking && (
-      <PushBanner
-        pushChecking={pushChecking}
-        pushReady={pushReady}
-        pushBusy={pushBusy}
-        pushError={pushError}
-        pushStatus={pushStatus}
-        notifPerm={notifPerm}
-        isIOS={isIOS}
-        isStandalone={isStandalone}
-        enablePush={enablePush}
-        disablePush={disablePush}
-        compact
-      />
-    )}
+        <div className="min-w-[320px]">
+          <OrderTypeToggle
+            visible={!resetMode}
+            orderType={orderType}
+            onChangeType={handleChangeOrderType}
+          />
+        </div>
+
+        <div className="justify-self-end w-full max-w-[520px]">
+          {!pushChecking && (
+            <PushBanner
+              pushChecking={pushChecking}
+              pushReady={pushReady}
+              pushBusy={pushBusy}
+              pushError={pushError}
+              pushStatus={pushStatus}
+              notifPerm={notifPerm}
+              isIOS={isIOS}
+              isStandalone={isStandalone}
+              enablePush={enablePush}
+              disablePush={disablePush}
+              compact
+            />
+          )}
+        </div>
+      </div>
+    </div>
   </div>
 )}
 
@@ -612,18 +650,6 @@ const weekLabel = useMemo(() => {
         savingDay={savingDay}
         onCancel={cancelEditDay}
         onSave={saveEditDay}
-      />
-
-      <OrderTypeToggle
-        visible={!resetMode && !editingBannerVisible}
-        orderType={orderType}
-        onChangeType={(k) => {
-          setOrderType(k);
-          actions.flushOtherTypes(k);
-          setStayOnChooseByType((p) => ({ ...p, [k]: false }));
-          setEditingDayByType((p) => ({ ...p, [k]: null }));
-          if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
-        }}
       />
 
       <OrderedSummary

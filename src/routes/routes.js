@@ -157,6 +157,8 @@ import Consolidate from '~/pagesConsolidate/Home';
 import ConsolidateTickTime from '~/pagesConsolidate/Tick';
 import ConsolidateManualTime from '~/pagesConsolidate/Manual';
 
+import AdminMesDashboard from '~/pagesMESAdmin/Dashboard';
+
 
 const routesConsolidate = [
   {
@@ -747,6 +749,15 @@ export const routesInkAdmin = [
   {
     path: config.routes.adminInkWeighLogfile,
     component: LogfileInk,
+    login: true,
+  },
+]
+
+
+export const routesMesAdmin = [
+  {
+    path: config.routes.adminMesDashboard,
+    component: AdminMesDashboard,
     login: true,
   },
 ]

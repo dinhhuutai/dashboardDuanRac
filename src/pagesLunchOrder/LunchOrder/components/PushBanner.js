@@ -19,34 +19,38 @@ export default function PushBanner({
   if (pushChecking) return null;
 
   if (compact) {
-    return (
-      <div className="mx-2 mb-3 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm p-3 flex items-center justify-between flex-1">
-        <div className="text-sm text-slate-700">
-          {pushReady ? "Đang bật thông báo đặt cơm" : "Bạn có thể bật thông báo để được nhắc khi có menu/khoá menu"}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={enablePush}
-            disabled={pushBusy || pushReady || (isIOS && !isStandalone)}
-            className="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-emerald-500/90 text-white text-[12px] shadow-sm hover:shadow transition-shadow hover:bg-emerald-500 disabled:opacity-50"
-            title={isIOS && !isStandalone ? "Hãy thêm trang ra màn hình chính để bật thông báo trên iOS" : ""}
-          >
-            {pushBusy ? <FaSpinner className="animate-spin" /> : <FiBell />}
-            Bật thông báo
-          </button>
-          {pushReady && (
-            <button
-              onClick={disablePush}
-              disabled={pushBusy}
-              className="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-white text-slate-700 text-[12px] border border-slate-200 hover:bg-slate-50 shadow-sm transition disabled:opacity-50"
-            >
-              Tắt
-            </button>
-          )}
-        </div>
+  return (
+    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-4 py-3 flex items-center justify-between gap-4 w-full min-w-0">
+      <div className="text-sm text-slate-700 truncate">
+        {pushReady
+          ? "Đang bật thông báo đặt cơm"
+          : "Bạn có thể bật thông báo để được nhắc khi có menu"}
       </div>
-    );
-  }
+
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={enablePush}
+          disabled={pushBusy || pushReady || (isIOS && !isStandalone)}
+          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-emerald-500 text-white text-sm shadow-sm hover:shadow transition-shadow hover:bg-emerald-600 disabled:opacity-50"
+          title={isIOS && !isStandalone ? "Hãy thêm trang ra màn hình chính để bật thông báo trên iOS" : ""}
+        >
+          {pushBusy ? <FaSpinner className="animate-spin" /> : <FiBell />}
+          Bật thông báo
+        </button>
+
+        {pushReady && (
+          <button
+            onClick={disablePush}
+            disabled={pushBusy}
+            className="inline-flex items-center justify-center h-10 px-4 rounded-xl bg-white text-slate-700 text-sm border border-slate-200 hover:bg-slate-50 shadow-sm transition disabled:opacity-50"
+          >
+            Tắt
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
   // empty-menu big banner
   if (pushReady) return null;

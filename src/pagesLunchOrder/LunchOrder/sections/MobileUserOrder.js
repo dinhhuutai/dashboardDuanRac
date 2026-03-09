@@ -119,6 +119,7 @@ export default function MobileUserOrderSlide({ navigate, config }) {
   const data = useLunchData({
     userId: tmp?.login?.currentUser?.userID,
     weekStartMonday: selectedMonday,
+    hasSecretary: CAN_SECRETARY,
   });
   const weeklyMenu = data.weeklyMenu;
 
@@ -235,6 +236,8 @@ export default function MobileUserOrderSlide({ navigate, config }) {
 
     savingAll,
     setSavingAll,
+
+    CAN_SECRETARY
   });
 
   // --- Edit per day ---
@@ -372,6 +375,7 @@ export default function MobileUserOrderSlide({ navigate, config }) {
         statusType: orderType,
         selections,
         createdBy: user.fullName,
+        hasSecretary: CAN_SECRETARY,
       });
 
       data.setLastSavedByType((prev) => {
@@ -507,7 +511,7 @@ export default function MobileUserOrderSlide({ navigate, config }) {
   if (!weeklyMenu) {
     return (
       <div className={`md:hidden ${t.bgMain}`} style={{ minHeight: "100dvh" }}>
-        <div className={`relative ${t.headerGrad} rounded-b-[50px] px-4 pt-4 pb-[90px]`}>
+        <div className={`relative ${t.headerGrad} rounded-b-[50px] px-4 pt-4 pb-[170px]`}>
           <div className="relative flex items-center justify-between mt-[20px]">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
@@ -534,7 +538,7 @@ export default function MobileUserOrderSlide({ navigate, config }) {
           </div>
         </div>
 
-        <div className="p-[10px] -mt-[30px]">
+        <div className="absolute left-4 right-4 top-[110px]">
           <div className={`rounded-3xl px-4 py-4 ${t.cardBg}`}>
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">

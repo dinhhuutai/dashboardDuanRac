@@ -15,6 +15,7 @@ const MODULEID = {
     qualityInspectionOQC: 13,
     qualityInspectionKCS: 14,
     consolidate: 15,
+    mes: 16,
 }
 
 

@@ -306,6 +306,8 @@ function HomeMain() {
       rou = config.routes.qualityInspectionKCS;
     } else if (m.moduleId === MODULEID.consolidate && role === "user") {
       rou = config.routes.consolidate;
+    } else if (m.moduleId === MODULEID.mes && role === "admin") {
+      rou = config.routes.adminMesDashboard;
     }
 
     navigate(rou);
