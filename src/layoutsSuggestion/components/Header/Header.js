@@ -153,7 +153,7 @@ function Header() {
               <span
                 className={`h-8 w-8 overflow-hidden rounded-full rounded-2xl`}
                 style={{
-                  backgroundImage: `url(${logoFeedback})`,
+                  backgroundImage: `url(${user?.avatar || logoFeedback})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
                   backgroundPosition: "50% 65%", // chỉnh % nếu cần

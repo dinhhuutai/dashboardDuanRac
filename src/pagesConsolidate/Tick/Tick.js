@@ -379,6 +379,7 @@ function Tick() {
         result,
         inspectionType: "GOM",
         scanType: scanMode,
+        inputType: 'SCAN'
       });
 
       setToast({

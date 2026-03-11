@@ -96,7 +96,7 @@ export default function TabBar() {
               <div />
 
               <div className="flex justify-center">
-                <TabItem to={config.routes.consolidateManualTime} label="Hồ sơ" icon={<FaEdit />} />
+                <TabItem to={config.routes.consolidateManualTime} label="Nhập tay" icon={<FaEdit />} />
               </div>
 
             </div>

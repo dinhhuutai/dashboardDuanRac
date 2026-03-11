@@ -29,6 +29,7 @@ function Manual() {
         qrCode: code,
         result,
         inspectionType: "OQC",
+        inputType: 'MANUAL'
       });
 
       setToast({
@@ -115,7 +116,7 @@ function Manual() {
 
           {/* RESULT */}
           <div className="flex justify-center gap-10 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer text-gray-700">
+            <label className={`flex ${result === 1 && 'bg-emerald-200'} justify-center h-[48px] w-[170px] rounded-xl border border-emerald-500 items-center gap-2 cursor-pointer text-gray-700`}>
               <input
                 type="radio"
                 checked={result === 1}
@@ -126,7 +127,7 @@ function Manual() {
               Đạt
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer text-gray-700">
+            <label className={`flex ${result === 0 && 'bg-rose-200'} justify-center h-[48px] w-[170px] rounded-xl border border-rose-500 items-center gap-2 cursor-pointer text-gray-700`}>
               <input
                 type="radio"
                 checked={result === 0}

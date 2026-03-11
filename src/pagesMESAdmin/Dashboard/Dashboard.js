@@ -301,7 +301,7 @@ function Dashboard() {
     <div className="min-h-screen bg-slate-100 p-3 md:p-4">
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
-          Dashboard Dòng chảy đơn hàng
+          Dòng chảy đơn hàng
         </h1>
 
         <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 md:text-sm">
@@ -489,30 +489,35 @@ function Dashboard() {
             )}
 
             {level === 'batches' && (
-              <DataTable
-                columns={[
-                  { key: 'BatchID', title: 'Mã lần vải về' },
-                  { key: 'OrderID', title: 'Đơn hàng' },
-                  { key: 'DetailID', title: 'Chi tiết' },
-                  {
-                    key: 'ReceivedDate',
-                    title: 'Ngày nhận',
-                    render: (row) => formatDate(row.ReceivedDate),
-                  },
-                  { key: 'QuantityReceived', title: 'SL nhận' },
-                  {
-                    key: 'QualityCheckMStatus',
-                    title: 'Tình trạng',
-                    render: (row) => <StatusBadge value={row.QualityCheckMStatus} />,
-                  },
-                ]}
-                rows={batches}
-                rowKey="BatchID"
-                emptyText="Không có lần vải về"
-                mobileTitle={(row) => `Batch #${row.BatchID}`}
-                mobileSubtitle={(row) => `DetailID: ${row.DetailID}`}
-              />
-            )}
+  <DataTable
+    columns={[
+      { key: 'BatchID', title: 'Mã lần vải về' },
+      { key: 'OrderID', title: 'Đơn hàng' },
+      { key: 'DetailID', title: 'Chi tiết' },
+      {
+        key: 'ReceivedDate',
+        title: 'Ngày nhận',
+        render: (row) => formatDate(row.ReceivedDate),
+      },
+      { key: 'QuantityReceived', title: 'SL nhận' },
+      {
+        key: 'QualityCheckMStatus',
+        title: 'Tình trạng',
+        render: (row) => <StatusBadge value={row.QualityCheckMStatus} />,
+      },
+      {
+        key: 'stationLogs',
+        title: 'Nhật ký trạm',
+        render: (row) => <StationLogsHorizontal logs={row.stationLogs || []} />,
+      },
+    ]}
+    rows={batches}
+    rowKey="BatchID"
+    emptyText="Không có lần vải về"
+    mobileTitle={(row) => `Batch #${row.BatchID}`}
+    mobileSubtitle={(row) => `DetailID: ${row.DetailID}`}
+  />
+)}
           </>
         )}
       </div>
@@ -703,6 +708,40 @@ function StatusBadge({ value }) {
     <span className="inline-flex min-h-7 items-center justify-center rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
       {safeValue(value)}
     </span>
+  );
+}
+
+function StationLogsHorizontal({ logs = [] }) {
+  if (!logs.length) {
+    return <span className="text-xs text-slate-400">Không có log</span>;
+  }
+
+  return (
+    <div className="max-w-[520px] overflow-x-auto">
+      <div className="flex min-w-max gap-2">
+        {logs.map((log, index) => (
+          <div
+            key={`${log.StationID}-${log.Timestamp}-${index}`}
+            className="min-w-[150px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+          >
+            <div className="text-[11px] text-slate-500">Trạm</div>
+            <div className="text-sm font-semibold text-slate-900">
+              {safeValue(log.StationID)}
+            </div>
+
+            <div className="mt-1 text-[11px] text-slate-500">Trạng thái</div>
+            <div className="text-sm font-semibold text-slate-900">
+              {safeValue(log.MStatus)}
+            </div>
+
+            <div className="mt-1 text-[11px] text-slate-500">Thời gian</div>
+            <div className="text-xs font-medium text-slate-700">
+              {formatDateTime(log.Timestamp)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

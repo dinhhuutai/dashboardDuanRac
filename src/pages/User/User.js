@@ -87,7 +87,7 @@ function User() {
                   {/* Ảnh nằm trên, nếu lỗi sẽ ẩn đi để lộ initials */}
                   {!avatarHidden && (
                     <img
-                      src={avatarImg}
+                      src={user?.avatar || avatarImg}
                       alt="avatar"
                       className="absolute inset-0 h-full w-full object-cover"
                       onError={() => setAvatarHidden(true)}

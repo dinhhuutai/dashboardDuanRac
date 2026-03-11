@@ -1,14 +1,16 @@
 // HeaderInfoMobile.jsx
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { BsBoxArrowRight } from "react-icons/bs";
 import avatar from "~/assets/imgs/avatar-main.jpg";
 import authSlice from "~/redux/slices/authSlice";
+import { userSelector } from "~/redux/selectors";
 import config from "~/config";
 import http from '~/api/http';
 
 function HeaderInfoMobile() {
+  const tmp = useSelector(userSelector);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const dispatch = useDispatch();
@@ -46,7 +48,7 @@ function HeaderInfoMobile() {
         className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-white/80 shadow-sm focus-visible:ring-4 focus-visible:ring-slate-200"
         title="Tài khoản"
       >
-        <img src={avatar} alt="avatar" className="h-9 w-9 rounded-full object-cover" />
+        <img src={tmp?.login?.currentUser?.avatar || avatar} alt="avatar" className="h-9 w-9 rounded-full object-cover" />
       </button>
 
       <div

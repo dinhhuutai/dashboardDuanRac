@@ -169,7 +169,7 @@ const t = {
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
               <img
-                src={avatarInk}
+                src={tmp?.login?.currentUser?.avatar || avatarInk}
                 alt="Avatar"
                 className="h-full w-full object-cover"
               />

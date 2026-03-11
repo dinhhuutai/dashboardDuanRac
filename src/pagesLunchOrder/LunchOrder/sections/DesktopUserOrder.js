@@ -52,7 +52,7 @@ export default function DesktopUserOrderSlide() {
     disablePush,
   } = usePushSetup();
 
-  const [weekMode, setWeekMode] = useState("current"); // current | next
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = tuần này
 
 function getMondayOfWeek(baseDate = new Date()) {
   const d = new Date(baseDate);
@@ -63,18 +63,39 @@ function getMondayOfWeek(baseDate = new Date()) {
   return d;
 }
 
+function changeWeek(offset) {
+  setWeekOffset((prev) => prev + offset);
+}
+
 const selectedMonday = useMemo(() => {
   const monday = getMondayOfWeek(new Date());
-  if (weekMode === "next") monday.setDate(monday.getDate() + 7);
+  monday.setDate(monday.getDate() + weekOffset * 7);
   return monday;
-}, [weekMode]);
+}, [weekOffset]);
 
 const weekLabel = useMemo(() => {
+  const start = new Date(selectedMonday);
+  const end = new Date(selectedMonday);
+  end.setDate(end.getDate() + 6);
+
+  const format = (date) => {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    return `${dd}/${mm}`;
+  };
+
+  const startText = format(start);
+  const endText = format(end);
+  const year = start.getFullYear();
+
+  return `${startText} → ${endText}/${year}`;
+}, [selectedMonday]);
+
+const weekNumber = useMemo(() => {
   const d = new Date(selectedMonday);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  const firstJan = new Date(d.getFullYear(), 0, 1);
+  const days = Math.floor((d - firstJan) / 86400000);
+  return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }, [selectedMonday]);
 
   // Quyền
@@ -117,7 +138,7 @@ const weekLabel = useMemo(() => {
   setEditBackupByType({ re: {}, ws: {}, ot: {} });
 
   if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
-}, [weekMode]);
+}, [weekOffset]);
 
   // data
   const data = useLunchData({
@@ -475,35 +496,28 @@ const weekLabel = useMemo(() => {
 
   const weekToggleNode = (
   <div className="flex items-center gap-3 shrink-0">
-    <div className="inline-flex items-center rounded-2xl p-1 bg-white border border-slate-200 shadow-sm">
-      <button
-        type="button"
-        onClick={() => setWeekMode("current")}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
-          weekMode === "current"
-            ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
-            : "text-slate-700 hover:bg-slate-50"
-        }`}
-      >
-        Tuần này
-      </button>
 
-      <button
-        type="button"
-        onClick={() => setWeekMode("next")}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
-          weekMode === "next"
-            ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
-            : "text-slate-700 hover:bg-slate-50"
-        }`}
-      >
-        Tuần sau
-      </button>
+    <button
+      onClick={() => changeWeek(-1)}
+      className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
+    >
+      ◀
+    </button>
+
+    <div className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 shadow-sm whitespace-nowrap">
+      Tuần {weekNumber}
+      <div className="text-xs text-slate-500">
+        {weekLabel}
+      </div>
     </div>
 
-    <div className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-600 shadow-sm whitespace-nowrap">
-      T2: {weekLabel}
-    </div>
+    <button
+      onClick={() => changeWeek(1)}
+      className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
+    >
+      ▶
+    </button>
+
   </div>
 );
 

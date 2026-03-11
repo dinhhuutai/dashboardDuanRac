@@ -29,6 +29,7 @@ function Manual() {
         qrCode: code,
         result,
         inspectionType: "GOM",
+        inputType: 'MANUAL'
       });
 
       setToast({

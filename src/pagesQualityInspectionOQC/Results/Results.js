@@ -133,6 +133,7 @@ function Result() {
         result,
         inspectionType: "OQC", // 🔥 giữ OQC
         scanType: scanMode,
+        inputType: 'SCAN'
       });
 
       setToast({
@@ -253,25 +254,27 @@ function Result() {
 
               {/* ĐẠT / KHÔNG ĐẠT */}
               <div className="flex justify-center gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    checked={result === 1}
-                    onChange={() => setResult(1)}
-                  />
-                  <FaCheckCircle className="text-emerald-600" />
-                  Đạt
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    checked={result === 0}
-                    onChange={() => setResult(0)}
-                  />
-                  <FaTimesCircle className="text-rose-600" />
-                  Không đạt
-                </label>
+                          <label className={`flex ${result === 1 && 'bg-emerald-200'} justify-center h-[48px] w-[170px] rounded-xl border border-emerald-500 items-center gap-2 cursor-pointer text-gray-700`}>
+                            <input
+                              type="radio"
+                              checked={result === 1}
+                              onChange={() => setResult(1)}
+                              className="accent-emerald-500"
+                            />
+                            <FaCheckCircle className="text-emerald-500" />
+                            Đạt
+                          </label>
+              
+                          <label className={`flex ${result === 0 && 'bg-rose-200'} justify-center h-[48px] w-[170px] rounded-xl border border-rose-500 items-center gap-2 cursor-pointer text-gray-700`}>
+                            <input
+                              type="radio"
+                              checked={result === 0}
+                              onChange={() => setResult(0)}
+                              className="accent-rose-500"
+                            />
+                            <FaTimesCircle className="text-rose-500" />
+                            Không đạt
+                          </label>
               </div>
 
               <div className="flex gap-3 pt-2">

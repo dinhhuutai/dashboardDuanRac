@@ -1,15 +1,28 @@
 // src/pages/Home/components/ModuleCard.jsx
 import React from "react";
 import * as FiIcons from "react-icons/fi";
+import * as FcIcons from "react-icons/fc";
 
 // icon có thể là "FiSomething" hoặc URL
 const IconOrImg = ({ icon, className = "h-6 w-6" }) => {
-  if (!icon) return <FiIcons.FiGrid className={className + " text-slate-800"} />;
+  if (!icon) {
+    return <FiIcons.FiGrid className={`${className} text-slate-800`} />;
+  }
+
+  // Feather icon
   if (/^Fi[A-Za-z0-9]+$/.test(icon) && typeof FiIcons[icon] === "function") {
     const Cmp = FiIcons[icon];
-    return <Cmp className={className + " text-slate-800"} />;
+    return <Cmp className={`${className} text-slate-800`} />;
   }
-  return <img src={icon} alt="" className={className + " object-contain"} />;
+
+  // Flat color icon
+  if (/^Fc[A-Za-z0-9]+$/.test(icon) && typeof FcIcons[icon] === "function") {
+    const Cmp = FcIcons[icon];
+    return <Cmp className={className} />;
+  }
+
+  // URL ảnh
+  return <img src={icon} alt="" className={`${className} object-contain`} />;
 };
 
 const ModuleCard = ({ module, onGoUser, onGoAdmin }) => {
@@ -70,7 +83,7 @@ const ModuleCard = ({ module, onGoUser, onGoAdmin }) => {
                   transition hover:shadow-[2px_2px_4px_rgba(180,190,200,0.4),-2px_-2px_4px_rgba(255,255,255,0.8)]
                 "
               >
-                <FiIcons.FiUser className="h-4 w-4" />
+                <FcIcons.FcConferenceCall className="h-4 w-4" />
                 <span>User</span>
               </button>
             )}
@@ -86,7 +99,7 @@ const ModuleCard = ({ module, onGoUser, onGoAdmin }) => {
                   transition hover:shadow-[2px_2px_4px_rgba(180,190,200,0.4),-2px_-2px_4px_rgba(255,255,255,0.8)]
                 "
               >
-                <FiIcons.FiShield className="h-4 w-4" />
+                <FcIcons.FcPrivacy className="h-4 w-4" />
                 <span>Admin</span>
               </button>
             )}

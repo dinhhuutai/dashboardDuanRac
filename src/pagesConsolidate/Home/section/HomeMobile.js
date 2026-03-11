@@ -30,7 +30,7 @@ export default function MobileHomeOQC({ navigate, tmp }) {
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-white/30 border border-white/40">
               <img
-                src={avatar}
+                src={tmp?.login?.currentUser?.avatar || avatar}
                 alt="Avatar"
                 className="h-full w-full object-cover"
               />

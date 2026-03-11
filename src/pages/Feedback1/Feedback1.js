@@ -642,7 +642,7 @@ function FeedbackFlow() {
       {
         tmp?.login?.currentUser?.fullName &&
         <MobileFeedbackFlow
-          avatar={avatar}
+          avatar={tmp?.login?.currentUser?.avatar || avatar}
           tmp={tmp}
           logo={logo}
           logoFeedback={logoFeedback}

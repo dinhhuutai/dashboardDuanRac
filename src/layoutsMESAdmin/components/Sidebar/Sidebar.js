@@ -75,7 +75,7 @@ function Sidebar() {
       <div className="px-4 pt-3 pb-5">
         {/* Module label */}
         <div className="mb-3">
-          <span className="uppercase text-[#3F69D6] text-[11px] font-bold">Pha màu</span>
+          <span className="uppercase text-[#3F69D6] text-[11px] font-bold">MES</span>
         </div>
 
         {/* ===== Nhóm: Vận hành ===== */}
@@ -91,7 +91,7 @@ function Sidebar() {
                 {
                   <NavLink to={config.routes.adminMesDashboard} className={linkClass}>
                     <BsRocket className="text-[16px]" />
-                    <span>Dashboard</span>
+                    <span>Dòng chảy</span>
                   </NavLink>
                 }
 

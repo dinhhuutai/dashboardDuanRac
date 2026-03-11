@@ -4,6 +4,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiSearch, FiX,
 } from "react-icons/fi";
 import * as FiIcons from "react-icons/fi";
+import * as FcIcons from "react-icons/fc";
 import { Combobox } from "@headlessui/react";
 import { BASE_URL } from "~/config";
 import { useSelector } from "react-redux";
@@ -30,29 +31,31 @@ const Modal = ({ open, onClose, title, children }) => {
 };
 
 /* ---------- Danh sách ~50 icon hay dùng (Feather) ---------- */
-const ALLOWED_ICON_NAMES = [
-  "FiHome","FiGrid","FiBox","FiPackage","FiArchive","FiFolder","FiFileText","FiClipboard",
-  "FiCheckSquare","FiTag","FiShield","FiUsers","FiUser","FiSettings","FiTool","FiKey","FiLock","FiUnlock",
-  "FiMail","FiInbox","FiBell","FiMessageSquare","FiPhone","FiSmartphone","FiMonitor","FiGlobe",
-  "FiMap","FiMapPin","FiTruck","FiTrendingUp","FiTrendingDown","FiPieChart","FiBarChart2","FiDollarSign",
-  "FiShoppingCart","FiTrash2","FiDatabase","FiBook","FiBookmark","FiBriefcase","FiCalendar","FiClock",
-  "FiImage","FiCamera","FiEdit2","FiPenTool","FiSearch","FiAlertTriangle","FiActivity","FiLayers", "FiHeart",
-  "FiPercent"
-];
+const ALLOWED_ICON_NAMES = Object.keys(FcIcons);
 
 /* Lọc ra những icon thực sự tồn tại trong react-icons/fi (phòng lỗi chính tả) */
-const ICON_OPTIONS = ALLOWED_ICON_NAMES.filter((n) => typeof FiIcons[n] === "function");
+const ICON_OPTIONS = ALLOWED_ICON_NAMES.filter((n) => typeof FcIcons[n] === "function");
 
 /* ---------- Render icon theo tên (hoặc URL ảnh) ---------- */
-const IconOrImg = ({ icon, className = "h-5 w-5" }) => {
-  if (!icon) return <FiIcons.FiTag className={className + " text-slate-600"} />;
-  // Nếu là tên icon (FiSomething) và có tồn tại -> render component
+const IconOrImg = ({ icon, className = "h-6 w-6" }) => {
+  if (!icon) {
+    return <FiIcons.FiGrid className={`${className} text-slate-800`} />;
+  }
+
+  // Feather icon
   if (/^Fi[A-Za-z0-9]+$/.test(icon) && typeof FiIcons[icon] === "function") {
     const Cmp = FiIcons[icon];
-    return <Cmp className={className + " text-slate-700"} />;
+    return <Cmp className={`${className} text-slate-800`} />;
   }
-  // Ngược lại coi là URL ảnh
-  return <img src={icon} alt="" className={className + " object-contain"} />;
+
+  // Flat color icon
+  if (/^Fc[A-Za-z0-9]+$/.test(icon) && typeof FcIcons[icon] === "function") {
+    const Cmp = FcIcons[icon];
+    return <Cmp className={className} />;
+  }
+
+  // URL ảnh
+  return <img src={icon} alt="" className={`${className} object-contain`} />;
 };
 
 /* ---------- Component chính ---------- */
@@ -210,7 +213,7 @@ const openEdit = (row) => {
     }
   };
 
-  const SelectedIcon = (typeof FiIcons[form.icon] === "function" ? FiIcons[form.icon] : FiIcons.FiGrid);
+  const SelectedIcon = (typeof FcIcons[form.icon] === "function" ? FcIcons[form.icon] : FiIcons.FiGrid);
 
   return (
     <div className="min-h-[70vh]">
@@ -394,7 +397,7 @@ const openEdit = (row) => {
                     <li className="px-3 py-2 text-sm text-slate-500">Không tìm thấy</li>
                   ) : (
                     filteredIconOptions.map((iconName) => {
-                      const IconCmp = FiIcons[iconName];
+                      const IconCmp = FcIcons[iconName];
                       return (
                         <Combobox.Option
                           key={iconName}

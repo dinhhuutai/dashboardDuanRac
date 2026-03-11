@@ -1,12 +1,16 @@
 import React from "react";
 import { FaThLarge } from "react-icons/fa";
-import avatarBMI from "~/assets/imgs/avatar_bmi.png";
+import avatarBMI from "~/assets/imgs/avatar-main.jpg";
 import config from "~/config";
+import { userSelector } from "~/redux/selectors";
+import { useSelector } from "react-redux";
 
 import RobotLottie from "../components/RobotLottie";
 import { mockUser, mockLatest, mockRange } from "../data/mockBmi";
 
 export default function MobileHome({ navigate, bmi }) {
+  const tmp = useSelector(userSelector);
+
   return (
     <div className="md:hidden">
       <div
@@ -20,7 +24,7 @@ export default function MobileHome({ navigate, bmi }) {
         <div className="flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-11 w-11 rounded-full bg-white/30 border border-white/45 overflow-hidden shrink-0">
-              <img src={avatarBMI} alt="Avatar" className="h-full w-full object-cover" />
+              <img src={tmp?.login?.currentUser.avatar || avatarBMI} alt="Avatar" className="h-full w-full object-cover" />
             </div>
 
             <div className="min-w-0">

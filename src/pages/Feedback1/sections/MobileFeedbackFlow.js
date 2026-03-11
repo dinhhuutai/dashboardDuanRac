@@ -115,8 +115,8 @@ export default function MobileFeedbackFlow({
         {/* Top row */}
         <div className="relative flex items-center justify-between mt-[20px]">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="h-[40px] w-[40px] rounded-full items-center justify-center flex overflow-hidden bg-white/30 border border-white/40">
-              <img src={avatar} alt="Avatar" className="h-[34px] w-[34px] object-cover" />
+            <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
+              <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
             </div>
 
             <div className="min-w-0">

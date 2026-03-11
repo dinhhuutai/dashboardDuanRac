@@ -54,7 +54,7 @@ function HeaderInfo() {
         className="flex items-center gap-2 rounded-full bg-white/70 border border-white/70 px-2.5 py-1.5 shadow-sm hover:bg-white transition focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
       >
         <span className="h-9 w-9 overflow-hidden rounded-full ring-1 ring-white/70">
-          <img alt="avatar" src={avatar} className="h-full w-full object-cover" />
+          <img alt="avatar" src={user?.avatar || avatar} className="h-full w-full object-cover" />
         </span>
         <span className="hidden lg:flex flex-col items-start leading-tight">
           <span className="text-[13px] font-semibold text-slate-800 max-w-[160px] truncate">

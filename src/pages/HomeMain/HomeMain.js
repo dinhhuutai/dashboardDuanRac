@@ -450,7 +450,7 @@ function HomeMain() {
                 className="flex items-center gap-2 rounded-full bg-white px-2.5 py-1.5 ring-1 ring-slate-200 hover:ring-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
               >
                 <img
-                  src={avatar}
+                  src={user?.avatar || avatar}
                   alt="avatar"
                   className="h-8 w-8 rounded-full object-cover"
                 />

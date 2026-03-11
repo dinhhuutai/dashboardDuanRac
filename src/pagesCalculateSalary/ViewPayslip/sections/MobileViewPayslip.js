@@ -739,7 +739,7 @@ export default function MobileViewPayslip({
             {/* Avatar */}
             <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
               <img
-                src={avatarPayslip}
+                src={tmp?.login?.currentUser?.avatar || avatarPayslip}
                 alt="avatar"
                 className="h-full w-full object-cover"
               />

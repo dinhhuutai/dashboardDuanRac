@@ -37,7 +37,6 @@ export const fetchTaskManagerRole = createAsyncThunk(
   }
 );
 
-
 export default createSlice({
     name: 'auth',
     initialState: {
