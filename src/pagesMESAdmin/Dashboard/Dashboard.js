@@ -1,11 +1,659 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import http from '~/api/http';
-import { BASE_URL } from '~/config';
+// import { useEffect, useMemo, useRef, useState } from 'react';
+// import {
+//   apiGetOrders,
+//   apiGetItemsByOrder,
+//   apiGetDetailsByItem,
+//   apiGetBatchesByDetail,
+// } from './services/dashboardApi';
 
-import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+// import DashboardFilters from './components/DashboardFilters';
+// import OrdersView from './components/views/OrdersView';
+// import ItemsView from './components/views/ItemsView';
+// import DetailsView from './components/views/DetailsView';
+// import BatchesView from './components/views/BatchesView';
+
+// function Dashboard() {
+//   const [level, setLevel] = useState('orders'); // orders | items | details | batches
+
+//   const [orders, setOrders] = useState([]);
+//   const [items, setItems] = useState([]);
+//   const [details, setDetails] = useState([]);
+//   const [batches, setBatches] = useState([]);
+
+//   const [selectedOrder, setSelectedOrder] = useState(null);
+//   const [selectedItem, setSelectedItem] = useState(null);
+//   const [selectedDetail, setSelectedDetail] = useState(null);
+
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState('');
+
+//   const DEFAULT_STATUS = '01_OPEN';
+//   const DEFAULT_PAGE_SIZE = 5;
+//   const FILTER_DEBOUNCE = 400;
+
+//   const [orderFilters, setOrderFilters] = useState({
+//     range: { from: undefined, to: undefined },
+//     po: '',
+//     customerName: '',
+//     mstatus: DEFAULT_STATUS,
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//   });
+
+//   const [itemFilters, setItemFilters] = useState({
+//     range: { from: undefined, to: undefined },
+//     id: '',
+//     mstatus: '',
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//   });
+
+//   const [detailFilters, setDetailFilters] = useState({
+//     range: { from: undefined, to: undefined },
+//     mstatus: '',
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//   });
+
+//   const [batchFilters, setBatchFilters] = useState({
+//     range: { from: undefined, to: undefined },
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//   });
+
+//   const [ordersPagination, setOrdersPagination] = useState({
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//     total: 0,
+//     totalPages: 0,
+//   });
+
+//   const [itemsPagination, setItemsPagination] = useState({
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//     total: 0,
+//     totalPages: 0,
+//   });
+
+//   const [detailsPagination, setDetailsPagination] = useState({
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//     total: 0,
+//     totalPages: 0,
+//   });
+
+//   const [batchesPagination, setBatchesPagination] = useState({
+//     page: 1,
+//     pageSize: DEFAULT_PAGE_SIZE,
+//     total: 0,
+//     totalPages: 0,
+//   });
+
+//   const mountedRef = useRef(false);
+
+//   async function loadOrders(customFilters) {
+//     try {
+//       setLoading(true);
+//       setError('');
+//       const filters = customFilters || orderFilters;
+//       const result = await apiGetOrders(filters);
+
+//       setOrders(result?.data || []);
+//       setOrdersPagination(
+//         result?.pagination || {
+//           page: 1,
+//           pageSize: DEFAULT_PAGE_SIZE,
+//           total: 0,
+//           totalPages: 0,
+//         }
+//       );
+//     } catch (err) {
+//       console.error(err);
+//       setOrders([]);
+//       setOrdersPagination({
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//         total: 0,
+//         totalPages: 0,
+//       });
+//       setError('Không tải được danh sách đơn hàng');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function loadItems(orderId, customFilters) {
+//     try {
+//       setLoading(true);
+//       setError('');
+//       const filters = customFilters || itemFilters;
+//       const result = await apiGetItemsByOrder(orderId, filters);
+
+//       setItems(result?.data || []);
+//       setItemsPagination(
+//         result?.pagination || {
+//           page: 1,
+//           pageSize: DEFAULT_PAGE_SIZE,
+//           total: 0,
+//           totalPages: 0,
+//         }
+//       );
+//     } catch (err) {
+//       console.error(err);
+//       setItems([]);
+//       setItemsPagination({
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//         total: 0,
+//         totalPages: 0,
+//       });
+//       setError('Không tải được danh sách mã hàng');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function loadDetails(itemId, customFilters) {
+//     try {
+//       setLoading(true);
+//       setError('');
+//       const filters = customFilters || detailFilters;
+//       const result = await apiGetDetailsByItem(itemId, filters);
+
+//       setDetails(result?.data || []);
+//       setDetailsPagination(
+//         result?.pagination || {
+//           page: 1,
+//           pageSize: DEFAULT_PAGE_SIZE,
+//           total: 0,
+//           totalPages: 0,
+//         }
+//       );
+//     } catch (err) {
+//       console.error(err);
+//       setDetails([]);
+//       setDetailsPagination({
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//         total: 0,
+//         totalPages: 0,
+//       });
+//       setError('Không tải được danh sách chi tiết');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function loadBatches(detailId, customFilters) {
+//     try {
+//       setLoading(true);
+//       setError('');
+//       const filters = customFilters || batchFilters;
+//       const result = await apiGetBatchesByDetail(detailId, filters);
+
+//       setBatches(result?.data || []);
+//       setBatchesPagination(
+//         result?.pagination || {
+//           page: 1,
+//           pageSize: DEFAULT_PAGE_SIZE,
+//           total: 0,
+//           totalPages: 0,
+//         }
+//       );
+//     } catch (err) {
+//       console.error(err);
+//       setBatches([]);
+//       setBatchesPagination({
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//         total: 0,
+//         totalPages: 0,
+//       });
+//       setError('Không tải được danh sách lần vải về');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   useEffect(() => {
+//     mountedRef.current = true;
+//     return () => {
+//       mountedRef.current = false;
+//     };
+//   }, []);
+
+//   // orders: page đổi thì load ngay
+//   useEffect(() => {
+//     if (!mountedRef.current || level !== 'orders') return;
+//     loadOrders(orderFilters);
+//   }, [level, orderFilters.page, orderFilters.pageSize]);
+
+//   // orders: filter đổi thì debounce
+//   useEffect(() => {
+//     if (!mountedRef.current || level !== 'orders') return;
+
+//     const timer = setTimeout(() => {
+//       loadOrders(orderFilters);
+//     }, FILTER_DEBOUNCE);
+
+//     return () => clearTimeout(timer);
+//   }, [
+//     level,
+//     orderFilters.po,
+//     orderFilters.customerName,
+//     orderFilters.mstatus,
+//     orderFilters.range?.from,
+//     orderFilters.range?.to,
+//   ]);
+
+//   // items: page/pageSize đổi thì load ngay
+//   useEffect(() => {
+//     if (level !== 'items' || !selectedOrder?.OrderID) return;
+//     loadItems(selectedOrder.OrderID, itemFilters);
+//   }, [level, selectedOrder?.OrderID, itemFilters.page, itemFilters.pageSize]);
+
+//   // items: filter đổi thì debounce
+//   useEffect(() => {
+//     if (level !== 'items' || !selectedOrder?.OrderID) return;
+
+//     const timer = setTimeout(() => {
+//       loadItems(selectedOrder.OrderID, itemFilters);
+//     }, FILTER_DEBOUNCE);
+
+//     return () => clearTimeout(timer);
+//   }, [
+//     level,
+//     selectedOrder?.OrderID,
+//     itemFilters.id,
+//     itemFilters.mstatus,
+//     itemFilters.range?.from,
+//     itemFilters.range?.to,
+//   ]);
+
+//   // details: page đổi thì load ngay
+//   useEffect(() => {
+//     if (level !== 'details' || !selectedItem?.ItemID) return;
+//     loadDetails(selectedItem.ItemID, detailFilters);
+//   }, [level, selectedItem?.ItemID, detailFilters.page, detailFilters.pageSize]);
+
+//   // details: filter đổi thì debounce
+//   useEffect(() => {
+//     if (level !== 'details' || !selectedItem?.ItemID) return;
+
+//     const timer = setTimeout(() => {
+//       loadDetails(selectedItem.ItemID, detailFilters);
+//     }, FILTER_DEBOUNCE);
+
+//     return () => clearTimeout(timer);
+//   }, [
+//     level,
+//     selectedItem?.ItemID,
+//     detailFilters.mstatus,
+//     detailFilters.range?.from,
+//     detailFilters.range?.to,
+//   ]);
+
+//   // batches: page đổi thì load ngay
+//   useEffect(() => {
+//     if (level !== 'batches' || !selectedDetail?.DetailID) return;
+//     loadBatches(selectedDetail.DetailID, batchFilters);
+//   }, [level, selectedDetail?.DetailID, batchFilters.page, batchFilters.pageSize]);
+
+//   // batches: filter đổi thì debounce
+//   useEffect(() => {
+//     if (level !== 'batches' || !selectedDetail?.DetailID) return;
+
+//     const timer = setTimeout(() => {
+//       loadBatches(selectedDetail.DetailID, batchFilters);
+//     }, FILTER_DEBOUNCE);
+
+//     return () => clearTimeout(timer);
+//   }, [
+//     level,
+//     selectedDetail?.DetailID,
+//     batchFilters.range?.from,
+//     batchFilters.range?.to,
+//   ]);
+
+//   function handleSelectOrder(order) {
+//     setSelectedOrder(order);
+//     setSelectedItem(null);
+//     setSelectedDetail(null);
+
+//     setItems([]);
+//     setDetails([]);
+//     setBatches([]);
+
+//     setItemsPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setDetailsPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setBatchesPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setItemFilters({
+//       range: { from: undefined, to: undefined },
+//       id: '',
+//       mstatus: '',
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setDetailFilters({
+//       range: { from: undefined, to: undefined },
+//       mstatus: '',
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setBatchFilters({
+//       range: { from: undefined, to: undefined },
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setLevel('items');
+//   }
+
+//   function handleSelectItem(item) {
+//     setSelectedItem(item);
+//     setSelectedDetail(null);
+
+//     setDetails([]);
+//     setBatches([]);
+
+//     setDetailsPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setBatchesPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setDetailFilters({
+//       range: { from: undefined, to: undefined },
+//       mstatus: '',
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setBatchFilters({
+//       range: { from: undefined, to: undefined },
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setLevel('details');
+//   }
+
+//   function handleSelectDetail(detail) {
+//     setSelectedDetail(detail);
+//     setBatches([]);
+
+//     setBatchesPagination({
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//       total: 0,
+//       totalPages: 0,
+//     });
+
+//     setBatchFilters({
+//       range: { from: undefined, to: undefined },
+//       page: 1,
+//       pageSize: DEFAULT_PAGE_SIZE,
+//     });
+
+//     setLevel('batches');
+//   }
+
+//   function handleBack() {
+//     setError('');
+
+//     if (level === 'batches') {
+//       setLevel('details');
+//       return;
+//     }
+
+//     if (level === 'details') {
+//       setLevel('items');
+//       return;
+//     }
+
+//     if (level === 'items') {
+//       setLevel('orders');
+//     }
+//   }
+
+//   function handleReset() {
+//     if (level === 'orders') {
+//       setOrderFilters({
+//         range: { from: undefined, to: undefined },
+//         po: '',
+//         customerName: '',
+//         mstatus: DEFAULT_STATUS,
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//       });
+//       return;
+//     }
+
+//     if (level === 'items') {
+//       setItemFilters({
+//         range: { from: undefined, to: undefined },
+//         id: '',
+//         mstatus: '',
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//       });
+//       return;
+//     }
+
+//     if (level === 'details') {
+//       setDetailFilters({
+//         range: { from: undefined, to: undefined },
+//         mstatus: '',
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//       });
+//       return;
+//     }
+
+//     if (level === 'batches') {
+//       setBatchFilters({
+//         range: { from: undefined, to: undefined },
+//         page: 1,
+//         pageSize: DEFAULT_PAGE_SIZE,
+//       });
+//     }
+//   }
+
+//   const pageTitle = useMemo(() => {
+//     if (level === 'orders') return 'Danh sách đơn hàng';
+//     if (level === 'items') {
+//       return `Danh sách mã hàng - Đơn hàng ${selectedOrder?.PO ?? ''}`;
+//     }
+//     if (level === 'details') {
+//       return `Danh sách chi tiết - Mã hàng ${selectedItem?.ItemCode ?? ''}`;
+//     }
+//     return `Danh sách Lần vải về - Chi tiết ${selectedDetail?.DetailID ?? ''}`;
+//   }, [level, selectedOrder, selectedItem, selectedDetail]);
+
+//   const breadcrumb = useMemo(() => {
+//     const list = [`Đơn hàng ${selectedOrder ? `(${selectedOrder?.PO})` : ''}`];
+//     if (selectedOrder) {
+//       list.push(`Mã hàng ${selectedItem ? `(${selectedItem?.ItemCode})` : ''}`);
+//     }
+//     if (selectedItem) {
+//       list.push(`Chi tiết ${selectedDetail ? `(${selectedDetail?.DetailID})` : ''}`);
+//     }
+//     if (selectedDetail) {
+//       list.push('Lần vải về');
+//     }
+//     return list.join(' > ');
+//   }, [selectedOrder, selectedItem, selectedDetail]);
+
+//   const currentFilters =
+//     level === 'orders'
+//       ? orderFilters
+//       : level === 'items'
+//       ? itemFilters
+//       : level === 'details'
+//       ? detailFilters
+//       : batchFilters;
+
+//   const setCurrentFilters =
+//     level === 'orders'
+//       ? setOrderFilters
+//       : level === 'items'
+//       ? setItemFilters
+//       : level === 'details'
+//       ? setDetailFilters
+//       : setBatchFilters;
+
+//   return (
+//     <div className="min-h-screen bg-slate-100 p-3 md:p-4">
+//       <div className="mb-4">
+//         <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+//           Dòng chảy đơn hàng
+//         </h1>
+
+//         <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 md:text-sm">
+//           {breadcrumb}
+//         </div>
+//       </div>
+
+//       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+//         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+//           <h2 className="text-lg font-semibold text-slate-900 md:text-xl">
+//             {pageTitle}
+//           </h2>
+
+//           {level !== 'orders' && (
+//             <button
+//               type="button"
+//               onClick={handleBack}
+//               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+//             >
+//               ← Quay lại
+//             </button>
+//           )}
+//         </div>
+
+//         <DashboardFilters
+//           level={level}
+//           currentFilters={currentFilters}
+//           setCurrentFilters={setCurrentFilters}
+//           orderFilters={orderFilters}
+//           setOrderFilters={setOrderFilters}
+//           onReset={handleReset}
+//         />
+
+//         <div className="relative">
+//           {error ? (
+//             <div className="mb-4 flex min-h-[100px] items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-700">
+//               {error}
+//             </div>
+//           ) : (
+//             <>
+//               {level === 'orders' && (
+//                 <OrdersView
+//                   rows={orders}
+//                   onRowClick={handleSelectOrder}
+//                   pagination={ordersPagination}
+//                   onPageChange={(page) =>
+//                     setOrderFilters((prev) => ({ ...prev, page }))
+//                   }
+//                   loading={loading}
+//                 />
+//               )}
+
+//               {level === 'items' && (
+//                 <ItemsView
+//                   rows={items}
+//                   onRowClick={handleSelectItem}
+//                   pagination={itemsPagination}
+//                   onPageChange={(page) =>
+//                     setItemFilters((prev) => ({ ...prev, page }))
+//                   }
+//                   loading={loading}
+//                 />
+//               )}
+
+//               {level === 'details' && (
+//                 <DetailsView
+//                   rows={details}
+//                   onRowClick={handleSelectDetail}
+//                   pagination={detailsPagination}
+//                   onPageChange={(page) =>
+//                     setDetailFilters((prev) => ({ ...prev, page }))
+//                   }
+//                   loading={loading}
+//                 />
+//               )}
+
+//               {level === 'batches' && (
+//                 <BatchesView
+//                   rows={batches}
+//                   pagination={batchesPagination}
+//                   onPageChange={(page) =>
+//                     setBatchFilters((prev) => ({ ...prev, page }))
+//                   }
+//                   loading={loading}
+//                 />
+//               )}
+//             </>
+//           )}
+
+//           {loading && (
+//             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]">
+//               <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
+//                 Đang tải dữ liệu...
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default Dashboard;
+
+
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  apiGetOrders,
+  apiGetItemsByOrder,
+  apiGetDetailsByItem,
+  apiGetBatchesByDetail,
+} from './services/dashboardApi';
+
+import DashboardFilters from './components/DashboardFilters';
+import OrdersView from './components/views/OrdersView';
+import ItemsView from './components/views/ItemsView';
+import DetailsView from './components/views/DetailsView';
+import BatchesView from './components/views/BatchesView';
 
 function Dashboard() {
   const [level, setLevel] = useState('orders'); // orders | items | details | batches
@@ -19,168 +667,426 @@ function Dashboard() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loadingCount, setLoadingCount] = useState(0);
+  const loading = loadingCount > 0;
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const DEFAULT_STATUS = '01_OPEN';
+  const DEFAULT_PAGE_SIZE = 5;
+  const FILTER_DEBOUNCE = 400;
+  const LOADING_DELAY = 180;
 
   const [orderFilters, setOrderFilters] = useState({
     range: { from: undefined, to: undefined },
-    id: '',
+    po: '',
     customerName: '',
+    mstatus: DEFAULT_STATUS,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
 
   const [itemFilters, setItemFilters] = useState({
     range: { from: undefined, to: undefined },
     id: '',
+    mstatus: '',
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
 
   const [detailFilters, setDetailFilters] = useState({
     range: { from: undefined, to: undefined },
-    id: '',
+    mstatus: '',
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
 
   const [batchFilters, setBatchFilters] = useState({
     range: { from: undefined, to: undefined },
-    id: '',
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
 
+  const [ordersPagination, setOrdersPagination] = useState({
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    totalPages: 0,
+  });
+
+  const [itemsPagination, setItemsPagination] = useState({
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    totalPages: 0,
+  });
+
+  const [detailsPagination, setDetailsPagination] = useState({
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    totalPages: 0,
+  });
+
+  const [batchesPagination, setBatchesPagination] = useState({
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    totalPages: 0,
+  });
+
+  const mountedRef = useRef(false);
+
+  function startLoading() {
+    setLoadingCount((prev) => prev + 1);
+  }
+
+  function stopLoading() {
+    setLoadingCount((prev) => Math.max(0, prev - 1));
+  }
+
   useEffect(() => {
-    loadOrders();
-  }, []);
+    let timer;
 
-  async function apiGetOrders(filters = {}) {
-    const res = await http.get(`${BASE_URL}/api/mes/orders`, {
-      params: cleanParams({
-        fromDate: formatDateParam(filters.range?.from),
-        toDate: formatDateParam(filters.range?.to),
-        orderId: filters.id,
-        customerName: filters.customerName,
-      }),
-    });
+    if (loading) {
+      timer = setTimeout(() => {
+        setShowLoading(true);
+      }, LOADING_DELAY);
+    } else {
+      setShowLoading(false);
+    }
 
-    return res.data?.data || [];
-  }
-
-  async function apiGetItemsByOrder(orderId, filters = {}) {
-    const res = await http.get(`${BASE_URL}/api/mes/orders/${encodeURIComponent(orderId)}/items`, {
-      params: cleanParams({
-        fromDate: formatDateParam(filters.range?.from),
-        toDate: formatDateParam(filters.range?.to),
-        itemId: filters.id,
-      }),
-    });
-
-    return res.data?.data || [];
-  }
-
-  async function apiGetDetailsByItem(itemId, filters = {}) {
-    const res = await http.get(`${BASE_URL}/api/mes/items/${encodeURIComponent(itemId)}/details`, {
-      params: cleanParams({
-        fromDate: formatDateParam(filters.range?.from),
-        toDate: formatDateParam(filters.range?.to),
-        detailId: filters.id,
-      }),
-    });
-
-    return res.data?.data || [];
-  }
-
-  async function apiGetBatchesByDetail(detailId, filters = {}) {
-    const res = await http.get(`${BASE_URL}/api/mes/details/${encodeURIComponent(detailId)}/batches`, {
-      params: cleanParams({
-        fromDate: formatDateParam(filters.range?.from),
-        toDate: formatDateParam(filters.range?.to),
-        batchId: filters.id,
-      }),
-    });
-
-    return res.data?.data || [];
-  }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   async function loadOrders(customFilters) {
     try {
-      setLoading(true);
+      startLoading();
       setError('');
-      const data = await apiGetOrders(customFilters || orderFilters);
-      setOrders(data);
+      const filters = customFilters || orderFilters;
+      const result = await apiGetOrders(filters);
+
+      setOrders(result?.data || []);
+      setOrdersPagination(
+        result?.pagination || {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          total: 0,
+          totalPages: 0,
+        }
+      );
     } catch (err) {
       console.error(err);
       setOrders([]);
+      setOrdersPagination({
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 0,
+      });
       setError('Không tải được danh sách đơn hàng');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   }
 
   async function loadItems(orderId, customFilters) {
     try {
-      setLoading(true);
+      startLoading();
       setError('');
-      const data = await apiGetItemsByOrder(orderId, customFilters || itemFilters);
-      setItems(data);
+      const filters = customFilters || itemFilters;
+      const result = await apiGetItemsByOrder(orderId, filters);
+
+      setItems(result?.data || []);
+      setItemsPagination(
+        result?.pagination || {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          total: 0,
+          totalPages: 0,
+        }
+      );
     } catch (err) {
       console.error(err);
       setItems([]);
+      setItemsPagination({
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 0,
+      });
       setError('Không tải được danh sách mã hàng');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   }
 
   async function loadDetails(itemId, customFilters) {
     try {
-      setLoading(true);
+      startLoading();
       setError('');
-      const data = await apiGetDetailsByItem(itemId, customFilters || detailFilters);
-      setDetails(data);
+      const filters = customFilters || detailFilters;
+      const result = await apiGetDetailsByItem(itemId, filters);
+
+      setDetails(result?.data || []);
+      setDetailsPagination(
+        result?.pagination || {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          total: 0,
+          totalPages: 0,
+        }
+      );
     } catch (err) {
       console.error(err);
       setDetails([]);
+      setDetailsPagination({
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 0,
+      });
       setError('Không tải được danh sách chi tiết');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   }
 
   async function loadBatches(detailId, customFilters) {
     try {
-      setLoading(true);
+      startLoading();
       setError('');
-      const data = await apiGetBatchesByDetail(detailId, customFilters || batchFilters);
-      setBatches(data);
+      const filters = customFilters || batchFilters;
+      const result = await apiGetBatchesByDetail(detailId, filters);
+
+      setBatches(result?.data || []);
+      setBatchesPagination(
+        result?.pagination || {
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          total: 0,
+          totalPages: 0,
+        }
+      );
     } catch (err) {
       console.error(err);
       setBatches([]);
+      setBatchesPagination({
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 0,
+      });
       setError('Không tải được danh sách lần vải về');
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   }
 
-  async function handleSelectOrder(order) {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // orders: vào level / đổi page / pageSize thì load ngay
+  useEffect(() => {
+    if (!mountedRef.current || level !== 'orders') return;
+    loadOrders(orderFilters);
+  }, [level, orderFilters.page, orderFilters.pageSize]);
+
+  // orders: chỉ debounce khi filter đổi
+  useEffect(() => {
+    if (!mountedRef.current || level !== 'orders') return;
+
+    const timer = setTimeout(() => {
+      loadOrders(orderFilters);
+    }, FILTER_DEBOUNCE);
+
+    return () => clearTimeout(timer);
+  }, [
+    orderFilters.po,
+    orderFilters.customerName,
+    orderFilters.mstatus,
+    orderFilters.range?.from,
+    orderFilters.range?.to,
+  ]);
+
+  // items: vào level / đổi page / pageSize thì load ngay
+  useEffect(() => {
+    if (level !== 'items' || !selectedOrder?.OrderID) return;
+    loadItems(selectedOrder.OrderID, itemFilters);
+  }, [level, selectedOrder?.OrderID, itemFilters.page, itemFilters.pageSize]);
+
+  // items: chỉ debounce khi filter đổi
+  useEffect(() => {
+    if (level !== 'items' || !selectedOrder?.OrderID) return;
+
+    const timer = setTimeout(() => {
+      loadItems(selectedOrder.OrderID, itemFilters);
+    }, FILTER_DEBOUNCE);
+
+    return () => clearTimeout(timer);
+  }, [
+    itemFilters.id,
+    itemFilters.mstatus,
+    itemFilters.range?.from,
+    itemFilters.range?.to,
+  ]);
+
+  // details: vào level / đổi page / pageSize thì load ngay
+  useEffect(() => {
+    if (level !== 'details' || !selectedItem?.ItemID) return;
+    loadDetails(selectedItem.ItemID, detailFilters);
+  }, [level, selectedItem?.ItemID, detailFilters.page, detailFilters.pageSize]);
+
+  // details: chỉ debounce khi filter đổi
+  useEffect(() => {
+    if (level !== 'details' || !selectedItem?.ItemID) return;
+
+    const timer = setTimeout(() => {
+      loadDetails(selectedItem.ItemID, detailFilters);
+    }, FILTER_DEBOUNCE);
+
+    return () => clearTimeout(timer);
+  }, [
+    detailFilters.mstatus,
+    detailFilters.range?.from,
+    detailFilters.range?.to,
+  ]);
+
+  // batches: vào level / đổi page / pageSize thì load ngay
+  useEffect(() => {
+    if (level !== 'batches' || !selectedDetail?.DetailID) return;
+    loadBatches(selectedDetail.DetailID, batchFilters);
+  }, [level, selectedDetail?.DetailID, batchFilters.page, batchFilters.pageSize]);
+
+  // batches: chỉ debounce khi filter đổi
+  useEffect(() => {
+    if (level !== 'batches' || !selectedDetail?.DetailID) return;
+
+    const timer = setTimeout(() => {
+      loadBatches(selectedDetail.DetailID, batchFilters);
+    }, FILTER_DEBOUNCE);
+
+    return () => clearTimeout(timer);
+  }, [batchFilters.range?.from, batchFilters.range?.to]);
+
+  function handleSelectOrder(order) {
+    setError('');
     setSelectedOrder(order);
     setSelectedItem(null);
     setSelectedDetail(null);
+
     setItems([]);
     setDetails([]);
     setBatches([]);
+
+    setItemsPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setDetailsPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setBatchesPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setItemFilters({
+      range: { from: undefined, to: undefined },
+      id: '',
+      mstatus: '',
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
+    setDetailFilters({
+      range: { from: undefined, to: undefined },
+      mstatus: '',
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
+    setBatchFilters({
+      range: { from: undefined, to: undefined },
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
     setLevel('items');
-    await loadItems(order.OrderID);
   }
 
-  async function handleSelectItem(item) {
+  function handleSelectItem(item) {
+    setError('');
     setSelectedItem(item);
     setSelectedDetail(null);
+
     setDetails([]);
     setBatches([]);
+
+    setDetailsPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setBatchesPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setDetailFilters({
+      range: { from: undefined, to: undefined },
+      mstatus: '',
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
+    setBatchFilters({
+      range: { from: undefined, to: undefined },
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
     setLevel('details');
-    await loadDetails(item.ItemID);
   }
 
-  async function handleSelectDetail(detail) {
+  function handleSelectDetail(detail) {
+    setError('');
     setSelectedDetail(detail);
     setBatches([]);
+
+    setBatchesPagination({
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      total: 0,
+      totalPages: 0,
+    });
+
+    setBatchFilters({
+      range: { from: undefined, to: undefined },
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+
     setLevel('batches');
-    await loadBatches(detail.DetailID);
   }
 
   function handleBack() {
@@ -201,81 +1107,73 @@ function Dashboard() {
     }
   }
 
-  function handleSearch() {
-    if (level === 'orders') {
-      loadOrders();
-      return;
-    }
-
-    if (level === 'items' && selectedOrder?.OrderID) {
-      loadItems(selectedOrder.OrderID);
-      return;
-    }
-
-    if (level === 'details' && selectedItem?.ItemID) {
-      loadDetails(selectedItem.ItemID);
-      return;
-    }
-
-    if (level === 'batches' && selectedDetail?.DetailID) {
-      loadBatches(selectedDetail.DetailID);
-    }
-  }
-
   function handleReset() {
+    setError('');
+
     if (level === 'orders') {
-      const reset = {
+      setOrderFilters({
         range: { from: undefined, to: undefined },
-        id: '',
+        po: '',
         customerName: '',
-      };
-      setOrderFilters(reset);
-      loadOrders(reset);
+        mstatus: DEFAULT_STATUS,
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+      });
       return;
     }
 
     if (level === 'items') {
-      const reset = {
+      setItemFilters({
         range: { from: undefined, to: undefined },
         id: '',
-      };
-      setItemFilters(reset);
-      if (selectedOrder?.OrderID) loadItems(selectedOrder.OrderID, reset);
+        mstatus: '',
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+      });
       return;
     }
 
     if (level === 'details') {
-      const reset = {
+      setDetailFilters({
         range: { from: undefined, to: undefined },
-        id: '',
-      };
-      setDetailFilters(reset);
-      if (selectedItem?.ItemID) loadDetails(selectedItem.ItemID, reset);
+        mstatus: '',
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+      });
       return;
     }
 
     if (level === 'batches') {
-      const reset = {
+      setBatchFilters({
         range: { from: undefined, to: undefined },
-        id: '',
-      };
-      setBatchFilters(reset);
-      if (selectedDetail?.DetailID) loadBatches(selectedDetail.DetailID, reset);
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+      });
     }
   }
 
   const pageTitle = useMemo(() => {
     if (level === 'orders') return 'Danh sách đơn hàng';
-    if (level === 'items') return `Danh sách mã hàng - Đơn hàng ${selectedOrder?.OrderID ?? ''}`;
-    if (level === 'details') return `Danh sách chi tiết - Mã hàng ${selectedItem?.ItemID ?? ''}`;
+    if (level === 'items') {
+      return `Danh sách mã hàng - Đơn hàng ${selectedOrder?.PO ?? ''}`;
+    }
+    if (level === 'details') {
+      return `Danh sách chi tiết - Mã hàng ${selectedItem?.ItemCode ?? ''}`;
+    }
     return `Danh sách Lần vải về - Chi tiết ${selectedDetail?.DetailID ?? ''}`;
   }, [level, selectedOrder, selectedItem, selectedDetail]);
 
   const breadcrumb = useMemo(() => {
-    const list = ['Đơn hàng'];
-    if (selectedOrder) list.push(`Mã hàng (${selectedOrder.OrderID})`);
-    if (selectedItem) list.push(`Chi tiết (${selectedItem.ItemID})`);
-    if (selectedDetail) list.push(`Lần vải về (${selectedDetail.DetailID})`);
+    const list = [`Đơn hàng ${selectedOrder ? `(${selectedOrder?.PO})` : ''}`];
+    if (selectedOrder) {
+      list.push(`Mã hàng ${selectedItem ? `(${selectedItem?.ItemCode})` : ''}`);
+    }
+    if (selectedItem) {
+      list.push(`Chi tiết ${selectedDetail ? `(${selectedDetail?.DetailID})` : ''}`);
+    }
+    if (selectedDetail) {
+      list.push('Lần vải về');
+    }
     return list.join(' > ');
   }, [selectedOrder, selectedItem, selectedDetail]);
 
@@ -326,496 +1224,82 @@ function Dashboard() {
           )}
         </div>
 
-        <div
-          className={`mb-4 grid gap-3 ${
-            level === 'orders'
-              ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-              : 'grid-cols-1 md:grid-cols-2'
-          }`}
-        >
-          <DateRangeField
-            label="Từ ngày - Đến ngày"
-            range={currentFilters.range}
-            onChange={(value) => setCurrentFilters((prev) => ({ ...prev, range: value }))}
-          />
+        <DashboardFilters
+          level={level}
+          currentFilters={currentFilters}
+          setCurrentFilters={setCurrentFilters}
+          orderFilters={orderFilters}
+          setOrderFilters={setOrderFilters}
+          onReset={handleReset}
+        />
 
-          <FilterField
-            label={
-              level === 'orders'
-                ? 'Đơn hàng'
-                : level === 'items'
-                ? 'Mã hàng'
-                : level === 'details'
-                ? 'Chi tiết'
-                : 'Lần vải về'
-            }
-            type="text"
-            placeholder={
-              level === 'orders'
-                ? 'Nhập đơn hàng'
-                : level === 'items'
-                ? 'Nhập mã hàng'
-                : level === 'details'
-                ? 'Nhập chi tiết'
-                : 'Nhập mã lần vải về'
-            }
-            value={currentFilters.id}
-            onChange={(value) => setCurrentFilters((prev) => ({ ...prev, id: value }))}
-          />
+        <div className="relative">
+          {error ? (
+            <div className="mb-4 flex min-h-[100px] items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-700">
+              {error}
+            </div>
+          ) : (
+            <>
+              {level === 'orders' && (
+                <OrdersView
+                  rows={orders}
+                  onRowClick={handleSelectOrder}
+                  pagination={ordersPagination}
+                  onPageChange={(page) =>
+                    setOrderFilters((prev) => ({ ...prev, page }))
+                  }
+                  loading={loading}
+                />
+              )}
 
-          {level === 'orders' && (
-            <FilterField
-              label="Khách hàng"
-              type="text"
-              placeholder="Nhập tên khách hàng"
-              value={orderFilters.customerName}
-              onChange={(value) =>
-                setOrderFilters((prev) => ({ ...prev, customerName: value }))
-              }
-            />
+              {level === 'items' && (
+                <ItemsView
+                  rows={items}
+                  onRowClick={handleSelectItem}
+                  pagination={itemsPagination}
+                  onPageChange={(page) =>
+                    setItemFilters((prev) => ({ ...prev, page }))
+                  }
+                  loading={loading}
+                />
+              )}
+
+              {level === 'details' && (
+                <DetailsView
+                  rows={details}
+                  onRowClick={handleSelectDetail}
+                  pagination={detailsPagination}
+                  onPageChange={(page) =>
+                    setDetailFilters((prev) => ({ ...prev, page }))
+                  }
+                  loading={loading}
+                />
+              )}
+
+              {level === 'batches' && (
+                <BatchesView
+                  rows={batches}
+                  pagination={batchesPagination}
+                  onPageChange={(page) =>
+                    setBatchFilters((prev) => ({ ...prev, page }))
+                  }
+                  loading={loading}
+                />
+              )}
+            </>
+          )}
+
+          {showLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]">
+              <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
+                Đang tải dữ liệu...
+              </div>
+            </div>
           )}
         </div>
-
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Lọc dữ liệu
-          </button>
-
-          <button
-            type="button"
-            onClick={handleReset}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
-          >
-            Tải lại
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex min-h-[100px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-slate-500">
-            Đang tải dữ liệu...
-          </div>
-        ) : error ? (
-          <div className="flex min-h-[100px] items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-700">
-            {error}
-          </div>
-        ) : (
-          <>
-            {level === 'orders' && (
-              <DataTable
-                columns={[
-                  { key: 'OrderID', title: 'Đơn hàng' },
-                  { key: 'CustomerName', title: 'Khách hàng' },
-                  {
-                    key: 'Deadline',
-                    title: 'Deadline',
-                    render: (row) => formatDate(row.Deadline),
-                  },
-                  {
-                    key: 'MStatus',
-                    title: 'Tình trạng',
-                    render: (row) => <StatusBadge value={row.MStatus} />,
-                  },
-                  {
-                    key: 'CreatedAt',
-                    title: 'Ngày tạo',
-                    render: (row) => formatDateTime(row.CreatedAt),
-                  },
-                ]}
-                rows={orders}
-                rowKey="OrderID"
-                emptyText="Không có đơn hàng"
-                onRowClick={handleSelectOrder}
-                mobileTitle={(row) => `Đơn hàng #${row.OrderID}`}
-                mobileSubtitle={(row) => row.CustomerName || ''}
-              />
-            )}
-
-            {level === 'items' && (
-              <DataTable
-                columns={[
-                  { key: 'ItemID', title: 'Mã hàng' },
-                  { key: 'OrderID', title: 'Đơn hàng' },
-                  { key: 'ItemCode', title: 'Tên mã hàng' },
-                  { key: 'Quantity', title: 'Số lượng' },
-                  {
-                    key: 'MStatus',
-                    title: 'Tình trạng',
-                    render: (row) => <StatusBadge value={row.MStatus} />,
-                  },
-                  {
-                    key: 'CreatedAt',
-                    title: 'Ngày tạo',
-                    render: (row) => formatDateTime(row.CreatedAt),
-                  },
-                ]}
-                rows={items}
-                rowKey="ItemID"
-                emptyText="Không có mã hàng"
-                onRowClick={handleSelectItem}
-                mobileTitle={(row) => row.ItemCode || `Item #${row.ItemID}`}
-                mobileSubtitle={(row) => `OrderID: ${row.OrderID}`}
-              />
-            )}
-
-            {level === 'details' && (
-              <DataTable
-                columns={[
-                  { key: 'DetailID', title: 'Chi tiết' },
-                  { key: 'ItemID', title: 'Mã hàng' },
-                  { key: 'DetailCode', title: 'Tên chi tiết' },
-                  { key: 'Quantity', title: 'Số lượng' },
-                  {
-                    key: 'MStatus',
-                    title: 'Tình trạng',
-                    render: (row) => <StatusBadge value={row.MStatus} />,
-                  },
-                  {
-                    key: 'CreatedAt',
-                    title: 'Ngày tạo',
-                    render: (row) => formatDateTime(row.CreatedAt),
-                  },
-                ]}
-                rows={details}
-                rowKey="DetailID"
-                emptyText="Không có chi tiết"
-                onRowClick={handleSelectDetail}
-                mobileTitle={(row) => row.DetailCode || `Detail #${row.DetailID}`}
-                mobileSubtitle={(row) => `ItemID: ${row.ItemID}`}
-              />
-            )}
-
-            {level === 'batches' && (
-  <DataTable
-    columns={[
-      { key: 'BatchID', title: 'Mã lần vải về' },
-      { key: 'OrderID', title: 'Đơn hàng' },
-      { key: 'DetailID', title: 'Chi tiết' },
-      {
-        key: 'ReceivedDate',
-        title: 'Ngày nhận',
-        render: (row) => formatDate(row.ReceivedDate),
-      },
-      { key: 'QuantityReceived', title: 'SL nhận' },
-      {
-        key: 'QualityCheckMStatus',
-        title: 'Tình trạng',
-        render: (row) => <StatusBadge value={row.QualityCheckMStatus} />,
-      },
-      {
-        key: 'stationLogs',
-        title: 'Nhật ký trạm',
-        render: (row) => <StationLogsHorizontal logs={row.stationLogs || []} />,
-      },
-    ]}
-    rows={batches}
-    rowKey="BatchID"
-    emptyText="Không có lần vải về"
-    mobileTitle={(row) => `Batch #${row.BatchID}`}
-    mobileSubtitle={(row) => `DetailID: ${row.DetailID}`}
-  />
-)}
-          </>
-        )}
       </div>
     </div>
   );
 }
-
-function DateRangeField({ label, range, onChange }) {
-  const [openCalendar, setOpenCalendar] = useState(false);
-
-  const rangeText = useMemo(() => {
-    if (!range?.from && !range?.to) return 'Chọn khoảng ngày';
-    if (range?.from && !range?.to) return `Từ ${format(range.from, 'dd/MM/yyyy')}`;
-    return `${format(range.from, 'dd/MM/yyyy')} → ${format(range.to, 'dd/MM/yyyy')}`;
-  }, [range]);
-
-  return (
-    <div className="relative">
-      <div className="mb-1 text-[12px] font-medium text-slate-700">{label}</div>
-
-      <button
-        type="button"
-        onClick={() => setOpenCalendar(true)}
-        className={[
-          'w-full rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-2.5 text-left',
-          'text-[13px] text-slate-900 transition hover:bg-white/90',
-          'focus:outline-none focus:ring-2 focus:ring-blue-200/70',
-        ].join(' ')}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <span className={range?.from ? 'font-medium' : 'text-slate-500'}>{rangeText}</span>
-          <span className="text-slate-500">📅</span>
-        </div>
-      </button>
-
-      {openCalendar && (
-        <div className="fixed inset-0 z-50" onClick={() => setOpenCalendar(false)} />
-      )}
-
-      {openCalendar && (
-        <div
-          className="absolute z-[60] mt-2 w-full min-w-[320px] rounded-2xl border border-slate-200/70 bg-white p-3 shadow-[0_18px_60px_rgba(15,23,42,0.18)]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-[12px] font-semibold text-slate-700">Chọn khoảng ngày</div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onChange({ from: undefined, to: undefined })}
-                className="text-[12px] font-medium text-slate-600 transition hover:text-slate-900"
-              >
-                Xóa
-              </button>
-
-              <BtnDarkSmall onClick={() => setOpenCalendar(false)}>Đóng</BtnDarkSmall>
-            </div>
-          </div>
-
-          <DayPicker
-            mode="range"
-            selected={range}
-            onSelect={(r) => onChange(r || { from: undefined, to: undefined })}
-            numberOfMonths={1}
-            showOutsideDays
-            className="rdp"
-            locale={vi}
-            weekStartsOn={1}
-            formatters={{
-              formatCaption: (date) => format(date, 'MMMM yyyy', { locale: vi }),
-            }}
-          />
-
-          <style>{dayPickerCss}</style>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function FilterField({ label, value, onChange, placeholder = '', type = 'text' }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-slate-700">{label}</span>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-      />
-    </label>
-  );
-}
-
-function DataTable({
-  columns,
-  rows,
-  rowKey,
-  emptyText,
-  onRowClick,
-  mobileTitle,
-  mobileSubtitle,
-}) {
-  if (!rows?.length) {
-    return (
-      <div className="flex min-h-[100px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-slate-500">
-        {emptyText}
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="hidden overflow-x-auto lg:block">
-        <table className="min-w-full border-collapse">
-          <thead>
-            <tr className="bg-slate-50">
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-left text-sm font-bold text-slate-700"
-                >
-                  {col.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row[rowKey]}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={onRowClick ? 'cursor-pointer hover:bg-sky-50' : ''}
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className="border-b border-slate-100 px-3 py-3 text-sm text-slate-900"
-                  >
-                    {col.render ? col.render(row) : safeValue(row[col.key])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="grid gap-3 lg:hidden">
-        {rows.map((row) => (
-          <div
-            key={row[rowKey]}
-            onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`rounded-2xl border border-slate-200 bg-white p-4 ${
-              onRowClick ? 'cursor-pointer hover:bg-sky-50' : ''
-            }`}
-          >
-            <div className="text-base font-bold text-slate-900">
-              {mobileTitle ? mobileTitle(row) : safeValue(row[rowKey])}
-            </div>
-
-            <div className="mt-1 text-sm text-slate-500">
-              {mobileSubtitle ? mobileSubtitle(row) : ''}
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {columns.map((col) => (
-                <div key={col.key} className="rounded-xl bg-slate-50 p-3">
-                  <div className="mb-1 text-xs text-slate-500">{col.title}</div>
-                  <div className="break-words text-sm font-semibold text-slate-900">
-                    {col.render ? col.render(row) : safeValue(row[col.key])}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function StatusBadge({ value }) {
-  return (
-    <span className="inline-flex min-h-7 items-center justify-center rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
-      {safeValue(value)}
-    </span>
-  );
-}
-
-function StationLogsHorizontal({ logs = [] }) {
-  if (!logs.length) {
-    return <span className="text-xs text-slate-400">Không có log</span>;
-  }
-
-  return (
-    <div className="max-w-[520px] overflow-x-auto">
-      <div className="flex min-w-max gap-2">
-        {logs.map((log, index) => (
-          <div
-            key={`${log.StationID}-${log.Timestamp}-${index}`}
-            className="min-w-[150px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-          >
-            <div className="text-[11px] text-slate-500">Trạm</div>
-            <div className="text-sm font-semibold text-slate-900">
-              {safeValue(log.StationID)}
-            </div>
-
-            <div className="mt-1 text-[11px] text-slate-500">Trạng thái</div>
-            <div className="text-sm font-semibold text-slate-900">
-              {safeValue(log.MStatus)}
-            </div>
-
-            <div className="mt-1 text-[11px] text-slate-500">Thời gian</div>
-            <div className="text-xs font-medium text-slate-700">
-              {formatDateTime(log.Timestamp)}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function BtnDarkSmall({ children, className = '', ...props }) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={[
-        'rounded-xl bg-slate-900 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-slate-800',
-        'active:scale-[0.98]',
-        className,
-      ].join(' ')}
-    >
-      {children}
-    </button>
-  );
-}
-
-function cleanParams(obj = {}) {
-  const result = {};
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] !== '' && obj[key] !== null && obj[key] !== undefined) {
-      result[key] = obj[key];
-    }
-  });
-  return result;
-}
-
-function safeValue(value) {
-  if (value === undefined || value === null || value === '') return '-';
-  return String(value);
-}
-
-function formatDate(value) {
-  if (!value) return '-';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleDateString('vi-VN');
-}
-
-function formatDateTime(value) {
-  if (!value) return '-';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleString('vi-VN');
-}
-
-function formatDateParam(value) {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-const dayPickerCss = `
-.rdp { --rdp-cell-size: 40px; margin: 0; }
-.rdp-caption_label { font-weight: 600; color: #0f172a; text-transform: capitalize; }
-.rdp-day { border-radius: 14px; font-weight: 600; }
-.rdp-range_middle .rdp-day_button {
-  background: rgba(37, 99, 235, 0.12);
-  border-radius: 12px;
-}
-.rdp-range_start .rdp-day_button,
-.rdp-range_end .rdp-day_button {
-  background: linear-gradient(to bottom, #60a5fa, #2563eb);
-  color: white;
-  border-radius: 14px;
-}
-`;
 
 export default Dashboard;

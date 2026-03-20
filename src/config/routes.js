@@ -102,6 +102,8 @@ const routes = {
 
 
   adminCalculateSalaryUploadPayrollReport: '/admin/calculate-salary/upload-payroll-report',
+  adminCalculateSalaryTypePay: '/admin/calculate-salary/type-pay',
+  adminCalculateSalaryHistory: '/admin/calculate-salary/history',
   calculateSalaryViewPayslip: '/me/view-payslip',
   
   
@@ -159,15 +161,20 @@ const routes = {
   qualityInspectionOQC: '/quality-inspection/oqc/home',
   qualityInspectionOQCResult: '/quality-inspection/oqc/result',
   qualityInspectionOQCManual: '/quality-inspection/oqc/manual',
+
+  adminHistoryOQC: '/admin/oqc/history',
   
   qualityInspectionKCS: '/quality-inspection/kcs',
   qualityInspectionKCSResult: '/quality-inspection/kcs/result',
   qualityInspectionKCSManual: '/quality-inspection/kcs/manual',
 
+  adminHistoryKCS: '/admin/kcs/history',
   
   consolidate: '/consolidate',
   consolidateTickTime: '/consolidate/tick/time',
   consolidateManualTime: '/consolidate/manual/time',
+
+  adminHistoryConsolidate: '/admin/consolidate/history',
   
   adminMesDashboard: '/admin/mes/dashboard'
   

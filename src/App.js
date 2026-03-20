@@ -11,6 +11,9 @@ import {
   routesFormAdmin,
   routesTaskManagementAdmin,
   routesMesAdmin,
+  routesKCSAdmin,
+  routesOQCAdmin,
+  routesConsolidateAdmin,
 } from "./routes";
 
 import ScrollToTop from "./components/ScrollToTop";
@@ -42,12 +45,14 @@ import DefaultLayoutBMI from "./layoutsBMI/DefaultLayout";
 import DefaultLayoutInkCovPerOnFilm from "./layoutsInkCovPerOnFilm/DefaultLayout";
 
 import DefaultLayoutQualityInspectionOQC from "./layoutQualityInspectionOQC/DefaultLayout";
+import DefaultLayoutAdminQualityInspectionOQC from "./layoutQualityInspectionOQCAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/DefaultLayout";
+import DefaultLayoutAdminQualityInspectionKCS from "./layoutQualityInspectionKCSAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
 
-import DefaultLayoutMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
+import DefaultLayoutAdminMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
 
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
@@ -364,7 +369,75 @@ function AppRoutes({ user }) {
             />
           ))}
         </Route>
-
+        
+        {/* ====== ADMIN OQC (module oqc, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="quality-inspection-oqc"
+              fallbackName="OQC - Kiểm tra chất lượng đầu ra"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesOQCAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminQualityInspectionOQC>
+                  <route.component />
+                </DefaultLayoutAdminQualityInspectionOQC>
+              }
+            />
+          ))}
+        </Route>
+        
+        {/* ====== ADMIN KCS (module kcs, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="quality-inspection-kcs"
+              fallbackName="KCS - Kiểm tra chất lượng tại chuyền"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesKCSAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminQualityInspectionKCS>
+                  <route.component />
+                </DefaultLayoutAdminQualityInspectionKCS>
+              }
+            />
+          ))}
+        </Route>
+        
+        {/* ====== ADMIN GOM HANG (module gom hang, chỉ admin) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="consolidate"
+              fallbackName="Gom hàng"
+              needRoles={["admin"]}
+            />
+          }
+        >
+          {routesConsolidateAdmin.map((route, index) => (
+            <Route
+              key={index}
+              path={route.addId ? `${route.path}/:id` : route.path}
+              element={
+                <DefaultLayoutAdminQualityInspectionKCS>
+                  <route.component />
+                </DefaultLayoutAdminQualityInspectionKCS>
+              }
+            />
+          ))}
+        </Route>
         
         {/* ====== ADMIN MES (module mes, chỉ admin) ====== */}
         <Route
@@ -381,9 +454,9 @@ function AppRoutes({ user }) {
               key={index}
               path={route.addId ? `${route.path}/:id` : route.path}
               element={
-                <DefaultLayoutMES>
+                <DefaultLayoutAdminMES>
                   <route.component />
-                </DefaultLayoutMES>
+                </DefaultLayoutAdminMES>
               }
             />
           ))}

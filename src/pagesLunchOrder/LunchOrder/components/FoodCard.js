@@ -124,17 +124,20 @@ export default function FoodCard({
             // SEC: qty chung + multi branch + stepper
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-center">
-                <QuantityStepper
-                  value={qtyEntryValue ?? 0}
-                  min={0}
-                  disabled={disabled}
-                  onChange={onChangeQtyEntry}
-                />
+                {
+                  item.foodName !== 'Trứng' &&
+                  <QuantityStepper
+                    value={qtyEntryValue ?? 0}
+                    min={0}
+                    disabled={disabled}
+                    onChange={onChangeQtyEntry}
+                  />
+                }
               </div>
 
               {(item.branches || []).map((br, idx) => {
                 const brSel = !!selectedBrEntryMap?.[br.branchId];
-                const qtyVal = qtyBrEntryMap?.[br.branchId] ?? (brSel ? 1 : 0);
+                const qtyVal = brSel ? (qtyBrEntryMap?.[br.branchId] ?? 0) : 0;
                 const pal = [
                   { bg: "bg-emerald-50", border: "border-emerald-200", ring: "ring-emerald-300/60", text: "text-emerald-700" },
                   { bg: "bg-sky-50", border: "border-sky-200", ring: "ring-sky-300/60", text: "text-sky-700" },
@@ -165,8 +168,9 @@ export default function FoodCard({
                       <div className="mt-2 flex items-center justify-center">
                         <QuantityStepper
                           value={qtyVal}
-                          min={1}
+                          min={0}
                           disabled={disabled}
+                          autoFocus={brSel}
                           onChange={(v) => onChangeQtyBranch(br.branchId, v, qtyVal)}
                         />
                       </div>

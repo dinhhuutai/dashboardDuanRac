@@ -15,7 +15,7 @@ export default function MobileHomeOQC({ navigate, tmp }) {
   /* =============================================== */
 
   return (
-    <div className={`md:hidden ${bgMain}`} style={{ minHeight: "100dvh" }}>
+    <div className={`md:hidden`}>
       {/* HEADER */}
       <div
         className="

@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import { userSelector } from "~/redux/selectors";
-import { useFeatureAllowed } from "~/hooks/useFeatureGuard";
-import MODULEID from "~/contants/modules";
-
 import MobileHomeKCS from "./section/HomeMobile";
-import { FaQrcode, FaClipboardCheck, FaCamera } from "react-icons/fa";
+import { FaQrcode, FaCamera } from "react-icons/fa";
 import config from "~/config";
+import ScanHistoryKCS from "./components/ScanHistoryKCS";
 
 function Home() {
   const navigate = useNavigate();
@@ -19,13 +17,19 @@ function Home() {
   };
 
   return (
-    <div className="overflow-hidden w-full block md:flex justify-center">
+    <div className="overflow-hidden w-full block md:flex justify-center bg-[#F7FCF9]">
       {/* ===== MOBILE ===== */}
-      <MobileHomeKCS
-        navigate={navigate}
-        tmp={tmp}
-        handleScanQR={handleScanQR}
-      />
+      <div className="md:hidden w-full">
+        <MobileHomeKCS
+          navigate={navigate}
+          tmp={tmp}
+          handleScanQR={handleScanQR}
+        />
+
+        <div className="md:hidden px-4 pb-[100px] mt-[136px] relative z-10">
+          <ScanHistoryKCS />
+        </div>
+      </div>
 
       {/* ===== DESKTOP ===== */}
       <div
@@ -36,7 +40,6 @@ function Home() {
           <div className="mt-6 rounded-[28px] bg-[#E8F8F1] shadow-xl overflow-hidden">
             <div className="relative p-8">
               <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6">
-                
                 {/* LEFT */}
                 <div>
                   <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-white text-green-800">
@@ -66,17 +69,18 @@ function Home() {
 
                 {/* RIGHT */}
                 <div className="hidden md:block">
-                  <div className="rounded-2xl bg-white p-4 text-center">
+                  <div className="rounded-2xl bg-white p-4 text-center border border-green-100">
                     <FaCamera size={96} className="mx-auto text-green-700" />
                     <div className="mt-2 text-xs text-slate-500">
                       KCS • Scan & Inspect
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
+
+          <ScanHistoryKCS />
         </div>
       </div>
     </div>

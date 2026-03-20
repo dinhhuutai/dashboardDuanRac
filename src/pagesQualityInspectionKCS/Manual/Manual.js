@@ -1,263 +1,126 @@
-// import React, { useState } from "react";
-// import { AnimatePresence, motion } from "framer-motion";
-// import {
-//   FaCheckCircle,
-//   FaTimesCircle,
-//   FaSpinner,
-// } from "react-icons/fa";
-// import http from "~/api/http";
-// import { BASE_URL } from "~/config";
-
-// function Manual() {
-//   const [code, setCode] = useState("");
-//   const [result, setResult] = useState(1);
-//   const [loading, setLoading] = useState(false);
-//   const [toast, setToast] = useState(null);
-
-//   const handleConfirm = async () => {
-//     if (!code.trim()) {
-//       setToast({
-//         type: "error",
-//         message: "❌ Vui lòng nhập mã",
-//       });
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
-//         qrCode: code,
-//         result,
-//         inspectionType: "KCS",
-//       });
-
-//       setToast({
-//         type: "success",
-//         message: "✅ Lưu kết quả thành công",
-//       });
-
-//       setCode("");
-//       setResult(1);
-//     } catch {
-//       setToast({
-//         type: "error",
-//         message: "❌ Không thể lưu kết quả",
-//       });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-[#E8F8F1] flex flex-col">
-
-//       {/* HEADER */}
-//       <div
-//         className="
-//           md:hidden
-//           bg-gradient-to-br
-//           from-green-400
-//           via-green-500
-//           to-emerald-600
-//           px-4
-//           py-[20px]
-//           text-center
-//           text-white
-//         "
-//       >
-//         <h1 className="text-xl font-semibold">
-//           KCS kiểm tra chất lượng sau in
-//         </h1>
-//       </div>
-
-//       {/* CONTENT */}
-//       <div className="flex-1 flex items-center justify-center px-4 -mt-20 md:mt-0">
-//         <motion.div
-//           initial={{ opacity: 0, y: 20 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           className="
-//             w-full max-w-md
-//             bg-[#F3FBF6]
-//             border border-green-200
-//             rounded-2xl
-//             p-6
-//             space-y-6
-//             shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-//           "
-//         >
-//           <h2 className="text-base font-semibold text-center text-gray-700">
-//             Nhập mã kiểm tra
-//           </h2>
-
-//           {/* INPUT */}
-//           <input
-//             type="text"
-//             value={code}
-//             onChange={(e) => setCode(e.target.value)}
-//             onKeyDown={(e) => {
-//               if (e.key === "Enter") handleConfirm();
-//             }}
-//             placeholder="Nhập mã sản phẩm..."
-//             className="
-//               w-full
-//               p-3
-//               border border-green-200
-//               rounded-xl
-//               focus:outline-none
-//               focus:ring-2
-//               focus:ring-green-400
-//               text-center
-//               text-lg
-//               bg-white
-//               transition
-//             "
-//           />
-
-//           {/* RESULT */}
-//           <div className="flex justify-center gap-10 pt-2">
-            
-//                         <label className={`flex ${result === 1 && 'bg-emerald-200'} justify-center h-[48px] w-[170px] rounded-xl border border-emerald-500 items-center gap-2 cursor-pointer text-gray-700`}>
-//                           <input
-//                             type="radio"
-//                             checked={result === 1}
-//                             onChange={() => setResult(1)}
-//                             className="accent-emerald-500"
-//                           />
-//                           <FaCheckCircle className="text-emerald-500" />
-//                           Đạt
-//                         </label>
-            
-//                         <label className={`flex ${result === 0 && 'bg-rose-200'} justify-center h-[48px] w-[170px] rounded-xl border border-rose-500 items-center gap-2 cursor-pointer text-gray-700`}>
-//                           <input
-//                             type="radio"
-//                             checked={result === 0}
-//                             onChange={() => setResult(0)}
-//                             className="accent-rose-500"
-//                           />
-//                           <FaTimesCircle className="text-rose-500" />
-//                           Không đạt
-//                         </label>
-//           </div>
-
-//           {/* BUTTON */}
-//           <button
-//             onClick={handleConfirm}
-//             disabled={loading}
-//             className="
-//               w-full
-//               py-3
-//               rounded-xl
-//               bg-emerald-500
-//               hover:bg-emerald-600
-//               text-white
-//               font-medium
-//               flex
-//               items-center
-//               justify-center
-//               gap-2
-//               active:scale-95
-//               transition
-//             "
-//           >
-//             {loading ? (
-//               <>
-//                 <FaSpinner className="animate-spin" />
-//                 Đang lưu...
-//               </>
-//             ) : (
-//               "Xác nhận"
-//             )}
-//           </button>
-//         </motion.div>
-//       </div>
-
-//       {/* TOAST */}
-//       <AnimatePresence>
-//         {toast && (
-//           <motion.div
-//             className="fixed bottom-[102px] inset-x-0 flex justify-center z-50"
-//             initial={{ opacity: 0, y: 20 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             exit={{ opacity: 0 }}
-//             onClick={() => setToast(null)}
-//           >
-//             <div
-//               className="
-//                 bg-white
-//                 px-5 py-3
-//                 rounded-full
-//                 shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-//               "
-//             >
-//               <span
-//                 className={`text-sm font-medium ${
-//                   toast.type === "success"
-//                     ? "text-emerald-600"
-//                     : "text-rose-600"
-//                 }`}
-//               >
-//                 {toast.message}
-//               </span>
-//             </div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </div>
-//   );
-// }
-
-// export default Manual;
-
-
-
-
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FaCheckCircle,
-  FaTimesCircle,
   FaSpinner,
   FaPlus,
   FaMinus,
+  FaClipboardCheck,
+  FaLayerGroup,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 
+const qtyFields = [
+  { key: "dat", label: "Đạt", icon: <FaCheckCircle className="text-emerald-500" /> },
+  { key: "thieu", label: "Thiếu", icon: <FaExclamationTriangle className="text-amber-500" /> },
+  { key: "du", label: "Dư", icon: <FaLayerGroup className="text-sky-500" /> },
+  { key: "mau", label: "Mẫu", icon: <FaClipboardCheck className="text-violet-500" /> },
+  { key: "vaiHu", label: "Vải hư", icon: <FaExclamationTriangle className="text-rose-500" /> },
+];
+
 function Manual() {
   const [code, setCode] = useState("");
-  const [result, setResult] = useState(1);
-  const [transQuantity, setTransQuantity] = useState(0);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const increaseQuantity = () => {
-    setTransQuantity((prev) => Number(prev || 0) + 1);
+  const [quantities, setQuantities] = useState({
+    dat: 0,
+    thieu: 0,
+    du: 0,
+    mau: 0,
+    vaiHu: 0,
+  });
+
+  const isValidCode = (value) => {
+    if (!value) return false;
+    const text = String(value).trim();
+    return text.startsWith("15");
   };
 
-  const decreaseQuantity = () => {
-    setTransQuantity((prev) => {
-      const current = Number(prev || 1);
-      return current > 0 ? current - 1 : 0;
+  const trimmedCode = code.trim();
+
+  const codeError = useMemo(() => {
+    if (!trimmedCode) return "";
+    if (!isValidCode(trimmedCode)) {
+      return "Mã không hợp lệ, mã phải bắt đầu bằng 15";
+    }
+    return "";
+  }, [trimmedCode]);
+
+  const totalError = useMemo(() => {
+    return (
+      Number(quantities.thieu || 0) +
+      Number(quantities.du || 0) +
+      Number(quantities.mau || 0) +
+      Number(quantities.vaiHu || 0)
+    );
+  }, [quantities]);
+
+  const totalAll = useMemo(() => {
+    return (
+      Number(quantities.dat || 0) +
+      Number(quantities.thieu || 0) +
+      Number(quantities.du || 0) +
+      Number(quantities.mau || 0) +
+      Number(quantities.vaiHu || 0)
+    );
+  }, [quantities]);
+
+  const canSubmit = !!trimmedCode && !codeError && totalAll > 0 && !loading;
+
+  const updateQty = (key, value) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const increaseQuantity = (key) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [key]: Number(prev[key] || 0) + 1,
+    }));
+  };
+
+  const decreaseQuantity = (key) => {
+    setQuantities((prev) => {
+      const current = Number(prev[key] || 0);
+      return {
+        ...prev,
+        [key]: current > 0 ? current - 1 : 0,
+      };
     });
   };
 
-  const handleQuantityChange = (e) => {
+  const handleQuantityChange = (key, e) => {
     const value = e.target.value;
 
     if (value === "") {
-      setTransQuantity("");
+      updateQty(key, "");
       return;
     }
 
     const numericValue = Number(value);
-
     if (!Number.isNaN(numericValue) && numericValue >= 0) {
-      setTransQuantity(numericValue);
+      updateQty(key, numericValue);
     }
   };
 
+  const resetForm = () => {
+    setCode("");
+    setQuantities({
+      dat: 0,
+      thieu: 0,
+      du: 0,
+      mau: 0,
+      vaiHu: 0,
+    });
+  };
+
   const handleConfirm = async () => {
-    if (!code.trim()) {
+    if (!trimmedCode) {
       setToast({
         type: "error",
         message: "❌ Vui lòng nhập mã",
@@ -265,10 +128,14 @@ function Manual() {
       return;
     }
 
-    if (result === 1 && transQuantity === "") {
+    if (!isValidCode(trimmedCode)) {
+      return;
+    }
+
+    if (totalAll <= 0) {
       setToast({
         type: "error",
-        message: "❌ Vui lòng nhập số lượng đạt hợp lệ",
+        message: "❌ Vui lòng nhập ít nhất 1 số lượng",
       });
       return;
     }
@@ -276,11 +143,18 @@ function Manual() {
     setLoading(true);
     try {
       await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
-        qrCode: code,
-        result,
+        qrCode: trimmedCode,
         inspectionType: "KCS",
-        transQuantity: result === 1 ? Number(transQuantity) : 0,
-        inputType: 'MANUAL'
+        result: Number(quantities.dat || 0) > 0 ? 1 : 0,
+        transQuantity: Number(quantities.dat || 0),
+        inputType: "MANUAL",
+        detailQuantity: {
+          dat: Number(quantities.dat || 0),
+          thieu: Number(quantities.thieu || 0),
+          du: Number(quantities.du || 0),
+          mau: Number(quantities.mau || 0),
+          vaiHu: Number(quantities.vaiHu || 0),
+        },
       });
 
       setToast({
@@ -288,9 +162,7 @@ function Manual() {
         message: "✅ Lưu kết quả thành công",
       });
 
-      setCode("");
-      setResult(1);
-      setTransQuantity(1);
+      resetForm();
     } catch {
       setToast({
         type: "error",
@@ -301,209 +173,217 @@ function Manual() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#E8F8F1] flex flex-col">
-      <div
-        className="
-          md:hidden
-          bg-gradient-to-br
-          from-green-400
-          via-green-500
-          to-emerald-600
-          px-4
-          py-[20px]
-          text-center
-          text-white
-        "
+  const renderQtyCard = (item, index) => {
+    const isMain = item.key === "dat";
+
+    return (
+      <motion.div
+        key={item.key}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.04 }}
+        className={`
+          w-full min-w-0 rounded-2xl border bg-white shadow-sm
+          ${isMain ? "border-emerald-200 md:col-span-2" : "border-slate-200"}
+        `}
       >
-        <h1 className="text-xl font-semibold">
+        <div className="flex items-center justify-between gap-3 px-3 py-3 md:px-4 border-b border-slate-100">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div
+              className={`
+                h-9 w-9 md:h-10 md:w-10 shrink-0 rounded-xl flex items-center justify-center
+                ${isMain ? "bg-emerald-50" : "bg-slate-50"}
+              `}
+            >
+              {item.icon}
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="text-sm md:text-base font-semibold text-slate-800 truncate">
+                {item.label}
+              </h3>
+              <p className="text-[11px] md:text-xs text-slate-500 truncate">
+                Nhập số lượng {item.label.toLowerCase()}
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`
+              shrink-0 min-w-[48px] h-8 px-2 md:min-w-[56px] md:h-9 md:px-3 rounded-full text-sm font-semibold
+              flex items-center justify-center
+              ${isMain ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}
+            `}
+          >
+            {Number(quantities[item.key] || 0)}
+          </div>
+        </div>
+
+        <div className="p-3 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3 w-full min-w-0">
+            <button
+              type="button"
+              onClick={() => decreaseQuantity(item.key)}
+              className="
+                h-10 w-10 md:h-12 md:w-12 shrink-0 rounded-xl border border-slate-200 bg-slate-50
+                flex items-center justify-center text-slate-700
+                active:scale-95 transition hover:bg-slate-100
+              "
+            >
+              <FaMinus className="text-sm" />
+            </button>
+
+            <input
+              type="number"
+              min="0"
+              value={quantities[item.key]}
+              onFocus={() => updateQty(item.key, "")}
+              onBlur={() => {
+                if (quantities[item.key] === "") updateQty(item.key, 0);
+              }}
+              onChange={(e) => handleQuantityChange(item.key, e)}
+              className={`
+                flex-1 min-w-0 w-0 h-10 md:h-12 rounded-xl border text-center text-base md:text-lg font-semibold bg-white
+                focus:outline-none focus:ring-2 transition
+                ${
+                  isMain
+                    ? "border-emerald-200 focus:ring-emerald-400"
+                    : "border-slate-200 focus:ring-slate-300"
+                }
+              `}
+            />
+
+            <button
+              type="button"
+              onClick={() => increaseQuantity(item.key)}
+              className="
+                h-10 w-10 md:h-12 md:w-12 shrink-0 rounded-xl border border-slate-200 bg-slate-50
+                flex items-center justify-center text-slate-700
+                active:scale-95 transition hover:bg-slate-100
+              "
+            >
+              <FaPlus className="text-sm" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#E8F8F1] via-[#F2FBF7] to-[#F8FCFA]">
+      <div className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 px-4 py-5 text-center text-white shadow-sm">
+        <h1 className="text-lg md:text-2xl font-semibold">
           KCS kiểm tra chất lượng sau in
         </h1>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 -mt-20 md:mt-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="
-            w-full max-w-md
-            bg-[#F3FBF6]
-            border border-green-200
-            rounded-2xl
-            p-6
-            space-y-6
-            shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-          "
-        >
-          <h2 className="text-base font-semibold text-center text-gray-700">
-            Nhập mã kiểm tra
-          </h2>
-
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleConfirm();
-            }}
-            placeholder="Nhập mã sản phẩm..."
+      <div className="px-4 pb-[100px] pt-6 md:pt-8">
+        <div className="mx-auto w-full max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
             className="
-              w-full
-              p-3
-              border border-green-200
-              rounded-xl
-              focus:outline-none
-              focus:ring-2
-              focus:ring-green-400
-              text-center
-              text-lg
-              bg-white
-              transition
-            "
-          />
-
-          <div className="flex justify-center gap-10 pt-2">
-            <label
-              className={`flex ${
-                result === 1 ? "bg-emerald-200" : ""
-              } justify-center h-[48px] w-[170px] rounded-xl border border-emerald-500 items-center gap-2 cursor-pointer text-gray-700`}
-            >
-              <input
-                type="radio"
-                checked={result === 1}
-                onChange={() => setResult(1)}
-                className="accent-emerald-500"
-              />
-              <FaCheckCircle className="text-emerald-500" />
-              Đạt
-            </label>
-
-            <label
-              className={`flex ${
-                result === 0 ? "bg-rose-200" : ""
-              } justify-center h-[48px] w-[170px] rounded-xl border border-rose-500 items-center gap-2 cursor-pointer text-gray-700`}
-            >
-              <input
-                type="radio"
-                checked={result === 0}
-                onChange={() => {setResult(0); setTransQuantity(0)}}
-                className="accent-rose-500"
-              />
-              <FaTimesCircle className="text-rose-500" />
-              Không đạt
-            </label>
-          </div>
-
-          {result === 1 && (
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Số lượng đạt
-              </label>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={decreaseQuantity}
-                  className="
-                    h-12 w-12
-                    rounded-xl
-                    border border-green-200
-                    bg-white
-                    flex items-center justify-center
-                    text-gray-700
-                    active:scale-95
-                    transition
-                  "
-                >
-                  <FaMinus />
-                </button>
-
-                <input
-                  type="number"
-                  min="0"
-                  value={transQuantity}
-                  onChange={handleQuantityChange}
-                  className="
-                    flex-1
-                    h-12
-                    border border-green-200
-                    rounded-xl
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-green-400
-                    text-center
-                    text-lg
-                    font-semibold
-                    bg-white
-                  "
-                />
-
-                <button
-                  type="button"
-                  onClick={increaseQuantity}
-                  className="
-                    h-12 w-12
-                    rounded-xl
-                    border border-green-200
-                    bg-white
-                    flex items-center justify-center
-                    text-gray-700
-                    active:scale-95
-                    transition
-                  "
-                >
-                  <FaPlus />
-                </button>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="
-              w-full
-              py-3
-              rounded-xl
-              bg-emerald-500
-              hover:bg-emerald-600
-              text-white
-              font-medium
-              flex
-              items-center
-              justify-center
-              gap-2
-              active:scale-95
-              transition
+              rounded-[28px] border border-emerald-100 bg-[#F7FCF9]
+              shadow-[0_10px_30px_rgba(16,24,40,0.06)] overflow-hidden
             "
           >
-            {loading ? (
-              <>
-                <FaSpinner className="animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              "Xác nhận"
-            )}
-          </button>
-        </motion.div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0">
+              <div className="p-4 md:p-6 lg:p-7">
+                <div className="mb-5">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Mã sản phẩm / mã kiểm tra
+                  </label>
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && canSubmit) {
+                        handleConfirm();
+                      }
+                    }}
+                    placeholder="Nhập mã sản phẩm..."
+                    className={`
+                      w-full min-w-0 h-11 md:h-14 px-4 border rounded-2xl
+                      focus:outline-none focus:ring-2
+                      bg-white text-center md:text-left text-base md:text-lg
+                      ${
+                        codeError
+                          ? "border-rose-400 focus:ring-rose-300"
+                          : "border-emerald-200 focus:ring-emerald-400"
+                      }
+                    `}
+                  />
+
+                  {codeError && (
+                    <p className="mt-2 text-sm text-rose-600">
+                      {codeError}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full min-w-0">
+                  {qtyFields.map((item, index) => renderQtyCard(item, index))}
+                </div>
+
+                <div className="bg-white/80 border-t lg:border-t-0 lg:border-l border-emerald-100 p-4 md:p-6 lg:p-7">
+                  <button
+                    onClick={handleConfirm}
+                    disabled={!canSubmit}
+                    className={`
+                      mt-5 w-full h-12 md:h-13 rounded-2xl
+                      text-white font-semibold flex items-center justify-center gap-2
+                      transition
+                      ${
+                        canSubmit
+                          ? "bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98]"
+                          : "bg-slate-300 cursor-not-allowed"
+                      }
+                    `}
+                  >
+                    {loading ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      "Xác nhận"
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="
+                      mt-3 w-full h-11 rounded-2xl border border-slate-200
+                      bg-white hover:bg-slate-50 text-slate-700 font-medium transition
+                    "
+                  >
+                    Làm mới
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       <AnimatePresence>
         {toast && (
           <motion.div
-            className="fixed bottom-[102px] inset-x-0 flex justify-center z-50"
-            initial={{ opacity: 0, y: 20 }}
+            className="fixed bottom-[102px] inset-x-0 flex justify-center z-50 px-4"
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, y: 8 }}
             onClick={() => setToast(null)}
           >
             <div
               className="
-                bg-white
-                px-5 py-3
-                rounded-full
-                shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+                max-w-md w-full md:w-auto
+                bg-white px-5 py-3 rounded-2xl
+                shadow-[0_10px_25px_rgba(0,0,0,0.12)] border border-slate-100
+                text-center
               "
             >
               <span

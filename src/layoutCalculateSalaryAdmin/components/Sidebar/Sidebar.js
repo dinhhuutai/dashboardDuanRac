@@ -95,6 +95,16 @@ function SidebarMealAdmin() {
                 Tải bảng lương
               </NavLink>
             </li>
+            <li>
+              <NavLink to={config.routes.adminCalculateSalaryHistory} className={linkClass}>
+                Lịch sử tải
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to={config.routes.adminCalculateSalaryTypePay} className={linkClass}>
+                Loại phiếu lương
+              </NavLink>
+            </li>
           </Section>
           
       </div>

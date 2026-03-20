@@ -302,10 +302,16 @@ function HomeMain() {
       rou = config.routes.inkCovPerOnFilm;
     } else if (m.moduleId === MODULEID.qualityInspectionOQC && role === "user") {
       rou = config.routes.qualityInspectionOQC;
+    } else if (m.moduleId === MODULEID.qualityInspectionOQC && role === "admin") {
+      rou = config.routes.adminHistoryOQC;
     } else if (m.moduleId === MODULEID.qualityInspectionKCS && role === "user") {
       rou = config.routes.qualityInspectionKCS;
+    } else if (m.moduleId === MODULEID.qualityInspectionKCS && role === "admin") {
+      rou = config.routes.adminHistoryKCS;
     } else if (m.moduleId === MODULEID.consolidate && role === "user") {
       rou = config.routes.consolidate;
+    } else if (m.moduleId === MODULEID.consolidate && role === "admin") {
+      rou = config.routes.adminHistoryConsolidate;
     } else if (m.moduleId === MODULEID.mes && role === "admin") {
       rou = config.routes.adminMesDashboard;
     }

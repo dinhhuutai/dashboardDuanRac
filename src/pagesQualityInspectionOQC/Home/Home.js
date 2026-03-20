@@ -3,32 +3,35 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import { userSelector } from "~/redux/selectors";
-import { useFeatureAllowed } from "~/hooks/useFeatureGuard";
-import MODULEID from "~/contants/modules";
-
 import MobileHomeOQC from "./section/HomeMobile";
-import { FaQrcode, FaClipboardCheck, FaCamera } from "react-icons/fa";
+import { FaQrcode, FaCamera } from "react-icons/fa";
 import config from "~/config";
+import ScanHistoryOQC from "./components/ScanHistoryOQC";
 
 function Home() {
   const navigate = useNavigate();
   const tmp = useSelector(userSelector);
 
-  // Actions
   const handleScanQR = () => {
     navigate(config.routes.qualityInspectionOQCResult);
   };
 
   return (
-    <div className="overflow-hidden w-full block md:flex justify-center">
-      {/* ===== MOBILE ===== */}
-      <MobileHomeOQC
-        navigate={navigate}
-        tmp={tmp}
-        handleScanQR={handleScanQR}
-      />
+    <div className="overflow-hidden w-full block md:flex justify-center bg-[#F4FAFF]">
+      {/* MOBILE */}
+      <div className="md:hidden w-full">
+        <MobileHomeOQC
+          navigate={navigate}
+          tmp={tmp}
+          handleScanQR={handleScanQR}
+        />
 
-      {/* ===== DESKTOP ===== */}
+        <div className="md:hidden px-4 pb-[100px] mt-[136px] relative z-10">
+          <ScanHistoryOQC />
+        </div>
+      </div>
+
+      {/* DESKTOP */}
       <div
         className="hidden md:flex w-full justify-center"
         style={{ minHeight: "calc(100dvh - 70px - 213px)" }}
@@ -37,7 +40,6 @@ function Home() {
           <div className="mt-6 rounded-[28px] bg-[#EAF6FF] shadow-xl overflow-hidden">
             <div className="relative p-8">
               <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6">
-                {/* LEFT */}
                 <div>
                   <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-white text-sky-800">
                     🧪 OQC – Kiểm tra chất lượng đầu ra
@@ -55,19 +57,17 @@ function Home() {
                   </p>
 
                   <div className="mt-6 flex gap-3 flex-wrap">
-                    
-                      <button
-                        onClick={handleScanQR}
-                        className="px-6 py-3 rounded-full bg-sky-600 text-white flex items-center gap-2"
-                      >
-                        <FaQrcode /> Quét QR OQC
-                      </button>
+                    <button
+                      onClick={handleScanQR}
+                      className="px-6 py-3 rounded-full bg-sky-600 hover:bg-sky-700 transition text-white flex items-center gap-2 shadow-lg"
+                    >
+                      <FaQrcode /> Quét QR OQC
+                    </button>
                   </div>
                 </div>
 
-                {/* RIGHT */}
                 <div className="hidden md:block">
-                  <div className="rounded-2xl bg-white p-4 text-center">
+                  <div className="rounded-2xl bg-white p-4 text-center border border-sky-100">
                     <FaCamera size={96} className="mx-auto text-sky-700" />
                     <div className="mt-2 text-xs text-slate-500">
                       OQC • Scan & Inspect
@@ -77,6 +77,8 @@ function Home() {
               </div>
             </div>
           </div>
+
+          <ScanHistoryOQC />
         </div>
       </div>
     </div>

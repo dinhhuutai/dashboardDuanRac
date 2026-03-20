@@ -100,7 +100,9 @@ import ProductionDashboardAdmin from '~/pagesProductionAdmin/Dashboard';
 
 import CalculateSalaryViewPayslip from '~/pagesCalculateSalary/ViewPayslip';
 
-import CalculateSalaryUploadPayrollReport from '~/pagesCalculateSalaryAdmin/UploadPayrollReport';
+import AdminCalculateSalaryUploadPayrollReport from '~/pagesCalculateSalaryAdmin/UploadPayrollReport';
+import AdminCalculateSalaryTypePay from '~/pagesCalculateSalaryAdmin/TypePay';
+import AdminCalculateSalaryHistory from '~/pagesCalculateSalaryAdmin/History';
 
 import Form from '~/pagesForm/Form';
 
@@ -149,13 +151,19 @@ import QualityInspectionOQC from '~/pagesQualityInspectionOQC/Home';
 import QualityInspectionOQCResult from '~/pagesQualityInspectionOQC/Results';
 import QualityInspectionOQCManual from '~/pagesQualityInspectionOQC/Manual';
 
+import AdminHistoryOQC from '~/pagesQualityInspectionOQCAdmin/History';
+
 import QualityInspectionKCS from '~/pagesQualityInspectionKCS/Home';
 import QualityInspectionKCSResult from '~/pagesQualityInspectionKCS/Results';
 import QualityInspectionKCSManual from '~/pagesQualityInspectionKCS/Manual';
 
+import AdminHistoryKCS from '~/pagesQualityInspectionKCSAdmin/History';
+
 import Consolidate from '~/pagesConsolidate/Home';
 import ConsolidateTickTime from '~/pagesConsolidate/Tick';
 import ConsolidateManualTime from '~/pagesConsolidate/Manual';
+
+import AdminHistoryConsolidate from '~/pagesConsolidateAdmin/History';
 
 import AdminMesDashboard from '~/pagesMESAdmin/Dashboard';
 
@@ -843,7 +851,17 @@ export const routesProductionAdmin = [
 export const routesCalculateSalaryAdmin = [
   {
     path: config.routes.adminCalculateSalaryUploadPayrollReport,
-    component: CalculateSalaryUploadPayrollReport,
+    component: AdminCalculateSalaryUploadPayrollReport,
+    login: true,
+  },
+  {
+    path: config.routes.adminCalculateSalaryTypePay,
+    component: AdminCalculateSalaryTypePay,
+    login: true,
+  },
+  {
+    path: config.routes.adminCalculateSalaryHistory,
+    component: AdminCalculateSalaryHistory,
     login: true,
   },
 ]
@@ -880,6 +898,30 @@ export const routesFormAdmin = [
   {
     path: config.routes.adminFormAnalytics,
     component: FormAnalytics,
+    login: true,
+  },
+]
+
+export const routesKCSAdmin = [
+  {
+    path: config.routes.adminHistoryKCS,
+    component: AdminHistoryKCS,
+    login: true,
+  },
+]
+
+export const routesOQCAdmin = [
+  {
+    path: config.routes.adminHistoryOQC,
+    component: AdminHistoryOQC,
+    login: true,
+  },
+]
+
+export const routesConsolidateAdmin = [
+  {
+    path: config.routes.adminHistoryConsolidate,
+    component: AdminHistoryConsolidate,
     login: true,
   },
 ]
