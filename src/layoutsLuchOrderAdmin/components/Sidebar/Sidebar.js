@@ -10,6 +10,8 @@ import {
   BsTable,              // Bảng bộ phận (editable)
   BsChevronDown,
 } from 'react-icons/bs';
+import { FiSettings, FiClock } from "react-icons/fi";
+import { TbToolsKitchen2 } from "react-icons/tb";
 
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -99,7 +101,7 @@ function SidebarMealAdmin() {
           
         {/* 4) Lịch sử & Theo dõi */}
         {(VIEW_NOT_ORDERED || VIEW_ORDER_HISTORY || VIEW_DEPT_BOARD) && (
-          <Section title="Lịch sử & Theo dõi" icon={BsBell} k="tracking">
+          <Section title="Lịch sử & Theo dõi" icon={FiClock} k="tracking">
             {VIEW_ORDER_HISTORY && (
               <li>
                 <NavLink to={config.routes.adminLunchOrderHistory} className={linkClass}>
@@ -135,7 +137,7 @@ function SidebarMealAdmin() {
 
         {/* 2) Thực đơn & Món ăn */}
         {(MANAGE_WEEKLY_MENU || MANAGE_FOODS) && (
-          <Section title="Thực đơn & Món ăn" icon={BsCalendarWeek} k="menu">
+          <Section title="Thực đơn & Món ăn" icon={TbToolsKitchen2} k="menu">
             {MANAGE_WEEKLY_MENU && (
               <li>
                 <NavLink to={config.routes.adminLunchOrderWeeklyMenu} className={linkClass}>
@@ -172,6 +174,14 @@ function SidebarMealAdmin() {
             )}
           </Section>
         )}
+        
+          <Section title="Cài đặt" icon={FiSettings} k="setting">
+              <li>
+                <NavLink to={config.routes.adminLunchOrderSettingTime} className={linkClass}>
+                  Áp dụng giờ
+                </NavLink>
+              </li>
+          </Section>
       </div>
     </aside>
   );

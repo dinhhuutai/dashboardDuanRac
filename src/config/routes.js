@@ -93,6 +93,7 @@ const routes = {
   adminLunchOrderHistory: '/admin/lunch-order/history',
   adminLunchOrderReport: '/admin/lunch-order/report',
   adminLunchOrderReportByDay: '/admin/lunch-order/report-by-day',
+  adminLunchOrderSettingTime: '/admin/lunch-order/setting-time',
 
 
   imageCaddi: '/image-caddi',

@@ -15,6 +15,7 @@ import {
   routesOQCAdmin,
   routesConsolidateAdmin,
 } from "./routes";
+import { APP_VERSION } from "./version";
 
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -131,13 +132,9 @@ function AppRoutes({ user }) {
                         <route.component />
                       ) 
                     : route.module === 'datcom' ? (
-                      hasModule(MODULEID.DATCOM) ? (
-                        <DefaultLayoutLunchOrder>
-                          <route.component />
-                        </DefaultLayoutLunchOrder>
-                      ) : (
-                        <Navigate to={config.routes.homeMain} replace />
-                      )
+                      <DefaultLayoutLunchOrder>
+                        <route.component />
+                      </DefaultLayoutLunchOrder>
                     ) : route.module === 'quanlycongviec' ? (
                       <DefaultLayoutTaskManagement>
                         <route.component />
@@ -469,6 +466,17 @@ function App() {
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState(tmp);
   useEffect(() => setUser(tmp), [tmp]);
+
+  useEffect(() => {
+    const oldVersion = localStorage.getItem("app_version");
+
+    if (oldVersion && oldVersion !== APP_VERSION) {
+      console.log("🔄 Có version mới → reload");
+      window.location.reload(true);
+    }
+
+    localStorage.setItem("app_version", APP_VERSION);
+  }, []);
 
   return (
     <Router>

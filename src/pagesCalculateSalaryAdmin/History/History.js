@@ -2058,10 +2058,14 @@ function History() {
                         className="w-11 h-11 rounded-xl border bg-white hover:bg-slate-50 disabled:opacity-50"
                         onClick={() => {
                           setCheckedIds([]);
-                          setPeriodIndex((s) => Math.max(s - 1, 0));
+                          setPeriodIndex((s) =>
+                            Math.min(s + 1, periods.length - 1)
+                          );
                         }}
                         disabled={
-                          periodIndex <= 0 || loadingFilter || !periods.length
+                          periodIndex >= periods.length - 1 ||
+                          loadingFilter ||
+                          !periods.length
                         }
                       >
                         <FaAngleLeft className="mx-auto" />
@@ -2077,14 +2081,10 @@ function History() {
                         className="w-11 h-11 rounded-xl border bg-white hover:bg-slate-50 disabled:opacity-50"
                         onClick={() => {
                           setCheckedIds([]);
-                          setPeriodIndex((s) =>
-                            Math.min(s + 1, periods.length - 1)
-                          );
+                          setPeriodIndex((s) => Math.max(s - 1, 0));
                         }}
                         disabled={
-                          periodIndex >= periods.length - 1 ||
-                          loadingFilter ||
-                          !periods.length
+                          periodIndex <= 0 || loadingFilter || !periods.length
                         }
                       >
                         <FaAngleRight className="mx-auto" />

@@ -89,6 +89,7 @@ import LunchOrderNotOrder from '~/pagesLunchOrderAdmin/NotOrder';
 import LunchOrderHistory from '~/pagesLunchOrderAdmin/History';
 import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
 import LunchOrderReportByDay from '~/pagesLunchOrderAdmin/ReportByDay';
+import LunchOrderSettingTime from '~/pagesLunchOrderAdmin/SettingTime';
 
 
 import ImageCaddi from '~/pages/ImageCaddi';
@@ -834,6 +835,11 @@ export const routesLunchOrderAdmin = [
   {
     path: config.routes.adminLunchOrderReportByDay,
     component: LunchOrderReportByDay,
+    login: true,
+  },
+  {
+    path: config.routes.adminLunchOrderSettingTime,
+    component: LunchOrderSettingTime,
     login: true,
   },
 ]

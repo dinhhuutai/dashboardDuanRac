@@ -38,3 +38,33 @@ export async function apiUnsubscribePush(endpoint) {
 }
 
 
+
+export async function apiGetLunchSettings() {
+  const res = await http.get(`${BASE_URL}/api/lunch-order/settings/current`);
+  return res.data?.data || null;
+}
+
+
+
+export const apiGetUserLockedDays = async ({
+  userId,
+  weeklyMenuId,
+  statusType,
+  hasSecretary,
+}) => {
+  const res = await http.get(
+    `${BASE_URL}/api/lunch-order/user-locked-days`,
+    {
+      params: { userId, weeklyMenuId, statusType, hasSecretary },
+    }
+  );
+  return res.data;
+};
+
+export const apiLockUserOrderDay = async (payload) => {
+  const res = await http.put(
+    `${BASE_URL}/api/lunch-order/lock-day`,
+    payload
+  );
+  return res.data;
+};

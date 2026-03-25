@@ -1,7 +1,7 @@
 {
   "id": "/?source=pwa",
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "THLA",
+  "name": "Nội bộ THLA",
   "description": "Website nội bộ Thuận Hưng Long An",
   "icons": [
     {
@@ -10,12 +10,12 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "logoAdmin.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "logoAdmin.png",
       "type": "image/png",
       "sizes": "512x512"
     }

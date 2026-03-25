@@ -30,12 +30,12 @@ function BatchesView({ rows, pagination, onPageChange, loading }) {
           {
             key: 'FabricStatus',
             title: 'Tình trạng vải',
-            render: (row) => <StatusBadge value={row.FabricStatus} />,
+            render: (row) => <StatusBadge value={row.tinhtrangvaiT} />,
           },
           {
             key: 'DeliveryDeadline',
             title: 'Hạn giao',
-            render: (row) => formatDateTime(row.DeliveryDeadline),
+            render: (row) => formatDateTime(row.Hanketthuc),
           },
 
           {
@@ -52,7 +52,7 @@ function BatchesView({ rows, pagination, onPageChange, loading }) {
           {
             key: 'MucReceiveTime',
             title: 'Ngày giờ nhận',
-            render: (row) => formatDateTime(row.MucReceiveTime),
+            render: (row) => formatDateTime(row.KhuonReturnTime),
           },
           {
             key: 'MucReturnTime',
@@ -68,7 +68,7 @@ function BatchesView({ rows, pagination, onPageChange, loading }) {
           {
             key: 'HasPlan',
             title: 'Có / Chưa có',
-            render: (row) => <StatusBadge value={row.HasPlan} />,
+            render: (row) => <StatusBadge value={row.PlanQuantity} />,
           },
 
           {
@@ -102,7 +102,7 @@ function BatchesView({ rows, pagination, onPageChange, loading }) {
           {
             key: 'OQCResult',
             title: 'Đạt / Không đạt',
-            render: (row) => <StatusBadge value={row.OQCResult} />,
+            render: (row) => <StatusBadge value={row.KCSResult} />,
           },
 
           {
@@ -110,7 +110,7 @@ function BatchesView({ rows, pagination, onPageChange, loading }) {
             title: 'Thời gian giao hàng',
             render: (row) => formatDateTime(row.DeliveryTime),
           },
-          { key: 'PackingQuantity', title: 'Số lượng packing' },
+          { key: 'KCSResult', title: 'Số lượng packing' },
         ]}
         rows={rows}
         rowKey={(row, index) => `${row.BatchID}-${row.DetailID || 'detail'}-${index}`}

@@ -150,6 +150,7 @@ function DashboardFilters({
             onChange={(e) => handlePageSizeChange(e.target.value)}
             className="h-10 min-w-[88px] rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           >
+            <option value={2}>2</option>
             <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={20}>20</option>

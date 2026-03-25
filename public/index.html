@@ -5,6 +5,10 @@
     <link rel="icon" href="%PUBLIC_URL%/logoAdmin.png" />
     <link rel="preload" as="audio" href="%PUBLIC_URL%/music/2010.mp3" type="audio/mpeg">
 
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Website được thiết kế bởi IT Thuận Hưng Long An" />
@@ -21,7 +25,7 @@
 <!-- Cho Safari iOS (vẫn hữu ích) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<!-- <link rel="apple-touch-icon" href="/icons/icon-192.png"> -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,7 +39,8 @@
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json?v=%REACT_APP_VERSION%"" />
+
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -48,7 +53,7 @@
     <title>THUẬN HƯNG LONG AN</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>Bạn cần vào THLA để sử dụng ứng dụng này.</noscript>
     <div id="root"></div>
     <!--
       This HTML file is a template.
