@@ -98,7 +98,7 @@ function Card({ children, className = "" }) {
   return (
     <div
       className={
-        "bg-white border border-slate-200 shadow-[0_18px_45px_rgba(15,23,42,0.04)] rounded-2xl p-4 md:p-5 " +
+        "bg-white border border-slate-200 rounded-2xl p-4 md:p-5 " +
         className
       }
     >
@@ -119,7 +119,7 @@ function Chip({ children }) {
 function ModalShell({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
           <div className="text-sm font-semibold text-slate-900">{title}</div>
           <button
@@ -187,7 +187,7 @@ function TaskBoardModal({ tasks, onClose, projectName }) {
                   {colTasks.map((t) => (
                     <div
                       key={t.taskId}
-                      className="bg-white rounded-lg border border-slate-200 px-2 py-1.5 shadow-sm"
+                      className="bg-white rounded-lg border border-slate-200 px-2 py-1.5"
                     >
                       <div className="font-medium text-slate-800 truncate">
                         {t.title}
@@ -453,7 +453,7 @@ function AddMemberModal({ projectId, onClose, onAdded }) {
             )}
 
             {userOptions.length > 0 && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-56 overflow-auto z-10">
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl max-h-56 overflow-auto z-10">
                 {userOptions.map((u) => (
                   <button
                     key={u.userId}
@@ -634,7 +634,7 @@ function ProjectFilesPanel({ projectId }) {
           </p>
         </div>
         <div>
-          <label className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 cursor-pointer">
+          <label className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer">
             {uploading ? "Đang tải..." : "+ Thêm tệp"}
             <input
               type="file"

@@ -120,11 +120,13 @@ import FormDashboard from '~/pagesFormAdmin/FormDashboard';
 import N20th11 from '~/pages/N20th11';
 
 import TaskManagementDashboard from '~/pagesTaskManagement/Tasks/Dashboard';
+import TaskManagementHome from '~/pagesTaskManagement/Home';
 
 import TaskManagementMyTasks from '~/pagesTaskManagement/Tasks/MyTasks';
 import TaskManagementTeamTasks from '~/pagesTaskManagement/Tasks/TeamTasks';
 import TaskManagementDepartmentTasks from '~/pagesTaskManagement/Tasks/DepartmentTasks';
 import TaskManagementCompanyTasks from '~/pagesTaskManagement/Tasks/CompanyTasks';
+import TaskManagementRequests from '~/pagesTaskManagement/Requests/Requests';
 
 import TaskManagementProjectList from '~/pagesTaskManagement/Projects/ProjectList';
 import TaskManagementProjectOverview from '~/pagesTaskManagement/Projects/ProjectOverview';
@@ -284,6 +286,12 @@ const routesBMI = [
 
 const routesTaskManagement = [
   {
+    path: config.routes.taskManagementHome,
+    component: TaskManagementHome,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
     path: config.routes.taskManagementDashboard,
     component: TaskManagementDashboard,
     login: true,
@@ -310,6 +318,12 @@ const routesTaskManagement = [
   {
     path: config.routes.taskManagementCompanyTasks,
     component: TaskManagementCompanyTasks,
+    login: true,
+    module: 'quanlycongviec',
+  },
+  {
+    path: config.routes.taskManagementRequests,
+    component: TaskManagementRequests,
     login: true,
     module: 'quanlycongviec',
   },

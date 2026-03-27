@@ -289,7 +289,7 @@ function HomeMain() {
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === "user") {
       rou = config.routes.form;
     } else if (m.moduleId === MODULEID.CONGVIEC && role === "user") {
-      rou = config.routes.taskManagementDashboard;
+      rou = config.routes.taskManagementMyTasks;
     } else if (m.moduleId === MODULEID.CONGVIEC && role === "admin") {
       rou = config.routes.adminTaskManagementDashboard;
     } else if (m.moduleId === MODULEID.XEPHOIVAI && role === "user") {

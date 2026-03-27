@@ -1,16 +1,10 @@
-import {
-  Menu,
-  Search,
-  Bell,
-  ChevronDown,
-  FolderKanban,
-  CheckSquare,
-} from "lucide-react";
+import { Search, FolderKanban, CheckSquare } from "lucide-react";
 
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { BsChevronDown, BsBoxArrowRight, BsBoxArrowLeft } from "react-icons/bs";
-import { useNavigate } from "react-router-dom";
+import { BsChevronDown, BsBoxArrowRight } from "react-icons/bs";
+import { FaThLarge } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
 import avatar from "~/assets/imgs/avatar-main.jpg";
 import { userSelector } from "~/redux/selectors";
 import authSlice from "~/redux/slices/authSlice";
@@ -21,33 +15,38 @@ import { Link } from "react-router-dom";
 import logo from "~/assets/imgs/logoAdmin.png";
 
 
-export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCreateQuick }) {
+export default function HeaderBar({ phase, onPhaseChange, onCreateQuick }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isRequest = location.pathname === config.routes.taskManagementRequests;
+  const isWorkActive =
+    !isRequest &&
+    (location.pathname === config.routes.taskManagementMyTasks ||
+      location.pathname === config.routes.taskManagementTeamTasks ||
+      location.pathname === config.routes.taskManagementDepartmentTasks ||
+      location.pathname === config.routes.taskManagementCompanyTasks ||
+      location.pathname === config.routes.taskManagementDashboard ||
+      location.pathname === config.routes.taskManagementHome);
+  const isProjectActive =
+    location.pathname.startsWith(config.routes.taskManagementProjectList) ||
+    location.pathname.startsWith(`${config.routes.taskManagementProjectOverview}/`);
+
   return (
     <div className="flex h-16 items-center gap-3">
       {/* Mobile menu */}
-      {
-        phase === 'work' ?
-        <button
-          onClick={onToggleSidebar}
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white hover:shadow-sm"
-          aria-label="Mở menu"
+      <div className="md:hidden inline-flex items-center gap-2 font-semibold">
+        <Link
+          to={config.routes.taskManagementHome}
+          className="flex items-center gap-3 group pr-[10px]"
+          aria-label="Trang quản lý công việc"
         >
-          <Menu className="h-5 w-5" />
-        </button> :
-        <div className="md:hidden inline-flex items-center gap-2 font-semibold">
-          <Link
-            to={phase === 'work' ? config.routes.taskManagementDashboard : config.routes.taskManagementProjectList}
-            className="flex items-center gap-3 group pr-[10px]"
-            aria-label="Trang phân tích"
-          >
-            <img alt="logo" src={logo} className="h-9 w-auto object-contain" />
-          </Link>
-          <span>{phase === 'work' ? 'QL Công Việc' : 'QL Dự Án'}</span>
-        </div>
-      }
+          <img alt="logo" src={logo} className="h-9 w-auto object-contain" />
+        </Link>
+        <span>Quản lý công việc</span>
+      </div>
 
       {/* Brand */}
-      <div className="hidden md:flex w-[270px] items-center gap-2 font-semibold tracking-tight">
+      <div className="hidden md:flex min-w-[220px] items-center gap-2 font-semibold tracking-tight">
         <Link
           to={phase === 'work' ? config.routes.taskManagementDashboard : config.routes.taskManagementProjectList}
           className="hidden md:flex items-center gap-3 group pr-[10px]"
@@ -60,26 +59,41 @@ export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCre
 
       {/* Phase switcher */}
       <div className="ml-2 md:block hidden">
-        <PhaseSwitcher phase={phase} onChange={onPhaseChange} />
+        <PhaseSwitcher
+          isWorkActive={isWorkActive}
+          isProjectActive={isProjectActive}
+          isRequest={isRequest}
+          onChange={onPhaseChange}
+          onGoRequests={() => navigate(config.routes.taskManagementRequests)}
+        />
       </div>
 
       {/* Search */}
-      <div className="relative ml-3 hidden md:block w-full max-w-md">
+      <div className="relative ml-2 hidden md:block w-full max-w-[360px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <input
           type="search"
-          placeholder="Tìm task, dự án, file, người dùng…"
-          className="w-full rounded-2xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+          placeholder="Tìm task, dự án..."
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
         />
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        
-        <button className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white hover:shadow-sm" aria-label="Thông báo">
-          <Bell className="h-5 w-5" />
+        <button
+          onClick={() => navigate(config.routes.homeMain)}
+          className="
+            hidden md:inline-flex items-center gap-2
+            h-10 px-3.5 rounded-xl border border-slate-200 bg-white
+            text-sm font-semibold text-slate-700
+            hover:bg-slate-50 active:scale-[.98] transition
+          "
+          title="Chọn ứng dụng"
+          aria-label="Chọn ứng dụng"
+        >
+          <FaThLarge className="text-[14px]" />
+          <span className="leading-none">Chọn ứng dụng</span>
         </button>
-        
-        <HeaderInfo exitTo={config.routes.home} />
+        <HeaderInfo />
       </div>
     </div>
   );
@@ -89,13 +103,13 @@ export default function HeaderBar({ phase, onPhaseChange, onToggleSidebar, onCre
 /* =============================
  * Phase Switcher
  * ============================= */
-function PhaseSwitcher({ phase, onChange }) {
+function PhaseSwitcher({ isWorkActive, isProjectActive, isRequest, onChange, onGoRequests }) {
   return (
     <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
       <button
         onClick={() => onChange("work")}
         className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
-          phase === "work" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+          isWorkActive ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
         }`}
       >
         <CheckSquare className="h-4 w-4" /> Công việc
@@ -103,17 +117,25 @@ function PhaseSwitcher({ phase, onChange }) {
       <button
         onClick={() => onChange("projects")}
         className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
-          phase === "projects" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+          isProjectActive ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
         }`}
       >
         <FolderKanban className="h-4 w-4" /> Dự án
+      </button>
+      <button
+        onClick={onGoRequests}
+        className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
+          isRequest ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+        }`}
+      >
+        <span className="text-[13px]">📌</span> Đề nghị
       </button>
     </div>
   );
 }
 
 
-function HeaderInfo({ exitTo = config.routes.home }) {
+function HeaderInfo() {
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
   const [open, setOpen] = useState(false);
@@ -145,10 +167,6 @@ function HeaderInfo({ exitTo = config.routes.home }) {
     } catch {}
     dispatch(authSlice.actions.logoutSuccess());
     navigate(config.routes.login);
-  };
-
-  const handleExitModule = () => {
-    navigate(config.routes.homeMain); // điều hướng ra trang tổng (home/dashboard hệ thống)
   };
 
   return (
@@ -188,21 +206,10 @@ function HeaderInfo({ exitTo = config.routes.home }) {
 
         <div className="block md:hidden h-px bg-slate-100" />
 
-        {/* Thoát QLCV */}
-        <button
-          onClick={handleExitModule}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left text-[14px] text-slate-700 hover:bg-slate-50"
-        >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-            <BsBoxArrowLeft />
-          </span>
-          Thoát QLCV
-        </button>
-
         {/* Đăng xuất */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left text-[14px] text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-b-2xl"
+          className="w-full flex items-center gap-3 px-4 py-3 text-left text-[14px] text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-2xl"
         >
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
             <BsBoxArrowRight />

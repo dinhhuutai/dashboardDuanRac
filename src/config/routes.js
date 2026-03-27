@@ -124,6 +124,7 @@ const routes = {
 
 
   taskManagement: '/task-management',
+  taskManagementHome: '/task-management/home',
 
   taskManagementDashboard: '/task-management/dashboard',
   
@@ -131,6 +132,7 @@ const routes = {
   taskManagementTeamTasks: '/task-management/team-tasks',
   taskManagementDepartmentTasks: '/task-management/department-tasks',
   taskManagementCompanyTasks: '/task-management/company-tasks',
+  taskManagementRequests: '/task-management/requests',
 
   taskManagementProjectList: '/task-management/project-list',
   taskManagementProjectOverview: '/task-management/project-overview',

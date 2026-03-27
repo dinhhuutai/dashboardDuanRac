@@ -18,8 +18,6 @@ export default function Sidebar({ phase, onNavigate }) {
   const roleTaskManager = useSelector(userRoleTaskManager);
   const roleCode = roleTaskManager?.code; // vd: bangiamdoc, giamdocnhamay...
 
-  console.log(roleTaskManager);
-
   // Tính quyền xem từng mục theo roleCode
   const {
     canViewMyTasks,

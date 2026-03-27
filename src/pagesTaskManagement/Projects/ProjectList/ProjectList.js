@@ -132,7 +132,7 @@ export function ViewChip({ active, label, onClick }) {
       onClick={onClick}
       className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium border transition ${
         active
-          ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+          ? "bg-slate-900 text-white border-slate-900"
           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
       }`}
     >
@@ -160,7 +160,7 @@ function CreateProjectButton({ onCreated }) {
         onClick={() => setOpen(true)}
         className="inline-flex items-center justify-center
         rounded-xl bg-slate-900 px-4 py-2.5
-        text-sm font-semibold text-white shadow-sm
+        text-sm font-semibold text-white
         hover:bg-slate-800 active:scale-[0.98]
         transition"
       >
@@ -436,7 +436,7 @@ function CreateProjectModalInner({ onClose, onCreated }) {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+              className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-xs md:text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
             >
               {saving && <Spinner />}
               <span>Lưu dự án</span>
@@ -477,7 +477,7 @@ export default function MyProjectsPage() {
     .card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 18px 45px rgba(15,23,42,0.04);
+      box-shadow: none;
       border-radius: 18px;
     }
 
@@ -667,7 +667,7 @@ export default function MyProjectsPage() {
               return (
                 <div
                   key={p.projectId}
-                  className="card p-4 md:p-5 flex flex-col gap-3 hover:shadow-md transition cursor-pointer"
+                  className="card p-4 md:p-5 flex flex-col gap-3 transition cursor-pointer"
                   onClick={() => {
                     navigate(`${config.routes.taskManagementProjectOverview}/${p.projectId}`);
                     // TODO: sau này navigate sang trang chi tiết dự án
