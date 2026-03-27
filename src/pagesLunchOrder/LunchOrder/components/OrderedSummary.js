@@ -33,7 +33,7 @@ export default function OrderedSummary({
   if (!visible) return null;
 
   return (
-    <div className="relative bg-white/70 backdrop-blur rounded-2xl border border-white/40 shadow-xl p-4 sm:p-6 mx-2 sm:mx-[10px]">
+    <div className="relative bg-white/70 backdrop-blur rounded-2xl border border-white/40 shadow-xl p-4 sm:p-6 mx-2 sm:mx-[10px] mt-[80px]">
       <h3 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 text-slate-800">
         Bạn đã đặt cơm tuần này
       </h3>

@@ -672,7 +672,7 @@ function Dashboard() {
   const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const DEFAULT_STATUS = '01_OPEN';
+  const DEFAULT_STATUS = 'OPEN';
   const DEFAULT_PAGE_SIZE = 5;
   const FILTER_DEBOUNCE = 400;
   const LOADING_DELAY = 180;

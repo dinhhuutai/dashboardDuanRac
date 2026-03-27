@@ -923,14 +923,26 @@ import {
 
 function fmtDbDateTime(v) {
   if (!v) return "-";
+
+  // nếu API trả Date object / string
   const s = String(v);
-  const noTZ = s.replace("Z", "").replace(/([+-]\d{2}:\d{2})$/, "");
+
+  // case 1: có dạng ISO có Z hoặc +07:00 => chuyển về "local string" theo đúng số giờ trong chuỗi
+  // trick: bỏ Z/offset để tránh JS tự đổi timezone
+  const noTZ = s
+    .replace("Z", "")
+    .replace(/([+-]\d{2}:\d{2})$/, ""); // remove +07:00 or -05:00 if exists
+
+  // noTZ thường dạng: 2025-12-13T08:30:00.000
   const [datePart, timePartRaw] = noTZ.split("T");
   if (!datePart) return s;
+
   const timePart = (timePartRaw || "").split(".")[0] || "00:00:00";
+  // trả về đúng format VN
   return `${datePart.split("-").reverse().join("/")} ${timePart}`;
 }
 
+/** ===== helpers ===== */
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -961,49 +973,25 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
+// ===== Glass theme (soft modern) =====
+const appBg = "bg-gradient-to-br from-slate-50 via-white to-indigo-50";
 const glass =
   "bg-white/55 backdrop-blur-xl border border-white/60 shadow-[0_12px_40px_-20px_rgba(2,6,23,0.25)]";
+const glassStrong =
+  "bg-white/70 backdrop-blur-xl border border-white/70 shadow-[0_14px_50px_-28px_rgba(2,6,23,0.35)]";
 const softRing = "ring-1 ring-black/5";
 
-const neuBg = "bg-slate-100";
-const neuShadow =
-  "shadow-[10px_10px_24px_rgba(15,23,42,0.12),-10px_-10px_24px_rgba(255,255,255,0.9)]";
-const neuShadowInset =
-  "shadow-[inset_10px_10px_18px_rgba(15,23,42,0.12),inset_-10px_-10px_18px_rgba(255,255,255,0.95)]";
+const neuBg = "bg-slate-100"; 
+const neuShadow = "shadow-[10px_10px_24px_rgba(15,23,42,0.12),-10px_-10px_24px_rgba(255,255,255,0.9)]"; 
+const neuShadowInset = "shadow-[inset_10px_10px_18px_rgba(15,23,42,0.12),inset_-10px_-10px_18px_rgba(255,255,255,0.95)]"; 
 const neuRing = "ring-1 ring-white/60";
 
-function ScrollArea({ className = "", children }) {
+function NeuCard({ title, sub, icon, right, children }) {
   return (
-    <div
-      className={[
-        "overflow-auto",
-        "[&::-webkit-scrollbar]:h-2",
-        "[&::-webkit-scrollbar]:w-2",
-        "[&::-webkit-scrollbar-track]:bg-slate-100/80",
-        "[&::-webkit-scrollbar-thumb]:bg-slate-300",
-        "[&::-webkit-scrollbar-thumb]:rounded-full",
-        className,
-      ].join(" ")}
-    >
-      {children}
-    </div>
-  );
-}
-
-function NeuCard({
-  title,
-  sub,
-  icon,
-  right,
-  children,
-  bodyClassName = "",
-  heightClassName = "",
-}) {
-  return (
-    <div className={`${glass} ${softRing} rounded-[24px] sm:rounded-3xl overflow-hidden`}>
-      <div className="px-4 sm:px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className={`${glass} ${softRing} rounded-3xl overflow-hidden`}>
+      <div className="px-4 sm:px-5 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-[#e8ecef] text-black grid place-items-center shadow-sm shrink-0">
+          <div className="h-11 w-11 rounded-2xl bg-[#e8ecef] text-black grid place-items-center shadow-sm">
             {icon}
           </div>
           <div className="min-w-0">
@@ -1011,21 +999,16 @@ function NeuCard({
             {sub ? <div className="text-xs text-slate-500 truncate">{sub}</div> : null}
           </div>
         </div>
-        {right ? <div className="w-full sm:w-auto">{right}</div> : null}
+        {right}
       </div>
-
-      <div className={`px-4 sm:px-5 pb-4 sm:pb-5 ${heightClassName}`}>
-        <div className={bodyClassName}>{children}</div>
-      </div>
+      <div className="px-4 sm:px-5 pb-5">{children}</div>
     </div>
   );
 }
 
 function NeuPill({ children }) {
   return (
-    <span
-      className={`${neuBg} ${neuShadowInset} ${neuRing} rounded-full px-3 py-1 text-[11px] sm:text-xs text-slate-600 inline-flex items-center`}
-    >
+    <span className={`${neuBg} ${neuShadowInset} ${neuRing} rounded-full px-3 py-1 text-xs text-slate-600`}>
       {children}
     </span>
   );
@@ -1036,7 +1019,7 @@ function NeuInput(props) {
     <input
       {...props}
       className={[
-        "w-full text-sm text-slate-800 placeholder:text-slate-400",
+        "w-full sm:w-auto text-sm text-slate-800 placeholder:text-slate-400",
         "rounded-2xl px-3.5 py-2.5",
         "bg-white/70 backdrop-blur border border-white/70 shadow-sm",
         "focus:outline-none focus:ring-2 focus:ring-indigo-400/40",
@@ -1051,10 +1034,11 @@ function NeuSelect(props) {
     <select
       {...props}
       className={[
-        "w-full text-sm text-slate-800",
+        "w-full sm:w-auto text-sm text-slate-800",
         "rounded-2xl px-3.5 py-2.5",
         "bg-white/70 backdrop-blur border border-white/70 shadow-sm",
         "focus:outline-none focus:ring-2 focus:ring-indigo-400/40",
+        "min-w-0",
         props.className || "",
       ].join(" ")}
     />
@@ -1091,14 +1075,15 @@ function StatusDot({ online }) {
   );
 }
 
+/** ===== charts (no library) ===== */
 function MiniBarChart({ data = [], height = 86 }) {
   const max = Math.max(1, ...data.map((d) => Number(d.value) || 0));
-  const cols = Math.max(6, data.length);
+  const cols = Math.max(10, data.length);
 
   return (
-    <ScrollArea className="w-full">
+    <div className="w-full">
       <div
-        className="grid items-end gap-2 min-w-[520px] md:min-w-0"
+        className="grid items-end gap-2"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
       >
         {data.map((d, i) => {
@@ -1123,13 +1108,13 @@ function MiniBarChart({ data = [], height = 86 }) {
           );
         })}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
 
 function DonutGauge({ value = 0, max = 1, label }) {
   const pct = clamp(max <= 0 ? 0 : value / max, 0, 1);
-  const size = 88;
+  const size = 96;
   const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -1137,7 +1122,7 @@ function DonutGauge({ value = 0, max = 1, label }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`${neuBg} ${neuShadowInset} ${neuRing} rounded-[24px] p-2.5 shrink-0`}>
+      <div className={`${neuBg} ${neuShadowInset} ${neuRing} rounded-[26px] p-3`}>
         <svg width={size} height={size}>
           <circle
             cx={size / 2}
@@ -1160,6 +1145,7 @@ function DonutGauge({ value = 0, max = 1, label }) {
           />
         </svg>
       </div>
+
       <div className="min-w-0">
         <div className="text-sm font-semibold text-slate-900">{label}</div>
         <div className="text-xs text-slate-500">{Math.round(pct * 100)}%</div>
@@ -1168,6 +1154,7 @@ function DonutGauge({ value = 0, max = 1, label }) {
   );
 }
 
+/** ===== pagination ===== */
 function usePagination(items, pageSize) {
   const [page, setPage] = useState(1);
   const total = items.length;
@@ -1192,12 +1179,12 @@ function Pager({ paging }) {
   const right = Math.min(page * pageSize, total);
 
   return (
-    <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-xs text-slate-500">
+    <div className="mt-3 flex flex-col items-start gap-2">
+      <div className="text-xs text-slate-500 text-left">
         {left}-{right} / {total}
       </div>
 
-      <div className="-ml-1 flex items-center gap-2 sm:ml-0">
+      <div className="flex items-center justify-start gap-2 w-full">
         <NeuButton
           onClick={() => setPage(Math.max(1, page - 1))}
           disabled={page <= 1}
@@ -1206,7 +1193,7 @@ function Pager({ paging }) {
           <FiChevronLeft />
         </NeuButton>
 
-        <div className="min-w-[52px] text-left sm:text-center text-xs text-slate-600">
+        <div className="min-w-[52px] text-left text-xs text-slate-600">
           {page}/{totalPages}
         </div>
 
@@ -1222,39 +1209,27 @@ function Pager({ paging }) {
   );
 }
 
-function MobileInfoRow({ label, value, valueClass = "" }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <div className="text-slate-500 shrink-0">{label}</div>
-      <div className={`text-right text-slate-900 font-medium break-all ${valueClass}`}>{value}</div>
-    </div>
-  );
-}
-
-function MobileCard({ children }) {
-  return (
-    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur p-3 space-y-2.5 shadow-sm">
-      {children}
-    </div>
-  );
-}
-
 export default function UsageDashboard() {
+  /** range filter */
   const [fromDate, setFromDate] = useState(startOfMonthInput());
   const [toDate, setToDate] = useState(todayInput());
 
   const [loading, setLoading] = useState(true);
+
   const [onlineList, setOnlineList] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
   const [topPages, setTopPages] = useState([]);
 
+  /** NEW: per-user top pages */
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserPages, setSelectedUserPages] = useState([]);
   const [loadingUserPages, setLoadingUserPages] = useState(false);
 
+  /** local filters */
   const [qUser, setQUser] = useState("");
   const [qPage, setQPage] = useState("");
 
+  /** derived lists */
   const onlineFiltered = useMemo(() => {
     const q = safeStr(qUser).trim().toLowerCase();
     const arr = Array.isArray(onlineList) ? onlineList : [];
@@ -1282,6 +1257,7 @@ export default function UsageDashboard() {
     return arr.filter((p) => safeStr(p.page).toLowerCase().includes(q));
   }, [topPages, qPage]);
 
+  /** paging */
   const onlinePaging = usePagination(onlineFiltered, 10);
   const usersPaging = usePagination(topUsersFiltered, 10);
   const pagesPaging = usePagination(topPagesFiltered, 10);
@@ -1290,6 +1266,7 @@ export default function UsageDashboard() {
     10
   );
 
+  /** KPIs */
   const onlineCount = useMemo(() => {
     return (onlineList || []).filter((x) => x.isOnline === 1 || x.isOnline === true).length;
   }, [onlineList]);
@@ -1310,6 +1287,7 @@ export default function UsageDashboard() {
     return Math.max(0, total - onlineCount);
   }, [onlineList, onlineCount]);
 
+  /** chart data */
   const chartTopUsers = useMemo(() => {
     const arr = (topUsers || []).slice(0, 10);
     return arr.map((u) => ({
@@ -1334,6 +1312,7 @@ export default function UsageDashboard() {
     }));
   }, [selectedUserPages]);
 
+  /** API load */
   const refresh = async () => {
     setLoading(true);
     try {
@@ -1362,6 +1341,7 @@ export default function UsageDashboard() {
       setTopUsers(rTopUsers?.data?.data || []);
       setTopPages(rTopPages?.data?.data || []);
 
+      // auto pick a user if none selected
       if (!selectedUserId && onlineData?.length) {
         setSelectedUserId(String(onlineData[0]?.userID ?? ""));
       }
@@ -1375,6 +1355,7 @@ export default function UsageDashboard() {
     }
   };
 
+  /** NEW: load pages for selected user */
   const loadSelectedUserPages = async (uid) => {
     if (!uid) {
       setSelectedUserPages([]);
@@ -1382,11 +1363,14 @@ export default function UsageDashboard() {
     }
     setLoadingUserPages(true);
     try {
+      // Recommended endpoint:
+      // GET /api/pageview/top-pages-by-user?userId=...&from=...&to=...
       const r = await http.get("/pageview/top-pages-by-user", {
         params: { userId: uid, from: fromDate, to: toDate },
       });
       setSelectedUserPages(r?.data?.data || []);
     } catch (e) {
+      // fallback (nếu BE chưa có) -> show empty, không crash
       console.warn("top-pages-by-user missing or failed:", e);
       setSelectedUserPages([]);
     } finally {
@@ -1404,6 +1388,7 @@ export default function UsageDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUserId, fromDate, toDate]);
 
+  /** UI header selects */
   const userOptions = useMemo(() => {
     const arr = Array.isArray(onlineList) ? onlineList : [];
     return arr
@@ -1415,34 +1400,29 @@ export default function UsageDashboard() {
   }, [onlineList]);
 
   return (
-    <div
-      className="min-h-screen px-3 py-3 sm:px-4 sm:py-4 pb-[96px] md:pb-4"
-      style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom))" }}
-    >
-      <div className="mx-auto max-w-[1400px] space-y-4 sm:space-y-5">
-        {/* Header */}
-        <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[24px] sm:rounded-[28px] p-4 sm:p-5`}>
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-[1200px] space-y-4 sm:space-y-5">
+        {/* ===== Header ===== */}
+        <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[28px] p-4 sm:p-5`}>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-3">
-                <span
-                  className={`${neuBg} ${neuShadowInset} rounded-2xl h-10 w-10 sm:h-11 sm:w-11 grid place-items-center text-slate-700 shrink-0`}
-                >
+                <span className={`${neuBg} ${neuShadowInset} rounded-2xl h-11 w-11 grid place-items-center text-slate-700`}>
                   <FiBarChart2 />
                 </span>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">
+                  <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">
                     Trung tâm theo dõi hoạt động
                   </h1>
-                  <div className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                  <div className="text-sm text-slate-500 mt-0.5">
                     Online • Thời gian • Trang truy cập
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="w-full xl:w-auto flex flex-col sm:flex-row gap-2 sm:items-end">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <div className="text-[11px] text-slate-500 mb-1">Từ ngày</div>
                   <NeuInput type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
@@ -1453,7 +1433,7 @@ export default function UsageDashboard() {
                 </div>
               </div>
 
-              <NeuButton onClick={refresh} disabled={loading} className="h-[42px] w-full sm:w-auto">
+              <NeuButton onClick={refresh} disabled={loading} className="h-[42px]">
                 <FiRefreshCcw className={loading ? "animate-spin" : ""} />
                 {loading ? "Đang tải" : "Làm mới"}
               </NeuButton>
@@ -1461,62 +1441,56 @@ export default function UsageDashboard() {
           </div>
         </div>
 
-        {/* KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[24px] sm:rounded-[28px] p-4`}>
+        {/* ===== KPIs ===== */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[28px] p-4`}>
             <div className="flex items-center justify-between">
               <div className="text-sm text-slate-500">Online</div>
               <span className={`${neuBg} ${neuShadowInset} rounded-2xl h-10 w-10 grid place-items-center text-slate-700`}>
                 <FiUsers />
               </span>
             </div>
-            <div className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">{onlineCount}</div>
-            <div className="mt-3">
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{onlineCount}</div>
+            <div className="mt-2">
               <DonutGauge value={onlineCount} max={Math.max(1, onlineCount + offlineCount)} label="Tỷ lệ online" />
             </div>
           </div>
 
-          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[24px] sm:rounded-[28px] p-4`}>
+          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[28px] p-4`}>
             <div className="flex items-center justify-between">
               <div className="text-sm text-slate-500">Tổng thời gian</div>
               <span className={`${neuBg} ${neuShadowInset} rounded-2xl h-10 w-10 grid place-items-center text-slate-700`}>
                 <FiClock />
               </span>
             </div>
-            <div className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900 break-words">
-              {fmtDuration(totalOnlineSeconds)}
-            </div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{fmtDuration(totalOnlineSeconds)}</div>
             <div className="mt-2 text-xs text-slate-500">Tất cả user (presence)</div>
           </div>
 
-          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[24px] sm:rounded-[28px] p-4 sm:col-span-2 xl:col-span-1`}>
+          <div className={`${neuBg} ${neuShadow} ${neuRing} rounded-[28px] p-4`}>
             <div className="flex items-center justify-between">
               <div className="text-sm text-slate-500">Lượt xem</div>
               <span className={`${neuBg} ${neuShadowInset} rounded-2xl h-10 w-10 grid place-items-center text-slate-700`}>
                 <FiHash />
               </span>
             </div>
-            <div className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">{totalPageViews}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{totalPageViews}</div>
             <div className="mt-2 text-xs text-slate-500">Pageview</div>
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+        {/* ===== Charts ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <NeuCard
             title="Top người dùng"
             sub="Thời gian online"
             icon={<FiUsers />}
             right={<NeuPill>{fromDate} → {toDate}</NeuPill>}
-            heightClassName="h-[300px]"
-            bodyClassName="h-full flex flex-col"
           >
             {chartTopUsers.length === 0 ? (
               <div className="text-sm text-slate-500">Chưa có dữ liệu</div>
             ) : (
-              <div className="flex-1 min-h-0">
-                <MiniBarChart data={chartTopUsers} height={180} />
-              </div>
+              <MiniBarChart data={chartTopUsers} />
             )}
           </NeuCard>
 
@@ -1525,353 +1499,322 @@ export default function UsageDashboard() {
             sub="Lượt xem"
             icon={<FiBarChart2 />}
             right={<NeuPill>{fromDate} → {toDate}</NeuPill>}
-            heightClassName="h-[300px]"
-            bodyClassName="h-full flex flex-col"
           >
             {chartTopPages.length === 0 ? (
               <div className="text-sm text-slate-500">Chưa có dữ liệu</div>
             ) : (
-              <div className="flex-1 min-h-0">
-                <MiniBarChart data={chartTopPages} height={180} />
-              </div>
+              <MiniBarChart data={chartTopPages} />
             )}
           </NeuCard>
         </div>
 
-        {/* Main data zone */}
-        <div className="grid grid-cols-1 2xl:grid-cols-12 gap-4">
-          <div className="2xl:col-span-5">
-            <NeuCard
-              title="User vào trang nào nhiều nhất"
-              sub="Theo user bạn chọn"
-              icon={<FiUser />}
-              right={
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                  <NeuPill>{fromDate} → {toDate}</NeuPill>
-                  <div className="w-full sm:w-[320px]">
-                    <NeuSelect
-                      value={selectedUserId}
-                      onChange={(e) => {
-                        userPagesPaging.setPage(1);
-                        setSelectedUserId(e.target.value);
-                      }}
-                    >
-                      <option value="">-- Chọn user --</option>
-                      {userOptions.map((o) => (
-                        <option key={o.userID} value={o.userID}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </NeuSelect>
-                  </div>
-                </div>
-              }
-              heightClassName="h-auto md:h-[620px]"
-              bodyClassName="h-full flex flex-col"
+        {/* ===== NEW: Selected user -> top pages ===== */}
+        <NeuCard
+          title="User vào trang nào nhiều nhất"
+          sub="Theo user bạn chọn"
+          icon={<FiUser />}
+          right={
+            <div className="flex items-center gap-2">
+              <NeuPill>{fromDate} → {toDate}</NeuPill>
+              <div className="hidden md:block w-[350px] min-w-0">
+  <NeuSelect
+    value={selectedUserId}
+    onChange={(e) => {
+      userPagesPaging.setPage(1);
+      setSelectedUserId(e.target.value);
+    }}
+    className="w-full min-w-0"
+  >
+    <option value="">-- Chọn user --</option>
+
+    {userOptions.map((o) => (
+      <option key={o.userID} value={o.userID}>
+        {o.label}
+      </option>
+    ))}
+  </NeuSelect>
+</div>
+            </div>
+          }
+        >
+          {/* mobile select */}
+          <div className="md:hidden mb-3">
+            <NeuSelect
+              value={selectedUserId}
+              onChange={(e) => {
+                userPagesPaging.setPage(1);
+                setSelectedUserId(e.target.value);
+              }}
             >
-              {loadingUserPages ? (
-                <div className="text-sm text-slate-500">Đang tải...</div>
-              ) : selectedUserId && selectedUserPages.length === 0 ? (
-                <div className="text-sm text-slate-500">
-                  Chưa có dữ liệu hoặc BE chưa có endpoint <code>/api/pageview/top-pages-by-user</code>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-4 shrink-0">
-                    <MiniBarChart data={chartSelectedUserPages} height={120} />
-                  </div>
-
-                  <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full">
-                      <div className="hidden md:block">
-                        <table className="w-full text-sm">
-                          <thead className="text-slate-500 sticky top-0 bg-white/80 backdrop-blur">
-                            <tr className="border-b border-white/40">
-                              <th className="text-left py-2 pr-3">Trang</th>
-                              <th className="text-right py-2">Views</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {userPagesPaging.slice.map((p, idx) => (
-                              <tr key={idx} className="border-b border-white/30">
-                                <td className="py-2 pr-3">
-                                  <div className="text-slate-900 break-all font-medium">{p.page}</div>
-                                </td>
-                                <td className="py-2 text-right font-semibold text-slate-900">{p.views}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="grid md:hidden gap-3">
-                        {userPagesPaging.slice.map((p, idx) => (
-                          <MobileCard key={idx}>
-                            <MobileInfoRow label="Trang" value={p.page || "-"} valueClass="text-left" />
-                            <MobileInfoRow label="Views" value={p.views ?? 0} />
-                          </MobileCard>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-
-                  <div className="shrink-0">
-                    <Pager paging={userPagesPaging} />
-                  </div>
-                </>
-              )}
-            </NeuCard>
+              <option value="">-- Chọn user --</option>
+              {userOptions.map((o) => (
+                <option key={o.userID} value={o.userID}>
+                  {o.label}
+                </option>
+              ))}
+            </NeuSelect>
           </div>
 
-          <div className="2xl:col-span-3">
-            <NeuCard
-              title="Người dùng"
-              sub="Online / Offline"
-              icon={<FiUsers />}
-              right={
-                <div className="w-full sm:w-[220px]">
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={qUser}
-                      onChange={(e) => {
-                        onlinePaging.setPage(1);
-                        usersPaging.setPage(1);
-                        setQUser(e.target.value);
-                      }}
-                      placeholder="Tìm user..."
-                      className={[
-                        "w-full text-sm text-slate-700 placeholder:text-slate-400",
-                        `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2.5`,
-                        "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
-                      ].join(" ")}
-                    />
-                  </div>
-                </div>
-              }
-              heightClassName="h-auto md:h-[620px]"
-              bodyClassName="h-full flex flex-col"
-            >
-              <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full">
-                  <div className="hidden md:block">
-                    <table className="w-full text-sm">
-                      <thead className="text-slate-500 sticky top-0 bg-white/80 backdrop-blur">
-                        <tr className="border-b border-white/40">
-                          <th className="text-left py-2 pr-3">Tên</th>
-                          <th className="text-left py-2 pr-3">TT</th>
-                          <th className="text-right py-2">Hôm nay</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {onlinePaging.slice.map((u) => (
-                          <tr key={u.userID} className="border-b border-white/30">
-                            <td className="py-2 pr-3">
-                              <div className="font-medium text-slate-900">{u.fullName || u.username}</div>
-                              <div className="text-xs text-slate-500">{u.username}</div>
-                            </td>
-                            <td className="py-2 pr-3">
-                              <div className="flex items-center gap-2">
-                                <StatusDot online={!!u.isOnline} />
-                                <span className="text-slate-700">{u.isOnline ? "Online" : "Offline"}</span>
-                              </div>
-                              <div className="text-[11px] text-slate-500 mt-1">{fmtDbDateTime(u.lastOnline)}</div>
-                            </td>
-                            <td className="py-2 text-right font-semibold text-slate-900">
-                              {fmtDuration(u.totalOnlineTodaySeconds)}
-                            </td>
-                          </tr>
-                        ))}
-                        {!loading && onlinePaging.total === 0 && (
-                          <tr>
-                            <td colSpan={3} className="py-8 text-center text-slate-500">
-                              Không có dữ liệu
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+          {loadingUserPages ? (
+            <div className="text-sm text-slate-500">Đang tải...</div>
+          ) : selectedUserId && selectedUserPages.length === 0 ? (
+            <div className="text-sm text-slate-500">
+              Chưa có dữ liệu (hoặc BE chưa có endpoint <code>/api/pageview/top-pages-by-user</code>)
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <MiniBarChart data={chartSelectedUserPages} />
+              </div>
 
-                  <div className="grid md:hidden gap-3">
-                    {onlinePaging.slice.map((u) => (
-                      <MobileCard key={u.userID}>
-                        <div>
-                          <div className="font-semibold text-slate-900">{u.fullName || u.username}</div>
-                          <div className="text-xs text-slate-500">{u.username}</div>
-                        </div>
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-slate-500">
+                    <tr className="border-b border-white/40">
+                      <th className="text-left py-2 pr-3">Trang</th>
+                      <th className="text-right py-2">Views</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userPagesPaging.slice.map((p, idx) => (
+                      <tr key={idx} className="border-b border-white/30">
+                        <td className="py-2 pr-3">
+                          <div className="text-slate-900 break-all font-medium">{p.page}</div>
+                        </td>
+                        <td className="py-2 text-right font-semibold text-slate-900">{p.views}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pager paging={userPagesPaging} />
+            </>
+          )}
+        </NeuCard>
+
+        {/* ===== Tables ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Users status */}
+          <NeuCard
+            title="Người dùng"
+            sub="Online / Offline"
+            icon={<FiUsers />}
+            right={
+              <div className="w-[240px] hidden sm:block">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={qUser}
+                    onChange={(e) => {
+                      onlinePaging.setPage(1);
+                      usersPaging.setPage(1);
+                      setQUser(e.target.value);
+                    }}
+                    placeholder="Tìm user..."
+                    className={[
+                      "w-full text-sm text-slate-700 placeholder:text-slate-400",
+                      `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2`,
+                      "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                    ].join(" ")}
+                  />
+                </div>
+              </div>
+            }
+          >
+            <div className="sm:hidden mb-3">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={qUser}
+                  onChange={(e) => {
+                    onlinePaging.setPage(1);
+                    usersPaging.setPage(1);
+                    setQUser(e.target.value);
+                  }}
+                  placeholder="Tìm user..."
+                  className={[
+                    "w-full text-sm text-slate-700 placeholder:text-slate-400",
+                    `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2.5`,
+                    "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                  ].join(" ")}
+                />
+              </div>
+            </div>
+
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="text-slate-500">
+                  <tr className="border-b border-white/40">
+                    <th className="text-left py-2 pr-3">Tên</th>
+                    <th className="text-left py-2 pr-3">TT</th>
+                    <th className="text-right py-2">Hôm nay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {onlinePaging.slice.map((u) => (
+                    <tr key={u.userID} className="border-b border-white/30">
+                      <td className="py-2 pr-3">
+                        <div className="font-medium text-slate-900">{u.fullName || u.username}</div>
+                        <div className="text-xs text-slate-500">{u.username}</div>
+                      </td>
+                      <td className="py-2 pr-3">
                         <div className="flex items-center gap-2">
                           <StatusDot online={!!u.isOnline} />
-                          <span className="text-sm text-slate-700">{u.isOnline ? "Online" : "Offline"}</span>
+                          <span className="text-slate-700">{u.isOnline ? "Online" : "Offline"}</span>
                         </div>
-                        <MobileInfoRow label="Lần cuối" value={fmtDbDateTime(u.lastOnline)} />
-                        <MobileInfoRow label="Hôm nay" value={fmtDuration(u.totalOnlineTodaySeconds)} />
-                      </MobileCard>
-                    ))}
-                    {!loading && onlinePaging.total === 0 && (
-                      <div className="py-8 text-center text-slate-500">Không có dữ liệu</div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          {fmtDbDateTime(u.lastOnline)}
+                        </div>
+                      </td>
+                      <td className="py-2 text-right font-semibold text-slate-900">
+                        {fmtDuration(u.totalOnlineTodaySeconds)}
+                      </td>
+                    </tr>
+                  ))}
+                  {!loading && onlinePaging.total === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-slate-500">
+                        Không có dữ liệu
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              <div className="shrink-0">
-                <Pager paging={onlinePaging} />
-              </div>
-            </NeuCard>
-          </div>
+            <Pager paging={onlinePaging} />
+          </NeuCard>
 
-          <div className="2xl:col-span-4">
-            <NeuCard
-              title="Top trang"
-              sub="Lượt xem"
-              icon={<FiBarChart2 />}
-              right={
-                <div className="w-full sm:w-[220px]">
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={qPage}
-                      onChange={(e) => {
-                        pagesPaging.setPage(1);
-                        setQPage(e.target.value);
-                      }}
-                      placeholder="Tìm trang..."
-                      className={[
-                        "w-full text-sm text-slate-700 placeholder:text-slate-400",
-                        `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2.5`,
-                        "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
-                      ].join(" ")}
-                    />
-                  </div>
+          {/* Top pages */}
+          <NeuCard
+            title="Top trang"
+            sub="Lượt xem"
+            icon={<FiBarChart2 />}
+            right={
+              <div className="w-[240px] hidden sm:block">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={qPage}
+                    onChange={(e) => {
+                      pagesPaging.setPage(1);
+                      setQPage(e.target.value);
+                    }}
+                    placeholder="Tìm trang..."
+                    className={[
+                      "w-full text-sm text-slate-700 placeholder:text-slate-400",
+                      `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2`,
+                      "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                    ].join(" ")}
+                  />
                 </div>
-              }
-              heightClassName="h-auto md:h-[620px]"
-              bodyClassName="h-full flex flex-col"
-            >
-              <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full">
-                  <div className="hidden md:block">
-                    <table className="w-full text-sm">
-                      <thead className="text-slate-500 sticky top-0 bg-white/80 backdrop-blur">
-                        <tr className="border-b border-white/40">
-                          <th className="text-left py-2 pr-3">Trang</th>
-                          <th className="text-right py-2">Views</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pagesPaging.slice.map((p, idx) => (
-                          <tr key={idx} className="border-b border-white/30">
-                            <td className="py-2 pr-3">
-                              <div className="font-medium text-slate-900 break-all">{p.page}</div>
-                            </td>
-                            <td className="py-2 text-right font-semibold text-slate-900">{p.views}</td>
-                          </tr>
-                        ))}
-                        {!loading && pagesPaging.total === 0 && (
-                          <tr>
-                            <td colSpan={2} className="py-8 text-center text-slate-500">
-                              Chưa có dữ liệu
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="grid md:hidden gap-3">
-                    {pagesPaging.slice.map((p, idx) => (
-                      <MobileCard key={idx}>
-                        <MobileInfoRow label="Trang" value={p.page || "-"} valueClass="text-left" />
-                        <MobileInfoRow label="Views" value={p.views ?? 0} />
-                      </MobileCard>
-                    ))}
-                    {!loading && pagesPaging.total === 0 && (
-                      <div className="py-8 text-center text-slate-500">Chưa có dữ liệu</div>
-                    )}
-                  </div>
-                </ScrollArea>
               </div>
-
-              <div className="shrink-0">
-                <Pager paging={pagesPaging} />
+            }
+          >
+            <div className="sm:hidden mb-3">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={qPage}
+                  onChange={(e) => {
+                    pagesPaging.setPage(1);
+                    setQPage(e.target.value);
+                  }}
+                  placeholder="Tìm trang..."
+                  className={[
+                    "w-full text-sm text-slate-700 placeholder:text-slate-400",
+                    `${neuBg} ${neuShadowInset} ${neuRing} rounded-2xl pl-9 pr-3.5 py-2.5`,
+                    "focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                  ].join(" ")}
+                />
               </div>
-            </NeuCard>
-          </div>
+            </div>
+
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="text-slate-500">
+                  <tr className="border-b border-white/40">
+                    <th className="text-left py-2 pr-3">Trang</th>
+                    <th className="text-right py-2">Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagesPaging.slice.map((p, idx) => (
+                    <tr key={idx} className="border-b border-white/30">
+                      <td className="py-2 pr-3">
+                        <div className="font-medium text-slate-900 break-all">{p.page}</div>
+                      </td>
+                      <td className="py-2 text-right font-semibold text-slate-900">{p.views}</td>
+                    </tr>
+                  ))}
+                  {!loading && pagesPaging.total === 0 && (
+                    <tr>
+                      <td colSpan={2} className="py-8 text-center text-slate-500">
+                        Chưa có dữ liệu
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pager paging={pagesPaging} />
+          </NeuCard>
         </div>
 
-        {/* Bottom full width */}
+        {/* Top users table */}
         <NeuCard
           title="Top người dùng"
           sub="Thời gian online"
           icon={<FiClock />}
           right={<NeuPill>{fromDate} → {toDate}</NeuPill>}
-          heightClassName="h-auto md:h-[440px]"
-          bodyClassName="h-full flex flex-col"
         >
-          <div className="flex-1 min-h-0">
-            <ScrollArea className="h-full">
-              <div className="hidden md:block">
-                <table className="w-full text-sm">
-                  <thead className="text-slate-500 sticky top-0 bg-white/80 backdrop-blur">
-                    <tr className="border-b border-white/40">
-                      <th className="text-left py-2 pr-3">Tên</th>
-                      <th className="text-left py-2 pr-3">Role</th>
-                      <th className="text-left py-2 pr-3">Last</th>
-                      <th className="text-right py-2">Tổng</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usersPaging.slice.map((u) => (
-                      <tr key={u.userID} className="border-b border-white/30">
-                        <td className="py-2 pr-3">
-                          <div className="font-medium text-slate-900">{u.fullName || u.username}</div>
-                          <div className="text-xs text-slate-500">{u.username}</div>
-                        </td>
-                        <td className="py-2 pr-3 text-slate-700">{u.role || "-"}</td>
-                        <td className="py-2 pr-3 text-slate-700">{fmtDbDateTime(u.lastOnline)}</td>
-                        <td className="py-2 text-right font-semibold text-slate-900">
-                          {fmtDuration(u.totalSeconds)}
-                        </td>
-                      </tr>
-                    ))}
-                    {!loading && usersPaging.total === 0 && (
-                      <tr>
-                        <td colSpan={4} className="py-8 text-center text-slate-500">
-                          Không có dữ liệu
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="grid md:hidden gap-3">
+          <div className="overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="text-slate-500">
+                <tr className="border-b border-white/40">
+                  <th className="text-left py-2 pr-3">Tên</th>
+                  <th className="text-left py-2 pr-3">Role</th>
+                  <th className="text-left py-2 pr-3">Last</th>
+                  <th className="text-right py-2">Tổng</th>
+                </tr>
+              </thead>
+              <tbody>
                 {usersPaging.slice.map((u) => (
-                  <MobileCard key={u.userID}>
-                    <div>
-                      <div className="font-semibold text-slate-900">{u.fullName || u.username}</div>
+                  <tr key={u.userID} className="border-b border-white/30">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium text-slate-900">{u.fullName || u.username}</div>
                       <div className="text-xs text-slate-500">{u.username}</div>
-                    </div>
-                    <MobileInfoRow label="Role" value={u.role || "-"} />
-                    <MobileInfoRow label="Last" value={fmtDbDateTime(u.lastOnline)} />
-                    <MobileInfoRow label="Tổng" value={fmtDuration(u.totalSeconds)} />
-                  </MobileCard>
+                    </td>
+                    <td className="py-2 pr-3 text-slate-700">{u.role || "-"}</td>
+                    <td className="py-2 pr-3 text-slate-700">
+                      {fmtDbDateTime(u.lastOnline)}
+                    </td>
+                    <td className="py-2 text-right font-semibold text-slate-900">
+                      {fmtDuration(u.totalSeconds)}
+                    </td>
+                  </tr>
                 ))}
                 {!loading && usersPaging.total === 0 && (
-                  <div className="py-8 text-center text-slate-500">Không có dữ liệu</div>
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-slate-500">
+                      Không có dữ liệu
+                    </td>
+                  </tr>
                 )}
-              </div>
-            </ScrollArea>
+              </tbody>
+            </table>
           </div>
 
-          <div className="shrink-0">
-            <Pager paging={usersPaging} />
-          </div>
+          <Pager paging={usersPaging} />
         </NeuCard>
-
-        <div className="h-24 md:h-0" />
       </div>
     </div>
   );
 }
+
+
+
+
+

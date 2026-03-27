@@ -1185,4 +1185,325 @@ export default function MobileUserOrderSlide({ navigate, config }) {
       />
     </div>
   );
+
+//   <div
+//     className={`md:hidden ${t.bgMain}`}
+//     style={{
+//       minHeight: "100dvh",
+//       paddingBottom: "max(80px, env(safe-area-inset-bottom))",
+//     }}
+//   >
+//     {isWeekSwitching && (
+//       <div className="fixed inset-0 z-[55] bg-white/20 backdrop-blur-[1px] flex items-center justify-center">
+//         <div className="px-3 py-2 rounded-full bg-white/90 border border-slate-200 shadow-md text-slate-700 text-sm flex items-center gap-2">
+//           <FaSpinner className="animate-spin" />
+//           <span>Đang chuyển tuần...</span>
+//         </div>
+//       </div>
+//     )}
+
+//     {isSaving && (
+//       <div className="fixed inset-0 z-[60] bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
+//         <div className="px-3 py-2 rounded-full bg-white/90 border border-slate-200 shadow-md text-slate-700 text-sm flex items-center gap-2">
+//           <FaSpinner className="animate-spin" />
+//           <span>Đang lưu thay đổi...</span>
+//         </div>
+//       </div>
+//     )}
+
+//     <div
+//       className={`relative ${t.headerGrad} rounded-b-[50px] px-4 pb-[90px]`}
+//       style={{ paddingTop: "max(16px, env(safe-area-inset-top))" }}
+//     >
+//       <div className="relative flex items-center justify-between mt-[20px]">
+//         <div className="flex items-center gap-3 min-w-0">
+//           <div className="h-11 w-11 rounded-full overflow-hidden bg-white/30 border border-white/40">
+//             <img
+//               src={tmp?.login?.currentUser?.avatar || avatar_datcom}
+//               alt="avatar"
+//               className="h-full w-full object-cover"
+//             />
+//           </div>
+//           <div className="min-w-0">
+//             <div className="text-sm text-white/90">Xin chào,</div>
+//             <div className="text-[18px] font-semibold text-white truncate">{fullName}</div>
+//           </div>
+//         </div>
+
+//         <button
+//           onClick={() => navigate?.(config?.routes?.homeMain)}
+//           className="h-10 w-10 rounded-full grid place-items-center text-white bg-white/25 border border-white/40 active:scale-95 transition"
+//           aria-label="Chọn ứng dụng"
+//           title="Chọn ứng dụng"
+//         >
+//           <FaThLarge />
+//         </button>
+//       </div>
+//     </div>
+
+//     <div className="px-4 -mt-[70px] relative z-20">
+//       <div className={`rounded-3xl px-4 py-4 ${t.cardBg}`}>
+//         <div className="flex items-start gap-3">
+//           <div className="flex-1 min-w-0">
+//             <div className="flex items-center gap-3 flex-wrap">
+//               <div className={`text-[20px] font-extrabold ${t.title1}`}>🍱 Đặt cơm</div>
+
+//               <div className="flex items-center gap-2">
+//                 <button
+//                   onClick={() => changeWeek(-1)}
+//                   disabled={data.pageLoading}
+//                   className="px-2 py-1 rounded-lg bg-[#FFF1C2] border border-amber-300 text-slate-700 text-sm active:scale-95 disabled:opacity-50"
+//                 >
+//                   ◀
+//                 </button>
+
+//                 <div className="px-3 py-1.5 rounded-lg border border-amber-300 bg-[#FFF1C2] text-sm font-semibold text-slate-700">
+//                   Tuần {weekValue.split("-W")[1]}
+//                 </div>
+
+//                 <button
+//                   onClick={() => changeWeek(1)}
+//                   disabled={data.pageLoading}
+//                   className="px-2 py-1 rounded-lg bg-[#FFF1C2] border border-amber-300 text-slate-700 text-sm active:scale-95 disabled:opacity-50"
+//                 >
+//                   ▶
+//                 </button>
+//               </div>
+//             </div>
+
+//             <div className="mt-1 text-[13px] font-semibold text-sky-700">{weekLabel}</div>
+//           </div>
+
+//           <button
+//             type="button"
+//             title={bellTitle}
+//             aria-label={bellTitle}
+//             disabled={!canTogglePush || pushBusy}
+//             onClick={() => {
+//               if (!canTogglePush || pushBusy) return;
+//               if (pushReady) disablePush?.();
+//               else enablePush?.();
+//             }}
+//             className={`h-[50px] w-[50px] rounded-2xl grid place-items-center shadow-sm active:scale-95 transition ${bellBtnClass} ${
+//               !canTogglePush || pushBusy ? "opacity-80" : ""
+//             }`}
+//           >
+//             {pushBusy ? (
+//               <FaSpinner className="animate-spin text-[18px]" />
+//             ) : pushReady ? (
+//               <FaBellSlash className="text-[18px]" />
+//             ) : (
+//               <FaBell className="text-[18px]" />
+//             )}
+//           </button>
+//         </div>
+
+//         {(pushError || pushStatus) && (
+//           <div
+//             className={`mt-3 rounded-2xl p-3 text-sm ${
+//               pushError
+//                 ? "bg-rose-50 text-rose-700 border border-rose-200"
+//                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+//             }`}
+//           >
+//             {pushError || pushStatus}
+//           </div>
+//         )}
+
+//         <div className="pt-5">
+//           <OrderTypeToggleMobi
+//             visible={!resetMode && !editingBannerVisible}
+//             orderType={orderType}
+//             onChangeType={(k) => {
+//               setOrderType(k);
+//               actions.flushOtherTypes(k);
+//               setStayOnChooseByType((p) => ({ ...p, [k]: false }));
+//               setEditingDayByType((p) => ({ ...p, [k]: null }));
+//               if (swiperRef.current?.slideTo) swiperRef.current.slideTo(0);
+//             }}
+//           />
+//         </div>
+//       </div>
+//     </div>
+
+//     <ResetBar visible={!!resetMode} onExit={actions.exitResetMode} />
+
+//     <EditingBanner
+//       visible={!!editingBannerVisible}
+//       dayText={editingDay ? dayNameVN(editingDay) : ""}
+//       isSaving={isSaving}
+//       savingDay={savingDay}
+//       onCancel={cancelEditDay}
+//       onSave={saveEditDay}
+//     />
+
+//     <div className="relative z-10 px-[10px] pt-4 pb-[calc(80px+env(safe-area-inset-bottom))]">
+//       <OrderedSummary
+//         visible={hasOrderedForType && !resetMode && !stayOnChooseByType[orderType]}
+//         weeklyMenu={weeklyMenu}
+//         sortedDays={sortedDays}
+//         orderType={orderType}
+//         isSec={isSec}
+//         selected={selected}
+//         selectedSec={selectedSec}
+//         selectedBr={selectedBr}
+//         qtyBr={qtyBr}
+//         qtyEntry={qtyEntry}
+//         skipSecDays={skipSecDays}
+//         userPick={userPick}
+//         cmpByPositionId={cmpByPositionId}
+//         dayNameVN={dayNameVN}
+//         canModifyDayByMode={canModifyDayByMode}
+//         canCancelDay={canCancelDay}
+//         onStartEditDay={startEditDay}
+//         onEnterResetMode={actions.enterResetMode}
+//         onAskCancel={askCancel}
+//         lockedDays={lockedDaysByType[orderType] || {}}
+//         lockingDay={lockingDay}
+//         onAskLockDay={askLockDay}
+//       />
+//     </div>
+
+//     {(!hasOrderedForType || resetMode || stayOnChooseByType[orderType]) && (
+//       <div className="w-full pb-[calc(80px+env(safe-area-inset-bottom))]">
+//         <ChooseSwiper
+//           daysToRender={daysToRender}
+//           grouped={grouped}
+//           weeklyMenu={weeklyMenu}
+//           orderType={orderType}
+//           isSec={isSec}
+//           selected={selected}
+//           selectedSec={selectedSec}
+//           selectedBr={selectedBr}
+//           qtyBr={qtyBr}
+//           qtyEntry={qtyEntry}
+//           skipSecDays={skipSecDays}
+//           userPick={data.userPickByType[orderType] || {}}
+//           isSaving={isSaving}
+//           canModifyDayByMode={canModifyDayByMode}
+//           swiperRef={swiperRef}
+//           onSlideChange={(idx) => setActiveSlide(idx)}
+//           dayNameVN={dayNameVN}
+//           onCardClick={actions.handleCardClick}
+//           onPickBranch={(day, eid, branchId) => {
+//             data.setUserPickByType((prev) => {
+//               const n = { ...prev };
+//               const byType = { ...(n[orderType] || {}) };
+//               const byDay = { ...(byType[day] || {}) };
+//               if (byDay[eid] === branchId) delete byDay[eid];
+//               else byDay[eid] = branchId;
+//               if (Object.keys(byDay).length) byType[day] = byDay;
+//               else delete byType[day];
+//               n[orderType] = byType;
+//               return n;
+//             });
+//           }}
+//           onChangeQtyEntry={(day, eid, v, curVal) => {
+//             const next = parseInt(typeof v === "function" ? v(curVal) : v, 10);
+//             const nextVal = Number.isFinite(next) ? Math.max(0, next) : 0;
+//             data.setQtyEntryByType((prev) => {
+//               const n = { ...prev };
+//               const byType = { ...(n[orderType] || {}) };
+//               const byDay = { ...(byType[day] || {}) };
+//               byDay[eid] = nextVal;
+//               byType[day] = byDay;
+//               n[orderType] = byType;
+//               return n;
+//             });
+//           }}
+//           onToggleBranch={(day, eid, branchId) => {
+//             if (isSaving) return;
+
+//             data.setSelectedBranchesByType((prev) => {
+//               const n = { ...prev };
+//               const byType = { ...(n[orderType] || {}) };
+//               const byDay = { ...(byType[day] || {}) };
+//               const byEntry = { ...(byDay[eid] || {}) };
+
+//               if (byEntry[branchId]) delete byEntry[branchId];
+//               else byEntry[branchId] = true;
+
+//               if (!Object.keys(byEntry).length) delete byDay[eid];
+//               else byDay[eid] = byEntry;
+
+//               byType[day] = byDay;
+//               n[orderType] = byType;
+//               return n;
+//             });
+
+//             data.setQtyBranchesByType((prev) => {
+//               const n = { ...prev };
+//               const byType = { ...(n[orderType] || {}) };
+//               const byDay = { ...(byType[day] || {}) };
+//               const byEntry = { ...(byDay[eid] || {}) };
+
+//               byEntry[branchId] = 0;
+//               byDay[eid] = byEntry;
+//               byType[day] = byDay;
+//               n[orderType] = byType;
+//               return n;
+//             });
+//           }}
+//           onChangeQtyBranch={(day, eid, branchId, v, curQty) => {
+//             const nextVal = Math.max(0, parseInt(typeof v === "function" ? v(curQty) : v, 10));
+//             data.setQtyBranchesByType((prev) => {
+//               const n = { ...prev };
+//               const byType = { ...(n[orderType] || {}) };
+//               const byDay = { ...(byType[day] || {}) };
+//               const byEntry = { ...(byDay[eid] || {}) };
+//               byEntry[branchId] = nextVal;
+//               byDay[eid] = byEntry;
+//               byType[day] = byDay;
+//               n[orderType] = byType;
+//               return n;
+//             });
+//           }}
+//           activeSlide={activeSlide}
+//         />
+
+//         {!weeklyMenu?.isLocked && (orderType !== "re" || activeSlide === daysToRender.length - 1) && (
+//           <div className="mt-2 px-4 pb-8 flex items-center justify-end gap-3">
+//             <button
+//               onClick={actions.handleSave}
+//               disabled={savingAll || (orderType === "re" && !hasChosenRequired)}
+//               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-br from-sky-600 to-amber-400 text-white shadow-sm hover:shadow transition-shadow disabled:opacity-50"
+//             >
+//               {savingAll && <FaSpinner className="animate-spin" />}
+//               <FaSave /> {isSec ? "Lưu (thư ký)" : "Lưu đặt cơm"}
+//             </button>
+//           </div>
+//         )}
+//       </div>
+//     )}
+
+//     <NoticeModal
+//       open={notice.open}
+//       title={notice.title}
+//       message={notice.message}
+//       onClose={() => setNotice({ ...notice, open: false })}
+//     />
+
+//     <ConfirmCancelModal
+//       open={cancelConfirm.open}
+//       foodName={cancelConfirm.foodName}
+//       dayText={cancelConfirm.day ? dayNameVN(cancelConfirm.day) : ""}
+//       busy={cancelConfirm.busy}
+//       onCancel={() =>
+//         !cancelConfirm.busy &&
+//         setCancelConfirm({ open: false, entryId: null, day: null, foodName: "", busy: false })
+//       }
+//       onConfirm={doCancelOne}
+//     />
+
+//     <ConfirmLockDayModal
+//       open={lockConfirm.open}
+//       dayText={lockConfirm.day ? dayNameVN(lockConfirm.day) : ""}
+//       busy={lockConfirm.busy}
+//       onCancel={() =>
+//         !lockConfirm.busy && setLockConfirm({ open: false, day: null, busy: false })
+//       }
+//       onConfirm={doLockDay}
+//     />
+//   </div>
+// );
 }
