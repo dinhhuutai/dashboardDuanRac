@@ -3,7 +3,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import React, { useMemo, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
-import { FaSpinner, FaPlus, FaTrash, FaSave } from 'react-icons/fa';
+import { FaSpinner, FaPlus, FaTrash, FaSave, FaWpforms } from 'react-icons/fa';
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
 
@@ -528,6 +528,9 @@ export default function FormCreate() {
   });
   const [startAt, setStartAt] = useState(null);
   const [endAt, setEndAt] = useState(null);
+  const [visibilityScope, setVisibilityScope] = useState("all");
+  const [targetUsers, setTargetUsers] = useState("");
+  const [targetDepts, setTargetDepts] = useState("");
 
   // sections & questions (local)
   const [sections, setSections] = useState([]);
@@ -609,6 +612,12 @@ export default function FormCreate() {
         await http.patch(`${BASE_URL}/api/forms/${formId}/publish`, { isActive: 1 });
       }
 
+      await http.put(`${BASE_URL}/api/forms/${formId}/visibility`, {
+        scope: visibilityScope,
+        users: targetUsers.split(",").map((x) => x.trim()).filter(Boolean),
+        depts: targetDepts.split(",").map((x) => x.trim()).filter(Boolean),
+      });
+
       alert(`Đã tạo biểu mẫu!\nLink chia sẻ: ${window.location.origin}/forms/${code}`);
     } catch (e) {
       console.error(e);
@@ -619,7 +628,7 @@ export default function FormCreate() {
   };
 
   return (
-    <div className="neu-page p-2 md:p-6">
+    <div className="neu-page p-2 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {/* Loading overlay */}
       {loading && (
         <div className="neu-overlay">
@@ -631,8 +640,13 @@ export default function FormCreate() {
       )}
 
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-2xl font-bold text-slate-800">Tạo biểu mẫu</div>
+      <div className="mb-4 flex items-center justify-between gap-3 max-w-7xl mx-auto">
+        <div>
+          <div className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <FaWpforms className="text-emerald-600" /> Tạo biểu mẫu mới
+          </div>
+          <div className="text-slate-600 text-sm">Thiết kế form nội bộ với nhiều loại câu hỏi như Google Form</div>
+        </div>
         <NeuBtn
           className={`neu-btn--primary ${!canSaveForm ? 'opacity-60 cursor-not-allowed' : ''}`}
           disabled={!canSaveForm}
@@ -643,36 +657,82 @@ export default function FormCreate() {
         </NeuBtn>
       </div>
 
-      {/* Meta */}
-      <FormMetaCard
-        title={title}
-        setTitle={setTitle}
-        description={description}
-        setDescription={setDescription}
-        flags={flags}
-        setFlags={setFlags}
-        startAt={startAt}
-        setStartAt={setStartAt}
-        endAt={endAt}
-        setEndAt={setEndAt}
-      />
-
-      {/* Sections */}
-      <SectionsCard
-        sections={sections}
-        setSections={setSections}
-        onAddSection={onAddSection}
-        onRemoveSection={onRemoveSection}
-        onAddQuestion={addQuestion}
-      />
-
-      {/* Questions */}
-      <QuestionsCard
-        questions={questions}
-        addQuestion={addQuestion}
-        updateQuestion={updateQuestion}
-        removeQuestion={removeQuestion}
-      />
+      <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-4 max-w-7xl mx-auto">
+        <div>
+          <FormMetaCard
+            title={title}
+            setTitle={setTitle}
+            description={description}
+            setDescription={setDescription}
+            flags={flags}
+            setFlags={setFlags}
+            startAt={startAt}
+            setStartAt={setStartAt}
+            endAt={endAt}
+            setEndAt={setEndAt}
+          />
+          <Card className="mt-4">
+            <div className="text-base font-semibold text-violet-900">Phạm vi hiển thị cho user</div>
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label className="inline-flex items-center gap-2 text-slate-700">
+                <input
+                  type="radio"
+                  name="visibilityScope"
+                  checked={visibilityScope === "all"}
+                  onChange={() => setVisibilityScope("all")}
+                />
+                Tất cả user có quyền module biểu mẫu
+              </label>
+              <label className="inline-flex items-center gap-2 text-slate-700">
+                <input
+                  type="radio"
+                  name="visibilityScope"
+                  checked={visibilityScope === "restricted"}
+                  onChange={() => setVisibilityScope("restricted")}
+                />
+                Chỉ user/phòng ban chỉ định
+              </label>
+            </div>
+            {visibilityScope === "restricted" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <div className="text-sm text-slate-700">Danh sách UserID (cách nhau dấu phẩy)</div>
+                  <input
+                    className="neu-input mt-1"
+                    value={targetUsers}
+                    onChange={(e) => setTargetUsers(e.target.value)}
+                    placeholder="VD: 12, 45, 108"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm text-slate-700">Danh sách phòng ban (cách nhau dấu phẩy)</div>
+                  <input
+                    className="neu-input mt-1"
+                    value={targetDepts}
+                    onChange={(e) => setTargetDepts(e.target.value)}
+                    placeholder="VD: KCS, KHO, PHA MAU"
+                  />
+                </div>
+              </div>
+            )}
+          </Card>
+          <SectionsCard
+            sections={sections}
+            setSections={setSections}
+            onAddSection={onAddSection}
+            onRemoveSection={onRemoveSection}
+            onAddQuestion={addQuestion}
+          />
+        </div>
+        <div>
+          <QuestionsCard
+            questions={questions}
+            addQuestion={addQuestion}
+            updateQuestion={updateQuestion}
+            removeQuestion={removeQuestion}
+          />
+        </div>
+      </div>
     </div>
   );
 }

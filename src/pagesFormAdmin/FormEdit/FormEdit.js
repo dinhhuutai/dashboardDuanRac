@@ -1,7 +1,7 @@
 // src/pages/admin/FormEdit.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSpinner, FaEye, FaArrowUp, FaArrowDown, FaPlus, FaSave, FaTrash } from 'react-icons/fa';
+import { FaSpinner, FaEye, FaArrowUp, FaArrowDown, FaPlus, FaSave, FaTrash, FaWpforms } from 'react-icons/fa';
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
 import routes from '~/config/routes';
@@ -47,6 +47,9 @@ export default function FormEdit() {
     requireDept: true,
   });
   const [windowAt, setWindowAt] = useState({ startAt: '', endAt: '' });
+  const [visibilityScope, setVisibilityScope] = useState("all");
+  const [targetUsers, setTargetUsers] = useState("");
+  const [targetDepts, setTargetDepts] = useState("");
 
   // sections editor
   const [secTitle, setSecTitle] = useState('');
@@ -65,7 +68,10 @@ export default function FormEdit() {
   const load = async () => {
     setLoading(true);
     try {
-      const rs = await http.get(`${BASE_URL}/api/forms/${id}`);
+      const [rs, visRs] = await Promise.all([
+        http.get(`${BASE_URL}/api/forms/${id}`),
+        http.get(`${BASE_URL}/api/forms/${id}/visibility`),
+      ]);
       setMeta(rs.data);
       setTitle(rs.data.form.title || '');
       setDescription(rs.data.form.description || '');
@@ -80,6 +86,9 @@ export default function FormEdit() {
         startAt: rs.data.form.startAt ? rs.data.form.startAt.slice(0, 16) : '',
         endAt: rs.data.form.endAt ? rs.data.form.endAt.slice(0, 16) : '',
       });
+      setVisibilityScope(visRs.data?.scope || "all");
+      setTargetUsers((visRs.data?.users || []).join(", "));
+      setTargetDepts((visRs.data?.depts || []).join(", "));
     } catch (e) {
       console.error(e);
       alert('Không tải được biểu mẫu.');
@@ -101,6 +110,11 @@ export default function FormEdit() {
         ...flags,
         startAt: windowAt.startAt || null,
         endAt: windowAt.endAt || null,
+      });
+      await http.put(`${BASE_URL}/api/forms/${meta.form.formId}/visibility`, {
+        scope: visibilityScope,
+        users: targetUsers.split(",").map((x) => x.trim()).filter(Boolean),
+        depts: targetDepts.split(",").map((x) => x.trim()).filter(Boolean),
       });
       await load();
     } catch (e) {
@@ -320,7 +334,7 @@ export default function FormEdit() {
   };
 
   return (
-    <div className="neu-page p-3 md:p-6 max-w-6xl mx-auto">
+    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {/* Loading overlay */}
       {loading && (
         <div className="neu-overlay">
@@ -332,9 +346,12 @@ export default function FormEdit() {
       )}
 
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3 max-w-7xl mx-auto">
         <div>
-          <div className="text-2xl font-bold text-slate-800">Chỉnh sửa biểu mẫu</div>
+          <div className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <FaWpforms className="text-emerald-600" /> Chỉnh sửa biểu mẫu
+          </div>
+          <div className="text-slate-600 text-sm">Cấu hình nội dung, section và câu hỏi theo thời gian thực</div>
           {previewLink && (
             <a
               href={previewLink}
@@ -356,7 +373,23 @@ export default function FormEdit() {
         </NeuBtn>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 max-w-7xl mx-auto">
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Mã biểu mẫu</div>
+          <div className="text-base font-semibold text-slate-800 mt-1">{meta?.form?.code || "—"}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Tổng section</div>
+          <div className="text-2xl font-bold text-slate-800 mt-1">{meta?.sections?.length || 0}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Tổng câu hỏi</div>
+          <div className="text-2xl font-bold text-emerald-700 mt-1">{meta?.questions?.length || 0}</div>
+        </div>
+      </div>
+
       {/* Meta */}
+      <div className="max-w-7xl mx-auto">
       <Card>
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="Tiêu đề">
@@ -412,10 +445,55 @@ export default function FormEdit() {
             </div>
           </div>
         </div>
+
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <div className="text-base font-semibold text-violet-900">Phạm vi hiển thị cho user</div>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label className="inline-flex items-center gap-2 text-slate-700">
+              <input
+                type="radio"
+                name="visibilityScopeEdit"
+                checked={visibilityScope === "all"}
+                onChange={() => setVisibilityScope("all")}
+              />
+              Tất cả user có quyền module biểu mẫu
+            </label>
+            <label className="inline-flex items-center gap-2 text-slate-700">
+              <input
+                type="radio"
+                name="visibilityScopeEdit"
+                checked={visibilityScope === "restricted"}
+                onChange={() => setVisibilityScope("restricted")}
+              />
+              Chỉ user/phòng ban chỉ định
+            </label>
+          </div>
+          {visibilityScope === "restricted" && (
+            <div className="grid md:grid-cols-2 gap-3 mt-3">
+              <Field label="Danh sách UserID (cách nhau dấu phẩy)">
+                <input
+                  className="neu-input mt-1"
+                  value={targetUsers}
+                  onChange={(e) => setTargetUsers(e.target.value)}
+                  placeholder="VD: 12, 45, 108"
+                />
+              </Field>
+              <Field label="Danh sách phòng ban (cách nhau dấu phẩy)">
+                <input
+                  className="neu-input mt-1"
+                  value={targetDepts}
+                  onChange={(e) => setTargetDepts(e.target.value)}
+                  placeholder="VD: KCS, KHO, PHA MAU"
+                />
+              </Field>
+            </div>
+          )}
+        </div>
       </Card>
+      </div>
 
       {/* Body: Sections + Questions */}
-      <div className="mt-6 grid md:grid-cols-2 gap-6">
+      <div className="mt-6 grid md:grid-cols-2 gap-6 max-w-7xl mx-auto">
         {/* Sections */}
         <Card>
           <div className="flex items-center justify-between mb-3">

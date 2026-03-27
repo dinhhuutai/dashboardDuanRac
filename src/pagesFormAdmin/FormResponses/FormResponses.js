@@ -66,21 +66,21 @@ export default function ResponseList() {
     try {
       setLoading(true);
       const rs = await http.post(
-        `${BASE_URL}/api/forms/${id}/responses/export?fmt=xlsx`,
+        `${BASE_URL}/api/forms/${id}/responses/export?fmt=csv`,
         { q: q || null, from: from?.toISOString() || null, to: to?.toISOString() || null },
         { responseType: 'blob' }
       );
-      const blob = new Blob([rs.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blob = new Blob([rs.data], { type: 'text/csv;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       const dateStr = new Date().toISOString().slice(0, 10);
-      a.download = `responses_form_${id}_${dateStr}.xlsx`;
+      a.download = `responses_form_${id}_${dateStr}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
-      alert('Xuất Excel thất bại.');
+      alert('Xuất CSV thất bại.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export default function ResponseList() {
   const toPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="neu-page p-3 md:p-6">
+    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {/* Overlay */}
       {loading && (
         <div className="neu-overlay">
@@ -101,14 +101,14 @@ export default function ResponseList() {
       )}
 
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3 max-w-7xl mx-auto">
         <div>
           <div className="text-2xl font-bold text-slate-800">Câu trả lời</div>
-          <div className="mt-1 text-slate-600 text-sm">Theo biểu mẫu #{id}</div>
+          <div className="mt-1 text-slate-600 text-sm">Theo biểu mẫu #{id} • Quản lý phản hồi và kiểm duyệt dữ liệu</div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={exportCsv} className="neu-btn neu-btn--primary">
-            Xuất Excel
+            Xuất CSV
           </button>
           <Link to={`${routes.adminFormEdit}/${id}`} className="neu-btn neu-btn--ghost">
             Quay lại Form
@@ -117,7 +117,7 @@ export default function ResponseList() {
       </div>
 
       {/* Filters */}
-      <div className="neu-section mb-4">
+      <div className="neu-section mb-4 max-w-7xl mx-auto border-violet-100">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <label className="text-sm font-medium text-slate-700">Tìm nhanh (Họ tên / SĐT / Bộ phận)</label>
@@ -153,8 +153,23 @@ export default function ResponseList() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 max-w-7xl mx-auto">
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Tổng phản hồi</div>
+          <div className="text-2xl font-bold text-slate-800 mt-1">{total}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Hợp lệ</div>
+          <div className="text-2xl font-bold text-emerald-700 mt-1">{rows.filter((x) => !!x.isValid).length}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Đang hiển thị trang</div>
+          <div className="text-2xl font-bold text-blue-700 mt-1">{rows.length}</div>
+        </div>
+      </div>
+
       {/* Table */}
-      <div className="neu-section p-0 overflow-auto">
+      <div className="neu-section p-0 overflow-auto max-w-7xl mx-auto border-violet-100">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-[1]">
             <tr className="bg-[var(--neu-card)] text-slate-600">
@@ -212,7 +227,7 @@ export default function ResponseList() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between max-w-7xl mx-auto">
         <div className="text-sm text-slate-600">
           {total > 0 ? `Hiển thị ${rows.length} / ${total} bản ghi` : '—'}
         </div>

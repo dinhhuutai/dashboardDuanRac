@@ -1,10 +1,13 @@
 // src/pages/form/Form.jsx
-import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { FaSpinner, FaCheckCircle } from 'react-icons/fa';
-import { useParams } from 'react-router-dom';
-import { BASE_URL } from '~/config/index';
-import http from '~/api/http';
+import "react-datepicker/dist/react-datepicker.css";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FaArrowLeft, FaCheckCircle, FaChevronRight, FaSpinner } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
+import { BASE_URL } from "~/config/index";
+import http from "~/api/http";
+import { useSelector } from "react-redux";
+import { userSelector } from "~/redux/selectors";
+import MobileFormHero from "./sections/MobileFormHero";
 
 
 /**
@@ -20,57 +23,73 @@ import http from '~/api/http';
  */
 
 export default function Form({ formId: formIdProp, code: codeProp }) {
+  const navigate = useNavigate();
+  const auth = useSelector(userSelector);
+  const currentUser = auth?.login?.currentUser || null;
   const params = useParams?.() || {};
-  const codeFromRoute = params.id; // route kiểu /forms/:code
-  const [code] = useState(codeProp || codeFromRoute || null);
+  const codeFromRoute = params.id;
+  const code = codeProp || codeFromRoute || null;
+  const userId = currentUser?.userID || null;
+  const userDept = currentUser?.department || currentUser?.departmentName || "";
+  const userName = currentUser?.fullName || "";
+  const userPhone = currentUser?.phone || "";
 
   const [loading, setLoading] = useState(true);
-  const [forms, setForms] = useState([]); // dùng khi không có formId
-  const [formId, setFormId] = useState(formIdProp || null);
-  const [meta, setMeta] = useState(null); // { form, sections, questions }
-  const [who, setWho] = useState({ name: '', phone: '', dept: '' });
-  const [values, setValues] = useState({}); // { [questionId]: value }
+  const [forms, setForms] = useState([]);
+  const [selectedFormId, setSelectedFormId] = useState(formIdProp || null);
+  const [meta, setMeta] = useState(null);
+  const [who, setWho] = useState({ name: userName, phone: userPhone, dept: userDept });
+  const [values, setValues] = useState({});
   const [sent, setSent] = useState(false);
   const [triedSubmit, setTriedSubmit] = useState(false);
   const firstLoad = useRef(true);
 
-  // lấy formId từ query ?id=... nếu chưa có
-  useEffect(() => {
-    if (!formIdProp && !formId) {
-      const u = new URL(window.location.href);
-      const id = u.searchParams.get('id');
-      if (id) setFormId(Number(id));
-    }
-  }, [formIdProp, formId]);
+  const goBackToFormList = () => {
+    setSelectedFormId(null);
+    setMeta(null);
+    setValues({});
+    setTriedSubmit(false);
+    setSent(false);
+    if (code) navigate("/form", { replace: true });
+  };
 
-  // tải danh sách form đang mở hoặc chi tiết form
+  useEffect(() => {
+    if (!formIdProp && !selectedFormId) {
+      const u = new URL(window.location.href);
+      const id = u.searchParams.get("id");
+      if (id) setSelectedFormId(Number(id));
+    }
+  }, [formIdProp, selectedFormId]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         if (code) {
-          const rs = await http.get(`${BASE_URL}/api/forms/code/${code}`);
+          const rs = await http.get(`${BASE_URL}/api/forms/code/${code}`, {
+            params: { userId, dept: userDept || null },
+          });
           setMeta(rs.data);
-          setFormId(rs.data?.form?.formId || null);
-        } else if (formId) {
-          const rs = await http.get(`${BASE_URL}/api/forms/${formId}`);
+        } else if (selectedFormId) {
+          const rs = await http.get(`${BASE_URL}/api/forms/${selectedFormId}`);
           setMeta(rs.data);
         } else {
-          // fallback: chọn form active từ danh sách
-          const rs = await http.get(`${BASE_URL}/api/forms`, { params: { activeOnly: 1 } });
-          setForms(rs.data || []);
+          const formsRs = await http.get(`${BASE_URL}/api/forms`, {
+            params: { activeOnly: 1, forUser: 1, userId: userId || null, dept: userDept || null },
+          });
+          const list = Array.isArray(formsRs.data) ? formsRs.data : (formsRs.data?.data || []);
+          setForms(list);
         }
       } catch (e) {
         console.error(e);
-        alert('Không tải được dữ liệu.');
+        alert(e?.response?.data?.error || "Không tải được dữ liệu biểu mẫu.");
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [code, formId]);
+  }, [code, selectedFormId, userId, userDept]);
 
-  // == Khôi phục & Lưu bản nháp localStorage theo formId
   useEffect(() => {
     if (!meta?.form?.formId) return;
     const key = `form_draft_${meta.form.formId}`;
@@ -94,7 +113,6 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
     return () => clearInterval(handle);
   }, [meta?.form?.formId, who, values]);
 
-  // kiểm tra hợp lệ
   const mustName = meta?.form?.requireName;
   const mustPhone = meta?.form?.requirePhone;
   const mustDept = meta?.form?.requireDept;
@@ -172,6 +190,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
 
       const payload = {
         respondent: {
+          userId: userId || null,
           name: who.name || null,
           phone: who.phone || null,
           department: who.dept || null,
@@ -198,37 +217,44 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
     }
   };
 
-  // ==== UI chọn form khi chưa có id
-  if (!formId && !loading) {
+  if (!code && !selectedFormId && !loading) {
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-4">Chọn biểu mẫu</h1>
-        <div className="grid gap-3">
-          {(forms || []).map((f) => (
-            <button
-              key={f.formId}
-              onClick={() => setFormId(f.formId)}
-              className="text-left rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50 transition flex items-start justify-between gap-3"
-            >
-              <div>
-                <div className="font-semibold text-slate-900">{f.title}</div>
-                {f.description && (
-                  <div className="text-slate-600 mt-1 line-clamp-2">{f.description}</div>
-                )}
-              </div>
-              <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Đang mở</span>
-            </button>
-          ))}
-          {(!forms || forms.length === 0) && (
-            <div className="text-slate-500">Hiện chưa có biểu mẫu nào đang mở.</div>
-          )}
+      <div className="min-h-svh bg-gradient-to-b from-violet-50 via-fuchsia-50 to-white">
+        <MobileFormHero
+          navigate={navigate}
+          currentUser={currentUser}
+          formTitle="Danh sách biểu mẫu"
+          formDescription="Chọn biểu mẫu để điền hoặc xem lại lịch sử bạn đã gửi."
+        />
+        <div className="px-4 md:px-6 max-w-4xl mx-auto pb-24">
+          <Card className="mt-[126px] md:mt-0 border-violet-200 bg-white/95">
+            <h2 className="text-lg font-semibold text-violet-900">Biểu mẫu khả dụng</h2>
+            <div className="grid gap-3 mt-3">
+              {(forms || []).map((f) => (
+                <button
+                  key={f.formId}
+                  onClick={() => navigate(`/form/${f.code}`)}
+                  className="text-left rounded-2xl border border-violet-200 bg-white p-4 hover:bg-violet-50 transition flex items-start justify-between gap-3"
+                >
+                  <div>
+                    <div className="font-semibold text-slate-900">{f.title}</div>
+                    {f.description && <div className="text-slate-600 mt-1 line-clamp-2">{f.description}</div>}
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                    Điền ngay <FaChevronRight className="text-[10px]" />
+                  </span>
+                </button>
+              ))}
+              {forms.length === 0 && <div className="text-slate-500">Hiện chưa có biểu mẫu nào dành cho bạn.</div>}
+            </div>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-svh bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-svh bg-gradient-to-b from-violet-50 via-fuchsia-50 to-white">
       <div className="px-4 md:px-6 max-w-4xl mx-auto pb-28 md:pb-36">
         {/* Loading overlay */}
         {loading && (
@@ -243,9 +269,22 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
         {/* CONTENT */}
         {meta && !sent && (
           <>
-            {/* Header */}
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="p-5 md:p-7 bg-[radial-gradient(circle_at_10%_10%,#ecfdf5,transparent_40%),radial-gradient(circle_at_90%_20%,#eff6ff,transparent_35%)]">
+            <div className="fixed top-0 left-0 right-0 h-[64px] z-[80] md:hidden bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600" />
+            <div className="fixed top-3 left-4 z-[90] md:static md:mb-0">
+              <button
+                type="button"
+                onClick={goBackToFormList}
+                className="inline-flex items-center justify-center h-11 w-11 rounded-2xl border border-violet-200/80 bg-white/90 text-violet-700 backdrop-blur hover:bg-violet-50 active:scale-95 transition"
+                aria-label="Quay lại danh sách biểu mẫu"
+                title="Quay lại"
+              >
+                <FaArrowLeft />
+              </button>
+            </div>
+
+            {/* Header desktop */}
+            <div className="hidden md:block rounded-3xl border border-violet-200 bg-white overflow-hidden mt-4">
+              <div className="p-5 md:p-7 bg-[radial-gradient(circle_at_10%_10%,#f5f3ff,transparent_40%),radial-gradient(circle_at_90%_20%,#fdf2f8,transparent_35%)]">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
@@ -271,9 +310,9 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       <Badge>Yêu cầu số điện thoại</Badge>
                     )}
                     {meta.form.requireDept && <Badge>Yêu cầu bộ phận</Badge>}
-                    {meta.form.closeAt && (
+                    {meta.form.endAt && (
                       <Badge tone="blue">
-                        Đóng: {fmtDateTime(meta.form.closeAt)}
+                        Đóng: {fmtDateTime(meta.form.endAt)}
                       </Badge>
                     )}
                   </div>
@@ -282,7 +321,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
             </div>
 
             {/* Thông tin người điền */}
-            <Card className="mt-5">
+            <Card className="mt-[68px] md:mt-5 border-violet-200 bg-white/95">
               <h2 className="text-lg font-semibold">Thông tin người điền</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                 <Field
@@ -353,7 +392,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                   {q.questionType === 'short_text' && (
                     <input
                       className={cx(
-                        'w-full border rounded-xl p-2 mt-3 focus:outline-none focus:ring-2 focus:ring-emerald-500',
+                        "w-full border rounded-xl p-2 mt-3 focus:outline-none focus:ring-2 focus:ring-violet-500",
                         triedSubmit && missingRequired.has(q.questionId) && 'border-rose-400'
                       )}
                       value={values[q.questionId] || ''}
@@ -367,7 +406,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       <textarea
                         rows={4}
                         className={cx(
-                          'w-full border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500',
+                          "w-full border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-violet-500",
                           triedSubmit && missingRequired.has(q.questionId) && 'border-rose-400'
                         )}
                         value={values[q.questionId] || ''}
@@ -395,7 +434,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                               className={cx(
                                 'px-3 py-2 rounded-xl border transition',
                                 active
-                                  ? 'bg-emerald-600 text-white border-emerald-600'
+                                  ? "bg-violet-600 text-white border-violet-600"
                                   : 'bg-white hover:bg-slate-50'
                               )}
                               onClick={() => handleChange(q, val)}
@@ -416,7 +455,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       {q.questionType === 'dropdown' ? (
                         <select
                           className={cx(
-                            'w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500',
+                            "w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-violet-500",
                             triedSubmit && missingRequired.has(q.questionId) && 'border-rose-400'
                           )}
                           value={values[q.questionId] || ''}
@@ -440,12 +479,12 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                                 key={opt.optionId}
                                 className={cx(
                                   'flex items-center gap-3 rounded-xl border px-3 py-2 cursor-pointer transition',
-                                  checked ? 'border-emerald-500 bg-emerald-50' : 'hover:bg-slate-50'
+                                  checked ? "border-violet-500 bg-violet-50" : "hover:bg-slate-50"
                                 )}
                               >
                                 <input
                                   type="radio"
-                                  className="accent-emerald-600"
+                                  className="accent-violet-600"
                                   name={`q_${q.questionId}`}
                                   checked={checked}
                                   onChange={() => handleChange(q, val)}
@@ -459,7 +498,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       {q.allowOtherOption && (
                         <div className="mt-2">
                           <input
-                            className="w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
                             placeholder="Khác (nhập tại đây)…"
                             onBlur={(e) => {
                               const txt = e.target.value.trim();
@@ -485,12 +524,12 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                             key={opt.optionId}
                             className={cx(
                               'flex items-center gap-3 rounded-xl border px-3 py-2 cursor-pointer transition',
-                              checked ? 'border-emerald-500 bg-emerald-50' : 'hover:bg-slate-50'
+                              checked ? "border-violet-500 bg-violet-50" : "hover:bg-slate-50"
                             )}
                           >
                             <input
                               type="checkbox"
-                              className="accent-emerald-600"
+                              className="accent-violet-600"
                               checked={checked}
                               onChange={(e) => {
                                 if (e.target.checked) handleChange(q, [...cur, val]);
@@ -503,7 +542,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       })}
                       {q.allowOtherOption && (
                         <input
-                          className="w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-full border rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
                           placeholder="Khác (nhập tại đây)…"
                           onBlur={(e) => {
                             const txt = e.target.value.trim();
@@ -538,7 +577,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
             {/* Sticky Submit Bar */}
             <div className="fixed bottom-0 left-0 right-0 z-50">
               <div className="mx-auto max-w-4xl px-4 md:px-6">
-                <div className="mb-3 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-lg">
+                <div className="mb-3 rounded-2xl border border-violet-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60">
                   <div className="p-3 md:p-4 flex items-center justify-between gap-3">
                     <div className="text-sm text-slate-600">
                       {totalRequired > 0 ? (
@@ -555,7 +594,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       className={cx(
                         'px-5 py-2 rounded-xl text-white font-medium transition',
                         canSubmit
-                          ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm'
+                          ? "bg-violet-600 hover:bg-violet-700 shadow-sm"
                           : 'bg-slate-400 cursor-not-allowed'
                       )}
                     >
@@ -571,7 +610,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
         {/* Sent state */}
         {sent && (
           <div className="mt-10">
-            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-emerald-900 shadow-sm">
+            <div className="rounded-3xl border border-violet-200 bg-violet-50 p-7 text-violet-900">
               <div className="flex items-start gap-3">
                 <FaCheckCircle className="text-2xl" />
                 <div>
@@ -579,7 +618,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                   <div className="mt-2">Chúng tôi đã ghi nhận câu trả lời của bạn.</div>
                   <div className="mt-4 flex gap-2">
                     <button
-                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                      className="px-4 py-2 rounded-xl bg-violet-600 text-white hover:bg-violet-700"
                       onClick={() => {
                         setSent(false);
                         setValues({});
@@ -590,7 +629,7 @@ export default function Form({ formId: formIdProp, code: codeProp }) {
                       Gửi thêm phản hồi
                     </button>
                     <a
-                      className="px-4 py-2 rounded-xl border border-emerald-300 text-emerald-700 hover:bg-white"
+                      className="px-4 py-2 rounded-xl border border-violet-300 text-violet-700 hover:bg-white"
                       href="/"
                     >
                       Về trang chủ
@@ -706,8 +745,8 @@ function Card({ children, className = '', hover = false }) {
   return (
     <div
       className={cx(
-        'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition',
-        hover && 'hover:shadow-md hover:border-slate-300',
+        'rounded-2xl border border-slate-200 bg-white p-5 transition',
+        hover && 'hover:border-slate-300',
         className
       )}
     >

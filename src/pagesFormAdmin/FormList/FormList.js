@@ -3,7 +3,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import { vi } from 'date-fns/locale';
-import { FaSpinner, FaPlus, FaSearch, FaTrash, FaCopy } from 'react-icons/fa';
+import { FaSpinner, FaPlus, FaSearch, FaTrash, FaCopy, FaWpforms, FaCheckCircle } from 'react-icons/fa';
 import { BASE_URL } from '~/config/index';
 import http from '~/api/http';
 import routes from '~/config/routes';
@@ -34,7 +34,7 @@ export default function FormList() {
     try {
       // lấy tất cả (kể cả tắt) -> activeOnly=0
       const rs = await http.get(`${BASE_URL}/api/forms`, { params: { activeOnly: 0 } });
-      const data = Array.isArray(rs.data) ? rs.data : [];
+      const data = Array.isArray(rs.data) ? rs.data : (rs.data?.data || []);
       setAllRows(data);
     } catch (e) {
       console.error(e);
@@ -149,7 +149,7 @@ export default function FormList() {
   };
 
   return (
-    <div className="neu-page p-3 md:p-6">
+    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {/* Overlay */}
       {loading && (
         <div className="neu-overlay">
@@ -161,18 +161,37 @@ export default function FormList() {
       )}
 
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3 max-w-7xl mx-auto">
         <div>
-          <div className="text-2xl font-bold text-slate-800">Quản lý biểu mẫu</div>
-          <div className="text-slate-600 text-sm">Danh sách, tìm kiếm, lọc & thao tác nhanh</div>
+          <div className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <FaWpforms className="text-emerald-600" /> Quản lý biểu mẫu
+          </div>
+          <div className="text-slate-600 text-sm">Danh sách biểu mẫu nội bộ, công bố và theo dõi phản hồi</div>
         </div>
-        <a href="/admin/forms/create" className="neu-btn neu-btn--primary">
+        <a href={routes.adminFormCreate} className="neu-btn neu-btn--primary">
           <FaPlus /> Tạo mới
         </a>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 max-w-7xl mx-auto">
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Tổng biểu mẫu</div>
+          <div className="text-2xl font-bold text-slate-800 mt-1">{allRows.length}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Đang công bố</div>
+          <div className="text-2xl font-bold text-emerald-700 mt-1">
+            {allRows.filter((x) => !!x.isActive).length}
+          </div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Đang hiển thị theo bộ lọc</div>
+          <div className="text-2xl font-bold text-blue-700 mt-1">{total}</div>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="neu-section mb-4">
+      <div className="neu-section mb-4 max-w-7xl mx-auto border-violet-100">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <label className="text-sm font-medium text-slate-700">Tìm theo tiêu đề / code</label>
@@ -228,10 +247,10 @@ export default function FormList() {
       </div>
 
       {/* Table */}
-      <div className="neu-section p-0 overflow-auto">
+      <div className="neu-section p-0 overflow-auto max-w-7xl mx-auto border-violet-100">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="text-slate-600">
+            <tr className="text-slate-600 bg-slate-50/60">
               <th className="text-left px-3 py-3">Tiêu đề</th>
               <th className="text-left px-3 py-3">Link</th>
               <th className="text-left px-3 py-3">Trạng thái</th>
@@ -264,7 +283,7 @@ export default function FormList() {
                 </td>
                 <td className="px-3 py-3 align-top">
                   {r.isActive ? (
-                    <span className="neu-chip neu-chip--success">Đang công bố</span>
+                    <span className="neu-chip neu-chip--success inline-flex items-center gap-1"><FaCheckCircle /> Đang công bố</span>
                   ) : (
                     <span className="neu-chip">Đã tắt</span>
                   )}
@@ -308,7 +327,7 @@ export default function FormList() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-3 neu-section flex items-center justify-between">
+      <div className="mt-3 neu-section flex items-center justify-between max-w-7xl mx-auto border-violet-100">
         <div className="text-sm text-slate-600">
           {total > 0 ? `Hiển thị ${rows.length} / ${total} biểu mẫu` : '—'}
         </div>

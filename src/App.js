@@ -52,6 +52,7 @@ import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/Defa
 import DefaultLayoutAdminQualityInspectionKCS from "./layoutQualityInspectionKCSAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
+import DefaultLayoutForm from "./layoutsForm/DefaultLayout"
 
 import DefaultLayoutAdminMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
 
@@ -128,10 +129,18 @@ function AppRoutes({ user }) {
                           <DefaultLayoutSuggest>
                             <route.component />
                           </DefaultLayoutSuggest>
+                        ) : route.module === 'bieumaunoibo' ? (
+                          <DefaultLayoutForm>
+                            <route.component />
+                          </DefaultLayoutForm>
                         ) :
                         <route.component />
                       ) 
-                    : route.module === 'datcom' ? (
+                    : route.module === 'bieumaunoibo' ? (
+                      <DefaultLayoutForm>
+                        <route.component />
+                      </DefaultLayoutForm>
+                    ) : route.module === 'datcom' ? (
                       <DefaultLayoutLunchOrder>
                         <route.component />
                       </DefaultLayoutLunchOrder>

@@ -97,7 +97,7 @@ export default function ResponseDetail() {
   const r = data.response;
 
   return (
-    <div className="neu-page p-3 md:p-6 max-w-5xl mx-auto">
+    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {loading && (
         <div className="neu-overlay">
           <div className="neu-card flex flex-col items-center gap-2">
@@ -108,7 +108,7 @@ export default function ResponseDetail() {
       )}
 
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3 max-w-6xl mx-auto">
         <div>
           <div className="text-2xl font-bold text-slate-800">Chi tiết câu trả lời</div>
           <div className="mt-1 text-slate-600 text-sm">
@@ -128,8 +128,23 @@ export default function ResponseDetail() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 max-w-6xl mx-auto">
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Mã phản hồi</div>
+          <div className="text-base font-semibold text-slate-800 mt-1">#{r.responseId}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Số câu đã trả lời</div>
+          <div className="text-2xl font-bold text-slate-800 mt-1">{(data.answers || []).length}</div>
+        </div>
+        <div className="neu-section">
+          <div className="text-sm text-slate-500">Trạng thái</div>
+          <div className="text-base font-semibold text-emerald-700 mt-1">{r.isValid ? "Hợp lệ" : "Đã hủy"}</div>
+        </div>
+      </div>
+
       {/* Meta */}
-      <div className="neu-section">
+      <div className="neu-section max-w-6xl mx-auto border-violet-100">
         <div className="flex items-center justify-between mb-3">
           <div className="text-slate-700 font-semibold">Thông tin gửi</div>
           {r.isValid ? (
@@ -152,7 +167,7 @@ export default function ResponseDetail() {
       </div>
 
       {/* Answers */}
-      <div className="mt-4 grid gap-3">
+      <div className="mt-4 grid gap-3 max-w-6xl mx-auto">
         {(data.answers || []).map((a) => (
           <AnswerCard key={a.questionId} a={a} />
         ))}

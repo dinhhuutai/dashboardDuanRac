@@ -805,6 +805,7 @@ export default function ReportByShift() {
   const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
 
   const [loading, setLoading] = useState(true);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
   const [filterType, setFilterType] = useState('one');
@@ -819,7 +820,7 @@ export default function ReportByShift() {
   useEffect(() => {
     setLoading(true);
     const controller = new AbortController();
-    const t = setTimeout(async () => {
+    const run = async () => {
       try {
         const params = {
           startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
@@ -844,13 +845,25 @@ export default function ReportByShift() {
       } finally {
         setLoading(false);
       }
-    }, 300); // ⏳ debounce 300ms
+    };
 
+    run();
     return () => {
       controller.abort();
-      clearTimeout(t);
     };
   }, [filterType, dateOne, startDate, endDate, selectedBucket]);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowLoadingOverlay(true), 250);
+    } else {
+      setShowLoadingOverlay(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   const deferredRaw = useDeferredValue(raw);
 
@@ -1104,7 +1117,7 @@ export default function ReportByShift() {
         </Card>
       </div>
 
-      {loading && (
+      {showLoadingOverlay && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-white/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <FaSpinner className="animate-spin text-emerald-600 text-4xl" />

@@ -209,100 +209,83 @@ code {
 }
 
 @layer utilities {
-  /* Màu nền dịu mắt (light) */
+  /* Form admin theme (flat/glass, no neumorphism) */
   .neu-page {
-    @apply min-h-screen bg-[#e8eef5];
-    /* có thể chuyển sang #e9edf3/#eaeef5 tùy palette */
+    @apply min-h-screen bg-gradient-to-b from-violet-50 via-white to-fuchsia-50;
   }
 
-  /* Khối nổi (card) */
   .neu-card {
-    @apply rounded-2xl p-4 md:p-5;
-    background: #e8eef5;
-    /* shadow đôi: đậm/dịu */
-    box-shadow:
-      10px 10px 20px #c8ced6,
-      -10px -10px 20px #ffffff;
+    @apply rounded-2xl p-4 md:p-5 bg-white border border-violet-100 shadow-sm;
   }
 
-  /* Vùng section to hơn */
   .neu-section {
-    @apply rounded-3xl p-4 md:p-6;
-    background: #e8eef5;
-    box-shadow:
-      12px 12px 26px #c8ced6,
-      -12px -12px 26px #ffffff;
+    @apply rounded-2xl p-4 md:p-6 bg-white border border-violet-100 shadow-sm;
   }
 
-  /* Input/Select kiểu lõm (inset) */
   .neu-input, .neu-select {
-    @apply w-full rounded-2xl px-3 py-2 text-slate-700 outline-none transition;
-    background: #e8eef5;
-    box-shadow:
-      inset 6px 6px 12px #c8ced6,
-      inset -6px -6px 12px #ffffff;
+    @apply w-full rounded-xl px-3 py-2 text-slate-700 bg-white border border-slate-200 outline-none transition;
   }
   .neu-input:focus, .neu-select:focus {
-    box-shadow:
-      inset 4px 4px 10px #c8ced6,
-      inset -4px -4px 10px #ffffff,
-      0 0 0 3px rgba(16,185,129,0.25);
+    @apply border-violet-300 ring-2 ring-violet-200;
   }
 
-  /* Nút nổi */
   .neu-btn {
-    @apply rounded-2xl px-4 py-2 font-medium text-slate-700 transition select-none;
-    background: #e8eef5;
-    box-shadow:
-      8px 8px 16px #c8ced6,
-      -8px -8px 16px #ffffff;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-medium text-slate-700 transition select-none border border-slate-200 bg-white shadow-sm hover:bg-slate-50;
   }
   .neu-btn:hover {
-    box-shadow:
-      6px 6px 12px #c8ced6,
-      -6px -6px 12px #ffffff;
+    @apply border-slate-300;
   }
   .neu-btn:active {
-    box-shadow:
-      inset 6px 6px 12px #c8ced6,
-      inset -6px -6px 12px #ffffff;
+    @apply scale-[0.99];
   }
-  /* Biến thể xanh lá cho nút hành động chính */
   .neu-btn--primary {
-    @apply text-emerald-700;
+    @apply bg-violet-600 text-white border-violet-600 hover:bg-violet-700 hover:border-violet-700;
+  }
+  .neu-btn--ghost {
+    @apply bg-white text-slate-700 border-slate-200 hover:bg-slate-50;
+  }
+  .neu-btn--muted {
+    @apply bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100;
+  }
+  .neu-btn--danger {
+    @apply bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100;
   }
 
-  /* Badge/nhãn nhỏ */
   .neu-badge {
-    @apply inline-flex items-center rounded-xl px-2 py-1 text-[12px] font-medium text-slate-600;
-    background: #e8eef5;
-    box-shadow:
-      4px 4px 8px #c8ced6,
-      -4px -4px 8px #ffffff;
+    @apply inline-flex items-center rounded-lg px-2 py-1 text-[12px] font-medium text-slate-700 bg-slate-100 border border-slate-200;
+  }
+  .neu-chip {
+    @apply inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-200;
+  }
+  .neu-chip--success {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+  .neu-chip--primary {
+    @apply bg-violet-50 text-violet-700 border-violet-200;
+  }
+  .neu-chip--ghost {
+    @apply bg-white text-slate-700 border-slate-200;
   }
 
-  /* Card thống kê mini */
   .neu-stat {
-    @apply rounded-2xl p-4;
-    background: #e8eef5;
-    box-shadow:
-      8px 8px 16px #c8ced6,
-      -8px -8px 16px #ffffff;
+    @apply rounded-2xl p-4 bg-white border border-violet-100 shadow-sm;
   }
 
-  /* Khung biểu đồ */
   .neu-chart {
-    @apply rounded-2xl p-3 md:p-4;
-    background: #e8eef5;
-    box-shadow:
-      inset 6px 6px 12px #c8ced6,
-      inset -6px -6px 12px #ffffff;
+    @apply rounded-2xl p-3 md:p-4 bg-slate-50 border border-slate-200;
+  }
+  .neu-row {
+    @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3;
+  }
+  .neu-row.between {
+    @apply justify-between;
+  }
+  .neu-inner {
+    @apply bg-slate-50 border border-slate-200;
   }
 
-  /* Overlay loading dịu mắt */
   .neu-overlay {
-    @apply fixed inset-0 z-50 grid place-items-center backdrop-blur-sm;
-    background: rgba(232,238,245,0.75);
+    @apply fixed inset-0 z-50 grid place-items-center bg-white/60 backdrop-blur-sm;
   }
 }
 

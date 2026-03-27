@@ -164,6 +164,7 @@ const WeightComparisonChart = ({ department1, department2 }) => {
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
 
   const [todayStats, setTodayStats] = useState({
     totalWeighings: 0,
@@ -201,6 +202,18 @@ const Analytics = () => {
     fetchAll();
   }, []);
 
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowLoadingOverlay(true), 250);
+    } else {
+      setShowLoadingOverlay(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+
   const donutTotal = useMemo(
     () => trashTypeData.reduce((sum, d) => sum + Number(d.value || 0), 0),
     [trashTypeData]
@@ -215,7 +228,7 @@ const Analytics = () => {
 
   return (
     <div className="relative">
-      {loading && (
+      {showLoadingOverlay && (
         <div className="fixed inset-0 bg-white/70 backdrop-blur-sm grid place-items-center z-50">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
         </div>

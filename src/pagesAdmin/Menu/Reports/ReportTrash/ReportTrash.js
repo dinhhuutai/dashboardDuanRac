@@ -899,6 +899,7 @@ export default function ReportTrash() {
   const EXPORT_EXCEL_REPORT = useFeatureAllowed(MODULEID.CANRAC, 'cr_xuatexceltrangbaocao');
 
   const [loading, setLoading] = useState(true);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
 
@@ -914,7 +915,7 @@ export default function ReportTrash() {
   useEffect(() => {
     setLoading(true);
     const controller = new AbortController();
-    const t = setTimeout(async () => {
+    const run = async () => {
       try {
         const params = {
           startDate: filterType === 'one' ? toISODate(dateOne) : toISODate(startDate),
@@ -936,9 +937,22 @@ export default function ReportTrash() {
       } finally {
         setLoading(false);
       }
-    }, 300);
-    return () => { controller.abort(); clearTimeout(t); };
+    };
+    run();
+    return () => { controller.abort(); };
   }, [filterType, dateOne, startDate, endDate, selectedBucketId]);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowLoadingOverlay(true), 250);
+    } else {
+      setShowLoadingOverlay(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   const deferredRaw = useDeferredValue(raw);
 
@@ -1102,7 +1116,7 @@ const pickVisibleCols = (vals = []) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 p-2 md:p-4">
-      {loading && (
+      {showLoadingOverlay && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-white/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <FaSpinner className="animate-spin text-emerald-600 text-4xl" />

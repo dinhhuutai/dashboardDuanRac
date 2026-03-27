@@ -106,6 +106,7 @@ import AdminCalculateSalaryTypePay from '~/pagesCalculateSalaryAdmin/TypePay';
 import AdminCalculateSalaryHistory from '~/pagesCalculateSalaryAdmin/History';
 
 import Form from '~/pagesForm/Form';
+import FormHistory from '~/pagesForm/FormHistory/FormHistory';
 
 import FormCreate from '~/pagesFormAdmin/FormCreate';
 import FormList from '~/pagesFormAdmin/FormList';
@@ -113,6 +114,7 @@ import FormEdit from '~/pagesFormAdmin/FormEdit';
 import FormResponses from '~/pagesFormAdmin/FormResponses';
 import FormResponseDetail from '~/pagesFormAdmin/FormResponseDetail';
 import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
+import FormDashboard from '~/pagesFormAdmin/FormDashboard';
 
 
 import N20th11 from '~/pages/N20th11';
@@ -486,10 +488,17 @@ export const routes = [
 
   
   {
+    path: config.routes.formHistory,
+    component: FormHistory,
+    login: true,
+    module: 'bieumaunoibo',
+  },
+  {
     path: config.routes.form,
     component: Form,
     login: false,
     isLogin: false,
+    module: 'bieumaunoibo',
     addId: true,
   },
   {
@@ -497,6 +506,7 @@ export const routes = [
     component: Form,
     login: false,
     isLogin: false,
+    module: 'bieumaunoibo',
   },
 
   
@@ -873,6 +883,11 @@ export const routesCalculateSalaryAdmin = [
 ]
 
 export const routesFormAdmin = [
+  {
+    path: config.routes.adminFormDashboard,
+    component: FormDashboard,
+    login: true,
+  },
   {
     path: config.routes.adminFormCreate,
     component: FormCreate,

@@ -43,7 +43,7 @@ export default function Analytics() {
     setLoading(true);
     try {
       const rs = await http.get(`${BASE_URL}/api/forms`, { params: { activeOnly: 1 } });
-      const list = rs.data || [];
+      const list = Array.isArray(rs.data) ? rs.data : (rs.data?.data || []);
       const sorted = [...list].sort((a, b) => {
         const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
         const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
@@ -51,7 +51,7 @@ export default function Analytics() {
       });
       if (sorted.length === 0) {
         const rs2 = await http.get(`${BASE_URL}/api/forms`, { params: { activeOnly: 0 } });
-        const all = rs2.data || [];
+        const all = Array.isArray(rs2.data) ? rs2.data : (rs2.data?.data || []);
         all.sort((a, b) => {
           const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
           const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
@@ -92,7 +92,7 @@ export default function Analytics() {
   const loadQuestionDetail = async (qid, setter) => {
     if (!qid || !formId) { setter(null); return; }
     try {
-      const rs = await http.get(`${BASE_URL}/api/bm/forms/${formId}/analytics/questions/${qid}`, { params });
+      const rs = await http.get(`${BASE_URL}/api/forms/${formId}/analytics/questions/${qid}`, { params });
       setter(rs.data);
     } catch (e) {
       console.error(e);
@@ -113,7 +113,7 @@ export default function Analytics() {
   const choiceList = useMemo(() => (summary?.topOptions || []), [summary]);
 
   return (
-    <div className="neu-page p-3 md:p-6">
+    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
       {loading && (
         <div className="neu-overlay">
           <div className="neu-card flex flex-col items-center gap-2">
@@ -124,11 +124,11 @@ export default function Analytics() {
       )}
 
       {/* Header */}
-      <div className="mb-4">
+      <div className="mb-4 max-w-7xl mx-auto">
         <div className="neu-section">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
             <div>
-              <div className="text-2xl font-bold text-slate-800">Thống kê & trực quan hóa</div>
+              <div className="text-2xl font-bold text-slate-800">Thống kê & trực quan hóa biểu mẫu</div>
               <div className="mt-1 text-slate-600 text-sm">
                 Biểu mẫu: {formId ? (
                   <>#{formId} — <span className="font-medium">{forms.find(f => f.formId === formId)?.title || ''}</span></>
@@ -202,8 +202,14 @@ export default function Analytics() {
         </div>
       </div>
 
+      <div className="neu-section mb-4 max-w-7xl mx-auto border-violet-100">
+        <div className="text-sm text-slate-600">
+          Gợi ý: chọn biểu mẫu, lọc thời gian, sau đó xem phân bố điểm và xu hướng phản hồi theo ngày/tuần.
+        </div>
+      </div>
+
       {/* Overview */}
-      <div className="grid md:grid-cols-3 gap-4 mb-4">
+      <div className="grid md:grid-cols-3 gap-4 mb-4 max-w-7xl mx-auto">
         <div className="neu-stat">
           <div className="text-slate-500 text-sm">Tổng lượt trả lời</div>
           <div className="text-2xl font-bold text-slate-800 mt-1">
@@ -225,7 +231,7 @@ export default function Analytics() {
       </div>
 
       {/* Charts */}
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-7xl mx-auto">
         <div className="neu-section">
           <div className="font-semibold text-slate-800 mb-3">Lượt trả lời theo ngày</div>
           <div className="neu-chart h-64">
@@ -265,7 +271,7 @@ export default function Analytics() {
       </div>
 
       {/* CSAT */}
-      <div className="neu-section mb-6">
+      <div className="neu-section mb-6 max-w-7xl mx-auto border-violet-100">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="font-semibold text-slate-800">Phân bố thang điểm (Linear scale)</div>
           <select
@@ -304,7 +310,7 @@ export default function Analytics() {
       </div>
 
       {/* Top lựa chọn */}
-      <div className="neu-section">
+      <div className="neu-section max-w-7xl mx-auto border-violet-100">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="font-semibold text-slate-800">Top lựa chọn (Multiple/Checkbox/Dropdown)</div>
           <select

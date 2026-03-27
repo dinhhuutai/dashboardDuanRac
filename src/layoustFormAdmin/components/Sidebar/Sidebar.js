@@ -28,7 +28,7 @@ function SidebarMealAdmin() {
     [
       'group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
       isActive
-        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+        ? 'bg-violet-50 text-violet-700 ring-1 ring-violet-200'
         : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50',
     ].join(' ');
 
@@ -69,12 +69,17 @@ function SidebarMealAdmin() {
       "
     >
       <div className="px-3 py-3">
-        <div className="uppercase text-emerald-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
+        <div className="uppercase text-violet-700/80 text-[11px] font-bold tracking-wider px-2 mb-2">
           Biểu mẫu
         </div>
 
         {/* 1) Tổng quan */}
         <Section title="Tổng quan" icon={BsSpeedometer2} k="overview">
+          <li>
+            <NavLink to={config.routes.adminFormDashboard} className={linkClass}>
+              Dashboard
+            </NavLink>
+          </li>
           <li>
             <NavLink to={config.routes.adminFormAnalytics} className={linkClass}>
               Analytics

@@ -1220,6 +1220,7 @@ export default function ReportTotalDynamic() {
   useEffect(() => setUser(tmp?.login?.currentUser), [tmp]);
 
   const [loading, setLoading] = useState(true);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [filterType, setFilterType] = useState('one'); // 'one' | 'range'
   const [dateOne, setDateOne] = useState(new Date());
   const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; });
@@ -1239,7 +1240,7 @@ export default function ReportTotalDynamic() {
   useEffect(() => {
     setLoading(true);
     const controller = new AbortController();
-    const t = setTimeout(async () => {
+    const run = async () => {
       try {
         const params = {
           startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
@@ -1258,9 +1259,22 @@ export default function ReportTotalDynamic() {
       } finally {
         setLoading(false);
       }
-    }, 300);
-    return () => { controller.abort(); clearTimeout(t); };
+    };
+    run();
+    return () => { controller.abort(); };
   }, [filterType, dateOne, startDate, endDate]);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowLoadingOverlay(true), 250);
+    } else {
+      setShowLoadingOverlay(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   const deferredRaw = useDeferredValue(raw);
   /* ===== Chuẩn hóa dữ liệu để render nhanh ===== */
@@ -1704,7 +1718,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
       )}
 
       {/* Global loading */}
-      {loading && (
+      {showLoadingOverlay && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-white/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <FaSpinner className="animate-spin text-emerald-600 text-4xl" />

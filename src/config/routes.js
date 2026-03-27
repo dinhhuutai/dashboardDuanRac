@@ -109,8 +109,10 @@ const routes = {
   
   
   form: '/form',
+  formHistory: '/form/history',
 
   adminFormCreate: '/admin/form/create',
+  adminFormDashboard: '/admin/form/dashboard',
   adminFormList: '/admin/form/list',
   adminFormEdit: '/admin/form/edit',
   adminFormResponses: '/admin/form/responses',
