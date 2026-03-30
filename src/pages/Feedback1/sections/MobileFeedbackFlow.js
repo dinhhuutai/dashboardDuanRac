@@ -347,16 +347,21 @@ export default function MobileFeedbackFlow({
                     {selectedCategoryName?.includes("Kh") ? "" : ` về ${selectedCategoryName}`}
                   </h2>
 
+                  <p className="text-center text-[11px] text-slate-500 px-1">
+                    Xuống dòng / thụt lề được giữ nguyên khi gửi.
+                  </p>
                   <textarea
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    rows={5}
+                    rows={7}
+                    spellCheck={false}
                     className="
-                      min-h-[130px] w-full rounded-2xl
+                      min-h-[160px] w-full resize-y rounded-2xl
                       border border-slate-300 bg-white
-                      px-4 py-3 text-sm text-slate-800
+                      px-4 py-3 font-mono text-[13px] leading-relaxed text-slate-800
                       shadow-sm placeholder:text-slate-400
                       focus:outline-none focus:ring-2 focus:ring-sky-500/30
+                      whitespace-pre-wrap
                     "
                     placeholder="Viết rõ ý kiến của bạn..."
                   />

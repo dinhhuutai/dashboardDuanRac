@@ -542,7 +542,10 @@ function SuggestionList() {
                     >
                       <td className="px-4 py-3">{i + 1}</td>
                       <td className="px-4 py-3">{item.categoryName}</td>
-                      <td className="px-4 py-3 max-w-[400px] truncate">
+                      <td
+                        className="px-4 py-3 max-w-[400px] truncate align-top"
+                        title={item.content}
+                      >
                         {item.content}
                       </td>
                       <td className="px-4 py-3">

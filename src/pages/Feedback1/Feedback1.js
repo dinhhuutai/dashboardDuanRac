@@ -618,21 +618,22 @@ function FeedbackFlow() {
     try {
       const res = await http.post("/api/suggestions/submit", formData);
       const data = await res.data;
-      if (data.success) setStep(5);
-      else setModalMessage("❌ Gửi góp ý thất bại!");
+      if (data.success) {
+        setStep(5);
+        setSelectedCategory(null);
+        setFeedback("");
+        setImages([]);
+        setImagePreviews([]);
+        setWantContact(null);
+        setContactInfo({ name: "", department: "", phone: "" });
+      } else {
+        setModalMessage("❌ Gửi góp ý thất bại!");
+      }
     } catch (err) {
       console.error(err);
       setModalMessage("❌ Có lỗi xảy ra khi gửi.");
     } finally {
-      setLoadingCategories(false);
-      setSelectedCategory(null);
-      setFeedback("");
-      setImages([]);
-      setImagePreviews([]);
-      setWantContact(null);
-      setContactInfo({ name: "", department: "", phone: "" });
       setLoading(false);
-      setModalMessage("");
     }
   };
 
@@ -904,8 +905,9 @@ function FeedbackFlow() {
             <textarea
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              rows={5}
-              className="min-h-[140px] w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+              rows={8}
+              spellCheck={false}
+              className="min-h-[200px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-3 font-mono text-[13px] leading-relaxed text-slate-800 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30 whitespace-pre-wrap"
               placeholder="Viết rõ ý kiến của bạn..."
             />
 

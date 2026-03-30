@@ -175,7 +175,7 @@ const ImageDetailModal = ({ selectedItem, closeModal }) => {
 
               <div className="text-[15px] leading-relaxed text-slate-800">
                 <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Nội dung</div>
-                <div className="rounded-lg bg-slate-50 ring-1 ring-slate-200 px-3 py-2">
+                <div className="rounded-lg bg-slate-50 ring-1 ring-slate-200 px-3 py-2 whitespace-pre-wrap break-words">
                   {content}
                 </div>
               </div>
