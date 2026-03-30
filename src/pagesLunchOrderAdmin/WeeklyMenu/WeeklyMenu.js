@@ -13,6 +13,40 @@ function fmt(d){ const dd=new Date(d); const day=dd.getDate().toString().padStar
 function toISODate(d){ const dd=new Date(d); const y=dd.getFullYear(); const m=(dd.getMonth()+1).toString().padStart(2,"0"); const day=dd.getDate().toString().padStart(2,"0"); return `${y}-${m}-${day}`; }
 function getISOWeekNumber(d){ const date=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dayNum=date.getUTCDay()||7; date.setUTCDate(date.getUTCDate()+4-dayNum); const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1)); return Math.ceil(((date-yearStart)/86400000+1)/7); }
 
+/** Món cố định chỉ hiển thị sẵn trên UI (ô trống); re: 3 ô cuối; ws/ot: chỉ 93 ở ô cuối loại đó */
+const UI_DEFAULT_FOOD_SLOTS = {
+  re: [
+    [10, 67],
+    [11, 80],
+    [12, 93],
+  ],
+  ws: [[1, 93]],
+  ot: [[5, 93]],
+};
+
+function foodFromCatalog(foods, foodId) {
+  const f = foods.find((x) => Number(x.foodId) === Number(foodId));
+  if (!f) return null;
+  return { foodId: f.foodId, foodName: f.foodName, imageUrl: f.imageUrl };
+}
+
+function applyUiDefaultFoods(boardMap, statusType, foods) {
+  const st = (statusType || "re").toLowerCase();
+  const pairs = UI_DEFAULT_FOOD_SLOTS[st];
+  if (!pairs?.length || !foods?.length) return boardMap;
+  const out = { ...boardMap };
+  for (let day = 1; day <= 7; day++) {
+    for (const [position, fid] of pairs) {
+      const key = `slot-${day}-${position}`;
+      if (!out[key]) {
+        const row = foodFromCatalog(foods, fid);
+        if (row) out[key] = row;
+      }
+    }
+  }
+  return out;
+}
+
 /* =================== UI: Notice =================== */
 function NoticeModal({ open, title="Thông báo", message="", onClose }) {
   return (
@@ -128,17 +162,17 @@ export default function WeeklyMenu() {
   // load weekly menu by monday
   useEffect(() => { loadWeeklyMenu(); /* eslint-disable-next-line */ }, [monday]);
 
-  // khi đổi tab, map lại board từ allEntries
+  // map board từ server + ô trống thì gắn món cố định (chỉ UI; Lưu mới ghi DB)
   useEffect(() => {
     const map = {};
     allEntries
-      .filter(e => (e.statusType || 're').toLowerCase() === statusType)
-      .forEach(e => {
+      .filter((e) => (e.statusType || "re").toLowerCase() === statusType)
+      .forEach((e) => {
         const key = `slot-${e.dayOfWeek}-${e.position}`;
         map[key] = { foodId: e.foodId, foodName: e.foodName, imageUrl: e.imageUrl };
       });
-    setBoard(map);
-  }, [statusType, allEntries]);
+    setBoard(applyUiDefaultFoods(map, statusType, foods));
+  }, [statusType, allEntries, foods]);
 
   async function loadWeeklyMenu() {
     setMenuLoading(true);
@@ -150,15 +184,6 @@ export default function WeeklyMenu() {
       setWeeklyMenu(data);
       const entries = data?.entries || [];
       setAllEntries(entries);
-      // map theo tab hiện tại
-      const map = {};
-      entries
-        .filter(e => (e.statusType || 're').toLowerCase() === statusType)
-        .forEach(e => {
-          const key = `slot-${e.dayOfWeek}-${e.position}`;
-          map[key] = { foodId: e.foodId, foodName: e.foodName, imageUrl: e.imageUrl };
-        });
-      setBoard(map);
     } finally {
       setMenuLoading(false);
     }

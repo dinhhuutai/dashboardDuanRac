@@ -27,10 +27,10 @@ const inset =
   "rounded-2xl bg-white/55 border border-white/70 " +
   "shadow-[inset_6px_6px_14px_rgba(15,23,42,0.08),inset_-6px_-6px_14px_rgba(255,255,255,0.95)]";
 
-/** Tab style giống BMI */
+/** Tab — desktop compact */
 const navBtn = ({ isActive }) =>
   [
-    "px-3 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2",
+    "px-2 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5",
     isActive
       ? `text-emerald-700 ${inset}`
       : "text-slate-700 hover:text-slate-900 hover:bg-white/60",
@@ -68,17 +68,17 @@ function Header() {
 
   return (
     <header className={glassBar}>
-      <div className="h-[64px] px-3 sm:px-5 hidden md:flex items-center justify-between gap-3 relative">
+      <div className="h-14 px-3 sm:px-4 hidden md:flex items-center justify-between gap-2 relative">
         {/* LEFT: Brand */}
-        <div className="flex items-center gap-2 min-w-0">
-          <Link to={config.routes.lunchOrder} className="flex items-center gap-2 min-w-0">
-            <img src={logoAdmin} alt="Logo" className="h-[40px] w-[40px] object-contain" />
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Link to={config.routes.lunchOrder} className="flex items-center gap-1.5 min-w-0">
+            <img src={logoAdmin} alt="Logo" className="h-8 w-8 object-contain shrink-0" />
 
             {/* Desktop brand */}
             <div className="hidden sm:block min-w-0">
               {/* ✅ đổi xanh nước biển -> xanh lá */}
               <div
-                className="font-extrabold text-[14px] leading-tight truncate"
+                className="font-extrabold text-[13px] leading-tight truncate"
                 style={{
                   background: "linear-gradient(90deg, #22C55E, #10B981)", // emerald/green
                   WebkitBackgroundClip: "text",
@@ -90,7 +90,7 @@ function Header() {
               </div>
 
               {/* ✅ đổi dòng phụ */}
-              <div className="text-[12px] text-slate-500 -mt-[1px]">
+              <div className="text-[11px] text-slate-500 -mt-px leading-tight">
                 Đặt cơm
               </div>
             </div>
@@ -106,29 +106,29 @@ function Header() {
 
         
         {/* CENTER: Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-0.5">
           <NavLink to={config.routes.lunchOrder} end className={navBtn}>
-            <FaUtensils className="text-[14px]" />
+            <FaUtensils className="text-[12px] shrink-0" />
             Đặt cơm
           </NavLink>
 
           <NavLink to={config.routes.lunchOrderHistory} end className={navBtn}>
-            <FaClipboardList className="text-[14px]" />
+            <FaClipboardList className="text-[12px] shrink-0" />
             Lịch sử
           </NavLink>
 
           <NavLink to={config.routes.lunchOrderProxy} className={navBtn}>
-            <FaUsers className="text-[14px]" />
+            <FaUsers className="text-[12px] shrink-0" />
             Đặt giùm
           </NavLink>
         </nav>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Mobile icon (hiện ở md:hidden nên ở đây để sẵn) */}
           <button
             onClick={() => navigate(config.routes.homeMain)}
-            className={`md:hidden ${chip} h-10 w-10 grid place-items-center text-slate-700 hover:opacity-90 transition`}
+            className={`md:hidden ${chip} h-9 w-9 grid place-items-center text-slate-700 text-sm hover:opacity-90 transition`}
             title="Chọn ứng dụng"
             aria-label="Chọn ứng dụng"
           >
@@ -137,32 +137,32 @@ function Header() {
 
           {/* Desktop: Chọn ứng dụng */}
           <button
-  onClick={() => navigate(config.routes.homeMain)}
-  className={`
-  hidden md:inline-flex items-center gap-2
-  ${chip}
-  h-10 px-4
-  text-sm font-semibold text-slate-700
-  hover:text-slate-900 hover:bg-white/70
-  hover:ring-4 hover:ring-white/40
-  active:scale-[.98] transition
-`}
->
-  <FaThLarge className="text-[15px] -mt-[1px]" />
-  <span className="leading-none">Chọn ứng dụng</span>
-</button>
+            onClick={() => navigate(config.routes.homeMain)}
+            className={`
+              hidden md:inline-flex items-center gap-1.5
+              ${chip}
+              h-9 px-3
+              text-xs font-semibold text-slate-700
+              hover:text-slate-900 hover:bg-white/70
+              hover:ring-2 hover:ring-white/40
+              active:scale-[.98] transition
+            `}
+          >
+            <FaThLarge className="text-[12px] shrink-0" />
+            <span className="leading-none">Chọn ứng dụng</span>
+          </button>
 
           {/* Desktop Avatar dropdown */}
           <div className="hidden md:block relative" ref={wrapRef}>
             <button
               onClick={() => setOpen((v) => !v)}
-              className={`${chip} h-10 px-3 inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 transition`}
+              className={`${chip} h-9 px-2 inline-flex items-center gap-1.5 text-slate-700 hover:text-slate-900 transition`}
               title={user?.fullName || user?.username || ""}
               aria-label="Mở menu hồ sơ"
             >
               {/* ✅ Avatar giống bên BMI (background-image để canh vị trí chắc) */}
               <span
-                className={`h-8 w-8 overflow-hidden rounded-full rounded-2xl`}
+                className="h-7 w-7 overflow-hidden rounded-full rounded-2xl shrink-0"
                 style={{
                   backgroundImage: `url(${user?.avatar || avatar_datcom})`,
                   backgroundRepeat: "no-repeat",
@@ -171,7 +171,7 @@ function Header() {
                 }}
               />
 
-              <span className="text-sm font-semibold max-w-[160px] truncate">
+              <span className="text-xs font-semibold max-w-[132px] truncate">
                 {user?.fullName || user?.username || "Người dùng"}
               </span>
             </button>

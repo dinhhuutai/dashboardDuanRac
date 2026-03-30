@@ -177,21 +177,49 @@ function getConfigByOrderType(settings, orderType) {
   };
 }
 
-function buildCutoffDate(weeklyMenu, dayOfWeek1to7, timeValue, dayOffset = 0) {
+function buildCutoffDate(
+  weeklyMenu,
+  dayOfWeek1to7,
+  timeValue,
+  dayOffset = 0
+) {
   const mondayISO = weeklyMenu?.weekStartMonday;
   if (!mondayISO) return null;
 
-  const target = getDateFromMonday(mondayISO, dayOfWeek1to7);
+  const target = getDateFromMonday(
+    mondayISO,
+    dayOfWeek1to7
+  );
   if (!target) return null;
 
   if (dayOffset) {
-    target.setDate(target.getDate() + dayOffset);
+    let finalOffset = dayOffset;
+
+    // ✅ Nếu WS / OT và là Thứ 7 → nhảy qua Chủ nhật → sang Thứ 2
+    if (
+      dayOffset === 1 &&
+      Number(dayOfWeek1to7) === 6 // Thứ 7
+    ) {
+      finalOffset = 2;
+    }
+
+    target.setDate(
+      target.getDate() + finalOffset
+    );
   }
 
-  const parsed = parseTimeToHourMinute(timeValue);
+  const parsed = parseTimeToHourMinute(
+    timeValue
+  );
   if (!parsed) return null;
 
-  target.setHours(parsed.hh, parsed.mm, 0, 0);
+  target.setHours(
+    parsed.hh,
+    parsed.mm,
+    0,
+    0
+  );
+
   return target;
 }
 

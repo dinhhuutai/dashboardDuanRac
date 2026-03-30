@@ -692,24 +692,26 @@ export default function DesktopUserOrderSlide() {
   }
 
   const weekToggleNode = (
-    <div className="flex items-center gap-3 shrink-0">
+    <div className="flex items-center gap-1.5 shrink-0">
       <button
+        type="button"
         onClick={() => changeWeek(-1)}
         disabled={data.pageLoading}
-        className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50"
+        className="px-2 py-1 rounded-lg text-xs border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 leading-none"
       >
         ◀
       </button>
 
-      <div className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 shadow-sm whitespace-nowrap">
+      <div className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 shadow-sm whitespace-nowrap leading-tight">
         Tuần {weekNumber}
-        <div className="text-xs text-slate-500">{weekLabel}</div>
+        <div className="text-[10px] text-slate-500 font-normal">{weekLabel}</div>
       </div>
 
       <button
+        type="button"
         onClick={() => changeWeek(1)}
         disabled={data.pageLoading}
-        className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50"
+        className="px-2 py-1 rounded-lg text-xs border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 leading-none"
       >
         ▶
       </button>
@@ -740,12 +742,12 @@ export default function DesktopUserOrderSlide() {
         <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-lime-300/20 blur-3xl" />
 
-        <div className="mx-[10px] mb-4 rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md px-4 py-3 shadow-sm">
-          <div className="grid grid-cols-[auto_auto_1fr] items-center gap-4">
+        <div className="mx-2 mb-3 rounded-2xl border border-white/70 bg-white/55 backdrop-blur-md px-3 py-2 shadow-sm">
+          <div className="grid grid-cols-[auto_auto_1fr] items-center gap-2 md:gap-3">
             {weekToggleNode}
 
-            <div className="min-w-[320px]">
-              <OrderTypeToggle visible orderType={orderType} onChangeType={handleChangeOrderType} />
+            <div className="min-w-0 md:min-w-[240px]">
+              <OrderTypeToggle compact visible orderType={orderType} onChangeType={handleChangeOrderType} />
             </div>
 
             <div className="justify-self-end w-full max-w-[520px]">
@@ -766,10 +768,10 @@ export default function DesktopUserOrderSlide() {
           </div>
         </div>
 
-        <div className="mx-[10px]">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl p-8 md:p-10 shadow-sm">
-            <div className="mb-3 text-2xl font-semibold text-slate-800 flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900/5">🍱</span>
+        <div className="mx-2">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 backdrop-blur-xl p-5 md:p-6 shadow-sm">
+            <div className="mb-2 text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 text-lg items-center justify-center rounded-xl bg-slate-900/5">🍱</span>
               Chưa có thực đơn tuần này
             </div>
             <p className="text-slate-600">
@@ -798,7 +800,7 @@ export default function DesktopUserOrderSlide() {
   const daysToRender = editingDay ? [String(editingDay)] : sortedDays;
 
   return (
-    <div className="hidden md:block min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-[10px]">
+    <div className="hidden md:block min-h-screen relative bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 pt-1">
       {isWeekSwitching && (
         <div className="fixed inset-0 z-[55] bg-white/20 backdrop-blur-[1px] flex items-center justify-center">
           <div className="px-3 py-2 rounded-full bg-white/90 border border-slate-200 shadow-md text-slate-700 text-sm flex items-center gap-2">
@@ -818,13 +820,14 @@ export default function DesktopUserOrderSlide() {
       )}
 
       {!editingBannerVisible && (
-        <div className="px-6 mb-4">
-          <div className="rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md px-4 py-3 shadow-sm">
-            <div className="grid grid-cols-[auto_auto_1fr] items-center gap-4">
+        <div className="px-3 mb-3">
+          <div className="rounded-2xl border border-white/70 bg-white/55 backdrop-blur-md px-3 py-2 shadow-sm">
+            <div className="grid grid-cols-[auto_auto_1fr] items-center gap-2 md:gap-3">
               {weekToggleNode}
 
-              <div className="min-w-[320px]">
+              <div className="min-w-0 md:min-w-[240px]">
                 <OrderTypeToggle
+                  compact
                   visible={!resetMode}
                   orderType={orderType}
                   onChangeType={handleChangeOrderType}
@@ -988,17 +991,18 @@ export default function DesktopUserOrderSlide() {
           />
 
           {!weeklyMenu?.isLocked && (orderType !== "re" || activeSlide === daysToRender.length - 1) && (
-                      <div className="mt-2 px-4 pb-8 flex items-center justify-end gap-3">
+                      <div className="mt-1.5 px-3 pb-6 flex items-center justify-end gap-2">
                         <button
+                          type="button"
                           onClick={actions.handleSave}
                           disabled={
                             savingAll ||
                             (orderType === "re" && !hasChosenRequired)
                           }
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-br from-sky-600 to-amber-400 text-white shadow-sm hover:shadow transition-shadow disabled:opacity-50"
+                          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-gradient-to-br from-sky-600 to-amber-400 text-white shadow-sm hover:shadow transition-shadow disabled:opacity-50"
                         >
-                          {savingAll && <FaSpinner className="animate-spin" />}
-                          <FaSave /> {isSec ? "Lưu (thư ký)" : "Lưu đặt cơm"}
+                          {savingAll && <FaSpinner className="animate-spin text-sm" />}
+                          <FaSave className="text-sm" /> {isSec ? "Lưu (thư ký)" : "Lưu đặt cơm"}
                         </button>
                       </div>
                     )}

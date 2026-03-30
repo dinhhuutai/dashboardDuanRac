@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import http from "~/api/http";
 import { BASE_URL } from "~/config";
 import { userSelector } from "~/redux/selectors";
+import { fetchProjectDashboard } from "../../api/projectWorkApi";
 
 function formatDate(value) {
   if (!value) return "";
@@ -736,6 +737,7 @@ function ProjectOverview() {
   const [timeSummary, setTimeSummary] = useState(null);
   const [fileSummary, setFileSummary] = useState(null);
   const [chatSummary, setChatSummary] = useState(null);
+  const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   const [showBoardModal, setShowBoardModal] = useState(false);
@@ -759,10 +761,12 @@ function ProjectOverview() {
   async function loadOverview() {
     setLoading(true);
     setErrorMsg("");
+    setDashboardMetrics(null);
     try {
-      const res = await http.get(
-        `${BASE_URL}/api/task-management/${projectId}/overview`
-      );
+      const [res, dash] = await Promise.all([
+        http.get(`${BASE_URL}/api/task-management/${projectId}/overview`),
+        fetchProjectDashboard(projectId).catch(() => null),
+      ]);
       const d = res.data?.data;
       setProject(d?.project || null);
       setMyRole(d?.myRole || null);
@@ -772,6 +776,7 @@ function ProjectOverview() {
       setTimeSummary(d?.timeSummary || null);
       setFileSummary(d?.fileSummary || null);
       setChatSummary(d?.chatSummary || null);
+      if (dash?.success && dash.data) setDashboardMetrics(dash.data);
     } catch (err) {
       console.error("load project overview error", err);
       setErrorMsg(
@@ -913,6 +918,22 @@ function ProjectOverview() {
                           : 0}
                       </b>
                     </div>
+                    {dashboardMetrics != null && (
+                      <>
+                        <div>
+                          Sắp đến hạn (7 ngày):{" "}
+                          <b>{dashboardMetrics.dueSoonTasks ?? 0}</b>
+                        </div>
+                        <div>
+                          Thành viên:{" "}
+                          <b>{dashboardMetrics.memberCount ?? 0}</b>
+                        </div>
+                        <div>
+                          Hoàn thành ước tính:{" "}
+                          <b>{dashboardMetrics.completionPercent ?? 0}%</b>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
