@@ -180,7 +180,7 @@ const routes = {
   consolidateManualTime: '/consolidate/manual/time',
 
   adminHistoryConsolidate: '/admin/consolidate/history',
-  
+
   adminMesDashboard: '/admin/mes/dashboard'
   
 };
