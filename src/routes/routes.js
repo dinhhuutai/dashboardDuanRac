@@ -170,8 +170,49 @@ import ConsolidateManualTime from '~/pagesConsolidate/Manual';
 
 import AdminHistoryConsolidate from '~/pagesConsolidateAdmin/History';
 
+import AdminMesFlow from '~/pagesMESAdmin/Flow';
 import AdminMesDashboard from '~/pagesMESAdmin/Dashboard';
 
+import CapMoneyHome from '~/pageCapMoney/Home';
+import CapMoneyStatistic from '~/pageCapMoney/Statistic';
+import CapMoneyAccount from '~/pageCapMoney/Account';
+import CapMoneyBudget from '~/pageCapMoney/Budget';
+import CapMoneyPersonal from '~/pageCapMoney/Personal';
+
+
+
+const routesCapMoney = [
+  {
+    path: config.routes.capmoneyHome,
+    component: CapMoneyHome,
+    login: true,
+    module: 'capmoney',
+  },
+  {
+    path: config.routes.capmoneyStatistic,
+    component: CapMoneyStatistic,
+    login: true,
+    module: 'capmoney',
+  },
+  {
+    path: config.routes.capmoneyAccount,
+    component: CapMoneyAccount,
+    login: true,
+    module: 'capmoney',
+  },
+  {
+    path: config.routes.capmoneyBudget,
+    component: CapMoneyBudget,
+    login: true,
+    module: 'capmoney',
+  },
+  {
+    path: config.routes.capmoneyPersonal,
+    component: CapMoneyPersonal,
+    login: true,
+    module: 'capmoney',
+  },
+]
 
 const routesConsolidate = [
   {
@@ -543,6 +584,8 @@ export const routes = [
 
   ...routesConsolidate,
 
+  ...routesCapMoney,
+
 ];
 
 export const routesAdmin = [
@@ -791,6 +834,11 @@ export const routesMesAdmin = [
   {
     path: config.routes.adminMesDashboard,
     component: AdminMesDashboard,
+    login: true,
+  },
+  {
+    path: config.routes.adminMesFlow,
+    component: AdminMesFlow,
     login: true,
   },
 ]

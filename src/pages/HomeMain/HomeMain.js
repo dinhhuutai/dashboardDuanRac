@@ -314,6 +314,8 @@ function HomeMain() {
       rou = config.routes.adminHistoryConsolidate;
     } else if (m.moduleId === MODULEID.mes && role === "admin") {
       rou = config.routes.adminMesDashboard;
+    } else if (m.moduleId === MODULEID.capmoney && role === "user") {
+      rou = config.routes.capmoneyHome;
     }
 
     navigate(rou);

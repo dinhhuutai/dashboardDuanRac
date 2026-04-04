@@ -1,11 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import {
   BsChevronDown,
-  BsRocket,
-  BsQrCodeScan,
-  BsJournalAlbum,
-  BsClipboardCheck,
-  BsBarChartLine,
+  BsSpeedometer2,
+  BsDiagram3,
 } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
 import config from '~/config';
@@ -90,7 +87,13 @@ function Sidebar() {
               <SectionCard>
                 {
                   <NavLink to={config.routes.adminMesDashboard} className={linkClass}>
-                    <BsRocket className="text-[16px]" />
+                    <BsSpeedometer2 className="text-[16px]" />
+                    <span>Bảng điều khiển</span>
+                  </NavLink>
+                }
+                {
+                  <NavLink to={config.routes.adminMesFlow} className={linkClass}>
+                    <BsDiagram3 className="text-[16px]" />
                     <span>Dòng chảy</span>
                   </NavLink>
                 }

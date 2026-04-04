@@ -52,9 +52,13 @@ import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/Defa
 import DefaultLayoutAdminQualityInspectionKCS from "./layoutQualityInspectionKCSAdmin/DefaultLayoutAdmin";
 
 import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
+import DefaultLayoutAdminConsolidate from "./layoutConsolidateAdmin/DefaultLayoutAdmin";
+
 import DefaultLayoutForm from "./layoutsForm/DefaultLayout"
 
 import DefaultLayoutAdminMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
+
+import DefaultLayoutCapMoney from "./layoutCapMoney/DefaultLayout"
 
 
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
@@ -172,6 +176,10 @@ function AppRoutes({ user }) {
                       <DefaultLayoutConsolidate>
                         <route.component />
                       </DefaultLayoutConsolidate>
+                    ) : route.module === 'capmoney' ? (
+                      <DefaultLayoutCapMoney>
+                        <route.component />
+                      </DefaultLayoutCapMoney>
                     ) : (
                       <DefaultLayoutTrashWeight>
                         <route.component />
@@ -437,9 +445,9 @@ function AppRoutes({ user }) {
               key={index}
               path={route.addId ? `${route.path}/:id` : route.path}
               element={
-                <DefaultLayoutAdminQualityInspectionKCS>
+                <DefaultLayoutAdminConsolidate>
                   <route.component />
-                </DefaultLayoutAdminQualityInspectionKCS>
+                </DefaultLayoutAdminConsolidate>
               }
             />
           ))}

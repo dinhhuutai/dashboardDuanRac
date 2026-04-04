@@ -468,36 +468,47 @@ function SuggestionList() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-xl border border-slate-200 -mx-1 sm:mx-0">
-                {/* Không dùng table-fixed: tổng width cột (px) > min-width bảng sẽ bị ép đè cột */}
-                <table className="w-full min-w-[1500px] border-collapse text-xs sm:text-sm">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                {/* table-fixed + colgroup để đảm bảo các cột không bị đè nhau */}
+                <table className="w-full min-w-[1850px] table-fixed border-collapse text-xs sm:text-sm">
+                  <colgroup>
+                    <col style={{ width: "56px" }} />
+                    <col style={{ width: "180px" }} />
+                    <col style={{ width: "170px" }} />
+                    <col style={{ width: "240px" }} />
+                    <col style={{ width: "340px" }} />
+                    <col style={{ width: "150px" }} />
+                    <col style={{ width: "180px" }} />
+                    <col style={{ width: "210px" }} />
+                    <col style={{ width: "160px" }} />
+                  </colgroup>
                   <thead className="bg-slate-100 text-slate-600 text-[10px] sm:text-xs uppercase">
                     <tr>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap w-12 min-w-[3rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         #
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap min-w-[10rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Danh mục
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap min-w-[9rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Tình trạng
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left min-w-[14rem] max-w-[18rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Chi tiết xử lý
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left min-w-[16rem] max-w-[22rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Nội dung
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap min-w-[8.5rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Ngày gửi
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left min-w-[8rem]">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap">
                         Người gửi
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left min-w-[9rem] hidden md:table-cell">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap hidden md:table-cell">
                         Bộ phận
                       </th>
-                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap min-w-[7rem] hidden lg:table-cell">
+                      <th className="px-2 sm:px-3 py-2 sm:py-3 text-left whitespace-nowrap hidden lg:table-cell">
                         SĐT
                       </th>
                     </tr>
@@ -511,18 +522,18 @@ function SuggestionList() {
                         )}`}
                         onClick={() => handleRowClick(item)}
                       >
-                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top text-slate-500 tabular-nums">
+                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top text-slate-500 tabular-nums truncate">
                           {(page - 1) * pageSize + i + 1}
                         </td>
                         <td
-                          className="px-2 sm:px-3 py-2 sm:py-3 align-top max-w-[12rem] truncate"
+                          className="px-2 sm:px-3 py-2 sm:py-3 align-top truncate"
                           title={item.categoryName}
                         >
                           {item.categoryName || "—"}
                         </td>
                         <td className="px-2 sm:px-3 py-2 sm:py-3 align-top min-w-0">
                           <span
-                            className={`inline-flex max-w-full min-w-0 items-center rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium ring-1 ${badgeClassForStatus(
+                            className={`inline-flex min-w-0 items-center rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium ring-1 ${badgeClassForStatus(
                               item.statusId
                             )}`}
                           >
@@ -532,7 +543,7 @@ function SuggestionList() {
                           </span>
                         </td>
                         <td
-                          className="px-2 sm:px-3 py-2 sm:py-3 align-top max-w-[18rem] truncate text-slate-700"
+                          className="px-2 sm:px-3 py-2 sm:py-3 align-top truncate text-slate-700"
                           title={item.processing_detail || ""}
                         >
                           {item.processing_detail || (
@@ -540,16 +551,16 @@ function SuggestionList() {
                           )}
                         </td>
                         <td
-                          className="px-2 sm:px-3 py-2 sm:py-3 align-top max-w-[22rem] truncate"
+                          className="px-2 sm:px-3 py-2 sm:py-3 align-top truncate"
                           title={item.content}
                         >
                           {item.content}
                         </td>
-                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top whitespace-nowrap text-slate-600 font-mono text-[11px] sm:text-sm">
+                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top truncate text-slate-600 font-mono text-[11px] sm:text-sm">
                           {format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}
                         </td>
                         <td
-                          className="px-2 sm:px-3 py-2 sm:py-3 align-top max-w-[10rem] truncate"
+                          className="px-2 sm:px-3 py-2 sm:py-3 align-top truncate"
                           title={item.sender_name || "Ẩn danh"}
                         >
                           {item.sender_name || "Ẩn danh"}
@@ -557,7 +568,7 @@ function SuggestionList() {
                         <td className="px-2 sm:px-3 py-2 sm:py-3 align-top max-w-[12rem] truncate hidden md:table-cell">
                           {item.sender_department || "-"}
                         </td>
-                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top font-mono text-[11px] whitespace-nowrap hidden lg:table-cell">
+                        <td className="px-2 sm:px-3 py-2 sm:py-3 align-top font-mono text-[11px] truncate hidden lg:table-cell">
                           {item.sender_phone || "-"}
                         </td>
                       </tr>

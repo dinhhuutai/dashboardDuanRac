@@ -181,7 +181,16 @@ const routes = {
 
   adminHistoryConsolidate: '/admin/consolidate/history',
 
-  adminMesDashboard: '/admin/mes/dashboard'
+  adminMesDashboard: '/admin/mes/dashboard',
+  adminMesFlow: '/admin/mes/flow',
+
+
+  capmoneyHome: '/cap-money/home',
+  capmoneyStatistic: '/cap-money/statistic',
+  capmoneyAccount: '/cap-money/account',
+  capmoneyBudget: '/cap-money/budget',
+  capmoneyPersonal: '/cap-money/personal',
+
   
 };
 
