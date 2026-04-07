@@ -45,10 +45,12 @@ const STATIONS = [
 ];
 
 const PIE_COLORS = {
-  OPEN: "#ef4444",
-  READY: "#f59e0b",
+  OPEN: "#eab308",
+  READY: "#2563eb",
   RELEASE: "#22c55e",
 };
+
+const CHART_TOTAL_BAR = "#94a3b8";
 
 const BATCH_ID_POOL = [
   "SA026LA-000009",
@@ -140,8 +142,8 @@ function getOrderWarning(order, now) {
 }
 
 function getStatusBadgeClass(status) {
-  if (status === "OPEN") return "bg-red-50 text-red-700 border border-red-200";
-  if (status === "READY") return "bg-amber-50 text-amber-800 border border-amber-200";
+  if (status === "OPEN") return "bg-yellow-50 text-yellow-800 border border-yellow-300";
+  if (status === "READY") return "bg-blue-50 text-blue-700 border border-blue-200";
   if (status === "RELEASE") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
   return "bg-slate-50 text-slate-700 border border-slate-200";
 }
@@ -201,12 +203,18 @@ function KpiCard({ title, value, icon: Icon, tone = "slate", subLabel }) {
   const toneClass =
     tone === "red"
       ? "border-red-200 bg-red-50"
+      : tone === "yellow"
+      ? "border-yellow-200 bg-yellow-50"
       : tone === "amber"
       ? "border-amber-200 bg-amber-50"
       : tone === "green"
       ? "border-emerald-200 bg-emerald-50"
       : tone === "blue"
       ? "border-sky-200 bg-sky-50"
+      : tone === "violet"
+      ? "border-violet-200 bg-violet-50"
+      : tone === "gray"
+      ? "border-slate-200 bg-slate-100"
       : "border-slate-200 bg-white";
 
   return (
@@ -250,8 +258,8 @@ function StatusMiniBar({ open, ready, release, total }) {
   return (
     <div className="w-[120px]">
       <div className="flex h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className="bg-red-500" style={{ width: `${o}%` }} />
-        <div className="bg-amber-500" style={{ width: `${r}%` }} />
+        <div className="bg-yellow-500" style={{ width: `${o}%` }} />
+        <div className="bg-blue-500" style={{ width: `${r}%` }} />
         <div className="bg-emerald-500" style={{ width: `${rl}%` }} />
       </div>
     </div>
@@ -822,10 +830,10 @@ export default function Dashboard() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                Dashboard điều hành
+                Bảng điều khiển
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-slate-500">
-                Tập trung vào đơn hôm nay, ORR, điểm nghẽn và đơn đang kẹt
+                
               </p>
             </div>
 
@@ -844,10 +852,10 @@ export default function Dashboard() {
             title="Tổng đơn hàng hôm nay"
             value={kpis.totalToday}
             icon={FiPackage}
-            tone="blue"
+            tone="gray"
           />
-          <KpiCard title="OPEN" value={kpis.open} icon={FiClock} tone="red" />
-          <KpiCard title="READY" value={kpis.ready} icon={FiActivity} tone="amber" />
+          <KpiCard title="OPEN" value={kpis.open} icon={FiClock} tone="yellow" />
+          <KpiCard title="READY" value={kpis.ready} icon={FiActivity} tone="blue" />
           <KpiCard
             title="RELEASE"
             value={kpis.release}
@@ -904,16 +912,16 @@ export default function Dashboard() {
         <Bar
           dataKey="total"
           name="Tổng đơn"
-          fill="#94a3b8"
-          radius={[4, 4, 0, 0]}
-          barSize={24}
+          fill={CHART_TOTAL_BAR}
+          radius={[6, 6, 0, 0]}
+          barSize={22}
         />
 
         <Line
           type="monotone"
           dataKey="open"
           name="OPEN"
-          stroke="#ef4444"
+          stroke="#ca8a04"
           strokeWidth={2.5}
           dot={{ r: 3 }}
           activeDot={{ r: 5 }}
@@ -923,7 +931,7 @@ export default function Dashboard() {
           type="monotone"
           dataKey="ready"
           name="READY"
-          stroke="#f59e0b"
+          stroke="#2563eb"
           strokeWidth={2.5}
           dot={{ r: 3 }}
           activeDot={{ r: 5 }}
@@ -947,8 +955,8 @@ export default function Dashboard() {
         <div className="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
           <SectionCard title="Điểm cần chú ý" icon={FiAlertTriangle} className="xl:col-span-1">
             <div className="space-y-2">
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3">
-                <div className="text-[11px] text-red-600">Trạm nghẽn nhất</div>
+              <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-3">
+                <div className="text-[11px] text-yellow-800 font-semibold">Trạm nghẽn nhất</div>
                 <div className="mt-1 text-sm font-semibold text-slate-900 break-words">
                   {bottleneckStation?.stationName || "-"}
                 </div>
@@ -1058,13 +1066,13 @@ export default function Dashboard() {
               </td>
 
               <td className="py-3 pr-2 text-center">
-                <span className="inline-flex min-w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 font-semibold text-red-700">
+                <span className="inline-flex min-w-[42px] items-center justify-center rounded-lg border border-yellow-300 bg-yellow-50 px-2.5 py-1 font-semibold text-yellow-800">
                   {row.open}
                 </span>
               </td>
 
               <td className="py-3 pr-2 text-center">
-                <span className="inline-flex min-w-[42px] items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">
+                <span className="inline-flex min-w-[42px] items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">
                   {row.ready}
                 </span>
               </td>
@@ -1115,11 +1123,11 @@ export default function Dashboard() {
 
   <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-slate-500">
     <div className="inline-flex items-center gap-2">
-      <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+      <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
       OPEN
     </div>
     <div className="inline-flex items-center gap-2">
-      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+      <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
       READY
     </div>
     <div className="inline-flex items-center gap-2">

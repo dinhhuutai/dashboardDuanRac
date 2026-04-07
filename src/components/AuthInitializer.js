@@ -20,7 +20,10 @@ export default function AuthInitializer({ children }) {
           );
         }
       } catch (e) {
-        dispatch(authSlice.actions.logoutSuccess());
+        const status = e?.response?.status;
+        if (status === 401 || status === 403) {
+          dispatch(authSlice.actions.logoutSuccess());
+        }
       }
     };
 
