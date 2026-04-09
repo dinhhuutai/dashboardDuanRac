@@ -3,6 +3,7 @@ import axios from "axios";
 import { BASE_URL } from "~/config";
 import store from "~/redux/store";
 import authSlice from "~/redux/slices/authSlice";
+import { refreshSession } from "~/api/authApi";
 
 // Sửa path này cho khớp backend của bạn:
 // - Nếu BE: app.use('/auth', ...)  => "/auth/refresh"
@@ -21,17 +22,6 @@ function selectAccessToken() {
   } catch {
     return null;
   }
-}
-
-// Lấy accessToken từ nhiều shape response khác nhau
-function pickAccessToken(res) {
-  return (
-    res?.data?.accessToken ||
-    res?.data?.data?.accessToken ||
-    res?.data?.token ||
-    res?.data?.data?.token ||
-    null
-  );
 }
 
 function isAuthPath(url = "") {
@@ -74,19 +64,14 @@ http.interceptors.response.use(
     original._retry = true;
 
     try {
-      // Gọi refresh bằng axios gốc (không dùng instance có interceptor)
-      const res = await axios.post(`${BASE_URL}${REFRESH_PATH}`, null, {
-        withCredentials: true,
-      });
-
-      const newToken = pickAccessToken(res);
+      // Dùng chung mutex với AuthInitializer — một POST /refresh tại một thời điểm
+      const data = await refreshSession();
+      const newToken = data?.accessToken;
       if (!newToken) {
-        // Không có token mới → coi như fail
         store.dispatch(authSlice.actions.logoutSuccess());
         return Promise.reject(new Error("Refresh failed: missing accessToken"));
       }
 
-      // Cập nhật token mới vào Redux để mọi request sau dùng được
       store.dispatch(authSlice.actions.refreshToken(newToken));
 
       // Gắn token mới và retry request gốc

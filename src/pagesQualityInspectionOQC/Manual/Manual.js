@@ -1,4 +1,4 @@
-// import React, { useState } from "react";
+// import React, { useMemo, useState } from "react";
 // import { AnimatePresence, motion } from "framer-motion";
 // import {
 //   FaCheckCircle,
@@ -14,16 +14,38 @@
 //   const [loading, setLoading] = useState(false);
 //   const [toast, setToast] = useState(null);
 
+//   const isValidCode = (value) => {
+//     if (!value) return false;
+//     const text = String(value).trim();
+//     return text.startsWith("15");
+//   };
+
+//   const trimmedCode = code.trim();
+
+//   const codeError = useMemo(() => {
+//     if (!trimmedCode) return "";
+//     if (!isValidCode(trimmedCode)) {
+//       return "Mã không hợp lệ, mã phải bắt đầu bằng 15";
+//     }
+//     return "";
+//   }, [trimmedCode]);
+
+//   const canSubmit = !!trimmedCode && !codeError && !loading;
+
 //   const handleConfirm = async () => {
-//     if (!code.trim()) {
+//     if (!trimmedCode) {
 //       setToast({ type: "error", message: "❌ Vui lòng nhập mã" });
+//       return;
+//     }
+
+//     if (!isValidCode(trimmedCode)) {
 //       return;
 //     }
 
 //     setLoading(true);
 //     try {
 //       await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
-//         qrCode: code,
+//         qrCode: trimmedCode,
 //         result,
 //         inspectionType: "OQC",
 //         inputType: "MANUAL",
@@ -56,15 +78,12 @@
 
 //   return (
 //     <div className="min-h-screen bg-gradient-to-br from-sky-100 to-blue-100 flex flex-col">
-      
-//       {/* HEADER */}
 //       <div className="md:hidden bg-gradient-to-r from-sky-500 to-blue-500 py-5 text-center text-white shadow">
 //         <h1 className="text-lg font-semibold">
 //           OQC kiểm tra chất lượng
 //         </h1>
 //       </div>
 
-//       {/* CONTENT */}
 //       <div className="flex-1 flex items-center justify-center px-4 -mt-16">
 //         <motion.div
 //           initial={{ opacity: 0, y: 30 }}
@@ -75,18 +94,34 @@
 //             Nhập mã sản phẩm
 //           </h2>
 
-//           {/* INPUT */}
-//           <input
-//             value={code}
-//             onChange={(e) => setCode(e.target.value)}
-//             onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-//             placeholder="Nhập mã..."
-//             className="w-full p-3 text-center text-lg border rounded-xl focus:ring-2 focus:ring-sky-400 outline-none"
-//           />
+//           <div className="space-y-2">
+//             <input
+//               value={code}
+//               onChange={(e) => setCode(e.target.value)}
+//               onKeyDown={(e) => {
+//                 if (e.key === "Enter" && canSubmit) {
+//                   handleConfirm();
+//                 }
+//               }}
+//               placeholder="Nhập mã..."
+//               className={`
+//                 w-full p-3 text-center text-lg border rounded-xl outline-none focus:ring-2
+//                 ${
+//                   codeError
+//                     ? "border-rose-400 focus:ring-rose-300"
+//                     : "border-slate-300 focus:ring-sky-400"
+//                 }
+//               `}
+//             />
 
-//           {/* OPTIONS */}
+//             {codeError && (
+//               <p className="text-sm text-rose-600">
+//                 {codeError}
+//               </p>
+//             )}
+//           </div>
+
 //           <div className="flex flex-col gap-3">
-//             {/* Đạt */}
 //             <div
 //               onClick={() => setResult(1)}
 //               className={`flex items-center justify-center gap-2 h-12 rounded-xl border cursor-pointer transition ${getStyle(
@@ -97,7 +132,6 @@
 //               <span>Đạt</span>
 //             </div>
 
-//             {/* Không đạt */}
 //             <div
 //               onClick={() => setResult(0)}
 //               className={`flex items-center justify-center gap-2 h-12 rounded-xl border cursor-pointer transition ${getStyle(
@@ -108,7 +142,6 @@
 //               <span>Không đạt</span>
 //             </div>
 
-//             {/* Giao đặc biệt */}
 //             <div
 //               onClick={() => setResult(2)}
 //               className={`flex items-center justify-center gap-2 h-12 rounded-xl border cursor-pointer transition ${getStyle(
@@ -119,11 +152,17 @@
 //             </div>
 //           </div>
 
-//           {/* BUTTON */}
 //           <button
 //             onClick={handleConfirm}
-//             disabled={loading}
-//             className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white flex justify-center gap-2 transition"
+//             disabled={!canSubmit}
+//             className={`
+//               w-full py-3 rounded-xl text-white flex justify-center gap-2 transition
+//               ${
+//                 canSubmit
+//                   ? "bg-sky-500 hover:bg-sky-600"
+//                   : "bg-slate-300 cursor-not-allowed"
+//               }
+//             `}
 //           >
 //             {loading ? (
 //               <>
@@ -137,7 +176,6 @@
 //         </motion.div>
 //       </div>
 
-//       {/* TOAST */}
 //       <AnimatePresence>
 //         {toast && (
 //           <motion.div
@@ -168,8 +206,7 @@
 // export default Manual;
 
 
-
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FaCheckCircle,
@@ -185,48 +222,97 @@ function Manual() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
+  const normalizedCode = useMemo(() => {
+    return String(code || "").trim().toUpperCase();
+  }, [code]);
+
   const isValidCode = (value) => {
     if (!value) return false;
-    const text = String(value).trim();
+    const text = String(value).trim().toUpperCase();
     return text.startsWith("15");
   };
 
-  const trimmedCode = code.trim();
-
   const codeError = useMemo(() => {
-    if (!trimmedCode) return "";
-    if (!isValidCode(trimmedCode)) {
+    if (!normalizedCode) return "";
+    if (!isValidCode(normalizedCode)) {
       return "Mã không hợp lệ, mã phải bắt đầu bằng 15";
     }
     return "";
-  }, [trimmedCode]);
+  }, [normalizedCode]);
 
-  const canSubmit = !!trimmedCode && !codeError && !loading;
+  const canSubmit = !!normalizedCode && !codeError && !loading;
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+  };
 
   const handleConfirm = async () => {
-    if (!trimmedCode) {
-      setToast({ type: "error", message: "❌ Vui lòng nhập mã" });
+    if (!normalizedCode) {
+      showToast("error", "❌ Vui lòng nhập mã");
       return;
     }
 
-    if (!isValidCode(trimmedCode)) {
+    if (!isValidCode(normalizedCode)) {
+      showToast("error", "❌ Mã không hợp lệ, mã phải bắt đầu bằng 15");
       return;
     }
 
     setLoading(true);
     try {
-      await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
-        qrCode: trimmedCode,
+      const response = await http.post(`${BASE_URL}/api/quality-inspection/save-result`, {
+        qrCode: normalizedCode,
         result,
         inspectionType: "OQC",
         inputType: "MANUAL",
       });
 
-      setToast({ type: "success", message: "✅ Lưu thành công" });
+      showToast(
+        "success",
+        response?.data?.message || "✅ Lưu thành công"
+      );
+
       setCode("");
       setResult(1);
-    } catch {
-      setToast({ type: "error", message: "❌ Lỗi khi lưu" });
+    } catch (err) {
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const message = data?.message;
+
+      if (status === 409) {
+        const lastScan = data?.data;
+
+        if (lastScan?.employeeName && lastScan?.inspectionDateTime) {
+          showToast(
+            "error",
+            `⚠️ Mã này đã được ${lastScan.employeeName} quét trong 24 giờ gần nhất`
+          );
+        } else {
+          showToast(
+            "error",
+            `⚠️ ${message || "Mã này đã quét trong 24 giờ gần nhất"}`
+          );
+        }
+        return;
+      }
+
+      if (status === 400) {
+        showToast(
+          "error",
+          `❌ ${message || "Dữ liệu không hợp lệ"}`
+        );
+        return;
+      }
+
+      showToast(
+        "error",
+        `❌ ${message || "Lỗi khi lưu"}`
+      );
     } finally {
       setLoading(false);
     }
@@ -245,6 +331,7 @@ function Manual() {
       return result === 2
         ? "bg-yellow-200 border-yellow-500"
         : "border-yellow-300";
+    return "";
   };
 
   return (
@@ -275,6 +362,7 @@ function Manual() {
                 }
               }}
               placeholder="Nhập mã..."
+              autoComplete="off"
               className={`
                 w-full p-3 text-center text-lg border rounded-xl outline-none focus:ring-2
                 ${
@@ -350,13 +438,13 @@ function Manual() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            className="fixed bottom-20 inset-x-0 flex justify-center"
+            className="fixed bottom-20 inset-x-0 flex justify-center px-4 z-50"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, y: 10 }}
             onClick={() => setToast(null)}
           >
-            <div className="bg-white px-5 py-3 rounded-full shadow">
+            <div className="bg-white px-5 py-3 rounded-2xl shadow max-w-md w-full md:w-auto text-center">
               <span
                 className={`text-sm font-medium ${
                   toast.type === "success"

@@ -496,14 +496,364 @@ import {
   FiTrash2,
   FiSearch,
   FiX,
+  FiUsers,
 } from "react-icons/fi";
 import * as FiIcons from "react-icons/fi";
 import * as FcIcons from "react-icons/fc";
 import { Combobox } from "@headlessui/react";
+import { createPortal } from "react-dom";
 import { BASE_URL } from "~/config";
 import { useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";
 import http from "~/api/http";
+
+const USER_LIST_PAGE_SIZE = 10;
+
+const cn = (...xs) => xs.filter(Boolean).join(" ");
+
+function UserRowAvatar({ avatar, name }) {
+  const [broken, setBroken] = useState(false);
+  const initials = (name || "?").trim().slice(0, 2).toUpperCase();
+  const showImg = !!avatar && !broken;
+
+  return (
+    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 text-indigo-700 ring-1 ring-slate-200 grid place-items-center text-xs font-semibold">
+      {showImg ? (
+        <img
+          src={avatar}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
+}
+
+function ModuleUsersModal({ open, moduleRow, onClose }) {
+  const moduleId = moduleRow?.moduleId;
+  const [tab, setTab] = useState("with"); // with | without
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [err, setErr] = useState("");
+  const [filterUser, setFilterUser] = useState(true);
+  const [filterAdmin, setFilterAdmin] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQ, setSearchQ] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    setTab("with");
+    setPage(1);
+    setFilterUser(true);
+    setFilterAdmin(true);
+    setSearchInput("");
+    setSearchQ("");
+    setRows([]);
+    setTotal(0);
+    setErr("");
+  }, [open, moduleId]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQ(searchInput.trim()), 320);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (!open || !moduleId) return;
+    if (tab === "with" && !filterUser && !filterAdmin) {
+      setRows([]);
+      setTotal(0);
+      setErr("");
+      setLoading(false);
+      return;
+    }
+    let alive = true;
+    const run = async () => {
+      setLoading(true);
+      setErr("");
+      try {
+        const params = {
+          assigned: tab === "with" ? 1 : 0,
+          page,
+          pageSize: USER_LIST_PAGE_SIZE,
+          q: searchQ,
+        };
+        if (tab === "with") {
+          params.includeUser = filterUser ? 1 : 0;
+          params.includeAdmin = filterAdmin ? 1 : 0;
+        }
+        const res = await http.get(`${BASE_URL}/api/modules/${moduleId}/users`, {
+          params,
+        });
+        if (!alive) return;
+        if (res.data?.success) {
+          setRows(res.data.data || []);
+          setTotal(res.data.pagination?.total ?? 0);
+        } else {
+          setRows([]);
+          setTotal(0);
+          setErr(res.data?.message || "Không tải được danh sách.");
+        }
+      } catch (e) {
+        if (!alive) return;
+        setRows([]);
+        setTotal(0);
+        setErr(e?.response?.data?.message || "Lỗi kết nối máy chủ.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [open, moduleId, tab, page, filterUser, filterAdmin, searchQ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / USER_LIST_PAGE_SIZE));
+
+  if (!open || !moduleRow) return null;
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1000] flex min-h-0 flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="module-users-modal-title"
+    >
+      <div
+        className="absolute inset-0 min-h-[100dvh] w-full min-w-full bg-black/60 backdrop-blur-[2px]"
+        onClick={loading ? undefined : onClose}
+      />
+      <div className="relative z-[1] flex min-h-0 flex-1 justify-center overflow-y-auto overscroll-contain px-3 pb-8 pt-4 sm:px-4 sm:pb-10 sm:pt-6">
+        <div
+          className={cn(
+            "relative w-full max-w-[520px] shrink-0",
+            "flex max-h-[min(92dvh,calc(100dvh-2rem))] sm:max-h-[min(88dvh,calc(100dvh-3rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <h3
+              id="module-users-modal-title"
+              className="text-base font-semibold text-slate-900"
+            >
+              Danh sách user
+            </h3>
+            <p className="mt-0.5 truncate text-xs text-slate-500">
+              Module: <span className="font-medium text-slate-700">{moduleRow.name}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="shrink-0 rounded-xl p-2 hover:bg-slate-100 disabled:opacity-50"
+            aria-label="Đóng"
+          >
+            <FiX className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
+          <div
+            className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 ring-1 ring-slate-200/80"
+            role="tablist"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "with"}
+              onClick={() => {
+                setTab("with");
+                setPage(1);
+              }}
+              className={cn(
+                "h-10 rounded-lg text-sm font-semibold transition",
+                tab === "with"
+                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              Có module
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "without"}
+              onClick={() => {
+                setTab("without");
+                setPage(1);
+              }}
+              className={cn(
+                "h-10 rounded-lg text-sm font-semibold transition",
+                tab === "without"
+                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              Không có module
+            </button>
+          </div>
+        </div>
+
+        <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
+          <div className="relative">
+            <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Tìm tên, username, MSNV… (không dấu, không hoa thường)"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-sm ring-slate-200 placeholder:text-slate-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            {searchInput ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput("");
+                  setPage(1);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-500 hover:bg-slate-100"
+                aria-label="Xoá tìm kiếm"
+              >
+                <FiX className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {tab === "with" ? (
+          <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
+            <p className="mb-2 text-xs font-medium text-slate-600">
+              Lọc theo vai trò trong module
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+                  checked={filterUser}
+                  onChange={(e) => {
+                    setFilterUser(e.target.checked);
+                    setPage(1);
+                  }}
+                />
+                <span className="text-sm text-slate-800">user</span>
+              </label>
+              <label className="inline-flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+                  checked={filterAdmin}
+                  onChange={(e) => {
+                    setFilterAdmin(e.target.checked);
+                    setPage(1);
+                  }}
+                />
+                <span className="text-sm text-slate-800">admin</span>
+              </label>
+            </div>
+            {!filterUser && !filterAdmin ? (
+              <p className="mt-2 text-xs text-amber-700">
+                Chọn ít nhất một vai trò để xem danh sách.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+          {err ? (
+            <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+              {err}
+            </div>
+          ) : null}
+
+          {loading ? (
+            <div className="grid place-items-center py-16 text-sm text-slate-500">
+              Đang tải…
+            </div>
+          ) : tab === "with" && !filterUser && !filterAdmin ? (
+            <div className="grid place-items-center py-16 text-sm text-slate-500">
+              Chọn vai trò user hoặc admin ở trên.
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="grid place-items-center py-16 text-sm text-slate-500">
+              Không có user.
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {rows.map((u) => (
+                <li
+                  key={u.userID}
+                  className="flex items-center gap-3 py-3 first:pt-0"
+                >
+                  <UserRowAvatar avatar={u.avatar} name={u.fullName} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-slate-900">
+                      {u.fullName || "—"}
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
+                      <span>MSNV: {u.msnv || u.username || "—"}</span>
+                      {tab === "with" && u.moduleRole ? (
+                        <span
+                          className={cn(
+                            "rounded-md px-1.5 py-0.5 ring-1",
+                            u.moduleRole === "admin"
+                              ? "bg-slate-100 text-slate-800 ring-slate-200"
+                              : "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                          )}
+                        >
+                          {u.moduleRole}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <p className="text-xs text-slate-500">
+            Trang {page}/{totalPages} · {total} user
+          </p>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || loading}
+              className="h-10 min-w-[44px] rounded-xl bg-white px-3 text-sm font-medium ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Trước
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || loading}
+              className="h-10 min-w-[44px] rounded-xl bg-white px-3 text-sm font-medium ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 /* ---------- Modal đơn giản ---------- */
 const Modal = ({ open, onClose, title, children }) => {
@@ -585,6 +935,7 @@ function Module() {
   const [saving, setSaving] = useState(false);
   const [delId, setDelId] = useState(null);
   const [msg, setMsg] = useState({ type: "", text: "" });
+  const [usersModalModule, setUsersModalModule] = useState(null);
 
   const tmp = useSelector(userSelector);
   const [user, setUser] = useState({});
@@ -792,7 +1143,7 @@ function Module() {
                       <th className="px-3 py-2">Key</th>
                       <th className="px-3 py-2">Icon</th>
                       <th className="px-3 py-2">Mô tả</th>
-                      <th className="px-3 py-2 w-40">Thao tác</th>
+                      <th className="px-2 py-2 w-px whitespace-nowrap">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -823,21 +1174,40 @@ function Module() {
                             <span className="text-slate-400">—</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="flex items-center gap-2">
+                        <td className="px-2 py-2 align-top">
+                          <div
+                            className="inline-flex items-center gap-px rounded-xl border border-slate-200/90 bg-slate-50/90 p-0.5 shadow-sm"
+                            role="group"
+                            aria-label="Thao tác module"
+                          >
                             <button
-                              disabled={!canManage}
-                              onClick={() => openEdit(r)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                              type="button"
+                              onClick={() => setUsersModalModule(r)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-indigo-700 hover:shadow-sm"
+                              title="Danh sách user"
+                              aria-label="Danh sách user"
                             >
-                              <FiEdit2 /> Sửa
+                              <FiUsers className="h-4 w-4" />
                             </button>
                             <button
+                              type="button"
+                              disabled={!canManage}
+                              onClick={() => openEdit(r)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-slate-900 hover:shadow-sm disabled:pointer-events-none disabled:opacity-40"
+                              title="Sửa"
+                              aria-label="Sửa module"
+                            >
+                              <FiEdit2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
                               disabled={!canManage}
                               onClick={() => setDelId(r.moduleId)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:opacity-50"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-600 transition hover:bg-red-50 hover:shadow-sm disabled:pointer-events-none disabled:opacity-40"
+                              title="Xoá"
+                              aria-label="Xoá module"
                             >
-                              <FiTrash2 /> Xoá
+                              <FiTrash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </td>
@@ -888,6 +1258,13 @@ function Module() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setUsersModalModule(r)}
+                        className="col-span-2 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-indigo-50 text-sm font-semibold text-indigo-800 ring-1 ring-indigo-200 hover:bg-indigo-100"
+                      >
+                        <FiUsers /> Danh sách user
+                      </button>
                       <button
                         disabled={!canManage}
                         onClick={() => openEdit(r)}
@@ -1102,6 +1479,12 @@ function Module() {
           </div>
         </div>
       </Modal>
+
+      <ModuleUsersModal
+        open={!!usersModalModule}
+        moduleRow={usersModalModule}
+        onClose={() => setUsersModalModule(null)}
+      />
 
       {/* Modal xác nhận xoá */}
       <Modal open={!!delId} onClose={() => setDelId(null)} title="Xác nhận xoá">
