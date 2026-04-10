@@ -41,8 +41,15 @@ function CreateAccountCard({ onCreated }) {
           text: res.data?.message || "Tạo tài khoản thất bại.",
         });
       }
-    } catch {
-      setToast({ type: "error", text: "Lỗi kết nối máy chủ." });
+    } catch (e) {
+      const msg = e?.response?.data?.message;
+      setToast({
+        type: "error",
+        text:
+          typeof msg === "string" && msg.trim()
+            ? msg
+            : "Lỗi kết nối máy chủ.",
+      });
     } finally {
       setSaving(false);
     }
