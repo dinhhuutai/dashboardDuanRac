@@ -28,6 +28,7 @@ export default function usePushSetup() {
 
       if (!supported) {
         setPushReady(false);
+        setPushError("Thiết bị/trình duyệt chưa hỗ trợ Web Push. Với Android, vui lòng dùng Chrome.");
         setPushChecking(false);
         return;
       }
@@ -47,6 +48,7 @@ export default function usePushSetup() {
       setPushReady(false);
       setPushChecking(false);
       setNotifPerm("unsupported");
+      setPushError("Thiết bị/trình duyệt chưa hỗ trợ Web Push.");
     }
   }, []);
 

@@ -668,6 +668,7 @@ export default function ViewPayslip() {
         if (!supported) {
           setNotifPerm("unsupported");
           setPushReady(false);
+          setPushError("Thiết bị/trình duyệt chưa hỗ trợ Web Push. Với Android, vui lòng dùng Chrome.");
           setPushChecking(false);
           return;
         }

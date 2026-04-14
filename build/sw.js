@@ -3,6 +3,25 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
 console.log('[SW] loaded v3');
 
+function normalizeToCurrentOrigin(rawUrl) {
+  // Always open notification links on the same origin as current SW.
+  // This avoids cross-origin opens that can look like "lost login" on some devices.
+  const fallback = self.location.origin + '/';
+  if (!rawUrl) return fallback;
+
+  let decoded = rawUrl;
+  try { decoded = decodeURIComponent(decoded); } catch {}
+  try { decoded = decodeURIComponent(decoded); } catch {}
+
+  try {
+    const parsed = new URL(decoded, self.location.origin);
+    const pathOnly = `${parsed.pathname || '/'}${parsed.search || ''}${parsed.hash || ''}`;
+    return new URL(pathOnly, self.location.origin).href;
+  } catch {
+    return fallback;
+  }
+}
+
 self.addEventListener('push', (event) => {
   let data = {};
   try {
@@ -12,18 +31,7 @@ self.addEventListener('push', (event) => {
     data = {};
   }
 
-  // Chuẩn hoá URL an toàn
-  let rawUrl = data.url || '/';
-  try { rawUrl = decodeURIComponent(rawUrl); } catch {}
-  try { rawUrl = decodeURIComponent(rawUrl); } catch {} // nếu server encode 2 lần
-
-  // Tạo absolute URL từ origin của SW (nếu rawUrl là relative)
-  let absUrl;
-  try {
-    absUrl = new URL(rawUrl, self.location.origin).href;
-  } catch {
-    absUrl = self.location.origin + '/'; // fallback
-  }
+  const absUrl = normalizeToCurrentOrigin(data.url || '/');
 
   const title = data.title || 'THLA';
   const options = {

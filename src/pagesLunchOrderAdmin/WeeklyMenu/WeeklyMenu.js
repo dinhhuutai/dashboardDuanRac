@@ -20,7 +20,7 @@ const UI_DEFAULT_FOOD_SLOTS = {
     [11, 80],
     [12, 93],
   ],
-  ws: [[1, 93]],
+  ws: [[1, 136]],
   ot: [[5, 93]],
 };
 
@@ -271,7 +271,8 @@ export default function WeeklyMenu() {
 
   const days = [
     { d:1, name:"Thứ 2" },{ d:2, name:"Thứ 3" },{ d:3, name:"Thứ 4" },
-    { d:4, name:"Thứ 5" },{ d:5, name:"Thứ 6" },{ d:6, name:"Thứ 7" },{ d:7, name:"Chủ nhật" },
+    { d:4, name:"Thứ 5" },{ d:5, name:"Thứ 6" },{ d:6, name:"Thứ 7" },
+    // { d:7, name:"Chủ nhật"},
   ];
 
   const tabs = [

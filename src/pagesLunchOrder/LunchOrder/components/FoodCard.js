@@ -356,7 +356,7 @@ export default function FoodCard({
                   compact ? "px-1.5 text-[9px]" : "px-2 text-[10px]"
                 }`}
               >
-                +{branches.length - 2} chi nhánh
+                +{branches.length - 2} nhánh
               </span>
             )}
           </div>
@@ -435,14 +435,14 @@ export default function FoodCard({
                 </div>
               ) : (
                 <div className={`text-slate-400 italic ${compact ? "text-[10px]" : "text-xs"}`}>
-                  Không có chi nhánh
+                  Không có nhánh
                 </div>
               )}
             </div>
           ) : (
             // SEC: qty chung + multi branch + stepper
             <div className={`flex flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
-              {item.foodName !== "Trứng" && (
+              {item.foodName !== "Trứng" && item.foodName !== "Tiền đi ca" && (
                 <div className="flex items-center justify-center">
                   <QuantityStepper
                     value={qtyEntryValue ?? 0}
@@ -547,7 +547,7 @@ export default function FoodCard({
                 </div>
               ) : (
                 <div className={`text-slate-400 italic ${compact ? "text-[10px]" : "text-xs"}`}>
-                  Không có chi nhánh
+                  Không có nhánh
                 </div>
               )}
             </div>
