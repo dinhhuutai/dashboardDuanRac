@@ -179,7 +179,7 @@ import CapMoneyAccount from '~/pageCapMoney/Account';
 import CapMoneyBudget from '~/pageCapMoney/Budget';
 import CapMoneyPersonal from '~/pageCapMoney/Personal';
 
-
+import TheSanXuatMaPhan from '~/pages/utilsMrTuy/MrTuy/TheSanXuatMaPhan';
 
 const routesCapMoney = [
   {
@@ -433,6 +433,13 @@ export const routesTaskManagementAdmin = [
 ]
 
 export const routes = [
+  
+  {
+    path: config.routes.utilsMrTuyTheSanXuatMaPhan,
+    component: TheSanXuatMaPhan,
+    login: false,
+    isLogin: false,
+  },
   {
     path: config.routes.home,
     component: Home,

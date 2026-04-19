@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { 
   routes, 
   routesAdmin, 
@@ -121,7 +121,10 @@ function AppRoutes({ user }) {
 
         {/* Public / Logged-in routes (mặc định) */}
         {routes.map((route, index) => (
-          <Route element={route.login && <ProtecteRouterLogin />} key={index}>
+          <Route
+            element={route.login ? <ProtecteRouterLogin /> : <Outlet />}
+            key={index}
+          >
             <Route
               path={route.addId ? `${route.path}/:id` : route.path}
               element={

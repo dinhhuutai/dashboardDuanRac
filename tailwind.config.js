@@ -4,6 +4,14 @@ module.exports = {
   content: ['./public/**/*.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      colors: {
+        neon: "#6FFF00",
+      },
+
+      fontFamily: {
+        grotesk: ["Anton", "sans-serif"],
+        condiment: ["Condiment", "cursive"],
+      },
       borderRadius: {
         xl2: "1.25rem",
       },
