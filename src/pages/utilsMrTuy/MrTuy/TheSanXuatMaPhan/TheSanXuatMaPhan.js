@@ -16,10 +16,79 @@ function applyBorder(cell) {
   cell.border = BORDER;
 }
 
+/** Chiều ngang cột Excel A–D (đơn vị như hộp thoại Độ rộng cột Excel). */
+const EXCEL_COL_WIDTHS = Object.freeze([33.22, 27.56, 65.22, 23.67]);
+
+/** Chiều cao hàng Excel 1–15 (point). */
+const EXCEL_ROW_HEIGHTS = Object.freeze([
+  24.6, 27.6, 30.6, 99, 108.6, 82.8, 20.4, 25.8, 25.8, 25.8, 25.8, 22.2, 23.4,
+  23.4, 23.4,
+]);
+
+/** Ảnh QR — giao diện web + in trình duyệt (inch). */
+const QR_IMAGE_WEB_IN = Object.freeze({ w: 3.7, h: 3.95 });
+
+/** Ảnh QR — xuất Excel (inch). */
+const QR_IMAGE_EXCEL_IN = Object.freeze({ w: 4.5, h: 3.95 });
+
+/** Lệch dọc neo ảnh (inch): web + Excel. */
+const QR_ANCHOR_TOP_IN = 0.05;
+
+/** 96 px/in — ExcelJS `ext` dùng pixel logic 96 DPI. */
+const EXCEL_IMAGE_DPI = 96;
+
+/** EMU / inch — DrawingML cho colOff / rowOff. */
+const EMU_PER_INCH = 914400;
+
+/** ~1 CSS px @96dpi → EMU (cùng quy ước ExcelJS ext-xform). */
+const EMU_PER_CSS_PX = 9525;
+
+/** Viền ô QR (px) — bù khi neo ảnh (Excel). */
+const QR_CELL_BORDER_PX = 1;
+
+/** Giao diện / in trình duyệt: cách viền trái ô QR (px). */
+const QR_WEB_QR_INSET_LEFT_PX = 0;
+
+/** Excel: cách viền trái (px @96dpi → EMU trong qrExcelAnchorOffsetsEmu). */
+const QR_EXCEL_INSET_LEFT_PX = 2;
+
+const EXCEL_COL_WIDTH_SUM = EXCEL_COL_WIDTHS.reduce((a, b) => a + b, 0);
+
+function qrExcelAnchorOffsetsEmu() {
+  const borderEmu = EMU_PER_CSS_PX * QR_CELL_BORDER_PX;
+  return {
+    nativeColOff: QR_EXCEL_INSET_LEFT_PX * EMU_PER_CSS_PX + borderEmu,
+    nativeRowOff:
+      Math.round(QR_ANCHOR_TOP_IN * EMU_PER_INCH) + borderEmu,
+  };
+}
+
 const PRINT_PAGE_STYLE_ID = "the-san-xuat-ma-phan-print-page";
 
-/** @param {"A3"|"A4"|"A5"|"A6"} size */
-function setPrintPageSize(size) {
+/** Injected print rules: khổ A5 ngang, bố cục khớp Excel. */
+const PRINT_SHEET_CLASS = "the-san-xuat-ma-phan-a5-sheet";
+
+/** Lề trang khi in (inch) — giống Excel pageSetup margins ~0.2. */
+const PRINT_MARGIN_IN = 0.2;
+
+/**
+ * Zoom để khối thẻ vừa một trang A5 ngang (210×148 mm, trừ lề).
+ */
+function computeA5LandscapePrintZoom(sheetEl) {
+  if (!sheetEl) return 1;
+  const pageWIn = 210 / 25.4 - 2 * PRINT_MARGIN_IN;
+  const pageHIn = 148 / 25.4 - 2 * PRINT_MARGIN_IN;
+  const wPx = sheetEl.offsetWidth;
+  const hPx = sheetEl.offsetHeight;
+  if (wPx <= 0 || hPx <= 0) return 1;
+  const wIn = wPx / 96;
+  const hIn = hPx / 96;
+  const raw = Math.min(pageWIn / wIn, pageHIn / hIn);
+  const s = Math.min(raw * 0.992, 1);
+  return Number.isFinite(s) && s > 0 ? s : 1;
+}
+
+function applyA5PrintStyles() {
   let el = document.getElementById(PRINT_PAGE_STYLE_ID);
   if (!el) {
     el = document.createElement("style");
@@ -28,8 +97,88 @@ function setPrintPageSize(size) {
   }
   el.textContent = `@media print {
   @page {
-    size: ${size};
-    margin: 8mm;
+    size: A5 landscape;
+    margin: ${PRINT_MARGIN_IN}in;
+  }
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .${PRINT_SHEET_CLASS} {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-size: 8.5pt !important;
+    line-height: 1.25 !important;
+  }
+  .${PRINT_SHEET_CLASS} table {
+    font-size: inherit !important;
+  }
+  .${PRINT_SHEET_CLASS} h1 {
+    font-size: 11pt !important;
+    line-height: 1.2 !important;
+    padding: 0.35rem 0.5rem !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-td {
+    padding: 0.2rem 0.35rem !important;
+    min-height: 0 !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-readcell {
+    min-height: 0 !important;
+    gap: 0.1rem 0.25rem !important;
+    padding-top: 0.1rem !important;
+    padding-bottom: 0.1rem !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-readcell-label {
+    font-size: 7.5pt !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-readcell-value {
+    font-size: 8.5pt !important;
+    line-height: 1.25 !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-qr-cell {
+    position: relative !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    vertical-align: top !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-qr-anchor {
+    position: absolute !important;
+    top: calc(${QR_ANCHOR_TOP_IN}in + ${QR_CELL_BORDER_PX}px) !important;
+    left: ${QR_WEB_QR_INSET_LEFT_PX}px !important;
+    line-height: 0 !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-qr-img {
+    display: block !important;
+    width: ${QR_IMAGE_WEB_IN.w}in !important;
+    height: ${QR_IMAGE_WEB_IN.h}in !important;
+    max-width: ${QR_IMAGE_WEB_IN.w}in !important;
+    max-height: ${QR_IMAGE_WEB_IN.h}in !important;
+    margin: 0 !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-ready-hdr {
+    padding: 0.2rem 0.35rem !important;
+    font-size: 9pt !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-warning {
+    padding: 0.25rem 0.35rem !important;
+    font-size: 9pt !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-check-row input {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+  .${PRINT_SHEET_CLASS} .a5-print-check-row span {
+    font-size: 8.5pt !important;
   }
 }`;
 }
@@ -115,6 +264,7 @@ function formatSlWithPcs(raw) {
 }
 
 function excelReadCellRich(label, valueText) {
+  const val = valueText ?? "";
   return {
     richText: [
       {
@@ -124,7 +274,7 @@ function excelReadCellRich(label, valueText) {
           name: "Calibri",
           color: { argb: "FF171717" },
         },
-        text: `${label}\n`,
+        text: `${label}: `,
       },
       {
         font: {
@@ -132,7 +282,7 @@ function excelReadCellRich(label, valueText) {
           name: "Calibri",
           color: { argb: "FF525252" },
         },
-        text: valueText ?? "",
+        text: val,
       },
     ],
   };
@@ -366,16 +516,15 @@ async function getQrImageBytesForExcel(href, imgEl) {
 
 function ReadCell({ label, value, valueClassName = "" }) {
   const raw = value != null && String(value).length > 0 ? String(value) : "";
-  const display = raw;
   return (
-    <div className="flex min-h-[2.75rem] min-w-0 flex-col justify-start gap-1 py-1">
-      <span className="text-xs font-bold leading-tight text-neutral-900">
-        {label}
+    <div className="a5-print-readcell flex min-h-0 min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5 py-1">
+      <span className="a5-print-readcell-label shrink-0 text-xs font-bold leading-snug text-neutral-900">
+        {label}:
       </span>
       <span
-        className={`block whitespace-pre-wrap break-words text-sm font-normal leading-snug text-neutral-600 [overflow-wrap:anywhere] ${valueClassName}`}
+        className={`a5-print-readcell-value min-w-0 flex-1 whitespace-pre-wrap break-words text-sm font-normal leading-snug text-neutral-600 [overflow-wrap:anywhere] ${valueClassName}`}
       >
-        {display}
+        {raw}
       </span>
     </div>
   );
@@ -396,12 +545,7 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
     views: [{ showGridLines: true }],
   });
   const COL_LAST = 4;
-  sheet.columns = [
-    { width: 12 },
-    { width: 16 },
-    { width: 17 },
-    { width: 17 },
-  ];
+  sheet.columns = EXCEL_COL_WIDTHS.map((width) => ({ width }));
 
   let row = 1;
   const v = (k) => (values[k] != null ? String(values[k]) : "");
@@ -465,12 +609,11 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
   sheet.mergeCells(qrBlockTop, 1, qrBlockTop + 2, 2);
   const qrCell = sheet.getCell(qrBlockTop, 1);
   qrCell.alignment = {
-    vertical: "middle",
-    horizontal: "center",
+    vertical: "top",
+    horizontal: "left",
     wrapText: true,
   };
   for (let r = qrBlockTop; r <= qrBlockTop + 2; r += 1) {
-    sheet.getRow(r).height = 72;
     for (let c = 1; c <= 2; c += 1) {
       applyBorder(sheet.getCell(r, c));
     }
@@ -487,8 +630,20 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
         base64: uint8ToRawBase64(imgData.buffer),
         extension: imgData.extension,
       });
-      const rEnd = qrBlockTop + 2;
-      sheet.addImage(imageId, `A${qrBlockTop}:B${rEnd}`);
+      const { nativeColOff, nativeRowOff } = qrExcelAnchorOffsetsEmu();
+      sheet.addImage(imageId, {
+        tl: {
+          nativeCol: 0,
+          nativeRow: qrBlockTop - 1,
+          nativeColOff,
+          nativeRowOff,
+        },
+        ext: {
+          width: QR_IMAGE_EXCEL_IN.w * EXCEL_IMAGE_DPI,
+          height: QR_IMAGE_EXCEL_IN.h * EXCEL_IMAGE_DPI,
+        },
+        editAs: "oneCell",
+      });
       qrEmbedded = true;
       qrCell.value = "";
     }
@@ -589,6 +744,31 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
   fullReadRow("CHUY\u1EC0N", "CHUYEN");
   fullReadRow("GI\u1EDC NH\u1EACN", "GIONHAN");
   fullReadRow("QC K\u00DD", "QCKY");
+
+  for (let i = 0; i < EXCEL_ROW_HEIGHTS.length; i += 1) {
+    sheet.getRow(i + 1).height = EXCEL_ROW_HEIGHTS[i];
+  }
+
+  const lastPrintRow = row - 1;
+  Object.assign(sheet.pageSetup, {
+    paperSize: 11,
+    orientation: "landscape",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 1,
+    horizontalCentered: true,
+    verticalCentered: false,
+    margins: {
+      left: 0.2,
+      right: 0.2,
+      top: 0.2,
+      bottom: 0.2,
+      header: 0.2,
+      footer: 0.2,
+    },
+    printArea: `A1:D${lastPrintRow}`,
+  });
+  delete sheet.pageSetup.scale;
 
   const buf = await wb.xlsx.writeBuffer();
   const stamp = v("PO") || new Date().toISOString().slice(0, 10);
@@ -728,22 +908,44 @@ function TheSanXuatMaPhanInner() {
   };
 
   useEffect(() => {
+    applyA5PrintStyles();
     return () => {
       document.getElementById(PRINT_PAGE_STYLE_ID)?.remove();
     };
   }, []);
 
-  const printWithSize = (size) => {
-    setPrintPageSize(size);
+  const handlePrintA5 = () => {
+    applyA5PrintStyles();
+    const sheet = document.querySelector(`.${PRINT_SHEET_CLASS}`);
     requestAnimationFrame(() => {
+      let zoomApplied = false;
+      if (sheet) {
+        const z = computeA5LandscapePrintZoom(sheet);
+        if (z < 1) {
+          sheet.style.zoom = String(z);
+          zoomApplied = true;
+        }
+      }
+      const onAfterPrint = () => {
+        if (zoomApplied && sheet) {
+          sheet.style.zoom = "";
+        }
+        window.removeEventListener("afterprint", onAfterPrint);
+      };
+      window.addEventListener("afterprint", onAfterPrint);
       window.print();
     });
   };
 
   const handleExportExcel = async () => {
     try {
+      // Dữ liệu nằm trong queryValues vì URL đã bị xóa sau mount; merge searchParams nếu còn.
+      const valuesForExport = {
+        ...searchParamsToValues(searchParams),
+        ...queryValues,
+      };
       await exportTheSanXuatExcel(
-        searchParamsToValues(searchParams),
+        valuesForExport,
         qrImageSrc,
         qrImgRef.current,
       );
@@ -754,7 +956,9 @@ function TheSanXuatMaPhanInner() {
   };
 
   const td =
-    "box-border min-h-[3rem] border-[1px] border-solid border-neutral-400 px-2 py-2 align-top";
+    "a5-print-td box-border min-h-0 border-[1px] border-solid border-neutral-400 px-2 py-2 align-top";
+
+  const rowPt = (idx) => ({ height: `${EXCEL_ROW_HEIGHTS[idx]}pt` });
 
   return (
     <div className="min-h-screen bg-neutral-100 p-4 text-black print:bg-white print:p-2">
@@ -767,35 +971,41 @@ function TheSanXuatMaPhanInner() {
           >
             {"Xu\u1EA5t Excel"}
           </button>
-          <span className="self-center text-sm text-neutral-600">In:</span>
-          {["A3", "A4", "A5", "A6"].map((sz) => (
-            <button
-              key={sz}
-              type="button"
-              onClick={() => printWithSize(sz)}
-              className="box-border rounded border-[1px] border-solid border-neutral-400 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:border-neutral-500 hover:bg-neutral-50"
-            >
-              {sz}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={handlePrintA5}
+            className="box-border rounded border-[1px] border-solid border-neutral-400 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-neutral-500 hover:bg-neutral-50"
+          >
+            {"In A5"}
+          </button>
         </div>
 
-        <div className="box-border border-[1px] border-solid border-neutral-400 bg-white">
-          <div className="box-border border-b-[1px] border-solid border-neutral-400 px-4 py-4 text-center">
-            <h1 className="text-xl font-bold tracking-tight text-neutral-900 md:text-2xl">
-              {"TH\u1EBA S\u1EA2N XU\u1EA4T \u2013 M\u00C3 PH\u1EA6N"}
-            </h1>
-          </div>
-
+        <div
+          className={`${PRINT_SHEET_CLASS} box-border border-[1px] border-solid border-neutral-400 bg-white`}
+        >
           <table className="box-border w-full table-fixed border-collapse text-sm [border-spacing:0]">
             <colgroup>
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "27%" }} />
-              <col style={{ width: "27%" }} />
-              <col style={{ width: "26%" }} />
+              {EXCEL_COL_WIDTHS.map((w, i) => (
+                <col
+                  key={i}
+                  style={{
+                    width: `${(w / EXCEL_COL_WIDTH_SUM) * 100}%`,
+                  }}
+                />
+              ))}
             </colgroup>
             <tbody>
-              <tr className="[&>td]:border-t-0">
+              <tr style={rowPt(0)}>
+                <td
+                  colSpan={4}
+                  className="box-border border-[1px] border-solid border-neutral-400 px-4 py-2 text-center align-middle print:px-2 print:py-1"
+                >
+                  <h1 className="m-0 text-xl font-bold tracking-tight text-neutral-900 md:text-2xl print:text-[10pt] print:leading-tight">
+                    {"TH\u1EBA S\u1EA2N XU\u1EA4T \u2013 M\u00C3 PH\u1EA6N"}
+                  </h1>
+                </td>
+              </tr>
+              <tr className="[&>td]:border-t-0" style={rowPt(1)}>
                 <td className={td}>
                   <ReadCell label="CTY" value={q("CTY")} />
                 </td>
@@ -807,7 +1017,7 @@ function TheSanXuatMaPhanInner() {
                 </td>
               </tr>
 
-              <tr>
+              <tr style={rowPt(2)}>
                 <td className={td} colSpan={3}>
                   <ReadCell
                     label={"M\u00C3 \u2013 PH\u1EA6N"}
@@ -822,31 +1032,39 @@ function TheSanXuatMaPhanInner() {
                 </td>
               </tr>
 
-              <tr>
+              <tr style={rowPt(3)}>
                 <td
-                  className="box-border min-h-[8rem] border-[1px] border-solid border-neutral-400 p-2 align-middle"
+                  className="a5-print-qr-cell relative box-border border-[1px] border-solid border-neutral-400 p-0 align-top"
                   rowSpan={3}
                   colSpan={2}
                 >
                   {qrImageSrc && !qrImageBroken ? (
                     qrDisplaySrc ? (
-                      <img
-                        key={qrImgRetryKey}
-                        ref={qrImgRef}
-                        src={qrDisplaySrc}
-                        alt={"M\u00e3 QR"}
-                        loading="eager"
-                        decoding="async"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        className="mx-auto block print:max-h-[6cm] print:max-w-[6cm]"
+                      <div
+                        className="a5-print-qr-anchor absolute leading-none"
                         style={{
-                          width: "6cm",
-                          height: "6cm",
-                          objectFit: "contain",
+                          top: `calc(${QR_ANCHOR_TOP_IN}in + ${QR_CELL_BORDER_PX}px)`,
+                          left: QR_WEB_QR_INSET_LEFT_PX,
                         }}
-                        onLoad={handleQrImageLoad}
-                        onError={handleQrImageError}
-                      />
+                      >
+                        <img
+                          key={qrImgRetryKey}
+                          ref={qrImgRef}
+                          src={qrDisplaySrc}
+                          alt={"M\u00e3 QR"}
+                          loading="eager"
+                          decoding="async"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          className="a5-print-qr-img m-0 block max-w-none"
+                          style={{
+                            width: `${QR_IMAGE_WEB_IN.w}in`,
+                            height: `${QR_IMAGE_WEB_IN.h}in`,
+                            objectFit: "contain",
+                          }}
+                          onLoad={handleQrImageLoad}
+                          onError={handleQrImageError}
+                        />
+                      </div>
                     ) : (
                       <span className="text-xs text-neutral-500">
                         {"\u0110ang t\u1ea3i QR\u2026"}
@@ -869,7 +1087,7 @@ function TheSanXuatMaPhanInner() {
                   />
                 </td>
               </tr>
-              <tr>
+              <tr style={rowPt(4)}>
                 <td className={td}>
                   <ReadCell
                     label={"K\u00CDCH PHIM"}
@@ -880,7 +1098,7 @@ function TheSanXuatMaPhanInner() {
                   <ReadCell label="SLNV" value={q("SLNV")} />
                 </td>
               </tr>
-              <tr>
+              <tr style={rowPt(5)}>
                 <td className={td}>
                   <ReadCell
                     label={"Gi\u1edd b\u1eaft \u0111\u1ea7u"}
@@ -895,9 +1113,9 @@ function TheSanXuatMaPhanInner() {
                 </td>
               </tr>
 
-              <tr>
+              <tr style={rowPt(6)}>
                 <td
-                  className="box-border border-[1px] border-solid border-neutral-400 bg-neutral-100 px-2 py-1.5 font-bold text-neutral-900"
+                  className="a5-print-ready-hdr box-border border-[1px] border-solid border-neutral-400 bg-neutral-100 px-2 py-1.5 font-bold text-neutral-900"
                   colSpan={4}
                 >
                   READY CHECK:
@@ -909,8 +1127,12 @@ function TheSanXuatMaPhanInner() {
                 ["READY_KHUON", "Khu\xF4n OK", "XACNHAN_2"],
                 ["READY_MUC", "M\u1EF1c OK", "XACNHAN_3"],
                 ["READY_MAU", "M\u1EABu duy\u1EC7t OK", "XACNHAN_4"],
-              ].map(([name, label, xn]) => (
-                <tr key={name}>
+              ].map(([name, label, xn], readyIdx) => (
+                <tr
+                  key={name}
+                  className="a5-print-check-row"
+                  style={rowPt(7 + readyIdx)}
+                >
                   <td className={`${td} align-middle`}>
                     <div className="flex min-h-[2.75rem] min-w-0 items-center gap-2 py-1">
                       <input
@@ -934,9 +1156,9 @@ function TheSanXuatMaPhanInner() {
                 </tr>
               ))}
 
-              <tr>
+              <tr style={rowPt(11)}>
                 <td
-                  className="box-border border-[1px] border-solid border-neutral-400 px-2 py-2 text-left text-base font-bold text-neutral-900 md:text-lg"
+                  className="a5-print-warning box-border border-[1px] border-solid border-neutral-400 px-2 py-2 text-left text-base font-bold text-neutral-900 md:text-lg"
                   colSpan={4}
                 >
                   {
@@ -945,7 +1167,7 @@ function TheSanXuatMaPhanInner() {
                 </td>
               </tr>
 
-              <tr>
+              <tr style={rowPt(12)}>
                 <td className={td} colSpan={4}>
                   <ReadCell
                     label={"CHUY\u1EC0N"}
@@ -953,7 +1175,7 @@ function TheSanXuatMaPhanInner() {
                   />
                 </td>
               </tr>
-              <tr>
+              <tr style={rowPt(13)}>
                 <td className={td} colSpan={4}>
                   <ReadCell
                     label={"GI\u1EDC NH\u1EACN"}
@@ -961,7 +1183,7 @@ function TheSanXuatMaPhanInner() {
                   />
                 </td>
               </tr>
-              <tr>
+              <tr style={rowPt(14)}>
                 <td className={td} colSpan={4}>
                   <ReadCell label={"QC K\u00DD"} value={q("QCKY")} />
                 </td>
