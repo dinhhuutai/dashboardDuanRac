@@ -635,7 +635,7 @@ const ModernQR = () => {
     setBatchMpRunning(true);
     setBatchMpAt(0);
     try {
-      for (let n = 1; n <= 150; n++) {
+      for (let n = 151; n <= 700; n++) {
         setBatchMpAt(n);
         const code = `MP${String(n).padStart(3, "0")}`;
         const linkUrl = `${GOOGLE_FORM_MP_ENTRY_BASE}${code}`;
@@ -864,12 +864,12 @@ const ModernQR = () => {
         </div>
 
         <div className="mt-8 border-t border-[#E2E8F0] pt-6">
-          <h4 className="text-[15px] font-[600] mb-2 text-center">Tải hàng loạt Google Form (MP001 → MP150)</h4>
+          <h4 className="text-[15px] font-[600] mb-2 text-center">Tải hàng loạt Google Form (MP001 → MP700)</h4>
           <p className="mb-3 text-center text-[13px] text-[#64748B] leading-relaxed">
             Tự tạo QR (cùng định dạng ảnh “chỉ QR + logo”) cho từng link, chỉ đổi mã{" "}
-            <span className="font-mono text-[#0f172a]">MP001 … MP150</span> trong tham số{" "}
+            <span className="font-mono text-[#0f172a]">MP001 … MP700</span> trong tham số{" "}
             <span className="font-mono text-[12px]">entry.218182079</span>. Mỗi file tên{" "}
-            <span className="font-mono">MP001.png</span> … <span className="font-mono">MP150.png</span>.
+            <span className="font-mono">MP001.png</span> … <span className="font-mono">MP700.png</span>.
             Trình duyệt có thể hỏi cho phép tải nhiều file — hãy chọn Cho phép.
           </p>
           <div className="flex flex-col items-center gap-2">
@@ -880,8 +880,8 @@ const ModernQR = () => {
               className="text-[14px] px-[16px] py-[8px] bg-[#0f172a] text-white rounded-[6px] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {batchMpRunning
-                ? `Đang tải… ${batchMpAt}/150 (giữ tab này mở)`
-                : "Tạo & tải MP001.png … MP150.png"}
+                ? `Đang tải… ${batchMpAt}/700 (giữ tab này mở)`
+                : "Tạo & tải MP001.png … MP700.png"}
             </button>
           </div>
         </div>

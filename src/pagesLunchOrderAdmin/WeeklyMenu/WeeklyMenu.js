@@ -35,7 +35,7 @@ function applyUiDefaultFoods(boardMap, statusType, foods) {
   const pairs = UI_DEFAULT_FOOD_SLOTS[st];
   if (!pairs?.length || !foods?.length) return boardMap;
   const out = { ...boardMap };
-  for (let day = 1; day <= 7; day++) {
+  for (let day = 1; day <= 6; day++) {
     for (const [position, fid] of pairs) {
       const key = `slot-${day}-${position}`;
       if (!out[key]) {

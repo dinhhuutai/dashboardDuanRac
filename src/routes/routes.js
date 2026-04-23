@@ -180,6 +180,8 @@ import CapMoneyBudget from '~/pageCapMoney/Budget';
 import CapMoneyPersonal from '~/pageCapMoney/Personal';
 
 import TheSanXuatMaPhan from '~/pages/utilsMrTuy/MrTuy/TheSanXuatMaPhan';
+import FormTestRun from '~/pages/utilsMrTuy/MrTuy/FormTestRun';
+import FormReady from '~/pages/utilsMrTuy/MrTuy/FormReady';
 
 const routesCapMoney = [
   {
@@ -433,7 +435,18 @@ export const routesTaskManagementAdmin = [
 ]
 
 export const routes = [
-  
+  {
+    path: config.routes.utilsMrTuyFormReady,
+    component: FormReady,
+    login: false,
+    isLogin: false,
+  },
+  {
+    path: config.routes.utilsMrTuyFormTestRun,
+    component: FormTestRun,
+    login: false,
+    isLogin: false,
+  },
   {
     path: config.routes.utilsMrTuyTheSanXuatMaPhan,
     component: TheSanXuatMaPhan,

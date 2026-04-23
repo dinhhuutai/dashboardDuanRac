@@ -192,6 +192,8 @@ const routes = {
   capmoneyPersonal: '/cap-money/personal',
 
   utilsMrTuyTheSanXuatMaPhan: '/utils/mrTuy/the-san-xuat-ma-phan',
+  utilsMrTuyFormTestRun: '/utils/mrTuy/form-test-run',
+  utilsMrTuyFormReady: '/utils/mrTuy/form-ready-open-ready-test-run-release',
   
 };
 
