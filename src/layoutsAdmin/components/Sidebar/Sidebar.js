@@ -158,11 +158,11 @@ function Sidebar() {
               {
                 VIEW_PAGE_REPORT &&
                 <>
-                  <li>
+                  {/* <li>
                     <NavLink to={config.routes.adminReport} className={linkClass}>
                       Chi tiết
                     </NavLink>
-                  </li>
+                  </li> */}
                   <li>
                     <NavLink to={config.routes.adminReportByShift} className={linkClass}>
                       Theo ca làm
@@ -174,20 +174,25 @@ function Sidebar() {
                     </NavLink>
                   </li>
                   <li>
+                    <NavLink to={config.routes.adminReportTrashAndMaterial} className={linkClass}>
+                      Rác thải và vật tư
+                    </NavLink>
+                  </li>
+                  {/* <li>
                     <NavLink to={config.routes.adminReportByTrashBF17} className={linkClass}>
                       Theo loại rác trước 17/09
                     </NavLink>
-                  </li>
+                  </li> */}
                 </>
               }
-              {
+              {/* {
                 VIEW_PAGE_ISSUE &&
                 <li>
                   <NavLink to={config.routes.adminReportMaterials} className={linkClass}>
                     Vật tư
                   </NavLink>
                 </li>
-              }
+              } */}
             </Section>
           }
 

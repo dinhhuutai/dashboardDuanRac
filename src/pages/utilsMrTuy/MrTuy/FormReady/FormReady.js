@@ -84,15 +84,38 @@ function normalizeValue(v) {
   return v != null ? String(v).trim() : "";
 }
 
+function formatCurrentDate() {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yyyy = now.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 function exportFormReadyWord(values) {
   const stamp = normalizeValue(values.PO) || new Date().toISOString().slice(0, 10);
   const chk = `<span class="${CB_CLASS}">☐</span>`;
   const htmlRaw = `<!DOCTYPE html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="vi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="ProgId" content="Word.Document" />
+  <meta name="Generator" content="Microsoft Word 15" />
+  <!--[if gte mso 9]><xml>
+   <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+   </w:WordDocument>
+  </xml><![endif]-->
   <style>
-    @page { size: A4 portrait; margin: 0.22in; }
+    /* A4 dọc — Word đọc rõ hơn khi gắn @page theo section + inch */
+    @page WordSection1 {
+      size: 8.27in 11.69in;
+      margin: 0.22in;
+      mso-page-orientation: portrait;
+    }
+    div.WordSection1 { page: WordSection1; }
     body { font-family: "Times New Roman", serif; color: #111827; margin: 0; font-size: 16.5px; line-height: 1.48; }
     /* Không dùng flex — Word dễ bỏ qua page-break trên khối flex */
     .doc-p1, .doc-p2 { box-sizing: border-box; }
@@ -106,16 +129,18 @@ function exportFormReadyWord(values) {
     table.tbl-2col td, table.tbl-3col td { vertical-align: top; }
     table.tbl-2col td { width: 50%; padding: 2px 12px 10px 0; }
     table.tbl-2col td + td { padding: 2px 0 10px 12px; }
-    table.tbl-3col td { width: 33.33%; padding: 0 10px; }
+    table.tbl-3col td { width: 33.33%; padding: 0 6px; }
     table.tbl-3col td:first-child { padding-left: 0; }
     table.tbl-3col td:last-child { padding-right: 0; }
     table.tbl-2col p, table.tbl-3col p { margin: 5px 0; }
     .block { margin-top: 0; }
     .title-wrap { margin-top: 0; }
     .title-wrap > p { margin-top: 8px; margin-bottom: 0; }
+    .doc-p2 .block-tight-top { margin-top: 6px !important; }
   </style>
 </head>
 <body>
+  <div class="WordSection1">
   <div class="doc-p1">
     <div class="title-wrap">
       <h1>FORM READY - OPEN / READY /TEST RUN - RELEASE (MÃ-PHẦN)</h1>
@@ -124,18 +149,25 @@ function exportFormReadyWord(values) {
       <table class="tbl-2col" width="100%">
         <tr>
           <td width="50%"><p>MÃ ĐƠN: ${normalizeValue(values.PO) || "__________"}</p></td>
-          <td width="50%"><p>MÃ - PHẦN: ${normalizeValue(values.MA) || "__________"}</p></td>
+          <td width="50%"><p>MÃ: ${normalizeValue(values.MA) || "__________"}</p></td>
         </tr>
         <tr>
           <td width="50%"><p>KHÁCH HÀNG: ${normalizeValue(values.KH) || "__________"}</p></td>
-          <td width="50%"><p>TÊN SẢN PHẨM: __________</p></td>
+          <td width="50%"><p>PHẦN:</p></td>
         </tr>
         <tr>
           <td width="50%"><p>SỐ LƯỢNG: ${normalizeValue(values.SL) || "__________"}</p></td>
+          <td width="50%"><p>MÀU VẢI: ${normalizeValue(values.MAUVAI) || "__________"}</p></td>
+        </tr>
+        <tr>
           <td width="50%"><p>CHUYỀN DỰ KIẾN: ${normalizeValue(values.CHUYEN) || "__________"}</p></td>
+          <td width="50%"><p>KÍCH VẢI: ${normalizeValue(values.KICHVAI) || "__________"}</p></td>
+        </tr>
+        <tr>
+          <td width="50%"><p>NGÀY DỰ KIẾN RELEASE: ${formatCurrentDate()}</p></td>
+          <td width="50%"><p>KÍCH PHIM: ${normalizeValue(values.KICHPHIM) || "__________"}</p></td>
         </tr>
       </table>
-      <p>NGÀY DỰ KIẾN RELEASE: _________</p>
     </div>
 
     <div class="block">
@@ -171,7 +203,7 @@ function exportFormReadyWord(values) {
       <h2>5. CHECKLIST TEST RUN</h2>
       <table class="tbl-3col" width="100%">
         <tr>
-          <td width="33%">
+          <td width="33%" valign="top">
             <p><b>A. QC kiểm</b></p>
             <p>☐ Màu đúng</p>
             <p>☐ Độ nét đạt</p>
@@ -180,7 +212,7 @@ function exportFormReadyWord(values) {
             <p>☐ Không lỗi lớn</p>
             <p>☐ Đúng tiêu chuẩn QC</p>
           </td>
-          <td width="34%">
+          <td width="34%" valign="top">
             <p><b>B. CNSP kiểm</b></p>
             <p>☐ Đúng thông số kỹ thuật</p>
             <p>☐ Đúng độ bám mực</p>
@@ -188,11 +220,22 @@ function exportFormReadyWord(values) {
             <p>☐ Không lỗi kỹ thuật vận hành</p>
             <p>☐ Có thể chạy hàng loạt</p>
           </td>
-          <td width="33%">
+          <td width="33%" valign="top">
             <p><b>C. Tổ trưởng chuyền xác nhận</b></p>
             <p>☐ Chuyền sẵn sàng chạy</p>
             <p>☐ Công nhân hiểu thao tác</p>
             <p>☐ Không còn điểm nghẽn</p>
+          </td>
+        </tr>
+        <tr>
+          <td width="33%" valign="top" style="padding-top: 10px;">
+            <p style="margin: 0; padding-top: 4px; border-bottom: 1px solid #111827; min-height: 24px;"><span style="font-size: 14px;">Ký tên:</span></p>
+          </td>
+          <td width="34%" valign="top" style="padding-top: 10px;">
+            <p style="margin: 0; padding-top: 4px; border-bottom: 1px solid #111827; min-height: 24px;"><span style="font-size: 14px;">Ký tên:</span></p>
+          </td>
+          <td width="33%" valign="top" style="padding-top: 10px;">
+            <p style="margin: 0; padding-top: 4px; border-bottom: 1px solid #111827; min-height: 24px;"><span style="font-size: 14px;">Ký tên:</span></p>
           </td>
         </tr>
       </table>
@@ -213,15 +256,16 @@ function exportFormReadyWord(values) {
     </div>
     <div class="block">
       <h2>8. GHI CHÚ LỖI (NẾU CÓ)</h2>
-      <p>________________________________________________________________________________</p>
-      <p>________________________________________________________________________________</p>
+      <p style="margin: 4px 0;">________________________________________________________________________________</p>
+      <p style="margin: 4px 0;">________________________________________________________________________________</p>
     </div>
-    <div class="block">
-      <h2>QUY TẮC BẮT BUỘC</h2>
-      <p><b>❗ KHÔNG ĐỦ CHỮ KÝ → KHÔNG READY</b></p>
-      <p><b>❗ KHÔNG READY → KHÔNG ĐƯỢC RELEASE</b></p>
-      <p><b>❗ QC CÓ QUYỀN CHẶN</b></p>
+    <div class="block block-tight-top">
+      <h2 style="margin-bottom: 4px;">QUY TẮC BẮT BUỘC</h2>
+      <p style="margin: 3px 0; line-height: 1.35;"><b>❗ KHÔNG ĐỦ CHỮ KÝ → KHÔNG READY</b></p>
+      <p style="margin: 3px 0; line-height: 1.35;"><b>❗ KHÔNG READY → KHÔNG ĐƯỢC RELEASE</b></p>
+      <p style="margin: 3px 0; line-height: 1.35;"><b>❗ QC CÓ QUYỀN CHẶN</b></p>
     </div>
+  </div>
   </div>
 </body>
 </html>`;
@@ -265,6 +309,9 @@ function FormReady() {
       PO: normalizeValue(queryValues.PO),
       MA: normalizeValue(queryValues.MA),
       KH: normalizeValue(queryValues.KH),
+      MAUVAI: normalizeValue(queryValues.MAUVAI),
+      KICHVAI: normalizeValue(queryValues.KICHVAI),
+      KICHPHIM: normalizeValue(queryValues.KICHPHIM),
       SL: normalizeValue(queryValues.SL),
       CHUYEN: normalizeValue(queryValues.CHUYEN),
     }),
@@ -313,15 +360,16 @@ function FormReady() {
             <h2 className="text-[25px] font-bold text-blue-950">1. THÔNG TIN CHUNG</h2>
             <div className="mt-2 grid grid-cols-2 gap-x-10 gap-y-2 text-[18px]">
               <p>MÃ ĐƠN: {data.PO || "__________"}</p>
-              <p>MÃ - PHẦN: {data.MA || "__________"}</p>
+              <p>MÃ: {data.MA || "__________"}</p>
               <p>KHÁCH HÀNG: {data.KH || "__________"}</p>
-              <p>TÊN SẢN PHẨM: __________</p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-x-10 text-[18px]">
+              <p class="font-bold">PHẦN:</p>
               <p>SỐ LƯỢNG: {data.SL || "__________"}</p>
+              <p>MÀU VẢI: {data.MAUVAI || "__________"}</p>
               <p>CHUYỀN DỰ KIẾN: {data.CHUYEN || "__________"}</p>
+              <p>KÍCH VẢI: {data.KICHVAI || "__________"}</p>
+              <p>NGÀY DỰ KIẾN RELEASE: {formatCurrentDate()}</p>
+              <p>KÍCH PHIM: {data.KICHPHIM || "__________"}</p>
             </div>
-            <p className="mt-3 text-[18px]">NGÀY DỰ KIẾN RELEASE: _________</p>
           </section>
 
           <section>
@@ -380,11 +428,11 @@ function FormReady() {
           </section>
         </div>
 
-        <div className={`${PRINT_PAGE_CLASS} flex flex-col gap-8 bg-white px-10 py-8 text-[17px] leading-[1.55]`}>
+        <div className={`${PRINT_PAGE_CLASS} flex flex-col gap-5 bg-white px-10 py-8 text-[17px] leading-[1.55]`}>
           <section>
             <h2 className="text-[25px] font-bold text-blue-950">5. CHECKLIST TEST RUN</h2>
-            <div className="mt-3 grid grid-cols-3 gap-7">
-              <div className="space-y-2">
+            <div className="mt-3 grid grid-cols-3 gap-x-4 gap-y-0">
+              <div className="flex flex-col gap-2 self-stretch">
                 <p className="font-bold">A. QC kiểm</p>
                 <p>
                   <Cb /> Màu đúng
@@ -405,7 +453,7 @@ function FormReady() {
                   <Cb /> Đúng tiêu chuẩn QC
                 </p>
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2 self-stretch">
                 <p className="font-bold">B. CNSP kiểm</p>
                 <p>
                   <Cb /> Đúng thông số kỹ thuật
@@ -423,7 +471,7 @@ function FormReady() {
                   <Cb /> Có thể chạy hàng loạt
                 </p>
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2 self-stretch">
                 <p className="font-bold">C. Tổ trưởng chuyền xác nhận</p>
                 <p>
                   <Cb /> Chuyền sẵn sàng chạy
@@ -434,6 +482,11 @@ function FormReady() {
                 <p>
                   <Cb /> Không còn điểm nghẽn
                 </p>
+              </div>
+              <div className="col-span-3 mt-3 grid grid-cols-3 gap-x-4">
+                <span className="block border-b border-neutral-900 pb-1 pt-2 text-[15px] text-neutral-700">Ký tên:</span>
+                <span className="block border-b border-neutral-900 pb-1 pt-2 text-[15px] text-neutral-700">Ký tên:</span>
+                <span className="block border-b border-neutral-900 pb-1 pt-2 text-[15px] text-neutral-700">Ký tên:</span>
               </div>
             </div>
           </section>
@@ -446,12 +499,12 @@ function FormReady() {
             <p className="mt-2">
               <Cb /> NOT OK → DỪNG / CHỈNH / TEST LẠI
             </p>
-            <p className="mt-3">Lý do nếu NOT OK: ________________________________________________</p>
+            <p className="mt-2">Lý do nếu NOT OK: ________________________________________________</p>
           </section>
 
           <section>
             <h2 className="text-[25px] font-bold text-blue-950">7. CHỮ KÝ BẮT BUỘC</h2>
-            <div className="mt-2 space-y-3">
+            <div className="mt-2 space-y-2">
               <p>QC: __________________________</p>
               <p>CNSP: ________________________</p>
               <p>Tổ trưởng chuyền: ________________________</p>
@@ -463,14 +516,14 @@ function FormReady() {
           <section>
             <h2 className="text-[25px] font-bold text-blue-950">8. GHI CHÚ LỖI (NẾU CÓ)</h2>
             <p className="mt-2">________________________________________________________________________________</p>
-            <p className="mt-2">________________________________________________________________________________</p>
+            <p className="mt-1">________________________________________________________________________________</p>
           </section>
 
-          <section>
+          <section className="-mt-2">
             <h2 className="text-[25px] font-bold text-blue-950">QUY TẮC BẮT BUỘC</h2>
-            <p className="mt-2 text-[17px] font-bold text-red-600">❗ KHÔNG ĐỦ CHỮ KÝ → KHÔNG READY</p>
-            <p className="text-[17px] font-bold text-red-600">❗ KHÔNG READY → KHÔNG ĐƯỢC RELEASE</p>
-            <p className="text-[17px] font-bold text-red-600">❗ QC CÓ QUYỀN CHẶN</p>
+            <p className="mt-1 text-[17px] font-bold leading-snug text-red-600">❗ KHÔNG ĐỦ CHỮ KÝ → KHÔNG READY</p>
+            <p className="text-[17px] font-bold leading-snug text-red-600">❗ KHÔNG READY → KHÔNG ĐƯỢC RELEASE</p>
+            <p className="text-[17px] font-bold leading-snug text-red-600">❗ QC CÓ QUYỀN CHẶN</p>
           </section>
         </div>
       </div>

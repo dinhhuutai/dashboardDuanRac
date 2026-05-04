@@ -29,6 +29,7 @@ import ExportQr from '~/pagesAdmin/ExportQr';
 import Report from '~/pagesAdmin/Menu/Reports/Report';
 import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
 import ReportByTrash from '~/pagesAdmin/Menu/Reports/ReportTrash';
+import ReportTrashAndMaterial from '~/pagesAdmin/Menu/Reports/TrashAndMaterial';
 import ReportByTrashBF17 from '~/pagesAdmin/Menu/Reports/ReportTrashBF17';
 import ReportByDepartment from '~/pagesAdmin/Menu/Reports/ReportDepartment';
 import ReportMaterials from '~/pagesAdmin/Menu/Reports/ReportMaterials';
@@ -182,6 +183,7 @@ import CapMoneyPersonal from '~/pageCapMoney/Personal';
 import TheSanXuatMaPhan from '~/pages/utilsMrTuy/MrTuy/TheSanXuatMaPhan';
 import FormTestRun from '~/pages/utilsMrTuy/MrTuy/FormTestRun';
 import FormReady from '~/pages/utilsMrTuy/MrTuy/FormReady';
+import A6Card from '~/pages/utilsMrTuy/MrTuy/A6Card';
 
 const routesCapMoney = [
   {
@@ -435,6 +437,12 @@ export const routesTaskManagementAdmin = [
 ]
 
 export const routes = [
+  {
+    path: config.routes.utilsMrTuyA6Card,
+    component: A6Card,
+    login: false,
+    isLogin: false,
+  },
   {
     path: config.routes.utilsMrTuyFormReady,
     component: FormReady,
@@ -727,6 +735,11 @@ export const routesAdmin = [
   {
     path: config.routes.adminReportByTrash,
     component: ReportByTrash,
+    login: true,
+  },
+  {
+    path: config.routes.adminReportTrashAndMaterial,
+    component: ReportTrashAndMaterial,
     login: true,
   },
   {

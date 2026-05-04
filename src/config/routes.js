@@ -14,6 +14,7 @@ const routes = {
   adminReport: '/admin/menu/dashboard/report',
   adminReportByShift: '/admin/menu/dashboard/report-by-shift',
   adminReportByTrash: '/admin/menu/dashboard/report-by-trash',
+  adminReportTrashAndMaterial: '/admin/menu/dashboard/report-trash-and-material',
   adminReportByTrashBF17: '/admin/menu/dashboard/report-by-trash-bf17',
   adminReportByDepartment: '/admin/menu/dashboard/report-by-department',
   adminReportMaterials: '/admin/menu/dashboard/report-materials',
@@ -194,6 +195,7 @@ const routes = {
   utilsMrTuyTheSanXuatMaPhan: '/utils/mrTuy/the-san-xuat-ma-phan',
   utilsMrTuyFormTestRun: '/utils/mrTuy/form-test-run',
   utilsMrTuyFormReady: '/utils/mrTuy/form-ready-open-ready-test-run-release',
+  utilsMrTuyA6Card: '/utils/mrTuy/A6-card',
   
 };
 

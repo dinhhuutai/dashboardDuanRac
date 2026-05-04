@@ -17,7 +17,7 @@ function applyBorder(cell) {
 }
 
 /** Chiều ngang cột Excel A–D (đơn vị như hộp thoại Độ rộng cột Excel). */
-const EXCEL_COL_WIDTHS = Object.freeze([33.22, 27.56, 65.22, 23.67]);
+const EXCEL_COL_WIDTHS = Object.freeze([33.22, 27.56, 57.22, 31.67]);
 
 /** Chiều cao hàng Excel 1–15 (point). */
 const EXCEL_ROW_HEIGHTS = Object.freeze([
@@ -751,7 +751,7 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
   applyBorder(sheet.getCell(row, 4));
   row += 1;
 
-  sheet.mergeCells(row, 1, row, COL_LAST);
+  sheet.mergeCells(row, 1, row, 2);
   const readyHdr = sheet.getCell(row, 1);
   readyHdr.value = "READY CHECK:";
   readyHdr.font = {
@@ -766,7 +766,17 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
     fgColor: { argb: "FFE5E5E5" },
   };
   readyHdr.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
-  borderRange(row, 1, COL_LAST);
+  borderRange(row, 1, 2);
+  sheet.mergeCells(row, 3, row, 4);
+  const chuyenHdr = sheet.getCell(row, 3);
+  chuyenHdr.value = excelReadCellRich("CHUYỀN", dv("CHUYEN"));
+  chuyenHdr.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE5E5E5" },
+  };
+  chuyenHdr.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+  borderRange(row, 3, 4);
   row += 1;
 
   const ready = [
@@ -823,7 +833,6 @@ async function exportTheSanXuatExcel(values, preferredQrSrc = "", qrImgEl = null
     row += 1;
   };
 
-  fullReadRow("CHUY\u1EC0N", "CHUYEN");
   fullReadRow("GI\u1EDC NH\u1EACN", "GIONHAN");
   fullReadRow("QC K\u00DD", "QCKY");
 
@@ -1199,9 +1208,15 @@ function TheSanXuatMaPhanInner() {
               <tr style={rowPt(6)}>
                 <td
                   className="a5-print-ready-hdr box-border border-[1px] border-solid border-neutral-400 bg-neutral-100 px-2 py-1.5 font-bold text-black"
-                  colSpan={4}
+                  colSpan={2}
                 >
                   READY CHECK:
+                </td>
+                <td
+                  className="box-border border-[1px] border-solid border-neutral-400 bg-neutral-100 px-2 py-1.5"
+                  colSpan={2}
+                >
+                  <ReadCell label={"CHUY\u1EC0N"} value={qf("CHUYEN")} />
                 </td>
               </tr>
 
@@ -1253,20 +1268,12 @@ function TheSanXuatMaPhanInner() {
               <tr style={rowPt(12)}>
                 <td className={td} colSpan={4}>
                   <ReadCell
-                    label={"CHUY\u1EC0N"}
-                    value={qf("CHUYEN")}
-                  />
-                </td>
-              </tr>
-              <tr style={rowPt(13)}>
-                <td className={td} colSpan={4}>
-                  <ReadCell
                     label={"GI\u1EDC NH\u1EACN"}
                     value={qf("GIONHAN")}
                   />
                 </td>
               </tr>
-              <tr style={rowPt(14)}>
+              <tr style={rowPt(13)}>
                 <td className={td} colSpan={4}>
                   <ReadCell label={"QC K\u00DD"} value={qf("QCKY")} />
                 </td>
