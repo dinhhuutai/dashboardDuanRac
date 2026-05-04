@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import QRCodeStyling from "qr-code-styling";
 import logoImage from "~/assets/imgs/logoAdmin.png";
 
-/** Google Form: đổi giá trị entry (MP001 …) ở cuối URL */
+/** Google Form: đổi giá trị entry (SCAN001 …) ở cuối URL */
 const GOOGLE_FORM_MP_ENTRY_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLSeNf6SnRYJoFcSateSj4bRLDvZitynbWdd53qA-Lt32TT8oWw/viewform?usp=pp_url&entry.218182079=";
+  "https://docs.google.com/forms/d/e/1FAIpQLSdctVQ4wK953xjpNbMpLnwWkqVebyt8w0YOktgRY6H5Z2Pktw/viewform?usp=pp_url&entry.218182079=";
 
 const ModernQR = () => {
   // =========================
@@ -635,9 +635,9 @@ const ModernQR = () => {
     setBatchMpRunning(true);
     setBatchMpAt(0);
     try {
-      for (let n = 151; n <= 700; n++) {
+      for (let n = 1; n <= 700; n++) {
         setBatchMpAt(n);
-        const code = `MP${String(n).padStart(3, "0")}`;
+        const code = `SCAN${String(n).padStart(3, "0")}`;
         const linkUrl = `${GOOGLE_FORM_MP_ENTRY_BASE}${code}`;
         const pngDataUrl = await exportPlainQrWithLogoDataUrl(batchPlainQrCode, linkUrl);
         const link = document.createElement("a");
@@ -864,12 +864,12 @@ const ModernQR = () => {
         </div>
 
         <div className="mt-8 border-t border-[#E2E8F0] pt-6">
-          <h4 className="text-[15px] font-[600] mb-2 text-center">Tải hàng loạt Google Form (MP001 → MP700)</h4>
+          <h4 className="text-[15px] font-[600] mb-2 text-center">Tải hàng loạt Google Form (SCAN001 → SCAN700)</h4>
           <p className="mb-3 text-center text-[13px] text-[#64748B] leading-relaxed">
             Tự tạo QR (cùng định dạng ảnh “chỉ QR + logo”) cho từng link, chỉ đổi mã{" "}
-            <span className="font-mono text-[#0f172a]">MP001 … MP700</span> trong tham số{" "}
+            <span className="font-mono text-[#0f172a]">SCAN001 … SCAN700</span> trong tham số{" "}
             <span className="font-mono text-[12px]">entry.218182079</span>. Mỗi file tên{" "}
-            <span className="font-mono">MP001.png</span> … <span className="font-mono">MP700.png</span>.
+            <span className="font-mono">SCAN001.png</span> … <span className="font-mono">SCAN700.png</span>.
             Trình duyệt có thể hỏi cho phép tải nhiều file — hãy chọn Cho phép.
           </p>
           <div className="flex flex-col items-center gap-2">
@@ -881,7 +881,7 @@ const ModernQR = () => {
             >
               {batchMpRunning
                 ? `Đang tải… ${batchMpAt}/700 (giữ tab này mở)`
-                : "Tạo & tải MP001.png … MP700.png"}
+                : "Tạo & tải SCAN001.png … SCAN700.png"}
             </button>
           </div>
         </div>

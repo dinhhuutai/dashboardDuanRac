@@ -1059,7 +1059,7 @@
 
 //                 {/* Tổng cộng */}
 //                 <tr className="bg-emerald-50 border-t border-emerald-200">
-//                   <td className="px-2 py-2 text-center font-bold text-emerald-800" colSpan={filterType === 'one' ? 2 : 1}>
+//                   <td className="px-2 py-2 text-center font-bold text-emerald-800" colSpan={isOneDay ? 2 : 1}>
 //                     Tổng cộng
 //                   </td>
 //                   {report['Tổng cộng-']?.map(
@@ -1067,7 +1067,7 @@
 //                       i % 7 === 0 && (
 //                         <td
 //                           key={i}
-//                           colSpan={filterType === 'one' ? 7 : 1}
+//                           colSpan={isOneDay ? 7 : 1}
 //                           className="px-2 py-2 text-center font-bold text-emerald-900"
 //                         >
 //                           {e === 0 ? '-' : parseFloat(round1(e)?.toFixed(1))}
@@ -1098,10 +1098,7 @@
 
 
 
-import 'react-datepicker/dist/react-datepicker.css';
 import React, { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react';
-import DatePicker from 'react-datepicker';
-import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
 import { FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import http from '~/api/http';
@@ -1110,6 +1107,7 @@ import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import HandleGetCodeQr from '~/components/HandleGetCodeQR';
 import { useSelector } from 'react-redux';
 import { userSelector } from '~/redux/selectors';
+import DateRangeField from '~/components/DateRangeField';
 
 /* ======================= UI helpers ======================= */
 const cx = (...classes) => classes.filter(Boolean).join(' ');
@@ -1159,11 +1157,14 @@ const URL_STATS = `${BASE_URL}/api/statistics/weight-by-bucket`; // cùng contra
 const round1 = (n) => Math.round(n * 10) / 10;
 const fmt1 = (x) => (x === 0 ? '-' : (Math.round(x * 10) / 10).toFixed(1));
 
-function toVNDateISO(d) {
-  const vnOffset = 7 * 60;
-  const local = new Date(d.getTime() + vnOffset * 60 * 1000);
-  return local.toISOString().slice(0, 10);
-}
+// Gửi API đúng ngày lịch local (DateRangeField)
+const toISODate = (d) => {
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 function vnDateParts(date) {
     const vnOffset = 7 * 60;
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
@@ -1221,10 +1222,15 @@ export default function ReportTotalDynamic() {
 
   const [loading, setLoading] = useState(true);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
-  const [filterType, setFilterType] = useState('one'); // 'one' | 'range'
-  const [dateOne, setDateOne] = useState(new Date());
-  const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; });
-  const [endDate, setEndDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState({
+    from: new Date(),
+    to: new Date(),
+  });
+
+  const isOneDay = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) return false;
+    return toISODate(dateRange.from) === toISODate(dateRange.to);
+  }, [dateRange]);
 
   // dữ liệu động từ API: [{bucketID,bucketName, units:[{unitID,unitName,value:number[64]}], orphan?, sum:number[64]}]
   const [raw, setRaw] = useState([]);
@@ -1238,13 +1244,15 @@ export default function ReportTotalDynamic() {
 
   /* ===== Fetch with debounce & abort ===== */
   useEffect(() => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
     setLoading(true);
     const controller = new AbortController();
     const run = async () => {
       try {
         const params = {
-          startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
-          endDate:   filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(endDate),
+          startDate: toISODate(dateRange.from),
+          endDate: toISODate(dateRange.to),
         };
         const res = await http.get(URL_STATS, { params, signal: controller.signal });
         if (res.data?.status === 'success') {
@@ -1262,7 +1270,7 @@ export default function ReportTotalDynamic() {
     };
     run();
     return () => { controller.abort(); };
-  }, [filterType, dateOne, startDate, endDate]);
+  }, [dateRange]);
 
   useEffect(() => {
     let timer;
@@ -1346,13 +1354,16 @@ const grandRange = useMemo(() => sum7ShiftsPerCategory(grand || []), [grand]);
         updatedAt: nowUTC7.toISOString(),
         updatedBy: user?.userID,
         workShift,
-        workDate: new Date(dateOne).toISOString().split('T')[0],
+        workDate: toISODate(dateRange.from),
         userName: user?.fullName,
       };
       const res = await http.post('/trash-weighings', payload);
       if (res?.ok || res?.data?.status === 'success') {
         // refresh
-        const params = { startDate: toVNDateISO(dateOne), endDate: toVNDateISO(dateOne) };
+        const params = {
+          startDate: toISODate(dateRange.from),
+          endDate: toISODate(dateRange.to),
+        };
         const fresh = await http.get(URL_STATS, { params });
         if (fresh.data?.status === 'success') {
           setRaw(fresh.data.data || []);
@@ -1397,7 +1408,7 @@ const grandRange = useMemo(() => sum7ShiftsPerCategory(grand || []), [grand]);
   rows.push(['', 'Tổng cộng', ...vs]); // 2 cột đầu + 59-2 cột số liệu
 }
 
-const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateOne).dmy} (xuất ${formatNow()})`];
+const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT NGÀY ${vnDateParts(dateRange.from).dmy} (xuất ${formatNow()})`];
 const wsData = [title, headerRow1, headerRow2, ...rows];
 
     const wb = XLSX.utils.book_new();
@@ -1439,9 +1450,9 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
       if (ws[h1]) ws[h1].s = { ...ws[h1].s, font: { bold: true }, fill: { fgColor: { rgb: 'E5E7EB' } } };
     }
 
-    XLSX.utils.book_append_sheet(wb, ws, vnDateParts(dateOne).dmyDash);
+    XLSX.utils.book_append_sheet(wb, ws, vnDateParts(dateRange.from).dmyDash);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(dateOne).dmy}.xlsx`);
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(dateRange.from).dmy}.xlsx`);
   };
 
   const exportRangeExcel = async () => {
@@ -1465,7 +1476,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
     const grandTotal = grandRange.reduce((s, x) => s + (x || 0), 0);
     rows.push(['Tổng cộng', ...grandRange.map(v => (v === 0 ? '-' : round1(v).toFixed(1))), grandTotal === 0 ? '-' : round1(grandTotal).toFixed(1)]);
 
-    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy}  (xuất ${formatNow()})`];
+    const title = [`BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(dateRange.from).dmy} – ${vnDateParts(dateRange.to).dmy}  (xuất ${formatNow()})`];
     const wsData = [title, headerRow1, ...rows];
 
     const wb = XLSX.utils.book_new();
@@ -1490,9 +1501,9 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
     const titleCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
     ws[titleCell].s = { ...ws[titleCell].s, font: { bold: true, sz: 16 } };
 
-    XLSX.utils.book_append_sheet(wb, ws, `${vnDateParts(startDate).dmyDash} - ${vnDateParts(endDate).dmyDash}`);
+    XLSX.utils.book_append_sheet(wb, ws, `${vnDateParts(dateRange.from).dmyDash} - ${vnDateParts(dateRange.to).dmyDash}`);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy}.xlsx`);
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `BẢNG THEO DÕI RÁC THẢI CHI TIẾT ${vnDateParts(dateRange.from).dmy} – ${vnDateParts(dateRange.to).dmy}.xlsx`);
   };
 
   /* ======================= Render ======================= */
@@ -1507,7 +1518,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
             <div className="flex items-center gap-2">
               {EXPORT_EXCEL_REPORT && (
                 <button
-                  onClick={filterType === 'one' ? exportOneDayExcel : exportRangeExcel}
+                  onClick={isOneDay ? exportOneDayExcel : exportRangeExcel}
                   disabled={loading || !raw?.length}
                   className={cx(
                     'px-4 py-2 text-sm rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[.98] shadow-sm',
@@ -1518,70 +1529,13 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
                 </button>
               )}
 
-              <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'one' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="one" checked={filterType === 'one'} onChange={() => setFilterType('one')} className="mr-2 accent-emerald-600" />
-                  1 ngày
-                </label>
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'range' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="range" checked={filterType === 'range'} onChange={() => setFilterType('range')} className="mr-2 accent-emerald-600" />
-                  Nhiều ngày
-                </label>
-              </div>
             </div>
 
             <div className="flex flex-wrap items-end gap-3">
-              {filterType === 'one' ? (
-                <div>
-                  <label className="block text-xs text-slate-500 mb-1">Chọn ngày</label>
-                  <DatePicker
-                    selected={dateOne}
-                    onChange={(d) => setDateOne(d)}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    locale={vi}
-                    popperPlacement="bottom-start"
-                    popperClassName="!z-[9999]"
-                    portalId="react-datepicker-portal"
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Từ ngày</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(d) => setStartDate(d)}
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Đến ngày</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(d) => setEndDate(d)}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                </>
-              )}
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Khoảng ngày</label>
+                <DateRangeField range={dateRange} onChange={setDateRange} />
+              </div>
             </div>
           </div>
 
@@ -1589,7 +1543,11 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <SummaryPill
               label="Khoảng thời gian"
-              value={filterType === 'one' ? vnDateParts(dateOne).dmy : `${vnDateParts(startDate).dmy} – ${vnDateParts(endDate).dmy}`}
+              value={
+                isOneDay
+                  ? vnDateParts(dateRange.from).dmy
+                  : `${vnDateParts(dateRange.from).dmy} – ${vnDateParts(dateRange.to).dmy}`
+              }
             />
             <div className="text-xs text-slate-500">Nhấp đúp ô để chỉnh sửa nhanh (nếu được phân quyền)</div>
           </div>
@@ -1600,7 +1558,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
           <div className="overflow-auto">
             <table className="min-w-full text-sm text-slate-700">
               <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-sm border-b border-slate-200">
-                {filterType === 'one' ? (
+                {isOneDay ? (
                   <>
                     <tr>
                       <th rowSpan={2} className="px-2 py-2 text-center font-semibold text-slate-700">BP/Tổ</th>
@@ -1628,7 +1586,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
               </thead>
 
               <tbody className="divide-y divide-slate-100">
-                {filterType === 'one' ? (
+                {isOneDay ? (
                   // One day: chi tiết theo chuyền
                   rowsOneDay.map((group, gIdx) =>
                     group.rows.map((r, idx) => (
@@ -1644,7 +1602,7 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
                             key={i}
                             className={cx('px-2 py-1 text-center', 'text-slate-700', (i === (TRASH_CATEGORIES.length * SHIFTS.length)) && 'font-semibold text-slate-900')}
                             onDoubleClick={() => {
-  if (!ADD_DATA_REPORT || filterType !== 'one' || r.type === 'sum') return;
+  if (!ADD_DATA_REPORT || !isOneDay || r.type === 'sum') return;
   setStatusUpdate(true);
   setSelectInput({ group: group.bucketName, item: r.unitName, index: i });
   const num = Number(e || 0);
@@ -1676,9 +1634,9 @@ const wsData = [title, headerRow1, headerRow2, ...rows];
 
                 {/* Grand total */}
                 <tr className="bg-emerald-50 border-t border-emerald-200 sticky bottom-0">
-                  <td className="px-2 py-2 text-center font-bold text-emerald-800" colSpan={filterType === 'one' ? 2 : 1}>Tổng cộng</td>
+                  <td className="px-2 py-2 text-center font-bold text-emerald-800" colSpan={isOneDay ? 2 : 1}>Tổng cộng</td>
                   {(
-                    filterType === 'one'
+                    isOneDay
                       ? (grand || [])
                       : [...grandRange, grandRange.reduce((s, x) => s + (x || 0), 0)]
                   ).map((e, i) => (

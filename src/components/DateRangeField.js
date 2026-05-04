@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { FiCalendar, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 // ===== helper =====
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -54,6 +54,9 @@ function formatDateObj(date) {
 export default function DateRangeField({ range, onChange }) {
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => range?.from || new Date());
+  const buttonRef = useRef(null);
+  const popoverRef = useRef(null);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
 
   const weeks = useMemo(() => buildCalendarMatrix(viewDate), [viewDate]);
 
@@ -82,38 +85,121 @@ export default function DateRangeField({ range, onChange }) {
     }
   };
 
+  const updatePopoverPosition = () => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const popoverMinW = 268;
+    const pad = 8;
+    let left = rect.left;
+    const maxLeft = window.innerWidth - popoverMinW - pad;
+    if (left > maxLeft) left = Math.max(pad, maxLeft);
+    if (left < pad) left = pad;
+    setPopoverPos({ top: rect.bottom + 8, left });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePopoverPosition();
+  }, [open, viewDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e) => {
+      const t = e.target;
+      if (
+        popoverRef.current?.contains(t) ||
+        buttonRef.current?.contains(t)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onScrollOrResize = () => updatePopoverPosition();
+    window.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [open]);
+
+  const popover =
+    open &&
+    typeof document !== "undefined" &&
+    createPortal(
+      <div
+        ref={popoverRef}
+        className="fixed z-[9999] min-w-[260px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg"
+        style={{ top: popoverPos.top, left: popoverPos.left }}
+        role="dialog"
+        aria-label="Chọn khoảng ngày"
+      >
+        <div className="mb-2 flex justify-between">
+          <button
+            type="button"
+            className="rounded px-2 py-1 hover:bg-gray-100"
+            onClick={() =>
+              setViewDate(
+                new Date(viewDate.getFullYear(), viewDate.getMonth() - 1)
+              )
+            }
+          >
+            ◀
+          </button>
+          <span className="font-medium">{monthTitle(viewDate)}</span>
+          <button
+            type="button"
+            className="rounded px-2 py-1 hover:bg-gray-100"
+            onClick={() =>
+              setViewDate(
+                new Date(viewDate.getFullYear(), viewDate.getMonth() + 1)
+              )
+            }
+          >
+            ▶
+          </button>
+        </div>
+
+        {weeks.map((week, i) => (
+          <div key={i} className="grid grid-cols-7 gap-1">
+            {week.map((d, j) =>
+              d ? (
+                <button
+                  key={j}
+                  type="button"
+                  onClick={() => handlePick(d)}
+                  className="rounded p-2 hover:bg-gray-100"
+                >
+                  {d.getDate()}
+                </button>
+              ) : (
+                <div key={j} />
+              )
+            )}
+          </div>
+        ))}
+      </div>,
+      document.body
+    );
+
   return (
-    <div className="relative">
+    <div className="relative w-full min-w-0 max-w-full">
       <button
-        onClick={() => setOpen(!open)}
-        className="w-[260px] h-10 rounded-xl border px-3 text-left"
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="h-10 w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 text-left text-sm md:w-[260px] md:max-w-[260px] md:shrink-0"
       >
         {rangeText}
       </button>
-
-      {open && (
-        <div className="absolute z-50 mt-2 bg-white border p-3 rounded-xl shadow">
-          <div className="flex justify-between mb-2">
-            <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))}>◀</button>
-            <span>{monthTitle(viewDate)}</span>
-            <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))}>▶</button>
-          </div>
-
-          {weeks.map((week, i) => (
-            <div key={i} className="grid grid-cols-7 gap-1">
-              {week.map((d, j) =>
-                d ? (
-                  <button key={j} onClick={() => handlePick(d)} className="p-2 hover:bg-gray-100">
-                    {d.getDate()}
-                  </button>
-                ) : (
-                  <div key={j}></div>
-                )
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {popover}
     </div>
   );
 }

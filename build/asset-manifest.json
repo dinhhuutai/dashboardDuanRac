@@ -1,8 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.73c27d64.css",
-    "main.js": "/static/js/main.c9c560fc.js",
+    "main.css": "/static/css/main.e271a672.css",
+    "main.js": "/static/js/main.677ca835.js",
     "static/js/544.0466a351.chunk.js": "/static/js/544.0466a351.chunk.js",
+    "static/js/751.a19839a5.chunk.js": "/static/js/751.a19839a5.chunk.js",
+    "static/js/52.35047d29.chunk.js": "/static/js/52.35047d29.chunk.js",
     "static/js/794.472e9971.chunk.js": "/static/js/794.472e9971.chunk.js",
     "static/js/271.5a7394e8.chunk.js": "/static/js/271.5a7394e8.chunk.js",
     "static/media/caydua.png": "/static/media/caydua.92b8423f72fe87b38f8d.png",
@@ -85,7 +87,7 @@
     "static/media/nation-germany.svg": "/static/media/nation-germany.9585819fff6b679b76d52f67c22bab89.svg"
   },
   "entrypoints": [
-    "static/css/main.73c27d64.css",
-    "static/js/main.c9c560fc.js"
+    "static/css/main.e271a672.css",
+    "static/js/main.677ca835.js"
   ]
 }

@@ -1,13 +1,11 @@
-import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react';
+import React, { useEffect, useMemo, useState, useDeferredValue } from 'react';
 // ⚡ import động khi bấm Export
-import DatePicker from 'react-datepicker';
-import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
-import { FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaSpinner } from 'react-icons/fa';
 import http from '~/api/http';
 import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import MODULEID from '~/contants/modules';
+import DateRangeField from '~/components/DateRangeField';
 
   const formatNow = () => {
     const d = new Date();
@@ -33,10 +31,14 @@ const SectionTitle = ({ children }) => (
   </div>
 );
 
-// ====== Helpers chung ======
-const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
-const toVNDate = (d) => new Date(d.getTime() - d.getTimezoneOffset()*60000 + VN_OFFSET_MS);
-const toISODate = (d) => toVNDate(d).toISOString().slice(0,10);
+// ====== Ngày gửi API: lịch local khớp DateRangeField (tránh lệch +1 ngày do offset/toISOString) ======
+const toISODate = (d) => {
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 const fmtDmy = (date) => {
     const vnOffset = 7 * 60;
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
@@ -68,7 +70,9 @@ const sumByType = (arr = []) => {
     for (let k = 0; k < 7; k++) s += a[base + k] || 0;
     out.push(Math.round(s * 100) / 100);
   }
-  out.push(a[a.length - 1] || 0); // Tổng
+  out.push(
+    Math.round(((a[a.length - 1] || 0) + Number.EPSILON) * 100) / 100
+  );
   return out;
 };
 
@@ -76,22 +80,21 @@ const sumByType = (arr = []) => {
 const vniEq = (a = '', b = '') =>
   a.normalize('NFC').toLowerCase().trim() === b.normalize('NFC').toLowerCase().trim();
 
-// ====== Nhãn cột loại rác (theo thứ tự server encode) ======
-// Giả định server encode 8–9 loại theo block 7 cột; chỉnh danh sách khớp thực tế của bạn.
-// Ở đây theo code cũ của bạn: 8 loại + Tổng.
+// ====== Nhãn cột — khớp TRASH_NAMES trong API /api/statistics/weight-by-bucket (9 loại × 7 ca + tổng) ======
 const TYPE_LABELS = [
-  'Giẻ lau dính mực thường',
-  'Giẻ lau dính mực lapa',
-  'Băng keo',
+  'Giẻ lau có chứa thành phần nguy hại',
+  'Giẻ lau dính lapa',
+  'Băng keo dính mực',
   'Keo bàn thải',
   'Mực in thải',
   'Mực in lapa thải',
   'Vụn logo',
   'Lụa căng khung',
+  'Rác sinh hoạt',
 ];
 
-// Khi bật “Rác đi xử lý” → loại bỏ 2 mục: Băng keo, Lụa căng khung (giữ Tổng)
-const RXL_EXCLUDE = new Set(['Băng keo', 'Lụa căng khung']);
+// Khi bật “Rác đi xử lý” → ẩn 2 cột; Tổng = tổng các cột còn lại
+const RXL_EXCLUDE = new Set(['Băng keo dính mực', 'Lụa căng khung']);
 
 // =========================================
 export default function ReportTrash() {
@@ -102,28 +105,31 @@ export default function ReportTrash() {
   const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
 
-  const [filterType, setFilterType] = useState('one'); // 'one' | 'range'
-  const [dateOne, setDateOne] = useState(new Date());
-  const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setDate(d.getDate()-1); return d; });
-  const [endDate, setEndDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState({
+    from: new Date(),
+    to: new Date(),
+  });
 
   const [selectedBucketId, setSelectedBucketId] = useState('');
   const [isRacDiXuLy, setIsRacDiXuLy] = useState(false);
 
   // ==== Fetch (debounce + abort) ====
   useEffect(() => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
     setLoading(true);
     const controller = new AbortController();
     const run = async () => {
       try {
         const params = {
-          startDate: filterType === 'one' ? toISODate(dateOne) : toISODate(startDate),
-          endDate:   filterType === 'one' ? toISODate(dateOne) : toISODate(endDate),
+          startDate: toISODate(dateRange.from),
+          endDate: toISODate(dateRange.to),
           bucketName: selectedBucketId || '',
         };
         const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, {
           params, signal: controller.signal,
         });
+
         if (res.data?.status === 'success') {
           setRaw(res.data.data || []);
           setGrand(res.data.grandTotal || Array(64).fill(0));
@@ -139,7 +145,7 @@ export default function ReportTrash() {
     };
     run();
     return () => { controller.abort(); };
-  }, [filterType, dateOne, startDate, endDate, selectedBucketId]);
+  }, [dateRange, selectedBucketId]);
 
   useEffect(() => {
     let timer;
@@ -213,21 +219,25 @@ export default function ReportTrash() {
     return TYPE_LABELS.filter(l => !RXL_EXCLUDE.has(l));
   }, [isRacDiXuLy]);
 
-  // Chuyển `row.val` (mảng [types..., Tổng]) → chỉ chọn index phù hợp với visibleTypeLabels
-  // Thay toàn bộ hàm pickVisibleCols cũ bằng:
+  // vals = sumByType: [9 loại..., phần tử cuối = tổng khớp index 63 API]
 const pickVisibleCols = (vals = []) => {
-  // vals = [type1, type2, ..., typeN, originalTotal]
   const typeCount = TYPE_LABELS.length;
-  const typeVals = vals.slice(0, typeCount);       // chỉ phần loại
-  const chosenIdx = TYPE_LABELS
-    .map((_, i) => i)
-    .filter(i => !isRacDiXuLy || !RXL_EXCLUDE.has(TYPE_LABELS[i]));
+  const typeVals = vals.slice(0, typeCount);
+  const apiTotal = Math.round(
+    ((vals[typeCount] ?? vals[vals.length - 1] ?? 0) + Number.EPSILON) * 100
+  ) / 100;
 
-  const visibleVals = chosenIdx.map(i => typeVals[i] ?? 0);
-  const newTotal = Math.round(visibleVals.reduce((s, x) => s + (x || 0), 0) * 100) / 100;
+  const chosenIdx = TYPE_LABELS.map((_, i) => i).filter(
+    (i) => !isRacDiXuLy || !RXL_EXCLUDE.has(TYPE_LABELS[i])
+  );
+  const visibleVals = chosenIdx.map((i) => typeVals[i] ?? 0);
 
-  // Trả về mảng các cột hiển thị + Tổng mới (không dùng originalTotal nữa)
-  return [...visibleVals, newTotal];
+  if (isRacDiXuLy) {
+    const newTotal =
+      Math.round(visibleVals.reduce((s, x) => s + (x || 0), 0) * 100) / 100;
+    return [...visibleVals, newTotal];
+  }
+  return [...visibleVals, apiTotal];
 };
 
 
@@ -245,11 +255,12 @@ const pickVisibleCols = (vals = []) => {
     const selectedBucketName =
       processedBuckets.find(b => String(b.bucketID) === String(selectedBucketId))?.bucketName || '';
 
-      console.log(startDate, fmtDmy(startDate))
+    const rangeLabel =
+      toISODate(dateRange.from) === toISODate(dateRange.to)
+        ? fmtDmy(dateRange.from)
+        : `${fmtDmy(dateRange.from)} - ${fmtDmy(dateRange.to)}`;
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI ${selectedBucketName ? selectedBucketName : ''} THEO LOẠI RÁC NGÀY ${
-        filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`
-      }  (xuất ${formatNow()})`,
+      `BẢNG THEO DÕI RÁC THẢI ${selectedBucketName ? selectedBucketName : ''} THEO LOẠI RÁC NGÀY ${rangeLabel}  (xuất ${formatNow()})`,
     ];
 
     const headers = ['BP/Tổ','Chuyền', ...visibleTypeLabels, 'Tổng'];
@@ -301,15 +312,15 @@ const pickVisibleCols = (vals = []) => {
       ...Array(headers.length - 2).fill({ wch: 16 }),
     ];
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `${filterType === 'one' ? fmtDmyDash(dateOne) : `${fmtDmyDash(startDate)} - ${fmtDmyDash(endDate)}`}`,
-    );
+    const sheetRange =
+      toISODate(dateRange.from) === toISODate(dateRange.to)
+        ? fmtDmyDash(dateRange.from)
+        : `${fmtDmyDash(dateRange.from)} - ${fmtDmyDash(dateRange.to)}`;
+    XLSX.utils.book_append_sheet(wb, ws, sheetRange);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const fileName =
       `BÁO CÁO THEO LOẠI RÁC ${selectedBucketName ? selectedBucketName + ' ' : ''}` +
-      `${filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`}.xlsx`;
+      `${rangeLabel}.xlsx`;
     saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
   };
 
@@ -342,22 +353,14 @@ const pickVisibleCols = (vals = []) => {
                   📤 Xuất Excel
                 </button>
               )}
-
-              {/* Segment 1 ngày / nhiều ngày */}
-              <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'one' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="one" checked={filterType === 'one'} onChange={() => setFilterType('one')} className="mr-2 accent-emerald-600" />
-                  1 ngày
-                </label>
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'range' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="range" checked={filterType === 'range'} onChange={() => setFilterType('range')} className="mr-2 accent-emerald-600" />
-                  Nhiều ngày
-                </label>
-              </div>
             </div>
 
             {/* Filters */}
             <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Khoảng ngày</label>
+                <DateRangeField range={dateRange} onChange={setDateRange} />
+              </div>
               <div className="min-w-[220px]">
                 <label className="block text-xs text-slate-500 mb-1">Chọn tổ</label>
                 <select
@@ -391,53 +394,6 @@ const pickVisibleCols = (vals = []) => {
                 />
                 <span className="text-sm text-slate-700">Rác đi xử lý</span>
               </label>
-
-              {filterType === 'one' ? (
-                <div>
-                  <label className="block text-xs text-slate-500 mb-1">Chọn ngày</label>
-                  <DatePicker
-                    selected={dateOne}
-                    onChange={(d) => setDateOne(d)}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    locale={vi}
-                    popperPlacement="bottom-start"
-                    popperClassName="!z-[9999]"
-                    portalId="react-datepicker-portal"
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Từ ngày</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(d) => setStartDate(d)}
-                      selectsStart startDate={startDate} endDate={endDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Đến ngày</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(d) => setEndDate(d)}
-                      selectsEnd startDate={startDate} endDate={endDate} minDate={startDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </Card>

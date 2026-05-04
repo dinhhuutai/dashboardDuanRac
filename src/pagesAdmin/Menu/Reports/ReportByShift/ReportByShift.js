@@ -715,19 +715,17 @@
 
 
 
-import 'react-datepicker/dist/react-datepicker.css';
 import React, { useEffect, useMemo, useState, useDeferredValue } from 'react';
 /* ⛳️ Di chuyển import XLSX & saveAs vào dynamic import trong exportToExcel để giảm bundle
 import * as XLSX from 'xlsx-js-style';
 import { saveAs } from 'file-saver';
 */
-import DatePicker from 'react-datepicker';
-import { vi } from 'date-fns/locale';
 import { BASE_URL } from '~/config';
 import { FaSpinner } from 'react-icons/fa';
 import http from '~/api/http';
 import { useFeatureAllowed } from '~/hooks/useFeatureGuard';
 import MODULEID from '~/contants/modules';
+import DateRangeField from '~/components/DateRangeField';
   
   const formatNow = () => {
     const d = new Date();
@@ -776,11 +774,14 @@ function sumEvery7(arr = []) {
   result.splice(6, 1);
   return result;
 }
-function toVNDateISO(d) {
-  const vnOffset = 7 * 60;
-  const local = new Date(d.getTime() + vnOffset * 60 * 1000);
-  return local.toISOString().slice(0, 10);
-}
+// Gửi API đúng ngày lịch local (DateRangeField), không cộng offset + toISOString
+const toISODate = (d) => {
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 const fmtDmy = (date) => {
     const vnOffset = 7 * 60;
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
@@ -808,23 +809,25 @@ export default function ReportByShift() {
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [raw, setRaw] = useState([]);        // [{bucketID,bucketName,units:[{unitID,unitName,value}], orphan?, sum:[]} ]
   const [grand, setGrand] = useState(Array(64).fill(0));
-  const [filterType, setFilterType] = useState('one');
   const [selectedBucket, setSelectedBucket] = useState('');
-  const [dateOne, setDateOne] = useState(new Date());
-  const [startDate, setStartDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; });
-  const [endDate, setEndDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState({
+    from: new Date(),
+    to: new Date(),
+  });
 
   const headersDetail = ['BP/Tổ', 'Chuyền', 'Ca Ngắn 1', 'Ca Ngắn 2', 'Ca Ngắn 3', 'Ca Dài 1', 'Ca Dài 2', 'Ca Hành Chính', 'Tổng'];
 
   // ⚡️ Debounce + Abort request cũ để giảm spam API
   useEffect(() => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
     setLoading(true);
     const controller = new AbortController();
     const run = async () => {
       try {
         const params = {
-          startDate: filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(startDate),
-          endDate:   filterType === 'one' ? toVNDateISO(dateOne) : toVNDateISO(endDate),
+          startDate: toISODate(dateRange.from),
+          endDate: toISODate(dateRange.to),
           bucketName: selectedBucket || '',
         };
         const res = await http.get(`${BASE_URL}/api/statistics/weight-by-bucket`, {
@@ -851,7 +854,7 @@ export default function ReportByShift() {
     return () => {
       controller.abort();
     };
-  }, [filterType, dateOne, startDate, endDate, selectedBucket]);
+  }, [dateRange, selectedBucket]);
 
   useEffect(() => {
     let timer;
@@ -911,10 +914,12 @@ export default function ReportByShift() {
   }
 
     const wb = XLSX.utils.book_new();
+    const rangeLabel =
+      toISODate(dateRange.from) === toISODate(dateRange.to)
+        ? fmtDmy(dateRange.from)
+        : `${fmtDmy(dateRange.from)} - ${fmtDmy(dateRange.to)}`;
     const title = [
-      `BẢNG THEO DÕI RÁC THẢI ${selectedBucket ? selectedBucket : ''} THEO CA LÀM NGÀY ${
-        filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`
-      }   (xuất ${formatNow()})`,
+      `BẢNG THEO DÕI RÁC THẢI ${selectedBucket ? selectedBucket : ''} THEO CA LÀM NGÀY ${rangeLabel}   (xuất ${formatNow()})`,
     ];
     const wsData = [title, headersDetail];
 
@@ -957,15 +962,15 @@ export default function ReportByShift() {
       if (ws[addr]) ws[addr].s = { ...ws[addr].s, font: { bold: true }, fill: { fgColor: { rgb: 'e5e7eb' } } };
     }
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      `${filterType === 'one' ? fmtDmyDash(dateOne) : `${fmtDmyDash(startDate)} - ${fmtDmyDash(endDate)}`}`,
-    );
+    const sheetRange =
+      toISODate(dateRange.from) === toISODate(dateRange.to)
+        ? fmtDmyDash(dateRange.from)
+        : `${fmtDmyDash(dateRange.from)} - ${fmtDmyDash(dateRange.to)}`;
+    XLSX.utils.book_append_sheet(wb, ws, sheetRange);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([wbout], { type: 'application/octet-stream' }),
-      `BÁO CÁO THEO CA ${selectedBucket ? selectedBucket + ' ' : ''}${filterType === 'one' ? fmtDmy(dateOne) : `${fmtDmy(startDate)} - ${fmtDmy(endDate)}`}.xlsx`,
+      `BÁO CÁO THEO CA ${selectedBucket ? selectedBucket + ' ' : ''}${rangeLabel}.xlsx`,
     );
   };
 
@@ -987,19 +992,13 @@ export default function ReportByShift() {
                 </button>
               }
 
-              <div className="inline-flex overflow-hidden rounded-lg border border-slate-300">
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'one' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="one" checked={filterType === 'one'} onChange={() => setFilterType('one')} className="mr-2 accent-emerald-600" />
-                  1 ngày
-                </label>
-                <label className={cx('px-3 py-2 text-sm cursor-pointer', filterType === 'range' && 'bg-slate-100 font-medium')}>
-                  <input type="radio" value="range" checked={filterType === 'range'} onChange={() => setFilterType('range')} className="mr-2 accent-emerald-600" />
-                  Nhiều ngày
-                </label>
-              </div>
             </div>
 
             <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Khoảng ngày</label>
+                <DateRangeField range={dateRange} onChange={setDateRange} />
+              </div>
               <div className="min-w-[180px]">
                 <label className="block text-xs text-slate-500 mb-1">Chọn tổ</label>
                 <select
@@ -1013,58 +1012,6 @@ export default function ReportByShift() {
                   ))}
                 </select>
               </div>
-
-              {filterType === 'one' ? (
-                <div>
-                  <label className="block text-xs text-slate-500 mb-1">Chọn ngày</label>
-                  <DatePicker
-                    selected={dateOne}
-                    onChange={(d) => setDateOne(d)}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    locale={vi}
-                    popperPlacement="bottom-start"
-                    popperClassName="!z-[9999]"
-                    portalId="react-datepicker-portal"
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Từ ngày</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(d) => setStartDate(d)}
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Đến ngày</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(d) => setEndDate(d)}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate}
-                      dateFormat="dd/MM/yyyy"
-                      className="w-[140px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      locale={vi}
-                      popperPlacement="bottom-start"
-                      popperClassName="!z-[9999]"
-                      portalId="react-datepicker-portal"
-                    />
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </Card>
