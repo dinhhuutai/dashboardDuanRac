@@ -33,6 +33,7 @@ export default function CreateTransactionModal({
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
+  const categoriesReqRef = useRef(0);
 
   const [useCamera, setUseCamera] = useState(true);
   const [cameraErr, setCameraErr] = useState(null);
@@ -56,9 +57,35 @@ export default function CreateTransactionModal({
   const [transactionDate, setTransactionDate] = useState(initialDate || "");
   const [locationText] = useState(""); // placeholder UI only
 
+  const loadCategoriesForType = async (type, { force = false } = {}) => {
+    const reqId = ++categoriesReqRef.current;
+    try {
+      const res = await apiGetCapMoneyCategories(type);
+      if (reqId !== categoriesReqRef.current) return;
+      if (res?.success) {
+        const next = res.data || [];
+        setCategories(next);
+        // Giữ category hiện tại nếu vẫn còn trong danh sách (trừ khi force).
+        if (!force && categoryId && next.some((c) => String(c.categoryId) === String(categoryId))) return;
+        const first = next[0];
+        setCategoryId(first?.categoryId ? String(first.categoryId) : "");
+      } else {
+        setCategories([]);
+        setCategoryId("");
+      }
+    } catch (e) {
+      if (reqId !== categoriesReqRef.current) return;
+      console.error("load capmoney categories error:", e);
+      setCategories([]);
+      setCategoryId("");
+    }
+  };
+
   // Sync when open/initialDate changes
   useEffect(() => {
     if (!open) return;
+    // Invalidate old category requests mỗi lần mở modal
+    categoriesReqRef.current += 1;
     setSaving(false);
     setToast(null);
     setUseCamera(true);
@@ -85,23 +112,8 @@ export default function CreateTransactionModal({
   // Load categories when transactionType changes
   useEffect(() => {
     if (!open) return;
-    (async () => {
-      try {
-        const res = await apiGetCapMoneyCategories(transactionType);
-        if (res?.success) {
-          setCategories(res.data || []);
-          const first = (res.data || [])[0];
-          setCategoryId(first?.categoryId ? String(first.categoryId) : "");
-        } else {
-          setCategories([]);
-          setCategoryId("");
-        }
-      } catch (e) {
-        console.error("load capmoney categories error:", e);
-        setCategories([]);
-        setCategoryId("");
-      }
-    })();
+    loadCategoriesForType(transactionType);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionType, open]);
 
   const stopCamera = async () => {
@@ -197,8 +209,10 @@ export default function CreateTransactionModal({
   const onPickFile = (file) => {
     if (!file) return;
     setSkipImage(false);
+    setTransactionType("EXPENSE");
     setImageFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+    loadCategoriesForType("EXPENSE", { force: true });
   };
 
   const capturePhoto = async () => {
@@ -217,8 +231,10 @@ export default function CreateTransactionModal({
       if (!blob) return;
 
       const file = new File([blob], `capmoney_${Date.now()}.jpg`, { type: "image/jpeg" });
+      setTransactionType("EXPENSE");
       setImageFile(file);
       setPreviewUrl(URL.createObjectURL(blob));
+      loadCategoriesForType("EXPENSE", { force: true });
       await stopCamera();
     } catch (e) {
       console.error("capturePhoto error:", e);
@@ -278,7 +294,7 @@ export default function CreateTransactionModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[10000] bg-black/35 backdrop-blur-sm"
+          className="fixed inset-0 z-[11000] bg-black/35 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

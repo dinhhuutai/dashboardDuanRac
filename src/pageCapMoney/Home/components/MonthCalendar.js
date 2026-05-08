@@ -15,7 +15,7 @@ export default function MonthCalendar({
   monthCursor,
   calendarDays = [],
   selectedDate,
-  onOpenCreate,
+  onPressDay,
   todayStr,
 }) {
   const year = monthCursor.getFullYear();
@@ -65,6 +65,8 @@ export default function MonthCalendar({
 
           const isToday = cellDate === todayStr;
           const isSelected = cellDate === selectedDate;
+          const previewImages = Array.isArray(d?.previewImages) ? d.previewImages.slice(0, 2) : [];
+          const hasPreviewImages = previewImages.length > 0;
 
           const todayObj = new Date(todayStr);
           const cellObj = new Date(cellDate);
@@ -98,7 +100,7 @@ export default function MonthCalendar({
               layout
               key={cellDate}
               type="button"
-              onClick={() => onOpenCreate?.(cellDate)}
+              onClick={() => onPressDay?.(cellDate, d)}
               className={[
                 "h-14 flex flex-col items-center justify-start text-center",
                 "transition",
@@ -106,13 +108,30 @@ export default function MonthCalendar({
               ].join(" ")}
             >
               <div className={isToday ? "-mt-0.5" : ""}>
-                <div className={circleClass}>
-                  {isToday ? (
-                    <Plus size={16} strokeWidth={3} className="text-pink-500" aria-hidden />
-                  ) : !isFuture ? (
-                    <Plus size={14} strokeWidth={3} className="text-pink-500" aria-hidden />
-                  ) : null}
-                </div>
+                {hasPreviewImages ? (
+                  <div className="relative h-8 w-10">
+                    <img
+                      src={previewImages[0]}
+                      alt=""
+                      className="absolute left-0 top-0 h-8 w-8 rounded-xl object-cover ring-2 ring-amber-200 bg-white shadow-sm"
+                    />
+                    {previewImages[1] ? (
+                      <img
+                        src={previewImages[1]}
+                        alt=""
+                        className="absolute right-0 top-0 h-8 w-8 rounded-xl object-cover ring-2 ring-amber-200 bg-white shadow-sm rotate-[6deg]"
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className={circleClass}>
+                    {isToday ? (
+                      <Plus size={16} strokeWidth={3} className="text-pink-500" aria-hidden />
+                    ) : !isFuture ? (
+                      <Plus size={14} strokeWidth={3} className="text-pink-500" aria-hidden />
+                    ) : null}
+                  </div>
+                )}
               </div>
               <div className={dayTextClass}>{dayNum}</div>
               {isToday ? <div className="h-1 w-1 rounded-full bg-pink-500 mt-1" /> : <div className="h-1 w-1 mt-1" />}

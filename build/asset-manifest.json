@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.e271a672.css",
-    "main.js": "/static/js/main.677ca835.js",
+    "main.css": "/static/css/main.4d0a801e.css",
+    "main.js": "/static/js/main.862f127a.js",
     "static/js/544.0466a351.chunk.js": "/static/js/544.0466a351.chunk.js",
     "static/js/751.a19839a5.chunk.js": "/static/js/751.a19839a5.chunk.js",
     "static/js/52.35047d29.chunk.js": "/static/js/52.35047d29.chunk.js",
@@ -87,7 +87,7 @@
     "static/media/nation-germany.svg": "/static/media/nation-germany.9585819fff6b679b76d52f67c22bab89.svg"
   },
   "entrypoints": [
-    "static/css/main.e271a672.css",
-    "static/js/main.677ca835.js"
+    "static/css/main.4d0a801e.css",
+    "static/js/main.862f127a.js"
   ]
 }

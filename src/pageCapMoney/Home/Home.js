@@ -24,6 +24,7 @@ import { FiPlus } from "react-icons/fi";
 import { apiGetCapMoneyHomeSummary } from "./api/capMoneyApi";
 import MonthCalendar from "./components/MonthCalendar";
 import CreateTransactionModal from "./components/CreateTransactionModal";
+import DayTransactionsGalleryModal from "./components/DayTransactionsGalleryModal";
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -170,6 +171,9 @@ export default function Home() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState(todayStr);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryDate, setGalleryDate] = useState(todayStr);
+  const [galleryPos, setGalleryPos] = useState({ current: 1, total: 1 });
 
   const [toast, setToast] = useState(null);
 
@@ -227,6 +231,34 @@ export default function Home() {
     }
     setModalDate(d);
     setModalOpen(true);
+  };
+
+  const openGalleryModal = (dateStr) => {
+    const d = dateStr || todayStr;
+    setSelectedDate(d);
+    // đồng bộ month cursor theo ngày click (để highlight/đổi tháng đúng)
+    const y = Number(d.slice(0, 4));
+    const m = Number(d.slice(5, 7));
+    if (Number.isFinite(y) && Number.isFinite(m)) {
+      setMonthCursor(new Date(y, m - 1, 1));
+    }
+    setGalleryDate(d);
+    // compute position in month days that have transactions
+    const daysWithTx = (summary?.calendarDays || [])
+      .filter((x) => x?.hasTransaction)
+      .map((x) => x.date)
+      .filter(Boolean)
+      .sort();
+    const total = Math.max(1, daysWithTx.length);
+    const idx = daysWithTx.indexOf(d);
+    const current = idx >= 0 ? idx + 1 : 1;
+    setGalleryPos({ current, total });
+    setGalleryOpen(true);
+  };
+
+  const onPressDay = (dateStr, dayData) => {
+    if (dayData?.hasTransaction) openGalleryModal(dateStr);
+    else openCreateModal(dateStr);
   };
 
   const onPrevMonth = () => {
@@ -442,7 +474,7 @@ export default function Home() {
               calendarDays={summary.calendarDays || []}
               selectedDate={selectedDate}
               todayStr={todayStr}
-              onOpenCreate={(dateStr) => openCreateModal(dateStr)}
+              onPressDay={(dateStr, dayData) => onPressDay(dateStr, dayData)}
             />
           </div>
         )}
@@ -471,6 +503,15 @@ export default function Home() {
           setToast({ type: "success", message: "Đã lưu giao dịch thành công." });
           setTimeout(() => setToast(null), 1800);
         }}
+      />
+
+      <DayTransactionsGalleryModal
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        date={galleryDate}
+        accountId={accountFilter}
+        pos={galleryPos}
+        onChanged={() => loadSummary()}
       />
 
       {toast && (

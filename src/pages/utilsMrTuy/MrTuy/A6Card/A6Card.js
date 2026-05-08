@@ -114,6 +114,32 @@ function applyPrintStyles() {
   display: inline-block;
   vertical-align: baseline;
 }
+.${DOC_CLASS} .a6-hdr-sx-range {
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+  font-size: 9pt;
+}
+.${DOC_CLASS} .a6-hdr-sx-td {
+  min-width: 0;
+  overflow: hidden;
+}
+.${DOC_CLASS} .a6-hdr-sx-range .a6-hdr-lbl {
+  white-space: nowrap;
+}
+.${DOC_CLASS} .a6-hdr-sx-range .a6-dots-inline {
+  flex: 0 0 52px;
+  width: 52px;
+  min-width: 44px !important;
+  max-width: 56px;
+}
+.${DOC_CLASS} .a6-hdr-chuyen-cell .a6-hdr-line .a6-dots {
+  flex: 0 0 56px;
+  width: 56px;
+  min-width: 48px !important;
+  max-width: 64px;
+}
 .${DOC_CLASS} .a6-dots {
   border-bottom: 1px dotted #000;
   display: inline-block;
@@ -633,10 +659,10 @@ function formatA6PrintStampText() {
   return `${t} - ${date}`;
 }
 
-function HdrCell({ label, value }) {
+function HdrCell({ label, value, tdClassName }) {
   const v = normalizeValue(value);
   return (
-    <td>
+    <td className={tdClassName || undefined}>
       <span className="a6-hdr-line">
         <span className="a6-hdr-lbl">{label}</span>
         {v ? (
@@ -675,6 +701,19 @@ function exportA6CardWord(values) {
   const qrBlock = qrUrl
     ? `<img src="${escapeHtmlAttr(qrUrl)}" alt="" width="118" style="max-width:118px;height:auto;display:block;margin:0 auto"/>`
     : `${z}`;
+  const chuyen = normalizeValue(values.CHUYEN);
+  const sxtu = normalizeValue(values.SXTU);
+  const sxden = normalizeValue(values.SXDEN);
+  const chuyenHtml = chuyen
+    ? `<span class="a6-hdr-val">${escapeHtmlText(chuyen)}</span>`
+    : z;
+  const sxTuHtml = sxtu
+    ? `<span class="a6-hdr-val">${escapeHtmlText(sxtu)}</span>`
+    : '<span class="a6-dots a6-dots-inline">&nbsp;</span>';
+  const sxDenHtml = sxden
+    ? `<span class="a6-hdr-val">${escapeHtmlText(sxden)}</span>`
+    : '<span class="a6-dots a6-dots-inline">&nbsp;</span>';
+
   const idWord = normalizeValue(values.ID);
   const wordMetaTop = idWord
     ? `<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:9pt;margin:0 0 6px;font-weight:400;font-family:Cambria,'Times New Roman',serif"><span>${escapeHtmlText(idWord)}</span><span></span></div>`
@@ -756,14 +795,20 @@ table{border-collapse:collapse;width:100%}
 .a6-hdr-line .a6-hdr-lbl{flex:0 0 auto;white-space:nowrap;font-weight:400}
 .a6-hdr-line .a6-hdr-val{flex:0 1 auto;margin-left:0;min-width:0;word-wrap:break-word;overflow-wrap:break-word;font-weight:700}
 .a6-hdr-line .a6-dots{flex:1 1 0;min-width:0;margin-left:0;width:auto;max-width:100%;display:inline-block;vertical-align:baseline;box-sizing:border-box}
+.a6-hdr-chuyen-cell .a6-hdr-line .a6-dots{flex:0 0 56px!important;width:56px!important;min-width:48px!important;max-width:64px!important}
+.a6-hdr-sx-td{min-width:0;overflow:hidden}
+.a6-hdr-sx-range{flex-wrap:nowrap!important;align-items:baseline!important;gap:3px;white-space:nowrap;font-size:9pt}
+.a6-hdr-sx-range .a6-hdr-lbl{white-space:nowrap}
+.a6-hdr-sx-range .a6-dots-inline{flex:0 0 52px!important;width:52px!important;min-width:44px!important;max-width:56px!important}
 </style></head><body>${wordMetaTop}
 <h1 style="text-align:center;font-size:14.5pt;margin:0 0 5px">THLA – A6 CARD (MÃ – PHẦN) – BẢN V3</h1>
 <p style="text-align:center;margin:0 0 9px;font-size:9.5pt">(Chuẩn hóa checkpoint FINISH – Khóa Chất lượng + Số lượng + Trạng thái)</p>
 <table class="a6-hdr"><colgroup><col class="a6-hdr-col-qr"/><col class="a6-hdr-col-data"/><col class="a6-hdr-col-data"/></colgroup>
-<tr><td class="a6-hdr-qr" rowspan="4">${qrBlock}</td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">PO:</span><span class="a6-hdr-val">${po}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Mã hàng:</span><span class="a6-hdr-val">${ma}</span></span></td></tr>
+<tr><td class="a6-hdr-qr" rowspan="5">${qrBlock}</td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">PO:</span><span class="a6-hdr-val">${po}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Mã hàng:</span><span class="a6-hdr-val">${ma}</span></span></td></tr>
 <tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Màu vải:</span><span class="a6-hdr-val">${mauVai}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Kích vải:</span><span class="a6-hdr-val">${kichVai}</span></span></td></tr>
 <tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Kích phim:</span><span class="a6-hdr-val">${kichPhim}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Số lượng:</span><span class="a6-hdr-val">${sl}</span></span></td></tr>
-<tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Khách hàng:</span><span class="a6-hdr-val">${kh}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Ngày giao:</span><span class="a6-hdr-val">${ng}</span></span></td></tr></table>
+<tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Khách hàng:</span><span class="a6-hdr-val">${kh}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Ngày giao:</span><span class="a6-hdr-val">${ng}</span></span></td></tr>
+<tr><td class="a6-hdr-chuyen-cell"><span class="a6-hdr-line"><span class="a6-hdr-lbl">Chuyền:</span>${chuyenHtml}</span></td><td class="a6-hdr-sx-td"><span class="a6-hdr-line a6-hdr-sx-range"><span class="a6-hdr-lbl">Thời gian dự kiến SX: Từ</span>${sxTuHtml}<span class="a6-hdr-lbl"> đến </span>${sxDenHtml}</span></td></tr></table>
 
 <p style="text-align:left;font-weight:700;margin:7px 0 6px;font-size:10.5pt">— CHECKPOINT —</p>
 <table class="a6g">
@@ -835,9 +880,7 @@ table{border-collapse:collapse;width:100%}
 <td></td><td></td>
 <td class="a6sp">STOP</td>
 <td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td>
-<td class="a6lbl a6-rel1-lbl-r">KH ký</td>
-<td></td>
+<td></td><td></td><td></td>
 <td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
 </tr>
 <tr class="a6-rel1-row2">
@@ -845,8 +888,7 @@ table{border-collapse:collapse;width:100%}
 <td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
 <td></td><td></td><td></td>
 <td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
+<td></td><td></td>
 <td class="a6-dots-cell a6-col-11">${z}</td>
 </tr>
 <tr class="a6-trun-row1">
@@ -880,9 +922,7 @@ table{border-collapse:collapse;width:100%}
 <td></td>
 <td class="a6sp">STOP</td>
 <td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td>
-<td class="a6lbl a6-rel1-lbl-r">KH ký</td>
-<td></td>
+<td></td><td></td><td></td>
 <td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
 </tr>
 <tr class="a6-rel2-row2">
@@ -892,8 +932,7 @@ table{border-collapse:collapse;width:100%}
 <td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
 <td></td><td></td>
 <td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
+<td></td><td></td>
 <td class="a6-dots-cell a6-col-11">${z}</td>
 </tr>
 <tr class="a6-sx-row1">
@@ -1026,6 +1065,9 @@ function A6Card() {
       NG: formatNgayGiao(queryValues.NG),
       QR: normalizeValue(queryValues.QR),
       ID: normalizeValue(queryValues.ID),
+      CHUYEN: normalizeValue(queryValues.CHUYEN),
+      SXTU: normalizeValue(queryValues.SXTU),
+      SXDEN: normalizeValue(queryValues.SXDEN),
     }),
     [queryValues],
   );
@@ -1072,7 +1114,7 @@ function A6Card() {
             </colgroup>
             <tbody>
               <tr>
-                <td className="a6-hdr-qr" rowSpan={4}>
+                <td className="a6-hdr-qr" rowSpan={5}>
                   {data.QR ? (
                     <img className="a6-hdr-qr-img" src={data.QR} alt="Mã QR" />
                   ) : (
@@ -1095,6 +1137,25 @@ function A6Card() {
               <tr>
                 <HdrCell label="Khách hàng:" value={data.KH} />
                 <HdrCell label="Ngày giao:" value={data.NG} />
+              </tr>
+              <tr>
+                <HdrCell label="Chuyền:" value={data.CHUYEN} tdClassName="a6-hdr-chuyen-cell" />
+                <td className="a6-hdr-sx-td">
+                  <span className="a6-hdr-line a6-hdr-sx-range">
+                    <span className="a6-hdr-lbl">Thời gian dự kiến SX: Từ</span>
+                    {data.SXTU ? (
+                      <span className="a6-hdr-val">{data.SXTU}</span>
+                    ) : (
+                      <span className="a6-dots a6-dots-inline">&nbsp;</span>
+                    )}
+                    <span className="a6-hdr-lbl"> đến </span>
+                    {data.SXDEN ? (
+                      <span className="a6-hdr-val">{data.SXDEN}</span>
+                    ) : (
+                      <span className="a6-dots a6-dots-inline">&nbsp;</span>
+                    )}
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1241,7 +1302,7 @@ function A6Card() {
                 <td className="a6-stop">STOP</td>
                 <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
                 <td />
-                <td className="a6-lbl a6-rel1-lbl-r">KH ký</td>
+                <td />
                 <td />
                 <td className="a6-col-11 a6-open-gio">
                   <span className="a6-gio">Giờ STOP:</span>
@@ -1255,7 +1316,7 @@ function A6Card() {
                 <td />
                 <DotsCell className="a6-rel1-dot-l" />
                 <td />
-                <DotsCell className="a6-rel1-dot-l" />
+                <td />
                 <DotsCell className="a6-col-11" />
               </tr>
               <tr className="a6-trun-row1">
@@ -1315,7 +1376,7 @@ function A6Card() {
                 <td className="a6-stop">STOP</td>
                 <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
                 <td />
-                <td className="a6-lbl a6-rel1-lbl-r">KH ký</td>
+                <td />
                 <td />
                 <td className="a6-col-11 a6-open-gio">
                   <span className="a6-gio">Giờ STOP:</span>
@@ -1330,7 +1391,7 @@ function A6Card() {
                 <td />
                 <DotsCell className="a6-rel1-dot-l" />
                 <td />
-                <DotsCell className="a6-rel1-dot-l" />
+                <td />
                 <DotsCell className="a6-col-11" />
               </tr>
               <tr className="a6-sx-row1">
