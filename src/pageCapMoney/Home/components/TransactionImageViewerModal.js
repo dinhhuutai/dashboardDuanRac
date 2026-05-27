@@ -9,6 +9,8 @@ import {
   FiDownload,
   FiTrash2,
 } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiEdit3 } from "react-icons/fi";
 import {
   apiDeleteCapMoneyTransaction,
   apiGetCapMoneyCategories,
@@ -18,6 +20,8 @@ import {
   apiUpdateCapMoneyTransactionDate,
   apiUpdateCapMoneyTransactionCategory,
   apiUpdateCapMoneyTransactionAccount,
+  apiUpdateCapMoneyTransactionAmount,
+  apiUpdateCapMoneyTransactionNote,
 } from "../api/capMoneyApi";
 
 import {
@@ -187,7 +191,7 @@ function DatePickerModal({ open, initialDate, onClose, onPick }) {
           />
 
           <motion.div
-            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-white shadow-2xl"
+            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-white shadow-2xl max-h-[80vh] flex flex-col overflow-hidden sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[420px] sm:rounded-3xl"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -218,25 +222,28 @@ function DatePickerModal({ open, initialDate, onClose, onPick }) {
               </div>
             </div>
 
-            <div className="px-6 py-4">
+            <div
+              className="px-6 py-4 flex-1 overflow-y-auto"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-[22px] font-extrabold text-slate-900">{monthTitle}</div>
                 <div className="flex items-center gap-3 text-pink-300">
                   <button
                     type="button"
-                    className="h-10 w-10 rounded-full bg-pink-50 grid place-items-center"
+                    className="h-12 w-12 rounded-full bg-pink-50 grid place-items-center"
                     onClick={() => setCursor(new Date(year, monthIndex - 1, 1))}
                     aria-label="Tháng trước"
                   >
-                    ‹
+                    <FiChevronLeft className="text-[22px] text-pink-300" />
                   </button>
                   <button
                     type="button"
-                    className="h-10 w-10 rounded-full bg-pink-50 grid place-items-center"
+                    className="h-12 w-12 rounded-full bg-pink-50 grid place-items-center"
                     onClick={() => setCursor(new Date(year, monthIndex + 1, 1))}
                     aria-label="Tháng sau"
                   >
-                    ›
+                    <FiChevronRight className="text-[22px] text-pink-300" />
                   </button>
                 </div>
               </div>
@@ -271,7 +278,7 @@ function DatePickerModal({ open, initialDate, onClose, onPick }) {
                 })}
               </div>
             </div>
-            <div style={{ height: "calc(16px + env(safe-area-inset-bottom))" }} />
+            <div className="shrink-0" style={{ height: "calc(16px + env(safe-area-inset-bottom))" }} />
           </motion.div>
         </motion.div>
       ) : null}
@@ -358,7 +365,7 @@ function CategoryPickerModal({ open, transactionTypeId, selectedCategoryId, onCl
           />
 
           <motion.div
-            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-[#f7f2ea] shadow-2xl h-[52vh] flex flex-col overflow-hidden"
+            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-[#f7f2ea] shadow-2xl h-[52vh] flex flex-col overflow-hidden sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[520px] sm:rounded-3xl sm:h-auto sm:max-h-[80vh]"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -376,14 +383,14 @@ function CategoryPickerModal({ open, transactionTypeId, selectedCategoryId, onCl
 
             <div className="px-5 pb-3">
               <div className="relative flex items-center justify-center">
-                <div className="text-[22px] font-extrabold text-slate-900">Chọn danh mục</div>
+                <div className="text-[22px] font-bold text-slate-900">Chọn danh mục</div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="absolute right-0 top-1 h-8 w-8 rounded-full bg-black/5 grid place-items-center text-slate-700"
+                  className="absolute right-0 top-0 h-10 w-10 rounded-full bg-black/5 grid place-items-center text-slate-700"
                   aria-label="Đóng"
                 >
-                  ×
+                  <FiX className="text-[18px]" />
                 </button>
               </div>
 
@@ -498,7 +505,7 @@ function AccountPickerModal({ open, selectedAccountId, onClose, onPick }) {
           />
 
           <motion.div
-            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-[#f7f2ea] shadow-2xl h-[44vh] flex flex-col overflow-hidden"
+            className="absolute left-0 right-0 bottom-0 rounded-t-3xl bg-[#f7f2ea] shadow-2xl h-[44vh] flex flex-col overflow-hidden sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[520px] sm:rounded-3xl sm:h-auto sm:max-h-[70vh]"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -516,25 +523,29 @@ function AccountPickerModal({ open, selectedAccountId, onClose, onPick }) {
 
             <div className="px-5 pb-3">
               <div className="relative flex items-center justify-center">
-                <div className="text-[22px] font-extrabold text-slate-900">Chọn tài khoản</div>
+                <div className="text-[22px] font-bold text-slate-900">Chọn tài khoản</div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="absolute right-0 top-1 h-8 w-8 rounded-full bg-black/5 grid place-items-center text-slate-700"
+                  className="absolute right-0 top-0 h-10 w-10 rounded-full bg-black/5 grid place-items-center text-slate-700"
                   aria-label="Đóng"
                 >
-                  ×
+                  <FiX className="text-[18px]" />
                 </button>
               </div>
             </div>
 
-            <div className="px-6 pb-8 flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="px-6 pb-8 pt-2 flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
               {loading ? (
                 <div className="py-10 text-center text-slate-500 font-semibold">Đang tải...</div>
               ) : (
                 <div className="space-y-3">
                   {accounts.map((a) => {
                     const active = String(a.accountId) === String(selectedAccountId);
+                    const isBank = String(a.accountType || "").toLowerCase() === "bank";
+                    const iconBg = isBank ? "bg-blue-100" : "bg-emerald-100";
+                    const iconFg = isBank ? "text-blue-700" : "text-emerald-700";
+                    const currency = a.currencyCode || "VND";
                     return (
                       <button
                         key={a.accountId}
@@ -546,12 +557,14 @@ function AccountPickerModal({ open, selectedAccountId, onClose, onPick }) {
                         ].join(" ")}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-2xl bg-emerald-100 grid place-items-center text-emerald-700 font-black">
-                            {String(a.accountType || "").toLowerCase() === "bank" ? "🏛️" : "💼"}
+                          <div className={["h-14 w-14 rounded-2xl grid place-items-center font-black", iconBg, iconFg].join(" ")}>
+                            <span className="text-[22px] leading-none">
+                              {a.accountIcon ? String(a.accountIcon).slice(0, 2) : isBank ? "🏛️" : "💼"}
+                            </span>
                           </div>
                           <div>
                             <div className="text-[18px] font-extrabold text-slate-900">{a.accountName}</div>
-                            <div className="text-[13px] font-bold text-slate-400">VND</div>
+                            <div className="text-[13px] font-bold text-slate-400">{currency}</div>
                           </div>
                         </div>
                         <div className={active ? "h-8 w-8 rounded-full bg-pink-100 grid place-items-center" : "h-8 w-8"}>{active ? "✓" : ""}</div>
@@ -569,6 +582,105 @@ function AccountPickerModal({ open, selectedAccountId, onClose, onPick }) {
     </AnimatePresence>
   );
 }
+
+function AmountEditModal({ open, initialAmount, onClose, onSave }) {
+  const [raw, setRaw] = useState("0");
+  useEffect(() => {
+    if (!open) return;
+    const n = Number(initialAmount || 0);
+    setRaw(String(Math.max(0, Math.trunc(n))));
+  }, [open, initialAmount]);
+
+  const append = (ch) => setRaw((v) => (v === "0" ? String(ch) : String(v) + String(ch)));
+  const backspace = () => setRaw((v) => (v.length <= 1 ? "0" : v.slice(0, -1)));
+  const clear = () => setRaw("0");
+  const num = Number(raw || 0);
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div className="fixed inset-0 z-[13080]">
+          <motion.button
+            type="button"
+            className="absolute inset-0 bg-black/10"
+            onClick={onClose}
+            aria-label="Đóng"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+
+          <motion.div
+            className="absolute left-0 right-0 bottom-0 bg-white shadow-2xl max-h-[85vh] flex flex-col overflow-hidden sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[420px] sm:rounded-3xl"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.12}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 900) onClose?.();
+            }}
+          >
+            <div className="pt-2 pb-2 flex justify-center">
+              <div className="h-1.5 w-10 rounded-full bg-slate-200" />
+            </div>
+
+            <div className="px-5 pb-3 flex items-center justify-between">
+              <div className="text-[22px] font-bold text-slate-900">Số tiền</div>
+              <button
+                type="button"
+                className="h-10 px-5 rounded-full bg-emerald-500 text-white font-extrabold"
+                onClick={() => onSave?.(num)}
+              >
+                Xong
+              </button>
+            </div>
+
+            <div className="px-5 pb-4">
+              <div className="h-14 rounded-2xl bg-slate-50 ring-1 ring-slate-200 flex items-center px-4">
+                <div className="text-[22px] font-extrabold text-slate-600 mr-2">đ</div>
+                <div className="text-[28px] font-extrabold text-slate-900 tabular-nums">
+                  {new Intl.NumberFormat("vi-VN").format(num)}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 pb-4 flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="grid grid-cols-3 gap-3">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    className="h-14 rounded-2xl bg-slate-100 text-[22px] font-extrabold text-slate-900"
+                    onClick={() => append(d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+                <button type="button" className="h-14 rounded-2xl bg-slate-100 text-[18px] font-extrabold" onClick={clear}>
+                  C
+                </button>
+                <button type="button" className="h-14 rounded-2xl bg-slate-100 text-[22px] font-extrabold" onClick={() => append("0")}>
+                  0
+                </button>
+                <button type="button" className="h-14 rounded-2xl bg-slate-100 text-[20px] font-extrabold" onClick={backspace}>
+                  ⌫
+                </button>
+              </div>
+            </div>
+
+            <div style={{ height: "calc(10px + env(safe-area-inset-bottom))" }} />
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+// Note is edited inline (focus input to show keyboard)
+
 export default function TransactionImageViewerModal({
   open,
   month,
@@ -594,6 +706,10 @@ export default function TransactionImageViewerModal({
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [accountPickerOpen, setAccountPickerOpen] = useState(false);
+  const [amountEditOpen, setAmountEditOpen] = useState(false);
+  const [noteEditing, setNoteEditing] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const noteInputRef = useRef(null);
 
   const total = items.length || 0;
   const currentItem = items[idx] || null;
@@ -628,6 +744,33 @@ export default function TransactionImageViewerModal({
     const blob = await resp.blob();
     const ext = blob.type?.includes("png") ? "png" : "jpg";
     return new File([blob], `${fileNameBase}.${ext}`, { type: blob.type || "image/jpeg" });
+  };
+
+  const saveNoteInline = async () => {
+    const t = currentItem;
+    if (!t?.transactionId) return;
+    const next = String(noteDraft || "").trim();
+    if (String(t.detailNote || "").trim() === next) {
+      setNoteEditing(false);
+      return;
+    }
+    try {
+      setBusy(true);
+      const res = await apiUpdateCapMoneyTransactionNote(t.transactionId, { detailNote: next });
+      if (!res?.success) throw new Error(res?.message || "Cập nhật ghi chú thất bại");
+      setItems((prev) =>
+        prev.map((x) =>
+          String(x.transactionId) === String(t.transactionId) ? { ...x, detailNote: next } : x
+        )
+      );
+      setNoteEditing(false);
+    } catch (err) {
+      console.error("update note error:", err);
+      showNotice("Cập nhật ghi chú thất bại. Vui lòng thử lại.");
+      setNoteEditing(false);
+    } finally {
+      setBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -982,10 +1125,68 @@ export default function TransactionImageViewerModal({
                           </div>
 
                           {/* Amount */}
-                          <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center">
-                            <div className="px-6 py-2.5 rounded-2xl bg-black/30 backdrop-blur-[2px]">
-                              <div className="text-white text-[34px] font-extrabold tracking-wide tabular-nums drop-shadow">
-                                {`${Number(it.transactionTypeId) === 1 ? "-" : "+"} ${formatVND(it.amount)}`}
+                          <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center">
+                            <div className="w-[min(360px,calc(100vw-72px))] px-6 py-3 rounded-[28px] bg-black/35 backdrop-blur-[2px]">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setAmountEditOpen(true);
+                                }}
+                                className="w-full"
+                              >
+                                <div className="text-white text-[34px] font-extrabold tracking-wide tabular-nums drop-shadow flex items-center justify-center gap-2">
+                                  <span className={Number(it.transactionTypeId) === 1 ? "text-rose-400" : "text-emerald-300"}>
+                                    {Number(it.transactionTypeId) === 1 ? "-" : "+"}
+                                  </span>
+                                  <span>{formatVND(it.amount)}</span>
+                                </div>
+                              </button>
+
+                              <div className="mt-1">
+                                {noteEditing && String(currentItem?.transactionId) === String(it.transactionId) ? (
+                                  <input
+                                    ref={noteInputRef}
+                                    value={noteDraft}
+                                    onChange={(e) => setNoteDraft(e.target.value)}
+                                    onBlur={() => saveNoteInline()}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        saveNoteInline();
+                                      }
+                                      if (e.key === "Escape") {
+                                        setNoteEditing(false);
+                                      }
+                                    }}
+                                    enterKeyHint="done"
+                                    className="w-full bg-transparent text-[13px] font-semibold text-white/90 drop-shadow text-center outline-none placeholder:text-white/55"
+                                    placeholder="Thêm ghi chú"
+                                    maxLength={1000}
+                                  />
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setNoteDraft(String(it.detailNote || ""));
+                                      setNoteEditing(true);
+                                      setTimeout(() => noteInputRef.current?.focus?.(), 0);
+                                    }}
+                                    className="w-full text-[13px] font-semibold text-white/90 drop-shadow text-center truncate"
+                                  >
+                                    {String(it.detailNote || "").trim() ? (
+                                      String(it.detailNote).trim()
+                                    ) : (
+                                      <span className="inline-flex items-center justify-center gap-2 text-white/55">
+                                        <FiEdit3 className="text-[14px]" />
+                                        <span>Thêm ghi chú</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1146,6 +1347,38 @@ export default function TransactionImageViewerModal({
               }
             }}
           />
+
+          <AmountEditModal
+            open={amountEditOpen}
+            initialAmount={currentItem?.amount || 0}
+            onClose={() => setAmountEditOpen(false)}
+            onSave={async (val) => {
+              const t = currentItem;
+              if (!t?.transactionId) return;
+              if (!Number.isFinite(val) || val <= 0) {
+                showNotice("Số tiền phải > 0");
+                return;
+              }
+              try {
+                setBusy(true);
+                const res = await apiUpdateCapMoneyTransactionAmount(t.transactionId, { amount: val });
+                if (!res?.success) throw new Error(res?.message || "Cập nhật số tiền thất bại");
+                setAmountEditOpen(false);
+                setItems((prev) =>
+                  prev.map((x) =>
+                    String(x.transactionId) === String(t.transactionId) ? { ...x, amount: val } : x
+                  )
+                );
+              } catch (err) {
+                console.error("update amount error:", err);
+                showNotice("Cập nhật số tiền thất bại. Vui lòng thử lại.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+
+          {/* Inline note editing uses keyboard directly; no modal */}
       </motion.div>
     ) : null
   );

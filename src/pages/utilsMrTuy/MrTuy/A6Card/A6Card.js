@@ -58,6 +58,56 @@ function applyPrintStyles() {
 .${DOC_CLASS} .a6-hdr col.a6-hdr-col-data {
   width: 40%;
 }
+.${DOC_CLASS} .a6-hdr-pdf-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.${DOC_CLASS} .a6-hdr-pdf {
+  flex: 1 1 0;
+  min-width: 0;
+  table-layout: fixed;
+}
+.${DOC_CLASS} .a6-hdr-pdf td {
+  width: 20%;
+  vertical-align: top;
+}
+.${DOC_CLASS} .a6-hdr-pdf-qr {
+  flex: 0 0 auto;
+  text-align: center;
+  max-width: 100px;
+}
+.${DOC_CLASS} .a6-hdr-pdf-qr .a6-hdr-qr-img {
+  width: 88px;
+  max-width: 88px;
+}
+.${DOC_CLASS} .a6-rules-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+.${DOC_CLASS} .a6-rules-tbl td {
+  border: none;
+  padding: 2px 6px 3px 0;
+  vertical-align: top;
+  line-height: 1.35;
+}
+.${DOC_CLASS} .a6-rules-tbl td.a6-rules-tbl-h {
+  white-space: nowrap;
+  padding-right: 10px;
+}
+.${DOC_CLASS} .a6-grid col.a6-grid-col-st {
+  width: 9%;
+}
+.${DOC_CLASS} .a6-grid col.a6-grid-col-d {
+  width: 11.375%;
+}
+.${DOC_CLASS} .a6-pdf-lbl-r {
+  text-align: right;
+}
 .${DOC_CLASS} .a6-hdr td {
   padding: 2px 8px 3px 0;
   vertical-align: top;
@@ -256,61 +306,22 @@ function applyPrintStyles() {
 .${DOC_CLASS} .a6-grid tr.a6-ready-blk.a6-ready-end td {
   border-bottom: 1px solid #000 !important;
 }
-/* READY — Vải (có cột 1 READY): 2+3,5–7,10 phải; 4+8 trái */
-.${DOC_CLASS} .a6-grid tr.a6-ready-vai td:nth-child(2),
-.${DOC_CLASS} .a6-grid tr.a6-ready-vai td:nth-child(4) {
-  text-align: right;
+/* RELEASE 1 / 2 / SX — một hàng (mẫu PDF) */
+.${DOC_CLASS} .a6-grid tr.a6-rel1-row1 > td.a6-st,
+.${DOC_CLASS} .a6-grid tr.a6-rel2-row1 > td.a6-st,
+.${DOC_CLASS} .a6-grid tr.a6-sx-row1 > td.a6-st {
+  vertical-align: middle !important;
 }
-.${DOC_CLASS} .a6-grid tr.a6-ready-vai td:nth-child(3),
-.${DOC_CLASS} .a6-grid tr.a6-ready-vai td:nth-child(5) {
-  text-align: left;
-}
-.${DOC_CLASS} .a6-grid tr.a6-ready-vai td:nth-child(7) {
-  text-align: right;
-}
-/* READY — Mực (không cột 1): cùng lưới cột; hàng 3 cột 10 phải */
-.${DOC_CLASS} .a6-grid tr.a6-ready-muc td:nth-child(1),
-.${DOC_CLASS} .a6-grid tr.a6-ready-muc td:nth-child(3) {
-  text-align: right;
-}
-.${DOC_CLASS} .a6-grid tr.a6-ready-muc td:nth-child(2),
-.${DOC_CLASS} .a6-grid tr.a6-ready-muc td:nth-child(4) {
-  text-align: left;
-}
-.${DOC_CLASS} .a6-grid tr.a6-ready-muc td:nth-child(6) {
-  text-align: right;
-}
-.${DOC_CLASS} .a6-grid tr.a6-ready-stoprow td:nth-child(6) {
-  text-align: right;
-}
-/* RELEASE 1 / TEST RUN / RELEASE 2 — nhãn phải / chấm trái */
 .${DOC_CLASS} .a6-grid tr.a6-rel1-row1 td.a6-rel1-lbl-r,
 .${DOC_CLASS} .a6-grid tr.a6-trun-row1 td.a6-rel1-lbl-r,
 .${DOC_CLASS} .a6-grid tr.a6-rel2-row1 td.a6-rel1-lbl-r,
 .${DOC_CLASS} .a6-grid tr.a6-sx-row1 td.a6-rel1-lbl-r {
   text-align: right;
 }
-.${DOC_CLASS} .a6-grid tr.a6-rel1-row2 td.a6-rel1-dot-l,
-.${DOC_CLASS} .a6-grid tr.a6-trun-row2 td.a6-rel1-dot-l,
-.${DOC_CLASS} .a6-grid tr.a6-rel2-row2 td.a6-rel1-dot-l,
-.${DOC_CLASS} .a6-grid tr.a6-sx-row2 td.a6-rel1-dot-l {
+.${DOC_CLASS} .a6-grid td.a6-dots-cell.a6-rel1-dot-l {
   text-align: left;
 }
-/* Ô cột 1–2 rowspan 2 (RELEASE 1 / SX): căn giữa + kẻ đáy */
-.${DOC_CLASS} .a6-grid tr.a6-rel1-row1 > td.a6-st[rowspan],
-.${DOC_CLASS} .a6-grid tr.a6-sx-row1 > td.a6-st[rowspan] {
-  vertical-align: middle !important;
-  border-bottom: 1px solid #000 !important;
-}
-.${DOC_CLASS} .a6-grid tr.a6-rel1-row1 td:not([rowspan]),
-.${DOC_CLASS} .a6-grid tr.a6-sx-row1 td:not([rowspan]) {
-  border-bottom: none !important;
-}
-.${DOC_CLASS} .a6-grid tr.a6-rel1-row2 td,
-.${DOC_CLASS} .a6-grid tr.a6-sx-row2 td {
-  vertical-align: bottom !important;
-}
-/* TEST RUN — 3 hàng (ô cột 1–2 rowspan 3) */
+/* TEST RUN — 2 hàng (cột stage rowspan 2 + Kết quả) */
 .${DOC_CLASS} .a6-grid tr.a6-trun-row1 > td.a6-st[rowspan] {
   vertical-align: middle !important;
   border-bottom: 1px solid #000 !important;
@@ -318,20 +329,8 @@ function applyPrintStyles() {
 .${DOC_CLASS} .a6-grid tr.a6-trun-row1 td:not([rowspan]) {
   border-bottom: none !important;
 }
-.${DOC_CLASS} .a6-grid tr.a6-trun-row2 td {
-  vertical-align: bottom !important;
-  border-bottom: none !important;
-}
-/* RELEASE 2 — 2 hàng (ô cột 1 rowspan 2) */
-.${DOC_CLASS} .a6-grid tr.a6-rel2-row1 > td.a6-st[rowspan] {
+.${DOC_CLASS} .a6-grid tr.a6-trun-row3.a6-kq td {
   vertical-align: middle !important;
-  border-bottom: 1px solid #000 !important;
-}
-.${DOC_CLASS} .a6-grid tr.a6-rel2-row1 td:not([rowspan]) {
-  border-bottom: none !important;
-}
-.${DOC_CLASS} .a6-grid tr.a6-rel2-row2 td {
-  vertical-align: bottom !important;
 }
 .${DOC_CLASS} .a6-st {
   font-weight: 700;
@@ -383,35 +382,16 @@ function applyPrintStyles() {
   text-align: center;
   vertical-align: bottom;
 }
-/* OPEN: cột nhãn 2,4,7,9 căn phải; cột 3,5,8,10 căn trái */
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(2),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(4),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(7),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(9) {
-  text-align: right;
-}
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(3),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(5),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(8),
-.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(10) {
-  text-align: left;
-}
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(1),
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(3),
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(6),
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(8) {
-  text-align: right;
+/* OPEN: nhãn dùng .a6-pdf-lbl-r; STOP giữa */
+.${DOC_CLASS} .a6-grid tr.a6-open:not(.a6-open-dots) td:nth-child(6) {
+  text-align: center;
 }
 .${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(2),
 .${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(4),
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(7),
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(9) {
+.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(7) {
   text-align: left;
 }
 .${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(5) {
-  text-align: center;
-}
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(10) {
   text-align: center;
 }
 .${DOC_CLASS} .a6-grid tr.a6-open-dots td .a6-dots {
@@ -421,11 +401,6 @@ function applyPrintStyles() {
   margin-left: 0;
   display: block;
   box-sizing: border-box;
-}
-.${DOC_CLASS} .a6-grid tr.a6-open-dots td:nth-child(10) .a6-dots {
-  max-width: min(6.5rem, 100%);
-  margin-left: auto;
-  margin-right: auto;
 }
 .${DOC_CLASS} .a6-grid td.a6-col-11 > .a6-dots:only-child {
   max-width: min(6.5rem, 100%);
@@ -477,60 +452,186 @@ function applyPrintStyles() {
 .${DOC_CLASS} .a6-fin-lbl-line {
   white-space: nowrap;
 }
-.${DOC_CLASS} .a6-fin-qa {
+.${DOC_CLASS} .a6-fin-k {
   text-align: center;
-  min-width: 11em;
   vertical-align: middle !important;
-}
-.${DOC_CLASS} .a6-fin-to-truong {
-  max-width: 28%;
-  padding-right: 10px;
-  box-sizing: border-box;
-  vertical-align: middle !important;
-}
-.${DOC_CLASS} .a6-fin-quan {
-  vertical-align: middle !important;
-  text-align: center;
+  font-size: 8.25pt;
+  font-weight: 700;
   padding: 4px 6px;
   box-sizing: border-box;
 }
-.${DOC_CLASS} .a6-fin-dots-tt {
-  padding-left: 18px;
-  text-align: right;
+.${DOC_CLASS} .a6-rules-tbl strong {
+  font-weight: 700 !important;
+}
+/* Bảng master 8 cột × 17 hàng (in một mặt A5 ngang) */
+.${DOC_CLASS} .a6-master {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 8.75pt;
+  margin: 0;
+}
+.${DOC_CLASS} .a6-master td {
+  border: 1px solid #000;
+  padding: 2px 4px;
+  vertical-align: top;
   box-sizing: border-box;
 }
-.${DOC_CLASS} .a6-warn-row td {
-  font-weight: 700;
-  text-align: left;
-  vertical-align: middle !important;
-  font-size: 8.25pt;
+/* Hàng 6, 8–12: chiều cao thấp (OPEN, Mẫu duyệt, RELEASE 1/2, TEST RUN, SX) */
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact td {
+  padding-top: 0;
+  padding-bottom: 0;
 }
-.${DOC_CLASS} .a6-rules {
-  margin-top: 8px;
-  font-size: 10.5pt;
-  font-weight: 700;
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-st {
+  line-height: 1.1;
+  vertical-align: middle;
 }
-.${DOC_CLASS} .a6-rules-title {
-  font-weight: 700;
-  font-size: 10.5pt;
-  margin-bottom: 8px;
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign.a6-m-sign-dotsb,
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa {
+  padding: 1px 3px 0;
 }
-.${DOC_CLASS} .a6-rules p {
-  margin: 0 0 4px;
-  line-height: 1.42;
-  font-weight: 700 !important;
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner {
+  gap: 0;
+  min-height: 1.48em;
 }
-.${DOC_CLASS} .a6-rules p:last-child {
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner .a6-dots {
+  min-height: 0.8em;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa .a6-m-sign-dotsb-inner {
+  min-height: 1.38em;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa-stop {
   margin-bottom: 0;
 }
-.${DOC_CLASS} .a6-rules strong {
-  font-weight: 700 !important;
+/* Hàng 7 READY (Vải/Khuôn/Mực): cao hơn chút */
+.${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a .a6-m-sign-dotsb-inner,
+.${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a .a6-m-stopqa .a6-m-sign-dotsb-inner {
+  min-height: 3.05em;
+}
+.${DOC_CLASS} .a6-master .a6-m-qr {
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px;
+}
+.${DOC_CLASS} .a6-master .a6-m-qr-img {
+  display: block;
+  max-width: 100%;
+  width: 88px;
+  height: auto;
+  margin: 0 auto;
+}
+.${DOC_CLASS} .a6-master .a6-m-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 11.5pt;
+  vertical-align: middle;
+  line-height: 1.2;
+  padding: 3px 5px;
+}
+.${DOC_CLASS} .a6-master .a6-m-sub {
+  text-align: center;
+  font-size: 8.25pt;
+  vertical-align: middle;
+  line-height: 1.25;
+  padding: 2px 5px;
+}
+.${DOC_CLASS} .a6-master .a6-m-st {
+  font-weight: 700;
+  vertical-align: middle;
+  font-size: 8.5pt;
+}
+.${DOC_CLASS} .a6-master .a6-m-rules td {
+  font-weight: 700;
+  font-size: 8.25pt;
+  vertical-align: top;
+  line-height: 1.28;
+}
+/* Khối NGUYÊN TẮC: không kẻ ô giữa 2 cột và giữa các hàng */
+.${DOC_CLASS} .a6-master tr.a6-m-rules td:first-child {
+  border-right: none;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-rules td:last-child {
+  border-left: none;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-rules ~ tr.a6-m-rules td {
+  border-top: none;
+}
+.${DOC_CLASS} .a6-master tr.a6-m-rules:not(:last-child) td {
+  border-bottom: none;
+}
+.${DOC_CLASS} .a6-master .a6-m-sign .a6-hdr-line .a6-dots,
+.${DOC_CLASS} .a6-master .a6-m-stopqa .a6-hdr-line .a6-dots,
+.${DOC_CLASS} .a6-master .a6-m-sign-dotsb-inner .a6-dots {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  display: block;
+}
+/* Nhãn trên, gạch chấm ký phía dưới */
+.${DOC_CLASS} .a6-master .a6-m-sign.a6-m-sign-dotsb {
+  vertical-align: bottom;
+  padding: 3px 4px 2px;
+}
+.${DOC_CLASS} .a6-master .a6-m-sign-dotsb-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 2.65em;
+  gap: 2px;
+}
+.${DOC_CLASS} .a6-master .a6-m-sign-dotsb-lbl {
+  flex: 0 0 auto;
+  font-weight: 400;
+  font-size: inherit;
+  white-space: nowrap;
+  line-height: 1.12;
+}
+.${DOC_CLASS} .a6-master .a6-m-sign-dotsb-inner .a6-dots {
+  flex: 0 0 auto;
+  min-height: 1em;
+}
+.${DOC_CLASS} .a6-master .a6-m-stopqa {
+  vertical-align: bottom;
+  padding: 3px 4px 2px;
+}
+.${DOC_CLASS} .a6-master .a6-m-stopqa .a6-m-sign-dotsb-inner {
+  min-height: 2em;
+}
+.${DOC_CLASS} .a6-master .a6-m-stopqa-stop {
+  text-align: center;
+  margin-bottom: 1px;
+}
+.${DOC_CLASS} .a6-master .a6-m-field {
+  font-size: 8.5pt;
+}
+.${DOC_CLASS} .a6-master .a6-m-sx-wrap {
+  min-width: 0;
+  overflow: hidden;
+}
+.${DOC_CLASS} .a6-master .a6-m-chuyen-cell {
+  min-width: 0;
+  vertical-align: middle;
+}
+.${DOC_CLASS} .a6-master .a6-m-chuyen-cell .a6-hdr-line {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+.${DOC_CLASS} .a6-master .a6-m-chuyen-cell .a6-hdr-line .a6-dots {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .${DOC_CLASS} .a6-print-meta {
   display: none;
 }
 @media print {
-  @page { size: A4 portrait; margin: 0.28in; }
+  /* ~148×210 mm landscape; margin nhỏ để vừa 1 mặt */
+  @page { size: A5 landscape; margin: 6mm; }
   html, body { margin: 0 !important; padding: 0 !important; }
   body {
     print-color-adjust: exact;
@@ -541,6 +642,7 @@ function applyPrintStyles() {
   .${PRINT_PAGE_CLASS} {
     box-sizing: border-box !important;
     width: 100% !important;
+    max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
@@ -552,9 +654,9 @@ function applyPrintStyles() {
     display: grid !important;
     grid-template-columns: 1fr auto;
     align-items: center;
-    gap: 8px;
-    font-size: 9pt;
-    margin: 0 0 8px;
+    gap: 4px;
+    font-size: 7.25pt;
+    margin: 0 0 2px;
     font-family: Cambria, "Times New Roman", Times, serif;
   }
   .${DOC_CLASS} .a6-print-id {
@@ -569,6 +671,169 @@ function applyPrintStyles() {
   .${DOC_CLASS} .a6-stop {
     padding-left: 4px !important;
     padding-right: 4px !important;
+  }
+  /* Nén nhẹ cho vừa khổ A5 ngang */
+  .${DOC_CLASS} .a6-title {
+    font-size: 12.5pt !important;
+    margin: 0 0 3px !important;
+  }
+  .${DOC_CLASS} .a6-sub {
+    font-size: 8.5pt !important;
+    margin: 0 0 5px !important;
+    line-height: 1.25 !important;
+  }
+  .${DOC_CLASS} .a6-hdr {
+    margin-bottom: 4px !important;
+    font-size: 8.75pt !important;
+  }
+  .${DOC_CLASS} .a6-hdr td {
+    padding: 1px 5px 2px 0 !important;
+  }
+  .${DOC_CLASS} .a6-hdr-qr-img {
+    width: 92px !important;
+    max-width: 92px !important;
+  }
+  .${DOC_CLASS} .a6-cp-title {
+    font-size: 9.25pt !important;
+    margin: 3px 0 3px !important;
+  }
+  .${DOC_CLASS} .a6-grid {
+    margin-bottom: 5px !important;
+    font-size: 7.5pt !important;
+  }
+  .${DOC_CLASS} .a6-grid td {
+    padding: 2px 3px !important;
+  }
+  .${DOC_CLASS} .a6-grid tr.a6-open td {
+    padding: 2px 2px !important;
+  }
+  .${DOC_CLASS} .a6-grid td.a6-st.a6-ready-stage {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+  .${DOC_CLASS} .a6-st,
+  .${DOC_CLASS} .a6-stop,
+  .${DOC_CLASS} .a6-lbl {
+    font-size: 7.5pt !important;
+  }
+  .${DOC_CLASS} .a6-grid tr.a6-ready-blk td {
+    font-size: 8.25pt !important;
+  }
+  .${DOC_CLASS} .a6-dots-cell {
+    font-size: 8pt !important;
+  }
+  .${DOC_CLASS} .a6-ktra td,
+  .${DOC_CLASS} .a6-kq td {
+    font-size: 8.25pt !important;
+  }
+  .${DOC_CLASS} .a6-finish-all {
+    margin: 3px 0 5px !important;
+    font-size: 7.5pt !important;
+  }
+  .${DOC_CLASS} .a6-finish-all td {
+    padding: 2px 3px !important;
+  }
+  .${DOC_CLASS} .a6-rules-tbl {
+    margin-top: 4px !important;
+    font-size: 9pt !important;
+  }
+  .${DOC_CLASS} .a6-rules-tbl td {
+    padding: 2px 6px 2px 0 !important;
+    line-height: 1.32 !important;
+  }
+  .${DOC_CLASS} .a6-hdr-sx-range {
+    font-size: 7pt !important;
+    line-height: 1.15 !important;
+  }
+  .${DOC_CLASS} .a6-master {
+    font-size: 7.1pt !important;
+  }
+  .${DOC_CLASS} .a6-master td {
+    padding: 2px 2px !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-title {
+    font-size: 9.25pt !important;
+    padding: 3px 4px !important;
+    line-height: 1.18 !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-sub {
+    font-size: 7pt !important;
+    padding: 2px 4px !important;
+    line-height: 1.2 !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-st {
+    font-size: 7.25pt !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-field,
+  .${DOC_CLASS} .a6-master .a6-m-rules td {
+    font-size: 7.25pt !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-qr {
+    padding: 3px !important;
+    vertical-align: middle !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-qr-img {
+    width: 66px !important;
+    max-width: 66px !important;
+    max-height: 66px !important;
+    object-fit: contain !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-sign.a6-m-sign-dotsb,
+  .${DOC_CLASS} .a6-master .a6-m-stopqa {
+    padding: 3px 2px 2px !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-sign-dotsb-inner,
+  .${DOC_CLASS} .a6-master .a6-m-stopqa .a6-m-sign-dotsb-inner {
+    min-height: 2.28em !important;
+    gap: 0 !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-sign-dotsb-inner .a6-dots,
+  .${DOC_CLASS} .a6-master .a6-m-stopqa .a6-m-sign-dotsb-inner .a6-dots {
+    min-height: 1em !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-stopqa .a6-m-sign-dotsb-inner {
+    min-height: 2.05em !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-stopqa-stop {
+    margin-bottom: 0 !important;
+    line-height: 1 !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-st {
+    line-height: 1.1 !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner {
+    min-height: 1.48em !important;
+    gap: 0 !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner .a6-dots {
+    min-height: 0.8em !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa .a6-m-sign-dotsb-inner {
+    min-height: 1.42em !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-sign.a6-m-sign-dotsb,
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa {
+    padding: 2px 2px 1px !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-compact .a6-m-stopqa-stop {
+    margin-bottom: 0 !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a .a6-m-sign-dotsb-inner,
+  .${DOC_CLASS} .a6-master tr.a6-m-tr-ready-a .a6-m-stopqa .a6-m-sign-dotsb-inner {
+    min-height: 2.65em !important;
+  }
+  .${DOC_CLASS} .a6-master .a6-m-rules td {
+    font-size: 6.85pt !important;
+    line-height: 1.26 !important;
+    padding: 2px 2px !important;
   }
 }
 `;
@@ -659,26 +924,52 @@ function formatA6PrintStampText() {
   return `${t} - ${date}`;
 }
 
-function HdrCell({ label, value, tdClassName }) {
+/** Ô dữ liệu master (colspan + nhãn/giá trị hoặc children) */
+function MasterLineTd({ colSpan = 1, label, value, children, className }) {
   const v = normalizeValue(value);
   return (
-    <td className={tdClassName || undefined}>
+    <td colSpan={colSpan} className={["a6-m-field", className].filter(Boolean).join(" ")}>
+      {children ?? (
+        <span className="a6-hdr-line">
+          <span className="a6-hdr-lbl">{label}</span>
+          {v ? <span className="a6-hdr-val">{v}</span> : <span className="a6-dots">&nbsp;</span>}
+        </span>
+      )}
+    </td>
+  );
+}
+
+function MasterSignTd({ colSpan = 2, label, dotsBelow = false }) {
+  if (dotsBelow) {
+    return (
+      <td colSpan={colSpan} className="a6-m-sign a6-m-sign-dotsb">
+        <div className="a6-m-sign-dotsb-inner">
+          <span className="a6-m-sign-dotsb-lbl">{label}</span>
+          <span className="a6-dots">&nbsp;</span>
+        </div>
+      </td>
+    );
+  }
+  return (
+    <td colSpan={colSpan} className="a6-m-sign">
       <span className="a6-hdr-line">
         <span className="a6-hdr-lbl">{label}</span>
-        {v ? (
-          <span className="a6-hdr-val">{v}</span>
-        ) : (
-          <span className="a6-dots">&nbsp;</span>
-        )}
+        <span className="a6-dots">&nbsp;</span>
       </span>
     </td>
   );
 }
 
-function DotsCell({ className }) {
+function MasterStopQaTd({ colSpan = 2 }) {
   return (
-    <td className={["a6-dots-cell", className].filter(Boolean).join(" ")}>
-      <span className="a6-dots">&nbsp;</span>
+    <td colSpan={colSpan} className="a6-m-stopqa">
+      <div className="a6-m-stopqa-stop">
+        <span className="a6-stop">STOP</span>
+      </div>
+      <div className="a6-m-sign-dotsb-inner">
+        <span className="a6-m-sign-dotsb-lbl">QA ký</span>
+        <span className="a6-dots">&nbsp;</span>
+      </div>
     </td>
   );
 }
@@ -688,18 +979,9 @@ function exportA6CardWord(values) {
   const chk =
     '<span style="display:inline-block;width:9px;height:9px;border:1px solid #000;margin-right:4px;vertical-align:-2px"></span>';
   const z = '<span class="a6-dots">&nbsp;</span>';
-  const zi = '<span class="a6-dots a6-dots-inline">&nbsp;</span>';
-  const po = normalizeValue(values.PO) || z;
-  const ma = normalizeValue(values.MA) || z;
-  const kh = normalizeValue(values.KH) || z;
-  const mauVai = normalizeValue(values.MAUVAI) || z;
-  const kichVai = normalizeValue(values.KICHVAI) || z;
-  const kichPhim = normalizeValue(values.KICHPHIM) || z;
-  const sl = formatSoLuongDisplay(values.SL) || z;
-  const ng = formatNgayGiao(values.NG) || z;
   const qrUrl = normalizeValue(values.QR);
   const qrBlock = qrUrl
-    ? `<img src="${escapeHtmlAttr(qrUrl)}" alt="" width="118" style="max-width:118px;height:auto;display:block;margin:0 auto"/>`
+    ? `<img src="${escapeHtmlAttr(qrUrl)}" alt="" width="66" style="max-width:66px;max-height:66px;height:auto;object-fit:contain;display:block;margin:0 auto"/>`
     : `${z}`;
   const chuyen = normalizeValue(values.CHUYEN);
   const sxtu = normalizeValue(values.SXTU);
@@ -716,292 +998,84 @@ function exportA6CardWord(values) {
 
   const idWord = normalizeValue(values.ID);
   const wordMetaTop = idWord
-    ? `<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:9pt;margin:0 0 6px;font-weight:400;font-family:Cambria,'Times New Roman',serif"><span>${escapeHtmlText(idWord)}</span><span></span></div>`
+    ? `<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;font-size:7.25pt;margin:0 0 2px;font-weight:400;font-family:Cambria,'Times New Roman',serif"><span>${escapeHtmlText(idWord)}</span><span></span></div>`
     : "";
+
+  const valSpan = (v) => (normalizeValue(v) ? `<span class="a6-hdr-val">${escapeHtmlText(String(v))}</span>` : z);
+  const line2 = (lbl, v) =>
+    `<span class="a6-hdr-line"><span class="a6-hdr-lbl">${lbl}</span>${valSpan(v)}</span>`;
+  const signDotsBelow = (cs, lbl) =>
+    `<td colspan="${cs}" class="a6-m-sign a6-m-sign-dotsb"><div class="a6-m-sign-dotsb-inner"><span class="a6-m-sign-dotsb-lbl">${escapeHtmlText(lbl)}</span>${z}</div></td>`;
+  const stopQa = (cs) =>
+    `<td colspan="${cs}" class="a6-m-stopqa"><div class="a6-m-stopqa-stop" style="text-align:center;margin-bottom:1px"><span class="a6-stop">STOP</span></div><div class="a6-m-sign-dotsb-inner"><span class="a6-m-sign-dotsb-lbl">QA ký</span>${z}</div></td>`;
 
   const htmlRaw = `<!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8" />
 <style>
-body{font-family:Cambria,"Times New Roman",serif;font-size:10pt;line-height:1.25;color:#000;margin:0.28in}
+body{font-family:Cambria,"Times New Roman",serif;font-size:7.1pt;line-height:1.18;color:#000;margin:6mm}
+@page{size:A5 landscape;margin:6mm}
 table{border-collapse:collapse;width:100%}
-.a6g{border:1px solid #000}
-.a6g td{border:none;border-bottom:1px solid #000;padding:4px 5px;vertical-align:bottom;font-size:8.25pt;min-width:0;box-sizing:border-box}
-.a6g tr.a6-open:not(.a6-open-dots) td:not(.a6-open-stage){border-bottom:none!important}
-.a6-open-stage{vertical-align:middle!important}
+.a6-master{table-layout:fixed;border-collapse:collapse;width:100%;font-size:7.1pt}
+.a6-master td{border:1px solid #000;padding:2px 2px;vertical-align:top;box-sizing:border-box}
+.a6-m-qr{text-align:center;vertical-align:middle;padding:3px}
+.a6-m-title{text-align:center;font-weight:700;font-size:9.25pt;vertical-align:middle;line-height:1.18;padding:3px 4px}
+.a6-m-sub{text-align:center;font-size:7pt;vertical-align:middle;line-height:1.2;padding:2px 4px}
+.a6-m-st{font-weight:700;vertical-align:middle;font-size:7.25pt}
+.a6-m-rules td{font-weight:700;font-size:6.85pt;line-height:1.26;padding:2px 2px}
+.a6-master tr.a6-m-rules td:first-child{border-right:none}
+.a6-master tr.a6-m-rules td:last-child{border-left:none}
+.a6-master tr.a6-m-rules~tr.a6-m-rules td{border-top:none}
+.a6-master tr.a6-m-rules:not(:last-child) td{border-bottom:none}
+.a6-m-stopqa-stop{text-align:center;margin-bottom:1px}
 .a6-st-cb-line{display:inline-flex;align-items:center;white-space:nowrap}
-.a6g tr:last-child td{border-bottom:none}
-.a6g tr.nb td:not(.a6-ready-stage){border-bottom:none!important}
-.a6-ready-blk td{font-size:9pt;border-bottom:none!important;vertical-align:middle!important}
-.a6-ready-blk td.a6-ready-stage{border-bottom:1px solid #000!important}
-.a6-ready-blk.a6-ready-dots td{vertical-align:bottom!important}
-.a6-ready-end td{border-bottom:1px solid #000!important}
-.a6g tr.a6-ready-vai td:nth-child(2),.a6g tr.a6-ready-vai td:nth-child(4){text-align:right!important}
-.a6g tr.a6-ready-vai td:nth-child(3),.a6g tr.a6-ready-vai td:nth-child(5){text-align:left!important}
-.a6g tr.a6-ready-vai td:nth-child(7){text-align:right!important}
-.a6g tr.a6-ready-muc td:nth-child(1),.a6g tr.a6-ready-muc td:nth-child(3){text-align:right!important}
-.a6g tr.a6-ready-muc td:nth-child(2),.a6g tr.a6-ready-muc td:nth-child(4){text-align:left!important}
-.a6g tr.a6-ready-muc td:nth-child(6){text-align:right!important}
-.a6g tr.a6-ready-stoprow td:nth-child(6){text-align:right!important}
-.a6g tr.a6-rel1-row1 td.a6-rel1-lbl-r,.a6g tr.a6-trun-row1 td.a6-rel1-lbl-r,.a6g tr.a6-rel2-row1 td.a6-rel1-lbl-r,.a6g tr.a6-sx-row1 td.a6-rel1-lbl-r{text-align:right!important}
-.a6g tr.a6-rel1-row2 td.a6-rel1-dot-l,.a6g tr.a6-trun-row2 td.a6-rel1-dot-l,.a6g tr.a6-rel2-row2 td.a6-rel1-dot-l,.a6g tr.a6-sx-row2 td.a6-rel1-dot-l{text-align:left!important}
-.a6g tr.a6-rel1-row1 td:not([rowspan]),.a6g tr.a6-trun-row1 td:not([rowspan]),.a6g tr.a6-rel2-row1 td:not([rowspan]),.a6g tr.a6-sx-row1 td:not([rowspan]){border-bottom:none!important}
-.a6g tr.a6-rel1-row1 td[rowspan],.a6g tr.a6-trun-row1 td[rowspan],.a6g tr.a6-rel2-row1 td[rowspan],.a6g tr.a6-sx-row1 td[rowspan]{border-bottom:1px solid #000!important;vertical-align:middle!important}
-.a6g tr.a6-rel1-row2 td,.a6g tr.a6-rel2-row2 td,.a6g tr.a6-sx-row2 td{vertical-align:bottom!important}
-.a6g tr.a6-trun-row2 td{vertical-align:bottom!important;border-bottom:none!important}
-.fin tr.a6-fin-r1 td:not([rowspan]){border-bottom:none!important}
-.fin tr.a6-fin-r1 td[rowspan]{border-bottom:none!important;vertical-align:middle!important}
-.fin tr.a6-fin-r2 td{vertical-align:bottom!important;border-bottom:none!important}
-.fin tr.a6-fin-r2 td.a6-rel1-dot-l{text-align:left!important}
-.fin tr.a6-done-r1 td:not([rowspan]){border-bottom:none!important}
-.fin tr.a6-done-r1 td[rowspan]{border-bottom:1px solid #000!important;vertical-align:middle!important}
-.fin tr.a6-done-r2 td{vertical-align:bottom!important}
-.fin tr.a6-done-r1 td.a6-rel1-lbl-r{text-align:right!important}
-.fin tr.a6-done-r2 td.a6-rel1-dot-l{text-align:left!important}
-.a6g tr.a6-open td{padding:2.5px 2px}
-.a6g tr.a6-open-dots td{vertical-align:bottom!important}
-.a6-open-gio{text-align:center;vertical-align:bottom}
-.a6-dots{border-bottom:1px dotted #000;display:inline-block;min-width:120px;margin-left:4px;min-height:1em;box-sizing:border-box}
-.a6-dots-cell .a6-dots,.fin td.a6-dots-cell .a6-dots,.a6g td.a6-dots-cell .a6-dots{min-width:0;width:100%;max-width:100%;margin-left:0;display:block}
-.a6-dots-inline{min-width:0;max-width:100%;margin-left:4px;display:inline-block;vertical-align:baseline;box-sizing:border-box}
-.a6g tr.a6-open-dots td .a6-dots{min-width:0;width:100%;max-width:100%;margin-left:0;display:block;box-sizing:border-box}
-.a6g tr.a6-open-dots td:nth-child(10) .a6-dots,.a6g td.a6-col-11>.a6-dots:only-child{max-width:100%;margin-left:auto;margin-right:auto}
-.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(2),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(4),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(7),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(9){text-align:right}
-.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(3),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(5),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(8),.a6g tr.a6-open:not(.a6-open-dots) td:nth-child(10){text-align:left}
-.a6g tr.a6-open-dots td:nth-child(1),.a6g tr.a6-open-dots td:nth-child(3),.a6g tr.a6-open-dots td:nth-child(6),.a6g tr.a6-open-dots td:nth-child(8){text-align:right}
-.a6g tr.a6-open-dots td:nth-child(2),.a6g tr.a6-open-dots td:nth-child(4),.a6g tr.a6-open-dots td:nth-child(7),.a6g tr.a6-open-dots td:nth-child(9){text-align:left}
-.a6g tr.a6-open-dots td:nth-child(5),.a6g tr.a6-open-dots td:nth-child(10){text-align:center}
-.a6lbl+td{min-width:0;max-width:100%;box-sizing:border-box}
-.a6-col-11{padding:4px 4px!important;min-width:0;box-sizing:border-box}
-.a6-cc{text-align:center}
-.a6st{font-weight:700;width:calc(9% + 6px);box-sizing:border-box;vertical-align:middle!important}
-.a6-ready-stage{padding-top:8px!important;padding-bottom:8px!important}
-.a6lbl{font-size:8.25pt}
-.a6sp{font-weight:700;text-align:center;width:4%;vertical-align:middle!important;font-size:8.25pt}
-.fin{border:1px solid #000;margin:5px 0 8px;font-size:8.25pt}
-.fin td{border:none;border-bottom:1px solid #000;padding:4px 5px;vertical-align:bottom;min-width:0;box-sizing:border-box}
-.fin tr:last-child td{border-bottom:none}
-.fin-qa{text-align:center;min-width:11em;vertical-align:middle!important}
-.fin-tt{max-width:28%;padding-right:10px;box-sizing:border-box;vertical-align:middle!important}
-.a6-fin-quan{vertical-align:middle!important;text-align:center;padding:4px 6px;box-sizing:border-box}
-.fin-dots-tt{padding-left:18px!important;text-align:right!important;box-sizing:border-box}
-.fin-line{white-space:nowrap}
-.w{font-weight:700;text-align:left}
-.a6-hdr{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:9.5pt;table-layout:fixed}
-.a6-hdr col.a6-hdr-col-qr{width:20%}
-.a6-hdr col.a6-hdr-col-data{width:40%}
-.a6-hdr td{padding:2px 8px 3px 0;vertical-align:top;border:none;box-sizing:border-box}
-.a6-hdr td.a6-hdr-qr{padding-right:10px;text-align:center;vertical-align:top}
-.a6-hdr-line{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:3px;min-width:0;word-wrap:break-word;overflow-wrap:break-word}
+.a6-stop{font-weight:700;text-align:center}
+.a6-hdr-line{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:3px;min-width:0}
 .a6-hdr-line .a6-hdr-lbl{flex:0 0 auto;white-space:nowrap;font-weight:400}
-.a6-hdr-line .a6-hdr-val{flex:0 1 auto;margin-left:0;min-width:0;word-wrap:break-word;overflow-wrap:break-word;font-weight:700}
-.a6-hdr-line .a6-dots{flex:1 1 0;min-width:0;margin-left:0;width:auto;max-width:100%;display:inline-block;vertical-align:baseline;box-sizing:border-box}
-.a6-hdr-chuyen-cell .a6-hdr-line .a6-dots{flex:0 0 56px!important;width:56px!important;min-width:48px!important;max-width:64px!important}
-.a6-hdr-sx-td{min-width:0;overflow:hidden}
-.a6-hdr-sx-range{flex-wrap:nowrap!important;align-items:baseline!important;gap:3px;white-space:nowrap;font-size:9pt}
-.a6-hdr-sx-range .a6-hdr-lbl{white-space:nowrap}
-.a6-hdr-sx-range .a6-dots-inline{flex:0 0 52px!important;width:52px!important;min-width:44px!important;max-width:56px!important}
+.a6-hdr-line .a6-hdr-val{flex:0 1 auto;font-weight:700;min-width:0;word-wrap:break-word}
+.a6-hdr-line .a6-dots{flex:1 1 0;min-width:0;margin-left:0;max-width:100%}
+.a6-hdr-sx-range{flex-wrap:nowrap;align-items:baseline;gap:3px;white-space:nowrap;font-size:7pt;line-height:1.15}
+.a6-m-sign .a6-hdr-line .a6-dots,.a6-m-stopqa .a6-hdr-line .a6-dots,.a6-m-sign-dotsb-inner .a6-dots{min-width:0;width:100%;max-width:100%;margin-left:0;display:block}
+.a6-dots{border-bottom:1px dotted #000;display:inline-block;min-width:48px;margin-left:2px;min-height:1em;box-sizing:border-box}
+.a6-dots-inline{min-width:36px;max-width:100%;margin-left:2px;display:inline-block}
+.a6-m-sx-wrap{min-width:0;overflow:hidden}
+.a6-m-chuyen-cell{min-width:0;vertical-align:middle}
+.a6-m-chuyen-cell .a6-hdr-line{flex-wrap:wrap;align-items:center;gap:2px}
+.a6-m-chuyen-cell .a6-hdr-line .a6-dots{flex:1 1 auto;min-width:0}
+.a6-m-sign-dotsb{vertical-align:bottom;padding:3px 2px 2px!important}
+.a6-m-sign-dotsb-inner{display:flex;flex-direction:column;justify-content:flex-end;min-height:2.28em;gap:0}
+.a6-m-sign-dotsb-lbl{font-weight:400;white-space:nowrap;font-size:7.25pt;line-height:1.1}
+.a6-m-sign-dotsb-inner .a6-dots{margin-left:0!important;min-width:0!important;width:100%!important;display:block!important;flex:0 0 auto;min-height:1em}
+.a6-m-stopqa{vertical-align:bottom;padding:3px 2px 2px!important}
+.a6-m-stopqa .a6-m-sign-dotsb-inner{min-height:2.05em}
+.a6-master tr.a6-m-tr-compact td{padding-top:0!important;padding-bottom:0!important}
+.a6-master tr.a6-m-tr-compact .a6-m-st{line-height:1.1;vertical-align:middle}
+.a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner{min-height:1.48em!important;gap:0!important}
+.a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb-inner .a6-dots{min-height:0.8em!important}
+.a6-master tr.a6-m-tr-compact .a6-m-stopqa .a6-m-sign-dotsb-inner{min-height:1.42em!important}
+.a6-master tr.a6-m-tr-compact .a6-m-sign-dotsb,.a6-master tr.a6-m-tr-compact .a6-m-stopqa{padding:2px 2px 1px!important}
+.a6-master tr.a6-m-tr-compact .a6-m-stopqa-stop{margin-bottom:0!important}
+.a6-master tr.a6-m-tr-ready-a td{padding-top:4px!important;padding-bottom:4px!important}
+.a6-master tr.a6-m-tr-ready-a .a6-m-sign-dotsb-inner,.a6-master tr.a6-m-tr-ready-a .a6-m-stopqa .a6-m-sign-dotsb-inner{min-height:2.65em!important}
 </style></head><body>${wordMetaTop}
-<h1 style="text-align:center;font-size:14.5pt;margin:0 0 5px">THLA – A6 CARD (MÃ – PHẦN) – BẢN V3</h1>
-<p style="text-align:center;margin:0 0 9px;font-size:9.5pt">(Chuẩn hóa checkpoint FINISH – Khóa Chất lượng + Số lượng + Trạng thái)</p>
-<table class="a6-hdr"><colgroup><col class="a6-hdr-col-qr"/><col class="a6-hdr-col-data"/><col class="a6-hdr-col-data"/></colgroup>
-<tr><td class="a6-hdr-qr" rowspan="5">${qrBlock}</td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">PO:</span><span class="a6-hdr-val">${po}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Mã hàng:</span><span class="a6-hdr-val">${ma}</span></span></td></tr>
-<tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Màu vải:</span><span class="a6-hdr-val">${mauVai}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Kích vải:</span><span class="a6-hdr-val">${kichVai}</span></span></td></tr>
-<tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Kích phim:</span><span class="a6-hdr-val">${kichPhim}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Số lượng:</span><span class="a6-hdr-val">${sl}</span></span></td></tr>
-<tr><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Khách hàng:</span><span class="a6-hdr-val">${kh}</span></span></td><td><span class="a6-hdr-line"><span class="a6-hdr-lbl">Ngày giao:</span><span class="a6-hdr-val">${ng}</span></span></td></tr>
-<tr><td class="a6-hdr-chuyen-cell"><span class="a6-hdr-line"><span class="a6-hdr-lbl">Chuyền:</span>${chuyenHtml}</span></td><td class="a6-hdr-sx-td"><span class="a6-hdr-line a6-hdr-sx-range"><span class="a6-hdr-lbl">Thời gian dự kiến SX: Từ</span>${sxTuHtml}<span class="a6-hdr-lbl"> đến </span>${sxDenHtml}</span></td></tr></table>
-
-<p style="text-align:left;font-weight:700;margin:7px 0 6px;font-size:10.5pt">— CHECKPOINT —</p>
-<table class="a6g">
-<tr class="a6-open">
-<td class="a6st a6-open-stage" rowspan="2"><span class="a6-st-cb-line">${chk} OPEN</span></td>
-<td class="a6lbl">Sale ký</td><td></td>
-<td class="a6lbl">KT ký</td><td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl">KT ký</td><td></td>
-<td class="a6lbl">PGĐ ký</td><td></td>
-<td class="a6-open-gio a6-col-11"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-open a6-open-dots">
-<td></td><td><span class="a6-dots">&nbsp;</span></td><td></td><td><span class="a6-dots">&nbsp;</span></td><td></td><td></td><td><span class="a6-dots">&nbsp;</span></td><td></td><td><span class="a6-dots">&nbsp;</span></td><td class="a6-col-11"><span class="a6-dots">&nbsp;</span></td>
-</tr>
-<tr class="a6-ready-blk a6-ready-vai">
-<td class="a6st a6-ready-stage" rowspan="6"><span class="a6-st-cb-line">${chk} READY</span></td>
-<td class="a6lbl a6-cc" colspan="2">${chk} Vải OK &nbsp; Ký:</td>
-<td class="a6-cc"></td>
-<td class="a6lbl a6-cc" colspan="3">${chk} Khuôn OK &nbsp; Ký:</td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-<td class="a6lbl a6-cc">QA ký</td>
-<td class="a6-cc"></td>
-</tr>
-<tr class="a6-ready-blk a6-ready-dots">
-<td class="a6-cc" colspan="2"></td>
-<td class="a6-dots-cell">${z}</td>
-<td class="a6-cc" colspan="3"></td>
-<td class="a6-dots-cell">${z}</td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-<td class="a6-dots-cell">${z}</td>
-</tr>
-<tr class="a6-ready-blk a6-ready-muc">
-<td class="a6lbl a6-cc" colspan="2">${chk} Mực OK &nbsp; Ký:</td>
-<td class="a6-cc"></td>
-<td class="a6lbl" colspan="3">${chk} Mẫu duyệt OK &nbsp; Ký:</td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-</tr>
-<tr class="a6-ready-blk a6-ready-dots">
-<td class="a6-cc" colspan="2"></td>
-<td class="a6-dots-cell">${z}</td>
-<td class="a6-cc" colspan="3"></td>
-<td class="a6-dots-cell">${z}</td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-<td class="a6-cc"></td>
-</tr>
-<tr class="a6-ready-blk a6-ready-stoprow">
-<td></td><td></td><td></td><td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl a6-cc">QA ký</td>
-<td></td><td></td><td></td>
-<td class="a6-open-gio a6-col-11"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-ready-blk a6-ready-dots a6-ready-end">
-<td></td><td></td><td></td><td></td><td></td><td></td>
-<td class="a6-dots-cell">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-col-11">${z}</td>
-</tr>
-<tr class="a6-rel1-row1">
-<td class="a6st" colspan="2" rowspan="2"><span class="a6-st-cb-line">${chk} RELEASE 1</span></td>
-<td class="a6lbl a6-rel1-lbl-r">KH ký</td>
-<td></td><td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td><td></td><td></td>
-<td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-rel1-row2">
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td><td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-col-11">${z}</td>
-</tr>
-<tr class="a6-trun-row1">
-<td class="a6st" colspan="2" rowspan="3"><span class="a6-st-cb-line">${chk} TEST RUN</span></td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td><td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td><td></td><td></td>
-<td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-trun-row2">
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td><td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-col-11">${z}</td>
-</tr>
-<tr class="a6-trun-row3 a6kq">
-<td class="a6lbl">Kết quả:</td>
-<td class="a6-cc">${chk} OK</td>
-<td class="a6-cc">${chk} FAIL</td>
-<td></td><td></td><td></td><td></td><td></td><td></td>
-</tr>
-<tr class="a6-rel2-row1">
-<td class="a6st" rowspan="2"><span class="a6-st-cb-line">${chk} RELEASE 2</span></td>
-<td class="a6lbl a6-rel1-lbl-r">KH ký</td>
-<td></td>
-<td class="a6lbl a6-rel1-lbl-r">Tổ ký</td>
-<td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td><td></td><td></td>
-<td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-rel2-row2">
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-col-11">${z}</td>
-</tr>
-<tr class="a6-sx-row1">
-<td class="a6st" colspan="2" rowspan="2"><span class="a6-st-cb-line">${chk} SX (đang chạy)</span></td>
-<td class="a6lbl a6-rel1-lbl-r" colspan="2">Tổ trưởng ký</td>
-<td></td>
-<td class="a6sp">STOP</td>
-<td class="a6lbl a6-rel1-lbl-r">Tổ ký</td>
-<td></td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td></td>
-<td class="a6-col-11 a6-open-gio"><span style="font-size:7.5pt">Giờ STOP:</span></td>
-</tr>
-<tr class="a6-sx-row2">
-<td colspan="2"></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td><td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td class="a6-dots-cell a6-col-11">${z}</td>
-</tr>
+<table class="a6-master">
+<tr><td rowspan="4" colspan="2" class="a6-m-qr">${qrBlock}</td><td colspan="6" class="a6-m-title">THLA – A6 CARD (MÃ – PHẦN) – BẢN V3</td></tr>
+<tr><td colspan="6" class="a6-m-sub">(Chuẩn hóa checkpoint FINISH – Khóa Chất lượng + Số lượng + Trạng thái)</td></tr>
+<tr><td colspan="2" class="a6-m-field">${line2("PO:", values.PO)}</td><td colspan="2" class="a6-m-field">${line2("Mã hàng:", values.MA)}</td><td colspan="2" class="a6-m-field">${line2("Khách hàng:", values.KH)}</td></tr>
+<tr><td colspan="2" class="a6-m-field">${line2("Màu vải:", values.MAUVAI)}</td><td colspan="2" class="a6-m-field">${line2("Kích vải:", values.KICHVAI)}</td><td colspan="2" class="a6-m-field">${line2("Kích phim:", values.KICHPHIM)}</td></tr>
+<tr><td colspan="2" class="a6-m-field">${line2("Số lượng:", formatSoLuongDisplay(values.SL))}</td><td colspan="2" class="a6-m-field">${line2("Ngày giao:", formatNgayGiao(values.NG))}</td><td colspan="1" class="a6-m-field a6-m-chuyen-cell"><span class="a6-hdr-line"><span class="a6-hdr-lbl">Chuyền:</span>${chuyenHtml}</span></td><td colspan="3" class="a6-m-field a6-m-sx-wrap"><span class="a6-hdr-line a6-hdr-sx-range"><span class="a6-hdr-lbl">Thời gian dự kiến SX: Từ</span>${sxTuHtml}<span class="a6-hdr-lbl"> đến </span>${sxDenHtml}</span></td></tr>
+<tr class="a6-m-tr-open a6-m-tr-compact"><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} OPEN</span></td>${signDotsBelow(2, "Sale ký")}${signDotsBelow(2, "Tài chính ký")}${stopQa(2)}</tr>
+<tr class="a6-m-tr-ready-a"><td rowspan="2" colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} READY</span></td>${signDotsBelow(2, "Vải ký")}${signDotsBelow(2, "Khuôn ký")}${signDotsBelow(2, "Mực ký")}</tr>
+<tr class="a6-m-tr-ready-b a6-m-tr-compact">${signDotsBelow(2, "Mẫu duyệt ký")}${signDotsBelow(2, "QA ký")}${stopQa(2)}</tr>
+<tr class="a6-m-tr-compact"><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} RELEASE 1</span></td>${signDotsBelow(3, "Kế hoạch ký")}${stopQa(3)}</tr>
+<tr class="a6-m-tr-compact"><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} TEST RUN</span></td>${signDotsBelow(2, "CNSP ký")}${signDotsBelow(2, "QA ký")}${stopQa(2)}</tr>
+<tr class="a6-m-tr-compact"><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} RELEASE 2</span></td>${signDotsBelow(3, "Kế hoạch ký")}${stopQa(3)}</tr>
+<tr class="a6-m-tr-compact"><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} SX</span></td>${signDotsBelow(3, "Tổ trưởng ký")}${stopQa(3)}</tr>
+<tr><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} FINISH</span></td>${signDotsBelow(2, "QA ký")}${signDotsBelow(2, "Tổ trưởng ký")}${signDotsBelow(2, "Quản đốc ký")}</tr>
+<tr><td colspan="2" class="a6-m-st"><span class="a6-st-cb-line">${chk} DONE</span></td>${signDotsBelow(2, "Kho ký")}${signDotsBelow(2, "Sale ký")}${signDotsBelow(2, "Kế toán ký")}</tr>
+<tr class="a6-m-rules"><td colspan="4">NGUYÊN TẮC</td><td colspan="4"><strong>3. Không đạt chất lượng → không FINISH</strong></td></tr>
+<tr class="a6-m-rules"><td colspan="4"><strong>1. Không READY → không RELEASE</strong></td><td colspan="4"><strong>4. Không đủ số lượng → không FINISH</strong></td></tr>
+<tr class="a6-m-rules"><td colspan="4"><strong>2. TEST RUN FAIL → không chạy</strong></td><td colspan="4"><strong>5. Ai ký → người đó chịu trách nhiệm</strong></td></tr>
 </table>
-
-<p style="text-align:left;font-weight:700;margin:7px 0 6px;font-size:10.5pt">— FINISH —</p>
-<table class="fin">
-<tr class="a6-fin-r1">
-<td class="a6st" rowspan="2" style="width:calc(8% + 6px);box-sizing:border-box"><span class="a6-st-cb-line">${chk} FINISH</span></td>
-<td class="fin-qa" colspan="2" rowspan="2"><span class="fin-line">QA ký</span><br/><span class="fin-line">(Đạt chất lượng)</span></td>
-<td></td>
-<td class="fin-tt" colspan="2" rowspan="2"><span class="fin-line">Tổ trưởng ký</span><br/><span class="fin-line">(Đủ số lượng Mã – Phần):</span></td>
-<td></td>
-<td colspan="2" class="a6-fin-quan" rowspan="2">Quản đốc xác nhận<br/>(Đã hoàn tất toàn bộ):</td>
-<td></td><td></td>
-</tr>
-<tr class="a6-fin-r2">
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-</tr>
-<tr class="w"><td colspan="11">=&gt; Thiếu 1 trong 3: KHÔNG ĐƯỢC FINISH</td></tr>
-<tr class="a6-done-r1">
-<td class="a6st" rowspan="2" style="width:calc(8% + 6px);box-sizing:border-box;font-weight:700"><span class="a6-st-cb-line">${chk} DONE</span></td>
-<td class="a6lbl a6-rel1-lbl-r">Kho ký</td>
-<td colspan="2"></td>
-<td class="a6lbl a6-rel1-lbl-r">QA ký</td>
-<td colspan="2"></td>
-<td class="a6lbl a6-rel1-lbl-r">KT ký</td>
-<td colspan="2"></td>
-<td></td>
-</tr>
-<tr class="a6-done-r2">
-<td></td>
-<td colspan="2" class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td colspan="2" class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-<td colspan="2" class="a6-dots-cell a6-rel1-dot-l">${z}</td>
-<td></td>
-</tr>
-</table>
-
-<p style="font-weight:700;margin:8px 0 8px;font-size:10.5pt">— NGUYÊN TẮC —</p>
-<p style="margin:0 0 4px;font-size:10.5pt;font-weight:bold;line-height:1.42"><strong>1. Không READY → không RELEASE</strong></p>
-<p style="margin:0 0 4px;font-size:10.5pt;font-weight:bold;line-height:1.42"><strong>2. TEST RUN FAIL → không chạy</strong></p>
-<p style="margin:0 0 4px;font-size:10.5pt;font-weight:bold;line-height:1.42"><strong>3. Không đạt chất lượng → không FINISH</strong></p>
-<p style="margin:0 0 4px;font-size:10.5pt;font-weight:bold;line-height:1.42"><strong>4. Không đủ số lượng → không FINISH</strong></p>
-<p style="margin:0;font-size:10.5pt;font-weight:bold;line-height:1.42"><strong>5. Ai ký → người đó chịu trách nhiệm</strong></p>
 </body></html>`;
 
   const blob = new Blob([htmlRaw], { type: "application/msword;charset=utf-8" });
@@ -1074,7 +1148,7 @@ function A6Card() {
 
   return (
     <div className={`${PRINT_ROOT_CLASS} min-h-screen bg-neutral-100 p-3`}>
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-[210mm]">
         <div className="print-hidden mb-2 flex justify-end gap-2">
           <button
             type="button"
@@ -1085,7 +1159,7 @@ function A6Card() {
             }}
             className="rounded border border-neutral-400 bg-white px-3 py-1.5 text-sm shadow-sm hover:bg-neutral-50"
           >
-            In A4
+            In A5 ngang
           </button>
           <button
             type="button"
@@ -1101,46 +1175,40 @@ function A6Card() {
             <span className="a6-print-id" />
             <span className="a6-print-time" />
           </div>
-          <h1 className="a6-title">THLA – A6 CARD (MÃ – PHẦN) – BẢN V3</h1>
-          <p className="a6-sub">
-            (Chuẩn hóa checkpoint FINISH – Khóa Chất lượng + Số lượng + Trạng thái)
-          </p>
-
-          <table className="a6-hdr">
-            <colgroup>
-              <col className="a6-hdr-col-qr" />
-              <col className="a6-hdr-col-data" />
-              <col className="a6-hdr-col-data" />
-            </colgroup>
+          <table className="a6-master" lang="vi">
             <tbody>
               <tr>
-                <td className="a6-hdr-qr" rowSpan={5}>
+                <td rowSpan={4} colSpan={2} className="a6-m-qr">
                   {data.QR ? (
-                    <img className="a6-hdr-qr-img" src={data.QR} alt="Mã QR" />
+                    <img className="a6-m-qr-img" src={data.QR} alt="" />
                   ) : (
-                    <span className="a6-hdr-qr-placeholder">
-                      <span className="a6-dots">&nbsp;</span>
-                    </span>
+                    <span className="a6-dots">&nbsp;</span>
                   )}
                 </td>
-                <HdrCell label="PO:" value={data.PO} />
-                <HdrCell label="Mã hàng:" value={data.MA} />
+                <td colSpan={6} className="a6-m-title">
+                  THLA – A6 CARD (MÃ – PHẦN) – BẢN V3
+                </td>
               </tr>
               <tr>
-                <HdrCell label="Màu vải:" value={data.MAUVAI} />
-                <HdrCell label="Kích vải:" value={data.KICHVAI} />
+                <td colSpan={6} className="a6-m-sub">
+                  (Chuẩn hóa checkpoint FINISH – Khóa Chất lượng + Số lượng + Trạng thái)
+                </td>
               </tr>
               <tr>
-                <HdrCell label="Kích phim:" value={data.KICHPHIM} />
-                <HdrCell label="Số lượng:" value={data.SL} />
+                <MasterLineTd colSpan={2} label="PO:" value={data.PO} />
+                <MasterLineTd colSpan={2} label="Mã hàng:" value={data.MA} />
+                <MasterLineTd colSpan={2} label="Khách hàng:" value={data.KH} />
               </tr>
               <tr>
-                <HdrCell label="Khách hàng:" value={data.KH} />
-                <HdrCell label="Ngày giao:" value={data.NG} />
+                <MasterLineTd colSpan={2} label="Màu vải:" value={data.MAUVAI} />
+                <MasterLineTd colSpan={2} label="Kích vải:" value={data.KICHVAI} />
+                <MasterLineTd colSpan={2} label="Kích phim:" value={data.KICHPHIM} />
               </tr>
               <tr>
-                <HdrCell label="Chuyền:" value={data.CHUYEN} tdClassName="a6-hdr-chuyen-cell" />
-                <td className="a6-hdr-sx-td">
+                <MasterLineTd colSpan={2} label="Số lượng:" value={data.SL} />
+                <MasterLineTd colSpan={2} label="Ngày giao:" value={data.NG} />
+                <MasterLineTd colSpan={1} className="a6-m-chuyen-cell" label="Chuyền:" value={data.CHUYEN} />
+                <td colSpan={3} className="a6-m-field a6-m-sx-wrap">
                   <span className="a6-hdr-line a6-hdr-sx-range">
                     <span className="a6-hdr-lbl">Thời gian dự kiến SX: Từ</span>
                     {data.SXTU ? (
@@ -1157,364 +1225,112 @@ function A6Card() {
                   </span>
                 </td>
               </tr>
-            </tbody>
-          </table>
-
-          <p className="a6-cp-title">— CHECKPOINT —</p>
-
-          <table className="a6-grid">
-            <tbody>
-              <tr className="a6-open">
-                <td className="a6-st a6-open-stage" rowSpan={2}>
+              <tr className="a6-m-tr-open a6-m-tr-compact">
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> OPEN
                   </span>
                 </td>
-                <td className="a6-lbl">Sale ký</td>
-                <td />
-                <td className="a6-lbl">KT ký</td>
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl">KT ký</td>
-                <td />
-                <td className="a6-lbl">PGĐ ký</td>
-                <td />
-                <td className="a6-open-gio a6-col-11">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
+                <MasterSignTd label="Sale ký" dotsBelow />
+                <MasterSignTd label="Tài chính ký" dotsBelow />
+                <MasterStopQaTd />
               </tr>
-              <tr className="a6-open a6-open-dots">
-                <td />
-                <td>
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td />
-                <td>
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td />
-                <td />
-                <td>
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td />
-                <td>
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td className="a6-col-11">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-              </tr>
-              <tr className="a6-ready-blk a6-ready-vai">
-                <td className="a6-st a6-ready-stage" rowSpan={6}>
+              <tr className="a6-m-tr-ready-a">
+                <td rowSpan={2} colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> READY
                   </span>
                 </td>
-                <td className="a6-lbl a6-cc" colSpan={2}>
-                  <Cb /> Vải OK &nbsp; Ký:
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-lbl a6-cc" colSpan={3}>
-                  <Cb /> Khuôn OK &nbsp; Ký:
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-                <td className="a6-lbl a6-cc">QA ký</td>
-                <td className="a6-cc" />
+                <MasterSignTd label="Vải ký" dotsBelow />
+                <MasterSignTd label="Khuôn ký" dotsBelow />
+                <MasterSignTd label="Mực ký" dotsBelow />
               </tr>
-              <tr className="a6-ready-blk a6-ready-dots">
-                <td className="a6-cc" colSpan={2} />
-                <td className="a6-dots-cell">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td className="a6-cc" colSpan={3} />
-                <td className="a6-dots-cell">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-                <td className="a6-dots-cell">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
+              <tr className="a6-m-tr-ready-b a6-m-tr-compact">
+                <MasterSignTd colSpan={2} label="Mẫu duyệt ký" dotsBelow />
+                <MasterSignTd colSpan={2} label="QA ký" dotsBelow />
+                <MasterStopQaTd colSpan={2} />
               </tr>
-              <tr className="a6-ready-blk a6-ready-muc">
-                <td className="a6-lbl a6-cc" colSpan={2}>
-                  <Cb /> Mực OK &nbsp; Ký:
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-lbl" colSpan={3}>
-                  <Cb /> Mẫu duyệt OK &nbsp; Ký:
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-              </tr>
-              <tr className="a6-ready-blk a6-ready-dots">
-                <td className="a6-cc" colSpan={2} />
-                <td className="a6-dots-cell">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td className="a6-cc" colSpan={3} />
-                <td className="a6-dots-cell">
-                  <span className="a6-dots">&nbsp;</span>
-                </td>
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-                <td className="a6-cc" />
-              </tr>
-              <tr className="a6-ready-blk a6-ready-stoprow">
-                <td />
-                <td />
-                <td />
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl a6-cc">QA ký</td>
-                <td />
-                <td />
-                <td />
-                <td className="a6-open-gio a6-col-11">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
-              </tr>
-              <tr className="a6-ready-blk a6-ready-dots a6-ready-end">
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <DotsCell />
-                <td />
-                <td />
-                <DotsCell className="a6-col-11" />
-              </tr>
-              <tr className="a6-rel1-row1">
-                <td className="a6-st" colSpan={2} rowSpan={2}>
+              <tr className="a6-m-tr-compact">
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> RELEASE 1
                   </span>
                 </td>
-                <td className="a6-lbl a6-rel1-lbl-r">KH ký</td>
-                <td />
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td />
-                <td />
-                <td />
-                <td className="a6-col-11 a6-open-gio">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
+                <MasterSignTd colSpan={3} label="Kế hoạch ký" dotsBelow />
+                <MasterStopQaTd colSpan={3} />
               </tr>
-              <tr className="a6-rel1-row2">
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <DotsCell className="a6-col-11" />
-              </tr>
-              <tr className="a6-trun-row1">
-                <td className="a6-st" colSpan={2} rowSpan={3}>
+              <tr className="a6-m-tr-compact">
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> TEST RUN
                   </span>
                 </td>
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td />
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td />
-                <td />
-                <td />
-                <td className="a6-col-11 a6-open-gio">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
+                <MasterSignTd label="CNSP ký" dotsBelow />
+                <MasterSignTd label="QA ký" dotsBelow />
+                <MasterStopQaTd />
               </tr>
-              <tr className="a6-trun-row2">
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <DotsCell className="a6-col-11" />
-              </tr>
-              <tr className="a6-trun-row3 a6-kq">
-                <td className="a6-lbl">Kết quả:</td>
-                <td className="a6-cc">
-                  <Cb /> OK
-                </td>
-                <td className="a6-cc">
-                  <Cb /> FAIL
-                </td>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-              </tr>
-              <tr className="a6-rel2-row1">
-                <td className="a6-st" rowSpan={2}>
+              <tr className="a6-m-tr-compact">
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> RELEASE 2
                   </span>
                 </td>
-                <td className="a6-lbl a6-rel1-lbl-r">KH ký</td>
-                <td />
-                <td className="a6-lbl a6-rel1-lbl-r">Tổ ký</td>
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td />
-                <td />
-                <td />
-                <td className="a6-col-11 a6-open-gio">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
+                <MasterSignTd colSpan={3} label="Kế hoạch ký" dotsBelow />
+                <MasterStopQaTd colSpan={3} />
               </tr>
-              <tr className="a6-rel2-row2">
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <DotsCell className="a6-col-11" />
-              </tr>
-              <tr className="a6-sx-row1">
-                <td className="a6-st" colSpan={2} rowSpan={2}>
+              <tr className="a6-m-tr-compact">
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
-                    <Cb /> SX (đang chạy)
+                    <Cb /> SX
                   </span>
                 </td>
-                <td className="a6-lbl a6-rel1-lbl-r" colSpan={2}>
-                  Tổ trưởng ký
-                </td>
-                <td />
-                <td className="a6-stop">STOP</td>
-                <td className="a6-lbl a6-rel1-lbl-r">Tổ ký</td>
-                <td />
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td />
-                <td className="a6-col-11 a6-open-gio">
-                  <span className="a6-gio">Giờ STOP:</span>
-                </td>
+                <MasterSignTd colSpan={3} label="Tổ trưởng ký" dotsBelow />
+                <MasterStopQaTd colSpan={3} />
               </tr>
-              <tr className="a6-sx-row2">
-                <td colSpan={2} />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-                <DotsCell className="a6-rel1-dot-l" />
-                <DotsCell className="a6-col-11" />
-              </tr>
-            </tbody>
-          </table>
-
-          <p className="a6-cp-title">— FINISH —</p>
-
-          <table className="a6-finish-all">
-            <tbody>
-              <tr className="a6-fin-r1">
-                <td className="a6-fin-h" rowSpan={2}>
+              <tr>
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> FINISH
                   </span>
                 </td>
-                <td className="a6-fin-qa" colSpan={2} rowSpan={2}>
-                  <span className="a6-fin-lbl-line">QA ký</span>
-                  <br />
-                  <span className="a6-fin-lbl-line">(Đạt chất lượng)</span>
-                </td>
-                <td />
-                <td className="a6-fin-to-truong" colSpan={2} rowSpan={2}>
-                  <span className="a6-fin-lbl-line">Tổ trưởng ký</span>
-                  <br />
-                  <span className="a6-fin-lbl-line">(Đủ số lượng Mã – Phần):</span>
-                </td>
-                <td />
-                <td className="a6-fin-quan" colSpan={2} rowSpan={2}>
-                  Quản đốc xác nhận
-                  <br />
-                  (Đã hoàn tất toàn bộ):
-                </td>
-                <td />
-                <td />
+                <MasterSignTd label="QA ký" dotsBelow />
+                <MasterSignTd label="Tổ trưởng ký" dotsBelow />
+                <MasterSignTd label="Quản đốc ký" dotsBelow />
               </tr>
-              <tr className="a6-fin-r2">
-                <DotsCell className="a6-rel1-dot-l" />
-                <DotsCell className="a6-rel1-dot-l" />
-                <DotsCell className="a6-rel1-dot-l" />
-                <td />
-              </tr>
-              <tr className="a6-warn-row">
-                <td colSpan={11}>=&gt; Thiếu 1 trong 3: KHÔNG ĐƯỢC FINISH</td>
-              </tr>
-              <tr className="a6-done-r1">
-                <td className="a6-fin-h" rowSpan={2}>
+              <tr>
+                <td colSpan={2} className="a6-m-st">
                   <span className="a6-st-cb-line">
                     <Cb /> DONE
                   </span>
                 </td>
-                <td className="a6-lbl a6-rel1-lbl-r">Kho ký</td>
-                <td colSpan={2} />
-                <td className="a6-lbl a6-rel1-lbl-r">QA ký</td>
-                <td colSpan={2} />
-                <td className="a6-lbl a6-rel1-lbl-r">KT ký</td>
-                <td colSpan={2} />
-                <td />
+                <MasterSignTd label="Kho ký" dotsBelow />
+                <MasterSignTd label="Sale ký" dotsBelow />
+                <MasterSignTd label="Kế toán ký" dotsBelow />
               </tr>
-              <tr className="a6-done-r2">
-                <td />
-                <td colSpan={2} className="a6-dots-cell a6-rel1-dot-l">
-                  <span className="a6-dots">&nbsp;</span>
+              <tr className="a6-m-rules">
+                <td colSpan={4}>NGUYÊN TẮC</td>
+                <td colSpan={4}>
+                  <strong>3. Không đạt chất lượng → không FINISH</strong>
                 </td>
-                <td />
-                <td colSpan={2} className="a6-dots-cell a6-rel1-dot-l">
-                  <span className="a6-dots">&nbsp;</span>
+              </tr>
+              <tr className="a6-m-rules">
+                <td colSpan={4}>
+                  <strong>1. Không READY → không RELEASE</strong>
                 </td>
-                <td />
-                <td colSpan={2} className="a6-dots-cell a6-rel1-dot-l">
-                  <span className="a6-dots">&nbsp;</span>
+                <td colSpan={4}>
+                  <strong>4. Không đủ số lượng → không FINISH</strong>
                 </td>
-                <td />
+              </tr>
+              <tr className="a6-m-rules">
+                <td colSpan={4}>
+                  <strong>2. TEST RUN FAIL → không chạy</strong>
+                </td>
+                <td colSpan={4}>
+                  <strong>5. Ai ký → người đó chịu trách nhiệm</strong>
+                </td>
               </tr>
             </tbody>
           </table>
-
-          <p className="a6-rules-title">— NGUYÊN TẮC —</p>
-          <div className="a6-rules">
-            <p>
-              <strong>1. Không READY → không RELEASE</strong>
-            </p>
-            <p>
-              <strong>2. TEST RUN FAIL → không chạy</strong>
-            </p>
-            <p>
-              <strong>3. Không đạt chất lượng → không FINISH</strong>
-            </p>
-            <p>
-              <strong>4. Không đủ số lượng → không FINISH</strong>
-            </p>
-            <p>
-              <strong>5. Ai ký → người đó chịu trách nhiệm</strong>
-            </p>
-          </div>
         </div>
       </div>
     </div>

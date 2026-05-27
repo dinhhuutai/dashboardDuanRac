@@ -930,14 +930,15 @@ export default function ReportByShift() {
       const list = bucket.rows;
       if (list.length) merges.push({ s: { r: rowPtr, c: 0 }, e: { r: rowPtr + list.length - 1, c: 0 } });
       list.forEach((row, i) => {
-        const v = row.val.map((e) => (e === 0 ? '-' : round1(e).toFixed(1)));
+        // Xuất kiểu number để Excel SUM dùng được; 0 để trống
+        const v = row.val.map((e) => (e === 0 ? '' : round1(e)));
         wsData.push([i === 0 ? (bucket.bucketName === 'Không Tổ' ? '' : bucket.bucketName) : '', row.name, ...v]);
         rowPtr++;
       });
     });
 
     if (!selectedBucket) {
-      const v = grandCollapsed.map((e) => (e === 0 ? '-' : round1(e).toFixed(1)));
+      const v = grandCollapsed.map((e) => (e === 0 ? '' : round1(e)));
       wsData.push(['Tổng cộng', '', ...v]);
     }
 

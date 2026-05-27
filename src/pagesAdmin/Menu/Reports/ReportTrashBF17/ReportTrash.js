@@ -412,7 +412,8 @@ const ReportTrash = () => {
       d.items.map((item, idx) => {
         const key = `${d.group}-${item}`;
         const data = report[key];
-        const values = data?.map((e) => (e === 0 ? '-' : round1(e).toFixed(1)));
+        // Xuất kiểu number để Excel SUM dùng được; 0 để trống
+        const values = data?.map((e) => (e === 0 ? '' : round1(e)));
         return [idx === 0 ? (d.group === 'T4A' && selectedDepartment !== '' ? 'T4' : d.group === 'Bổ sung' ? 'T1' : d.group) : '', item, ...values];
       }),
     );

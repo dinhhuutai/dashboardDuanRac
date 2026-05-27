@@ -64,3 +64,13 @@ export async function apiUpdateCapMoneyTransactionAccount(transactionId, payload
   return res.data;
 }
 
+export async function apiUpdateCapMoneyTransactionAmount(transactionId, payload) {
+  const res = await http.put(`${root}/transactions/${transactionId}/amount`, payload);
+  return res.data;
+}
+
+export async function apiUpdateCapMoneyTransactionNote(transactionId, payload) {
+  const res = await http.put(`${root}/transactions/${transactionId}/note`, payload);
+  return res.data;
+}
+
