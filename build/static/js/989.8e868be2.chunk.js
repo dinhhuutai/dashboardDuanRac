@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[989],{70989:(e,t,r)=>{r.r(t),r.d(t,{default:()=>a});var s=r(44414);const a=function(){return(0,s.jsx)("div",{children:"Report Ink Weigh"})}}}]);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "~/config";
-import * as FaIcons from "react-icons/fa";
+import FaIcons from "~/components/IconSets/fa"; // cả bộ — ô chọn icon, xem IconSets/README.md
 import { Combobox } from "@headlessui/react";
 import http from '~/api/http';
 

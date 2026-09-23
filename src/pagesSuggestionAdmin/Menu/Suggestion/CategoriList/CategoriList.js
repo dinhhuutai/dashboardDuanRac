@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "~/config";
-import * as FaIcons from "react-icons/fa";
+import FaIcons from "~/components/IconSets/fa"; // cả bộ — tra icon theo tên, xem IconSets/README.md
 import {
   FaSpinner,
   FaTrashAlt,

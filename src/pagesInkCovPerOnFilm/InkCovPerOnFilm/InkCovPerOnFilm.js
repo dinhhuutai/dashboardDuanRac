@@ -743,10 +743,15 @@ function DesktopInkCovPerOnFilm() {
                 type="button"
                 disabled={!imgUrl}
                 onClick={() => {
-                  if (!imgUrl) return;
+                  if (!imgUrl || !file) return;
+
+                  // lấy tên file PDF bỏ .pdf
+                  const fileNameWithoutExt =
+                    file.name.replace(/\.pdf$/i, "");
+
                   const a = document.createElement("a");
                   a.href = imgUrl;
-                  a.download = "ink_result.png";
+                  a.download = `${fileNameWithoutExt}.png`;
                   a.click();
                 }}
                 className={`px-4 py-2 rounded-2xl font-extrabold border shadow-sm transition

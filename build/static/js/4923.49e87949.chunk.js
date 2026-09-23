@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[4923],{4923:(t,e,s)=>{s.r(e),s.d(e,{default:()=>r});var a=s(44414);const r=function(){return(0,a.jsx)("div",{children:"ReportByStatus"})}}}]);

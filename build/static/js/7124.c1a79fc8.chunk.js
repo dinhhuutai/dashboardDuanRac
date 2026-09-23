@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[7124],{87124:(e,t,r)=>{r.r(t),r.d(t,{default:()=>a});var s=r(44414);const a=function(){return(0,s.jsx)("div",{children:"ReportByEmployee"})}}}]);

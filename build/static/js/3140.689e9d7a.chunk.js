@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[3140],{23140:(a,e,s)=>{s.r(e),s.d(e,{default:()=>c});var t=s(44414);const c=function(){return(0,t.jsx)("div",{children:"Dashboard C\xf4ng Vi\u1ec7c"})}}}]);

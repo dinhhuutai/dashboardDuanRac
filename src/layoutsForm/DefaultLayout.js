@@ -1,76 +1,30 @@
-import Header from "~/layouts/components/Header";
-import Footer from "~/layouts/components/Footer";
-import { FaHistory, FaWpforms } from "react-icons/fa";
-import { NavLink, useLocation } from "react-router-dom";
+// Layout phía nhân viên — module Biểu mẫu nội bộ
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { ArrowLeft, ClipboardList } from "lucide-react";
 import config from "~/config";
-
-const barCard =
-  "rounded-3xl bg-white/70 backdrop-blur-xl border border-white/70 " +
-  "shadow-[0_18px_40px_rgba(15,23,42,0.12)]";
-
-function TabItem({ to, label, icon }) {
-  return (
-    <NavLink to={to} end>
-      {({ isActive }) => (
-        <div
-          className={[
-            "relative flex flex-col items-center justify-center transition",
-            isActive ? "text-violet-700" : "text-slate-600 hover:text-slate-800",
-          ].join(" ")}
-        >
-          <div className="text-xl">{icon}</div>
-          <div className="mt-1 text-[11px] font-semibold">{label}</div>
-          <span
-            className={[
-              "absolute -bottom-2 h-[5px] w-[5px] rounded-full transition",
-              isActive ? "bg-violet-500" : "bg-transparent",
-            ].join(" ")}
-          />
-        </div>
-      )}
-    </NavLink>
-  );
-}
-
-function MobileFormTabBar() {
-  const location = useLocation();
-  const isHistoryPage =
-    location.pathname === config.routes.formHistory ||
-    location.pathname.startsWith(`${config.routes.formHistory}/`);
-  const isFillPage =
-    location.pathname.startsWith(`${config.routes.form}/`) &&
-    !isHistoryPage;
-  if (isFillPage) return null;
-
-  return (
-    <div className="fixed bottom-3 left-0 right-0 z-[999] md:hidden">
-      <div className="px-3">
-        <div className={`${barCard} relative h-[62px]`}>
-          <div className="grid grid-cols-2 h-full items-center px-2">
-            <div className="flex justify-center">
-              <TabItem to={config.routes.form} label="Biểu mẫu" icon={<FaWpforms />} />
-            </div>
-            <div className="flex justify-center">
-              <TabItem to={config.routes.formHistory} label="Lịch sử" icon={<FaHistory />} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { userSelector } from "~/redux/selectors";
+import { ConfirmHost, Toaster } from "~/pagesForm/shared/ui";
 
 function DefaultLayout({ children }) {
+  const user = useSelector(userSelector)?.login?.currentUser;
   return (
-    <div>
-      <div className="hidden md:block h-[70px] fixed z-[999] top-0 left-0 right-0">
-        <Header />
-      </div>
-      <div className="md:mt-[70px]">{children}</div>
-      <div className="hidden md:block">
-        <Footer />
-      </div>
-      <MobileFormTabBar />
+    <div className="min-h-screen bg-slate-50">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
+          <Link to={config.routes.homeMain} className="-ml-2 rounded-md p-2 text-slate-600 hover:bg-slate-100" title="Về trang chủ">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <Link to={config.routes.form} className="flex min-w-0 items-center gap-2 font-semibold text-slate-800">
+            <ClipboardList className="h-5 w-5 shrink-0 text-blue-700" />
+            <span className="truncate">Biểu mẫu nội bộ</span>
+          </Link>
+          {user?.fullName && <span className="ml-auto hidden truncate text-sm text-slate-500 sm:block">{user.fullName}</span>}
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-4 pb-16 pt-5">{children}</main>
+      <Toaster />
+      <ConfirmHost />
     </div>
   );
 }

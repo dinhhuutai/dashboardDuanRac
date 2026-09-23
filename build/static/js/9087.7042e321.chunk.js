@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[9087],{59087:(e,t,s)=>{s.r(t),s.d(t,{default:()=>r});var a=s(44414);const r=function(){return(0,a.jsx)("div",{children:"UserUpdate"})}}}]);

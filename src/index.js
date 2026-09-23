@@ -6,9 +6,13 @@ import App from './App';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import store, { persistor } from './redux/store';
+import { injectStore } from '~/api/http';
 
 import AuthInitializer from "~/components/AuthInitializer";
 import PersistLoading from "~/components/PersistLoading";
+
+// Gắn store cho axios instance (đọc token, dispatch logout/refresh) — xem api/http.js
+injectStore(store);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

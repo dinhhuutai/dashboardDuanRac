@@ -1,5 +1,5 @@
 // src/pages/Home/HomeMain.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   FiHome,
   FiUsers,
@@ -9,8 +9,9 @@ import {
   FiLogOut,
   FiSearch,
   FiX,
+  FiBarChart2,
+  FiShield,
 } from "react-icons/fi";
-import * as FiIcons from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -25,10 +26,6 @@ import MODULEID from "~/contants/modules";
 import FirstLoginChangePasswordModal from "./FirstLoginChangePasswordModal";
 import PasswordChangeSuccessModal from "./PasswordChangeSuccessModal";
 
-import Module from "../Module";
-import UserModuleAccess from "../UserModuleAccess";
-import UsageDashboard from "../UsageDashboard";
-
 import MidAutumnLanternBackground from "~/components/UiBackground/BgTrungThu";
 import ChristmasSceneBackground from "~/components/UiBackground/BgNoel";
 import TetSpringBackground from "~/components/UiBackground/BgTet";
@@ -38,13 +35,20 @@ import longdenImg from "../../assets/imgs/long_den.png";
 
 import ModuleCard from "./ModuleCard";
 import CreateAccountCard from "./CreateAccountCard";
-import UsersAdminPanel from "./UsersAdminPanel";
 import ProfileSettingsCard from "./ProfileSettingsCard";
+import lazyPage from "~/utils/lazyPage";
 
 // import ThemeToggle from "./components/ThemeToggle";
 
 import LuckyGiftModal from "./LuckyGiftModal";
 import FirstLoginGiftModal from "./FirstLoginGiftModal";
+
+// Các màn hình chỉ admin dùng — tải khi mở, không nhồi vào trang chủ của mọi người
+// (Module kéo theo toàn bộ bộ icon react-icons/fc cho ô chọn icon)
+const Module = lazyPage(() => import("../Module"));
+const UserModuleAccess = lazyPage(() => import("../UserModuleAccess"));
+const UsageDashboard = lazyPage(() => import("../UsageDashboard"));
+const UsersAdminPanel = lazyPage(() => import("./UsersAdminPanel"));
 
 function HomeMain() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -285,7 +289,7 @@ function HomeMain() {
     } else if (m.moduleId === MODULEID.TINHLUONG && role === "user") {
       rou = config.routes.calculateSalaryViewPayslip;
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === "admin") {
-      rou = config.routes.adminFormCreate;
+      rou = config.routes.adminFormList;
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === "user") {
       rou = config.routes.form;
     } else if (m.moduleId === MODULEID.CONGVIEC && role === "user") {
@@ -566,7 +570,7 @@ function HomeMain() {
                     title="Dashboard"
                     onClick={() => setView("dashboard")}
                   >
-                    <FiIcons.FiBarChart2 />
+                    <FiBarChart2 />
                   </NavIcon>
                 )}
 
@@ -605,7 +609,7 @@ function HomeMain() {
                     title="Phân quyền"
                     onClick={() => setView("access")}
                   >
-                    <FiIcons.FiShield />
+                    <FiShield />
                   </NavIcon>
                 )}
               </nav>
@@ -640,13 +644,21 @@ function HomeMain() {
                   </div>
                 ))}
 
-              {view === "dashboard" && <UsageDashboard />}
+              <Suspense
+                fallback={
+                  <div className="py-16 text-center text-sm text-slate-500">
+                    Đang tải…
+                  </div>
+                }
+              >
+                {view === "dashboard" && <UsageDashboard />}
 
-              {view === "modules" && <Module />}
+                {view === "modules" && <Module />}
 
-              {view === "access" && <UserModuleAccess />}
+                {view === "access" && <UserModuleAccess />}
 
-              {view === "users" && <UsersAdminPanel />}
+                {view === "users" && <UsersAdminPanel />}
+              </Suspense>
 
               {view === "create" && (
                 <CreateAccountCard onCreated={() => setView("users")} />

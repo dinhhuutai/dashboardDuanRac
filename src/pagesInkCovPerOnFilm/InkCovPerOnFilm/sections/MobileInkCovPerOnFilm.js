@@ -116,10 +116,15 @@ export default function MobileInkCovPerOnFilm({ navigate }) {
   }
 
   function downloadImage() {
-    if (!imgUrl) return;
+    if (!imgUrl || !file) return;
+
+    // bỏ đuôi .pdf hoặc .PDF
+    const fileNameWithoutExt =
+      file.name.replace(/\.pdf$/i, "");
+
     const a = document.createElement("a");
     a.href = imgUrl;
-    a.download = "ink_result.png";
+    a.download = `${fileNameWithoutExt}.png`;
     a.click();
   }
 

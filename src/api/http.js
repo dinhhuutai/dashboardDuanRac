@@ -1,9 +1,16 @@
 // src/api/http.js
 import axios from "axios";
 import { BASE_URL } from "~/config";
-import store from "~/redux/store";
 import authSlice from "~/redux/slices/authSlice";
 import { refreshSession } from "~/api/authApi";
+
+// KHÔNG import store ở đây: store → authSlice → http → store là vòng import,
+// app trắng trang ("Cannot access ... before initialization") nếu authSlice
+// được nạp trước store. index.js gắn store vào bằng injectStore().
+let store = null;
+export function injectStore(s) {
+  store = s;
+}
 
 // Sửa path này cho khớp backend của bạn:
 // - Nếu BE: app.use('/auth', ...)  => "/auth/refresh"
@@ -18,7 +25,7 @@ const http = axios.create({
 // Lấy accessToken trực tiếp từ Redux
 function selectAccessToken() {
   try {
-    return store.getState()?.auth?.login?.accessToken || null;
+    return store?.getState()?.auth?.login?.accessToken || null;
   } catch {
     return null;
   }
@@ -58,7 +65,7 @@ http.interceptors.response.use(
     // Tránh vòng lặp: chỉ retry 1 lần
     if (original._retry) {
       // refresh đã thử mà vẫn 401 → logout
-      store.dispatch(authSlice.actions.logoutSuccess());
+      store?.dispatch(authSlice.actions.logoutSuccess());
       return Promise.reject(error);
     }
     original._retry = true;
@@ -68,11 +75,11 @@ http.interceptors.response.use(
       const data = await refreshSession();
       const newToken = data?.accessToken;
       if (!newToken) {
-        store.dispatch(authSlice.actions.logoutSuccess());
+        store?.dispatch(authSlice.actions.logoutSuccess());
         return Promise.reject(new Error("Refresh failed: missing accessToken"));
       }
 
-      store.dispatch(authSlice.actions.refreshToken(newToken));
+      store?.dispatch(authSlice.actions.refreshToken(newToken));
 
       // Gắn token mới và retry request gốc
       original.headers = original.headers || {};
@@ -80,7 +87,7 @@ http.interceptors.response.use(
       return http(original);
     } catch (e) {
       // Refresh thất bại → logout
-      store.dispatch(authSlice.actions.logoutSuccess());
+      store?.dispatch(authSlice.actions.logoutSuccess());
       return Promise.reject(e);
     }
   }

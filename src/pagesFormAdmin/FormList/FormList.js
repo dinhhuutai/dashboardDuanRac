@@ -1,354 +1,212 @@
-// src/pages/admin/FormList.jsx
-import 'react-datepicker/dist/react-datepicker.css';
-import React, { useEffect, useMemo, useState } from 'react';
-import DatePicker from 'react-datepicker';
-import { vi } from 'date-fns/locale';
-import { FaSpinner, FaPlus, FaSearch, FaTrash, FaCopy, FaWpforms, FaCheckCircle } from 'react-icons/fa';
-import { BASE_URL } from '~/config/index';
-import http from '~/api/http';
-import routes from '~/config/routes';
-import { NavLink } from 'react-router-dom';
+// Admin: danh sách biểu mẫu
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { BarChart3, ClipboardList, Copy, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import config from "~/config";
+import { errorMessage, fmApi } from "~/pagesForm/shared/api";
+import { fmtDateTime, fmtPercent, parseLocal } from "~/pagesForm/shared/format";
+import { TEMPLATES } from "~/pagesForm/shared/templates";
+import { Badge, Button, EmptyState, ErrorBox, IconButton, Modal, Spinner, Toggle, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 
-const fmt = (s) => (s ? new Date(s).toLocaleString('vi-VN') : '');
-const normalize = (s='') => s.toLowerCase().trim();
+function statusOf(f) {
+  if (!f.isVisible) return { label: "Đang ẩn", tone: "slate" };
+  if (f.isOpenNow) return { label: "Đang mở", tone: "green" };
+  const open = parseLocal(f.openAt);
+  if (f.acceptResponses && open && open > new Date()) return { label: `Mở lúc ${fmtDateTime(f.openAt)}`, tone: "blue" };
+  return { label: "Đã đóng", tone: "amber" };
+}
+
+function Progress({ done, total }) {
+  const pct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  return (
+    <div className="min-w-[120px]">
+      <div className="flex justify-between text-xs text-slate-500">
+        <span>{done}/{total} người</span>
+        <span className="font-medium text-slate-700">{total ? fmtPercent(done / total) : "—"}</span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200">
+        <div className={cn("h-full rounded-full", pct >= 100 ? "bg-emerald-500" : "bg-blue-600")} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+export function TemplatePicker({ open, onClose }) {
+  const navigate = useNavigate();
+  return (
+    <Modal open={open} onClose={onClose} title="Tạo biểu mẫu mới" size="lg">
+      <p className="mb-4 text-sm text-slate-500">Chọn một mẫu để bắt đầu — mọi câu hỏi đều sửa được.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => { onClose(); navigate(`${config.routes.adminFormBuilder}?template=${t.key}`); }}
+            className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-blue-400 hover:bg-blue-50/40"
+          >
+            <p className="font-semibold text-slate-800">{t.name}</p>
+            <p className="mt-1 text-sm text-slate-500">{t.hint}</p>
+          </button>
+        ))}
+      </div>
+    </Modal>
+  );
+}
 
 export default function FormList() {
-  const [loading, setLoading] = useState(true);
-  const [allRows, setAllRows] = useState([]);   // dữ liệu gốc (server)
-  const [rows, setRows] = useState([]);         // dữ liệu đã lọc (client)
-  const [total, setTotal] = useState(0);
+  const navigate = useNavigate();
+  const [forms, setForms] = useState(null);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [busy, setBusy] = useState({});
 
-  // filters (client)
-  const [q, setQ] = useState('');
-  const [activeOnly, setActiveOnly] = useState('all'); // 'all' | '1' | '0'
-  const [from, setFrom] = useState(null);
-  const [to, setTo] = useState(null);
-
-  // paging (client)
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-
-  // tải tất cả form (isDeleted=0) để lọc client
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async () => {
+    setError(null);
     try {
-      // lấy tất cả (kể cả tắt) -> activeOnly=0
-      const rs = await http.get(`${BASE_URL}/api/forms`, { params: { activeOnly: 0 } });
-      const data = Array.isArray(rs.data) ? rs.data : (rs.data?.data || []);
-      setAllRows(data);
+      setForms(await fmApi.forms());
     } catch (e) {
-      console.error(e);
-      alert('Không tải được danh sách biểu mẫu.');
+      setError(errorMessage(e, "Không tải được danh sách biểu mẫu"));
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const setFlag = async (f, flag, value) => {
+    setBusy((b) => ({ ...b, [f.formId]: true }));
+    try {
+      const r = await fmApi.setFlags(f.formId, { [flag]: value });
+      setForms((xs) => xs.map((x) => (x.formId === f.formId ? { ...x, ...r } : x)));
+      if (flag === "isVisible") toast.success(value ? "Đã hiện biểu mẫu cho nhân viên" : "Đã ẩn biểu mẫu");
+      else toast.success(value ? "Đã mở nhận phiếu" : "Đã ngừng nhận phiếu");
+    } catch (e) {
+      toast.error(errorMessage(e));
     } finally {
-      setLoading(false);
+      setBusy((b) => ({ ...b, [f.formId]: false }));
     }
   };
 
-  useEffect(() => { load(); }, []);
-
-  // lọc + sắp xếp + phân trang (client)
-  useEffect(() => {
-    const nq = normalize(q);
-    const start = from ? new Date(from).setHours(0,0,0,0) : null;
-    const end   = to   ? new Date(to).setHours(23,59,59,999) : null;
-
-    let filtered = allRows.slice();
-
-    // search theo title/code
-    if (nq) {
-      filtered = filtered.filter(r => {
-        const t = normalize(r.title || '');
-        const c = normalize(r.code || '');
-        return t.includes(nq) || c.includes(nq);
-      });
+  const duplicate = async (f) => {
+    try {
+      const r = await fmApi.duplicate(f.formId);
+      toast.success("Đã tạo bản sao (đang ẩn)");
+      navigate(`${config.routes.adminFormBuilder}/${r.formId}`);
+    } catch (e) {
+      toast.error(errorMessage(e));
     }
+  };
 
-    // filter trạng thái
-    if (activeOnly === '1') filtered = filtered.filter(r => !!r.isActive);
-    if (activeOnly === '0') filtered = filtered.filter(r => !r.isActive);
-
-    // filter theo createdAt
-    if (start) filtered = filtered.filter(r => r.createdAt ? new Date(r.createdAt) >= new Date(start) : false);
-    if (end)   filtered = filtered.filter(r => r.createdAt ? new Date(r.createdAt) <= new Date(end)   : false);
-
-    // sort mới cập nhật lên trước
-    filtered.sort((a,b)=>{
-      const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
-      const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
-      return tb - ta;
+  const remove = async (f) => {
+    const ok = await confirmDialog({
+      title: "Xoá biểu mẫu",
+      message: `Xoá "${f.title}"?${f.responseCount ? `\nBiểu mẫu đã có ${f.responseCount} phiếu — nhân viên sẽ không còn thấy biểu mẫu này.` : ""}`,
+      confirmText: "Xoá",
+      danger: true,
     });
-
-    setTotal(filtered.length);
-
-    // paginate
-    const fromIdx = (page - 1) * pageSize;
-    const pageRows = filtered.slice(fromIdx, fromIdx + pageSize);
-    setRows(pageRows);
-  }, [allRows, q, activeOnly, from, to, page]);
-
-  const toPages = Math.max(1, Math.ceil(total / pageSize));
-
-  const resetToFirstPage = (fn) => (...args) => { setPage(1); fn(...args); };
-
-  const togglePublish = async (form) => {
+    if (!ok) return;
     try {
-      setLoading(true);
-      await http.patch(`${BASE_URL}/api/forms/${form.formId}/publish`, { isActive: form.isActive ? 0 : 1 });
-      await load();
+      await fmApi.remove(f.formId);
+      setForms((xs) => xs.filter((x) => x.formId !== f.formId));
+      toast.success("Đã xoá biểu mẫu");
     } catch (e) {
-      console.error(e);
-      alert('Không cập nhật được trạng thái công bố.');
-      setLoading(false);
+      toast.error(errorMessage(e));
     }
   };
 
-  const onDuplicate = async (form) => {
-    if (!window.confirm(`Nhân bản biểu mẫu "${form.title}"?`)) return;
-    try {
-      setLoading(true);
-      const rs = await http.post(`${BASE_URL}/api/forms/${form.formId}/duplicate`);
-      const link = `${window.location.origin}/forms/${rs.data.code}`;
-      alert(`Đã nhân bản: ${rs.data.title}\nLink: ${link}`);
-      await load();
-    } catch (e) {
-      console.error(e);
-      alert('Không nhân bản được biểu mẫu.');
-      setLoading(false);
-    }
-  };
+  const shown = useMemo(() => {
+    if (!forms) return [];
+    const q = search.trim().toLowerCase();
+    return forms.filter((f) => {
+      if (filter === "open" && !(f.isVisible && f.isOpenNow)) return false;
+      if (filter === "hidden" && f.isVisible) return false;
+      return !q || f.title.toLowerCase().includes(q);
+    });
+  }, [forms, search, filter]);
 
-  const onDelete = async (form) => {
-    if (!window.confirm(`Xoá (mềm) biểu mẫu "${form.title}"?`)) return;
-    try {
-      setLoading(true);
-      await http.delete(`${BASE_URL}/api/forms/${form.formId}`);
-      await load();
-    } catch (e) {
-      console.error(e);
-      alert('Không xoá được biểu mẫu.');
-      setLoading(false);
-    }
-  };
+  if (error) return <ErrorBox message={error} onRetry={load} />;
+  if (!forms) return <Spinner />;
 
-  const copyCode = async (r) => {
-    try {
-      await navigator.clipboard.writeText(r.code || '');
-      alert('Đã copy code!');
-    } catch {
-      alert('Copy không thành công');
-    }
-  };
-  const copyLink = async (r) => {
-    try {
-      const link = `${window.location.origin}${routes.form}/${r.code}`;
-      await navigator.clipboard.writeText(link);
-      alert('Đã copy link!');
-    } catch {
-      alert('Copy không thành công');
-    }
-  };
+  const openCount = forms.filter((f) => f.isVisible && f.isOpenNow).length;
+  const totalResponses = forms.reduce((a, f) => a + f.responseCount, 0);
 
   return (
-    <div className="neu-page p-3 md:p-6 bg-gradient-to-b from-violet-50/70 via-white to-fuchsia-50/40 min-h-screen">
-      {/* Overlay */}
-      {loading && (
-        <div className="neu-overlay">
-          <div className="neu-card flex flex-col items-center gap-3">
-            <FaSpinner className="animate-spin text-emerald-600 text-3xl" />
-            <span className="text-slate-700 text-sm">Đang tải…</span>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Biểu mẫu</h1>
+          <p className="text-sm text-slate-500">Tạo, mở/ẩn biểu mẫu và theo dõi kết quả.</p>
+        </div>
+        <Button icon={Plus} onClick={() => setPickerOpen(true)}>Tạo biểu mẫu</Button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {[["Tổng biểu mẫu", forms.length], ["Đang mở", openCount], ["Tổng phiếu đã nộp", totalResponses]].map(([k, v]) => (
+          <div key={k} className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">{k}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-800">{v.toLocaleString("vi-VN")}</p>
           </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <input className={cn(inputCls, "pl-9")} placeholder="Tìm biểu mẫu…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <select className={cn(inputCls, "w-auto")} value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">Tất cả</option>
+          <option value="open">Đang mở</option>
+          <option value="hidden">Đang ẩn</option>
+        </select>
+      </div>
+
+      {forms.length === 0 ? (
+        <EmptyState icon={ClipboardList} title="Chưa có biểu mẫu nào">
+          <Button className="mt-3" icon={Plus} onClick={() => setPickerOpen(true)}>Tạo biểu mẫu đầu tiên</Button>
+        </EmptyState>
+      ) : shown.length === 0 ? (
+        <EmptyState icon={Search} title="Không tìm thấy biểu mẫu phù hợp" />
+      ) : (
+        <div className="space-y-3">
+          {shown.map((f) => {
+            const st = statusOf(f);
+            return (
+              <div key={f.formId} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-start gap-4">
+                  <button type="button" className="min-w-0 flex-1 text-left" onClick={() => navigate(`${config.routes.adminFormResults}/${f.formId}`)}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={st.tone}>{st.label}</Badge>
+                      {f.closeAt && <span className="text-xs text-slate-500">Hạn: {fmtDateTime(f.closeAt)}</span>}
+                      {f.audienceType === "targeted" && <Badge>Nhóm được chọn</Badge>}
+                    </div>
+                    <p className="mt-1.5 font-semibold text-slate-800 hover:text-blue-700">{f.title}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {f.questionCount} câu hỏi · {f.responseCount} phiếu
+                      {f.lastSubmittedAt ? ` · phiếu mới nhất ${fmtDateTime(f.lastSubmittedAt)}` : ""}
+                      {f.createdByName ? ` · tạo bởi ${f.createdByName}` : ""}
+                    </p>
+                  </button>
+                  <Progress done={f.targetDoneCount} total={f.targetCount} />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                  <div className="flex flex-wrap gap-5">
+                    <Toggle label="Hiện cho nhân viên" checked={f.isVisible} disabled={busy[f.formId]} onChange={(v) => setFlag(f, "isVisible", v)} />
+                    <Toggle label="Nhận phiếu" checked={f.acceptResponses} disabled={busy[f.formId]} onChange={(v) => setFlag(f, "acceptResponses", v)} />
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="secondary" size="sm" icon={BarChart3} onClick={() => navigate(`${config.routes.adminFormResults}/${f.formId}`)}>Kết quả</Button>
+                    <IconButton icon={Pencil} title="Sửa" onClick={() => navigate(`${config.routes.adminFormBuilder}/${f.formId}`)} />
+                    <IconButton icon={Copy} title="Nhân bản" onClick={() => duplicate(f)} />
+                    <IconButton icon={Trash2} title="Xoá" danger onClick={() => remove(f)} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between gap-3 max-w-7xl mx-auto">
-        <div>
-          <div className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <FaWpforms className="text-emerald-600" /> Quản lý biểu mẫu
-          </div>
-          <div className="text-slate-600 text-sm">Danh sách biểu mẫu nội bộ, công bố và theo dõi phản hồi</div>
-        </div>
-        <a href={routes.adminFormCreate} className="neu-btn neu-btn--primary">
-          <FaPlus /> Tạo mới
-        </a>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 max-w-7xl mx-auto">
-        <div className="neu-section">
-          <div className="text-sm text-slate-500">Tổng biểu mẫu</div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">{allRows.length}</div>
-        </div>
-        <div className="neu-section">
-          <div className="text-sm text-slate-500">Đang công bố</div>
-          <div className="text-2xl font-bold text-emerald-700 mt-1">
-            {allRows.filter((x) => !!x.isActive).length}
-          </div>
-        </div>
-        <div className="neu-section">
-          <div className="text-sm text-slate-500">Đang hiển thị theo bộ lọc</div>
-          <div className="text-2xl font-bold text-blue-700 mt-1">{total}</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="neu-section mb-4 max-w-7xl mx-auto border-violet-100">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">Tìm theo tiêu đề / code</label>
-            <div className="relative mt-1">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                className="neu-input pl-9"
-                placeholder="VD: khao sat, ... hoặc code"
-                value={q}
-                onChange={resetToFirstPage((e)=>setQ(e.target.value))}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">Trạng thái</label>
-            <select
-              className="neu-select mt-1"
-              value={activeOnly}
-              onChange={resetToFirstPage((e)=>setActiveOnly(e.target.value))}
-            >
-              <option value="all">Tất cả</option>
-              <option value="1">Đang công bố</option>
-              <option value="0">Đã tắt</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-sm font-medium text-slate-700">Từ ngày</label>
-              <DatePicker
-                selected={from}
-                onChange={resetToFirstPage(setFrom)}
-                dateFormat="dd/MM/yyyy"
-                className="neu-input mt-1"
-                locale={vi}
-                placeholderText="Chọn ngày"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Đến ngày</label>
-              <DatePicker
-                selected={to}
-                onChange={resetToFirstPage(setTo)}
-                dateFormat="dd/MM/yyyy"
-                className="neu-input mt-1"
-                locale={vi}
-                placeholderText="Chọn ngày"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="neu-section p-0 overflow-auto max-w-7xl mx-auto border-violet-100">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-slate-600 bg-slate-50/60">
-              <th className="text-left px-3 py-3">Tiêu đề</th>
-              <th className="text-left px-3 py-3">Link</th>
-              <th className="text-left px-3 py-3">Trạng thái</th>
-              <th className="text-left px-3 py-3">Tạo lúc</th>
-              <th className="text-left px-3 py-3">Cập nhật</th>
-              <th className="text-right px-3 py-3">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.formId} className="neu-row--table border-t">
-                <td className="px-3 py-3 align-top">
-                  <div className="font-medium">{r.title}</div>
-                  {r.description && <div className="text-slate-500 text-xs line-clamp-1">{r.description}</div>}
-                </td>
-                <td className="px-3 py-3 align-top">
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={`${routes.form}/${r.code}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-700 hover:underline"
-                    >
-                      {r.code}
-                    </a>
-                    <button className="neu-btn neu-btn--ghost" onClick={()=>copyLink(r)} title="Copy code">
-                      <FaCopy />
-                    </button>
-                  </div>
-                </td>
-                <td className="px-3 py-3 align-top">
-                  {r.isActive ? (
-                    <span className="neu-chip neu-chip--success inline-flex items-center gap-1"><FaCheckCircle /> Đang công bố</span>
-                  ) : (
-                    <span className="neu-chip">Đã tắt</span>
-                  )}
-                </td>
-                <td className="px-3 py-3 align-top">{fmt(r.createdAt)}</td>
-                <td className="px-3 py-3 align-top">{fmt(r.updatedAt)}</td>
-                <td className="px-3 py-3 align-top">
-                  <div className="flex items-center justify-end gap-2">
-                    <NavLink to={`${routes.adminFormEdit}/${r.formId}`} className="neu-btn neu-btn--ghost" title="Sửa">
-                      Sửa
-                    </NavLink>
-                    <NavLink to={`${routes.adminFormResponses}/${r.formId}`} className="neu-btn neu-btn--ghost" title="Câu trả lời">
-                      Trả lời
-                    </NavLink>
-                    <button onClick={() => onDuplicate(r)} className="neu-btn neu-btn--ghost" title="Nhân bản">
-                      <FaCopy />
-                    </button>
-                    <button
-                      onClick={() => togglePublish(r)}
-                      className={`neu-btn ${r.isActive ? 'neu-btn--primary' : 'neu-btn--muted'}`}
-                      title={r.isActive ? 'Tắt công bố' : 'Công bố'}
-                    >
-                      {r.isActive ? 'Tắt' : 'Bật'}
-                    </button>
-                    <button onClick={() => onDelete(r)} className="neu-btn neu-btn--danger" title="Xoá (soft)">
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {rows.length === 0 && !loading && (
-              <tr>
-                <td className="px-3 py-10 text-center text-slate-500" colSpan={6}>
-                  Không có dữ liệu
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="mt-3 neu-section flex items-center justify-between max-w-7xl mx-auto border-violet-100">
-        <div className="text-sm text-slate-600">
-          {total > 0 ? `Hiển thị ${rows.length} / ${total} biểu mẫu` : '—'}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className={`neu-btn neu-btn--ghost ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            Trước
-          </button>
-          <div className="text-sm">{page} / {toPages}</div>
-          <button
-            disabled={page >= toPages}
-            onClick={() => setPage((p) => Math.min(toPages, p + 1))}
-            className={`neu-btn neu-btn--ghost ${page >= toPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            Sau
-          </button>
-        </div>
-      </div>
+      <TemplatePicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </div>
   );
 }

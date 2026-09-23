@@ -1,24 +1,97 @@
 // src/pages/Home/components/ModuleCard.jsx
-import React from "react";
-import * as FiIcons from "react-icons/fi";
-import * as FcIcons from "react-icons/fc";
+import React, { Suspense } from "react";
+import { FiGrid } from "react-icons/fi";
+import {
+  FcApproval,
+  FcCalendar,
+  FcConferenceCall,
+  FcEditImage,
+  FcEngineering,
+  FcFactory,
+  FcFeedback,
+  FcIcons8Cup,
+  FcLike,
+  FcMoneyTransfer,
+  FcPackage,
+  FcPicture,
+  FcPieChart,
+  FcPrivacy,
+  FcSearch,
+  FcStackOfPhotos,
+  FcSurvey,
+  FcTodoList,
+  FcWorkflow,
+} from "react-icons/fc";
+import lazyPage from "~/utils/lazyPage";
 
-// icon có thể là "FiSomething" hoặc URL
+// Icon đang dùng trong bảng dbo.Modules (cột icon). Import từng icon thay vì
+// `import * as FcIcons` — cả bộ fc/fi nặng ~1,6 MB và nằm trong file JS chính.
+const KNOWN_ICONS = {
+  FcApproval,
+  FcCalendar,
+  FcEditImage,
+  FcEngineering,
+  FcFactory,
+  FcFeedback,
+  FcIcons8Cup,
+  FcLike,
+  FcMoneyTransfer,
+  FcPackage,
+  FcPicture,
+  FcPieChart,
+  FcSearch,
+  FcStackOfPhotos,
+  FcSurvey,
+  FcTodoList,
+  FcWorkflow,
+};
+
+// Icon khác (admin mới chọn trong trang Quản lý module) → tải cả bộ theo nhu cầu.
+// Phải đi qua ~/components/IconSets, xem README.md trong đó.
+const iconFromSet = (loadSet) =>
+  lazyPage(() =>
+    loadSet().then((mod) => {
+      const set = mod.default || mod;
+      return {
+        default: ({ name, className }) => {
+          const Cmp = set[name] || FiGrid;
+          return <Cmp className={className} />;
+        },
+      };
+    })
+  );
+const LazyFcIcon = iconFromSet(() => import("~/components/IconSets/fc"));
+const LazyFiIcon = iconFromSet(() => import("~/components/IconSets/fi"));
+
+// icon có thể là "FcSomething", "FiSomething" hoặc URL
 const IconOrImg = ({ icon, className = "h-6 w-6" }) => {
   if (!icon) {
-    return <FiIcons.FiGrid className={`${className} text-slate-800`} />;
+    return <FiGrid className={`${className} text-slate-800`} />;
   }
 
+  if (KNOWN_ICONS[icon]) {
+    const Cmp = KNOWN_ICONS[icon];
+    return <Cmp className={className} />;
+  }
+
+  const placeholder = <span className={`inline-block ${className}`} />;
+
   // Feather icon
-  if (/^Fi[A-Za-z0-9]+$/.test(icon) && typeof FiIcons[icon] === "function") {
-    const Cmp = FiIcons[icon];
-    return <Cmp className={`${className} text-slate-800`} />;
+  if (/^Fi[A-Za-z0-9]+$/.test(icon)) {
+    return (
+      <Suspense fallback={placeholder}>
+        <LazyFiIcon name={icon} className={`${className} text-slate-800`} />
+      </Suspense>
+    );
   }
 
   // Flat color icon
-  if (/^Fc[A-Za-z0-9]+$/.test(icon) && typeof FcIcons[icon] === "function") {
-    const Cmp = FcIcons[icon];
-    return <Cmp className={className} />;
+  if (/^Fc[A-Za-z0-9]+$/.test(icon)) {
+    return (
+      <Suspense fallback={placeholder}>
+        <LazyFcIcon name={icon} className={className} />
+      </Suspense>
+    );
   }
 
   // URL ảnh
@@ -83,7 +156,7 @@ const ModuleCard = ({ module, onGoUser, onGoAdmin }) => {
                   transition hover:shadow-[2px_2px_4px_rgba(180,190,200,0.4),-2px_-2px_4px_rgba(255,255,255,0.8)]
                 "
               >
-                <FcIcons.FcConferenceCall className="h-4 w-4" />
+                <FcConferenceCall className="h-4 w-4" />
                 <span>User</span>
               </button>
             )}
@@ -99,7 +172,7 @@ const ModuleCard = ({ module, onGoUser, onGoAdmin }) => {
                   transition hover:shadow-[2px_2px_4px_rgba(180,190,200,0.4),-2px_-2px_4px_rgba(255,255,255,0.8)]
                 "
               >
-                <FcIcons.FcPrivacy className="h-4 w-4" />
+                <FcPrivacy className="h-4 w-4" />
                 <span>Admin</span>
               </button>
             )}

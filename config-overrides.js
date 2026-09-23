@@ -17,6 +17,15 @@ module.exports = override(
 
   (config, env) => {
     if (env === 'production') {
+      // Code splitting tạo ra nhiều chunk → Terser mặc định chạy (số CPU - 1) worker
+      // song song, mỗi worker kế thừa NODE_OPTIONS=--max-old-space-size=6144
+      // → tràn RAM và build chết không báo lỗi. Giới hạn 2 worker.
+      for (const plugin of config.optimization?.minimizer || []) {
+        if (plugin?.constructor?.name === 'TerserPlugin' && plugin.options) {
+          plugin.options.parallel = 2;
+        }
+      }
+
       const version = new Date().getTime();
 
       const manifestPath = path.resolve(__dirname, 'public/manifest.json');

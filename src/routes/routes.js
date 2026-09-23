@@ -1,189 +1,190 @@
 import config from '~/config';
+import lazyPage from '~/utils/lazyPage';
 
-import Home from '~/pages/Home';
+// Trang đầu tiên người dùng thấy — nạp sẵn để không phải chờ thêm 1 lượt tải.
+// Mọi trang khác tải theo nhu cầu (code splitting) để giảm dung lượng JS ban đầu.
 import HomeMain from '~/pages/HomeMain';
 import Login from '~/pages/Login';
-import Scan from '~/pages/Scan';
-import User from '~/pages/User';
-import History from '~/pages/History';
-import Feedback from '~/pages/Feedback';
-import Feedback1 from '~/pages/Feedback1';
-import ExcelToPdf from '~/pages/Utils/ExcelToPdf';
-import LunchFeedbackForm from '~/pages/LunchFeedbackForm';
 
-import QrcodeCreate from '~/pagesAdmin/Manage/Qrcode/Create';
-import QrcodeList from '~/pagesAdmin/Manage/Qrcode/List';
-import QrcodeUpdate from '~/pagesAdmin/Manage/Qrcode/Update';
-import UserCreate from '~/pagesAdmin/Manage/User/Create';
-import UserList from '~/pagesAdmin/Manage/User/List';
-import UserUpdate from '~/pagesAdmin/Manage/User/Update';
-import Chat from '~/pagesAdmin/Menu/Applications/Chat';
-import MailBox from '~/pagesAdmin/Menu/Applications/MailBox';
-import Section from '~/pagesAdmin/Menu/Applications/Section';
-import Analytics from '~/pagesAdmin/Menu/Dashboards/Analytics';
-import HistoryWeigh from '~/pagesAdmin/Menu/Dashboards/HistoryWeigh';
+const Home = lazyPage(() => import('~/pages/Home'));
+const Scan = lazyPage(() => import('~/pages/Scan'));
+const User = lazyPage(() => import('~/pages/User'));
+const History = lazyPage(() => import('~/pages/History'));
+const Feedback = lazyPage(() => import('~/pages/Feedback'));
+const Feedback1 = lazyPage(() => import('~/pages/Feedback1'));
+const ExcelToPdf = lazyPage(() => import('~/pages/Utils/ExcelToPdf'));
+const LunchFeedbackForm = lazyPage(() => import('~/pages/LunchFeedbackForm'));
 
-import NgienCheChou from '~/pagesAdmin/NgienCheChou';
-import ExportQr from '~/pagesAdmin/ExportQr';
+const QrcodeCreate = lazyPage(() => import('~/pagesAdmin/Manage/Qrcode/Create'));
+const QrcodeList = lazyPage(() => import('~/pagesAdmin/Manage/Qrcode/List'));
+const QrcodeUpdate = lazyPage(() => import('~/pagesAdmin/Manage/Qrcode/Update'));
+const UserCreate = lazyPage(() => import('~/pagesAdmin/Manage/User/Create'));
+const UserList = lazyPage(() => import('~/pagesAdmin/Manage/User/List'));
+const UserUpdate = lazyPage(() => import('~/pagesAdmin/Manage/User/Update'));
+const Chat = lazyPage(() => import('~/pagesAdmin/Menu/Applications/Chat'));
+const MailBox = lazyPage(() => import('~/pagesAdmin/Menu/Applications/MailBox'));
+const Section = lazyPage(() => import('~/pagesAdmin/Menu/Applications/Section'));
+const Analytics = lazyPage(() => import('~/pagesAdmin/Menu/Dashboards/Analytics'));
+const HistoryWeigh = lazyPage(() => import('~/pagesAdmin/Menu/Dashboards/HistoryWeigh'));
 
-import Report from '~/pagesAdmin/Menu/Reports/Report';
-import ReportByShift from '~/pagesAdmin/Menu/Reports/ReportByShift';
-import ReportByTrash from '~/pagesAdmin/Menu/Reports/ReportTrash';
-import ReportTrashAndMaterial from '~/pagesAdmin/Menu/Reports/TrashAndMaterial';
-import ReportByTrashBF17 from '~/pagesAdmin/Menu/Reports/ReportTrashBF17';
-import ReportByDepartment from '~/pagesAdmin/Menu/Reports/ReportDepartment';
-import ReportMaterials from '~/pagesAdmin/Menu/Reports/ReportMaterials';
+const NgienCheChou = lazyPage(() => import('~/pagesAdmin/NgienCheChou'));
+const ExportQr = lazyPage(() => import('~/pagesAdmin/ExportQr'));
 
-import UnscannedQR from '~/pagesAdmin/Menu/Dashboards/UnscannedQR';
-import WeighTruck from '~/pagesAdmin/Menu/Dashboards/WeighTruck';
-import AdminHome from '~/pagesAdmin/Menu/Pages/Home';
-import AdminScan from '~/pagesAdmin/Menu/Pages/Scan';
-import AdminUser from '~/pagesAdmin/Menu/Pages/User';
-import TrashTypeList from '~/pagesAdmin/Manage/TrashType/List';
-import TrashTypeCreate from '~/pagesAdmin/Manage/TrashType/Create';
-import TrashTypeUpdate from '~/pagesAdmin/Manage/TrashType/Update';
-import TeamMemberList from '~/pagesAdmin/Manage/TeamMember/List';
-import TeamMemberCreate from '~/pagesAdmin/Manage/TeamMember/Create';
+const Report = lazyPage(() => import('~/pagesAdmin/Menu/Reports/Report'));
+const ReportByShift = lazyPage(() => import('~/pagesAdmin/Menu/Reports/ReportByShift'));
+const ReportByTrash = lazyPage(() => import('~/pagesAdmin/Menu/Reports/ReportTrash'));
+const ReportTrashAndMaterial = lazyPage(() => import('~/pagesAdmin/Menu/Reports/TrashAndMaterial'));
+const ReportByTrashBF17 = lazyPage(() => import('~/pagesAdmin/Menu/Reports/ReportTrashBF17'));
+const ReportByDepartment = lazyPage(() => import('~/pagesAdmin/Menu/Reports/ReportDepartment'));
+const ReportMaterials = lazyPage(() => import('~/pagesAdmin/Menu/Reports/ReportMaterials'));
 
-import SortUnitByDepartment from '~/pagesAdmin/Manage/Utils/SortUnitByDepartment';
-import SettingTable from '~/pagesAdmin/Manage/Utils/SettingTable';
+const UnscannedQR = lazyPage(() => import('~/pagesAdmin/Menu/Dashboards/UnscannedQR'));
+const WeighTruck = lazyPage(() => import('~/pagesAdmin/Menu/Dashboards/WeighTruck'));
+const AdminHome = lazyPage(() => import('~/pagesAdmin/Menu/Pages/Home'));
+const AdminScan = lazyPage(() => import('~/pagesAdmin/Menu/Pages/Scan'));
+const AdminUser = lazyPage(() => import('~/pagesAdmin/Menu/Pages/User'));
+const TrashTypeList = lazyPage(() => import('~/pagesAdmin/Manage/TrashType/List'));
+const TrashTypeCreate = lazyPage(() => import('~/pagesAdmin/Manage/TrashType/Create'));
+const TrashTypeUpdate = lazyPage(() => import('~/pagesAdmin/Manage/TrashType/Update'));
+const TeamMemberList = lazyPage(() => import('~/pagesAdmin/Manage/TeamMember/List'));
+const TeamMemberCreate = lazyPage(() => import('~/pagesAdmin/Manage/TeamMember/Create'));
 
-import ListBinClassCheck from '~/pagesAdmin/Menu/ClassChecks/ListBin';
-import HistoryClassCheck from '~/pagesAdmin/Menu/ClassChecks/History';
+const SortUnitByDepartment = lazyPage(() => import('~/pagesAdmin/Manage/Utils/SortUnitByDepartment'));
+const SettingTable = lazyPage(() => import('~/pagesAdmin/Manage/Utils/SettingTable'));
 
-import AnalyticsInk from '~/pagesInkWeighAdmin/Dashboards/Analytics';
-import ReportInk from '~/pagesInkWeighAdmin/Dashboards/Report';
+const ListBinClassCheck = lazyPage(() => import('~/pagesAdmin/Menu/ClassChecks/ListBin'));
+const HistoryClassCheck = lazyPage(() => import('~/pagesAdmin/Menu/ClassChecks/History'));
 
-import ProductionOrder from '~/pagesInkWeighAdmin/Dashboards/ProductionOrder';
-import InkTransferCart from '~/pagesInkWeighAdmin/Dashboards/InkTransferCart';
-import HistoryWeighInk from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh';
-import HistoryWeighInkV2 from '~/pagesInkWeighAdmin/Dashboards/HistoryWeigh/v2.0';
-import CompareWeighInk from '~/pagesInkWeighAdmin/Dashboards/CompareWeigh';
+const AnalyticsInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/Analytics'));
+const ReportInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/Report'));
 
-import ReportCartInk from '~/pagesInkWeighAdmin/Dashboards/ReportCartInk';
+const ProductionOrder = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/ProductionOrder'));
+const InkTransferCart = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/InkTransferCart'));
+const HistoryWeighInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/HistoryWeigh'));
+const HistoryWeighInkV2 = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/HistoryWeigh/v2.0'));
+const CompareWeighInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/CompareWeigh'));
 
-import LogfileInk from '~/pagesInkWeighAdmin/Dashboards/Logfile';
+const ReportCartInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/ReportCartInk'));
 
-import FeedbackList from '~/pagesAdmin/Manage/Feedback/FeedbackList';
-import FeedbackAnalytics from '~/pagesAdmin/Manage/Feedback/FeedbackAnalytics';
-import FeedbackRole from '~/pagesAdmin/Manage/Feedback/FeedbackRole';
+const LogfileInk = lazyPage(() => import('~/pagesInkWeighAdmin/Dashboards/Logfile'));
 
-import TrashTruckList from '~/pagesAdmin/Manage/TrashTruck/List';
-import TrashTruckCreate from '~/pagesAdmin/Manage/TrashTruck/Create';
+const FeedbackList = lazyPage(() => import('~/pagesAdmin/Manage/Feedback/FeedbackList'));
+const FeedbackAnalytics = lazyPage(() => import('~/pagesAdmin/Manage/Feedback/FeedbackAnalytics'));
+const FeedbackRole = lazyPage(() => import('~/pagesAdmin/Manage/Feedback/FeedbackRole'));
 
-import SuggestionList from '~/pagesSuggestionAdmin/Menu/Suggestion/SuggestionList';
-import SuggestionCategoriList from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriList';
-import SuggestionCategoriCreate from '~/pagesSuggestionAdmin/Menu/Suggestion/CategoriCreate';
+const TrashTruckList = lazyPage(() => import('~/pagesAdmin/Manage/TrashTruck/List'));
+const TrashTruckCreate = lazyPage(() => import('~/pagesAdmin/Manage/TrashTruck/Create'));
 
-
-import LunchOrder from '~/pagesLunchOrder/LunchOrder';
-import LunchOrderProxy from '~/pagesLunchOrder/LunchOrderProxy';
-import LunchOrderSearch from '~/pagesLunchOrder/Search';
-import LunchOrderHistoryUser from '~/pagesLunchOrder/History';
-
-import LunchOrderDashboard from '~/pagesLunchOrderAdmin/Dashboard';
-import LunchOrderWeeklyMenu from '~/pagesLunchOrderAdmin/WeeklyMenu';
-import LunchOrderFood from '~/pagesLunchOrderAdmin/Food';
-import LunchOrderDepartment from '~/pagesLunchOrderAdmin/Department';
-import LunchOrderAssignUserDept from '~/pagesLunchOrderAdmin/AssignUserDept';
-import LunchOrderNotOrder from '~/pagesLunchOrderAdmin/NotOrder';
-import LunchOrderHistory from '~/pagesLunchOrderAdmin/History';
-import LunchOrderReport from '~/pagesLunchOrderAdmin/Report';
-import LunchOrderReportByDay from '~/pagesLunchOrderAdmin/ReportByDay';
-import LunchOrderSettingTime from '~/pagesLunchOrderAdmin/SettingTime';
+const SuggestionList = lazyPage(() => import('~/pagesSuggestionAdmin/Menu/Suggestion/SuggestionList'));
+const SuggestionCategoriList = lazyPage(() => import('~/pagesSuggestionAdmin/Menu/Suggestion/CategoriList'));
+const SuggestionCategoriCreate = lazyPage(() => import('~/pagesSuggestionAdmin/Menu/Suggestion/CategoriCreate'));
 
 
-import ImageCaddi from '~/pages/ImageCaddi';
+const LunchOrder = lazyPage(() => import('~/pagesLunchOrder/LunchOrder'));
+const LunchOrderProxy = lazyPage(() => import('~/pagesLunchOrder/LunchOrderProxy'));
+const LunchOrderSearch = lazyPage(() => import('~/pagesLunchOrder/Search'));
+const LunchOrderHistoryUser = lazyPage(() => import('~/pagesLunchOrder/History'));
 
-import DryingCart from '~/pageDryingCart/DryingCart';
-
-import ProductionDashboardAdmin from '~/pagesProductionAdmin/Dashboard';
-
-
-import CalculateSalaryViewPayslip from '~/pagesCalculateSalary/ViewPayslip';
-
-import AdminCalculateSalaryUploadPayrollReport from '~/pagesCalculateSalaryAdmin/UploadPayrollReport';
-import AdminCalculateSalaryTypePay from '~/pagesCalculateSalaryAdmin/TypePay';
-import AdminCalculateSalaryHistory from '~/pagesCalculateSalaryAdmin/History';
-
-import Form from '~/pagesForm/Form';
-import FormHistory from '~/pagesForm/FormHistory/FormHistory';
-
-import FormCreate from '~/pagesFormAdmin/FormCreate';
-import FormList from '~/pagesFormAdmin/FormList';
-import FormEdit from '~/pagesFormAdmin/FormEdit';
-import FormResponses from '~/pagesFormAdmin/FormResponses';
-import FormResponseDetail from '~/pagesFormAdmin/FormResponseDetail';
-import FormAnalytics from '~/pagesFormAdmin/FormAnalytics';
-import FormDashboard from '~/pagesFormAdmin/FormDashboard';
+const LunchOrderDashboard = lazyPage(() => import('~/pagesLunchOrderAdmin/Dashboard'));
+const LunchOrderWeeklyMenu = lazyPage(() => import('~/pagesLunchOrderAdmin/WeeklyMenu'));
+const LunchOrderFood = lazyPage(() => import('~/pagesLunchOrderAdmin/Food'));
+const LunchOrderDepartment = lazyPage(() => import('~/pagesLunchOrderAdmin/Department'));
+const LunchOrderAssignUserDept = lazyPage(() => import('~/pagesLunchOrderAdmin/AssignUserDept'));
+const LunchOrderNotOrder = lazyPage(() => import('~/pagesLunchOrderAdmin/NotOrder'));
+const LunchOrderHistory = lazyPage(() => import('~/pagesLunchOrderAdmin/History'));
+const LunchOrderReport = lazyPage(() => import('~/pagesLunchOrderAdmin/Report'));
+const LunchOrderReportByDay = lazyPage(() => import('~/pagesLunchOrderAdmin/ReportByDay'));
+const LunchOrderSettingTime = lazyPage(() => import('~/pagesLunchOrderAdmin/SettingTime'));
 
 
-import N20th11 from '~/pages/N20th11';
+const ImageCaddi = lazyPage(() => import('~/pages/ImageCaddi'));
 
-import TaskManagementDashboard from '~/pagesTaskManagement/Tasks/Dashboard';
-import TaskManagementHome from '~/pagesTaskManagement/Home';
+const DryingCart = lazyPage(() => import('~/pageDryingCart/DryingCart'));
 
-import TaskManagementMyTasks from '~/pagesTaskManagement/Tasks/MyTasks';
-import TaskManagementTeamTasks from '~/pagesTaskManagement/Tasks/TeamTasks';
-import TaskManagementDepartmentTasks from '~/pagesTaskManagement/Tasks/DepartmentTasks';
-import TaskManagementCompanyTasks from '~/pagesTaskManagement/Tasks/CompanyTasks';
-import TaskManagementRequests from '~/pagesTaskManagement/Requests/Requests';
+const ProductionDashboardAdmin = lazyPage(() => import('~/pagesProductionAdmin/Dashboard'));
 
-import TaskManagementProjectList from '~/pagesTaskManagement/Projects/ProjectList';
-import TaskManagementProjectOverview from '~/pagesTaskManagement/Projects/ProjectOverview';
 
-import AdminTaskManagementDashboard from '~/pagesTaskManagementAdmin/Menu/Dashboard';
+const CalculateSalaryViewPayslip = lazyPage(() => import('~/pagesCalculateSalary/ViewPayslip'));
 
-import AdminTaskManagementReportByEmployee from '~/pagesTaskManagementAdmin/Menu/ReportByEmployee';
-import AdminTaskManagementReportByProject from '~/pagesTaskManagementAdmin/Menu/ReportByProeject';
-import AdminTaskManagementReportByStatus from '~/pagesTaskManagementAdmin/Menu/ReportByStatus';
+const AdminCalculateSalaryUploadPayrollReport = lazyPage(() => import('~/pagesCalculateSalaryAdmin/UploadPayrollReport'));
+const AdminCalculateSalaryTypePay = lazyPage(() => import('~/pagesCalculateSalaryAdmin/TypePay'));
+const AdminCalculateSalaryHistory = lazyPage(() => import('~/pagesCalculateSalaryAdmin/History'));
 
-import AdminTaskManagementDepartments from '~/pagesTaskManagementAdmin/Manage/Departments';
-import AdminTaskManagementRoles from '~/pagesTaskManagementAdmin/Manage/Roles';
-import AdminTaskManagementStatuses from '~/pagesTaskManagementAdmin/Manage/Statuses';
-import AdminTaskManagementTeams from '~/pagesTaskManagementAdmin/Manage/Teams';
-import AdminTaskManagementUserRoles from '~/pagesTaskManagementAdmin/Manage/UserRoles';
+// Module 9 — Biểu mẫu nội bộ
+const MyForms = lazyPage(() => import('~/pagesForm/MyForms'));
+const FormFill = lazyPage(() => import('~/pagesForm/FormFill'));
+const AdminFormList = lazyPage(() => import('~/pagesFormAdmin/FormList'));
+const AdminFormBuilder = lazyPage(() => import('~/pagesFormAdmin/FormBuilder'));
+const AdminFormResults = lazyPage(() => import('~/pagesFormAdmin/FormResults'));
+const AdminFormOrg = lazyPage(() => import('~/pagesFormAdmin/OrgManagement'));
 
-import BMI from '~/pagesBMI/BMI';
-import BMICheck from '~/pagesBMI/Check';
-import BMIDashboard from '~/pagesBMI/Dashboard';
-import BMIPlan from '~/pagesBMI/Plan';
-import BMIProfile from '~/pagesBMI/Profile';
 
-import InkCovPerOnFilm from '~/pagesInkCovPerOnFilm/InkCovPerOnFilm';
-import uploadFileFilm from '~/pagesInkCovPerOnFilm/uploadFileFilm';
+const N20th11 = lazyPage(() => import('~/pages/N20th11'));
 
-import QualityInspectionOQC from '~/pagesQualityInspectionOQC/Home';
-import QualityInspectionOQCResult from '~/pagesQualityInspectionOQC/Results';
-import QualityInspectionOQCManual from '~/pagesQualityInspectionOQC/Manual';
+const TaskManagementDashboard = lazyPage(() => import('~/pagesTaskManagement/Tasks/Dashboard'));
+const TaskManagementHome = lazyPage(() => import('~/pagesTaskManagement/Home'));
 
-import AdminHistoryOQC from '~/pagesQualityInspectionOQCAdmin/History';
+const TaskManagementMyTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/MyTasks'));
+const TaskManagementTeamTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/TeamTasks'));
+const TaskManagementDepartmentTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/DepartmentTasks'));
+const TaskManagementCompanyTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/CompanyTasks'));
+const TaskManagementRequests = lazyPage(() => import('~/pagesTaskManagement/Requests/Requests'));
 
-import QualityInspectionKCS from '~/pagesQualityInspectionKCS/Home';
-import QualityInspectionKCSResult from '~/pagesQualityInspectionKCS/Results';
-import QualityInspectionKCSManual from '~/pagesQualityInspectionKCS/Manual';
+const TaskManagementProjectList = lazyPage(() => import('~/pagesTaskManagement/Projects/ProjectList'));
+const TaskManagementProjectOverview = lazyPage(() => import('~/pagesTaskManagement/Projects/ProjectOverview'));
 
-import AdminHistoryKCS from '~/pagesQualityInspectionKCSAdmin/History';
+const AdminTaskManagementDashboard = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/Dashboard'));
 
-import Consolidate from '~/pagesConsolidate/Home';
-import ConsolidateTickTime from '~/pagesConsolidate/Tick';
-import ConsolidateManualTime from '~/pagesConsolidate/Manual';
+const AdminTaskManagementReportByEmployee = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByEmployee'));
+const AdminTaskManagementReportByProject = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByProeject'));
+const AdminTaskManagementReportByStatus = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByStatus'));
 
-import AdminHistoryConsolidate from '~/pagesConsolidateAdmin/History';
+const AdminTaskManagementDepartments = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Departments'));
+const AdminTaskManagementRoles = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Roles'));
+const AdminTaskManagementStatuses = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Statuses'));
+const AdminTaskManagementTeams = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Teams'));
+const AdminTaskManagementUserRoles = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/UserRoles'));
 
-import AdminMesFlow from '~/pagesMESAdmin/Flow';
-import AdminMesDashboard from '~/pagesMESAdmin/Dashboard';
+const BMI = lazyPage(() => import('~/pagesBMI/BMI'));
+const BMICheck = lazyPage(() => import('~/pagesBMI/Check'));
+const BMIDashboard = lazyPage(() => import('~/pagesBMI/Dashboard'));
+const BMIPlan = lazyPage(() => import('~/pagesBMI/Plan'));
+const BMIProfile = lazyPage(() => import('~/pagesBMI/Profile'));
 
-import CapMoneyHome from '~/pageCapMoney/Home';
-import CapMoneyStatistic from '~/pageCapMoney/Statistic';
-import CapMoneyAccount from '~/pageCapMoney/Account';
-import CapMoneyBudget from '~/pageCapMoney/Budget';
-import CapMoneyPersonal from '~/pageCapMoney/Personal';
+const InkCovPerOnFilm = lazyPage(() => import('~/pagesInkCovPerOnFilm/InkCovPerOnFilm'));
+const uploadFileFilm = lazyPage(() => import('~/pagesInkCovPerOnFilm/uploadFileFilm'));
 
-import TheSanXuatMaPhan from '~/pages/utilsMrTuy/MrTuy/TheSanXuatMaPhan';
-import FormTestRun from '~/pages/utilsMrTuy/MrTuy/FormTestRun';
-import FormReady from '~/pages/utilsMrTuy/MrTuy/FormReady';
-import A6Card from '~/pages/utilsMrTuy/MrTuy/A6Card';
+const QualityInspectionOQC = lazyPage(() => import('~/pagesQualityInspectionOQC/Home'));
+const QualityInspectionOQCResult = lazyPage(() => import('~/pagesQualityInspectionOQC/Results'));
+const QualityInspectionOQCManual = lazyPage(() => import('~/pagesQualityInspectionOQC/Manual'));
+
+const AdminHistoryOQC = lazyPage(() => import('~/pagesQualityInspectionOQCAdmin/History'));
+
+const QualityInspectionKCS = lazyPage(() => import('~/pagesQualityInspectionKCS/Home'));
+const QualityInspectionKCSResult = lazyPage(() => import('~/pagesQualityInspectionKCS/Results'));
+const QualityInspectionKCSManual = lazyPage(() => import('~/pagesQualityInspectionKCS/Manual'));
+
+const AdminHistoryKCS = lazyPage(() => import('~/pagesQualityInspectionKCSAdmin/History'));
+
+const Consolidate = lazyPage(() => import('~/pagesConsolidate/Home'));
+const ConsolidateTickTime = lazyPage(() => import('~/pagesConsolidate/Tick'));
+const ConsolidateManualTime = lazyPage(() => import('~/pagesConsolidate/Manual'));
+
+const AdminHistoryConsolidate = lazyPage(() => import('~/pagesConsolidateAdmin/History'));
+
+const AdminMesFlow = lazyPage(() => import('~/pagesMESAdmin/Flow'));
+const AdminMesDashboard = lazyPage(() => import('~/pagesMESAdmin/Dashboard'));
+
+const CapMoneyHome = lazyPage(() => import('~/pageCapMoney/Home'));
+const CapMoneyStatistic = lazyPage(() => import('~/pageCapMoney/Statistic'));
+const CapMoneyAccount = lazyPage(() => import('~/pageCapMoney/Account'));
+const CapMoneyBudget = lazyPage(() => import('~/pageCapMoney/Budget'));
+const CapMoneyPersonal = lazyPage(() => import('~/pageCapMoney/Personal'));
+
+const TheSanXuatMaPhan = lazyPage(() => import('~/pages/utilsMrTuy/MrTuy/TheSanXuatMaPhan'));
+const FormTestRun = lazyPage(() => import('~/pages/utilsMrTuy/MrTuy/FormTestRun'));
+const FormReady = lazyPage(() => import('~/pages/utilsMrTuy/MrTuy/FormReady'));
+const A6Card = lazyPage(() => import('~/pages/utilsMrTuy/MrTuy/A6Card'));
 
 const routesCapMoney = [
   {
@@ -571,25 +572,17 @@ export const routes = [
 
   
   {
-    path: config.routes.formHistory,
-    component: FormHistory,
+    path: config.routes.form,
+    component: MyForms,
     login: true,
     module: 'bieumaunoibo',
   },
   {
-    path: config.routes.form,
-    component: Form,
-    login: false,
-    isLogin: false,
+    path: config.routes.formFill,
+    component: FormFill,
+    login: true,
     module: 'bieumaunoibo',
     addId: true,
-  },
-  {
-    path: config.routes.form,
-    component: Form,
-    login: false,
-    isLogin: false,
-    module: 'bieumaunoibo',
   },
 
   
@@ -979,41 +972,30 @@ export const routesCalculateSalaryAdmin = [
 
 export const routesFormAdmin = [
   {
-    path: config.routes.adminFormDashboard,
-    component: FormDashboard,
-    login: true,
-  },
-  {
-    path: config.routes.adminFormCreate,
-    component: FormCreate,
-    login: true,
-  },
-  {
     path: config.routes.adminFormList,
-    component: FormList,
+    component: AdminFormList,
     login: true,
   },
   {
-    path: config.routes.adminFormEdit,
-    component: FormEdit,
+    path: config.routes.adminFormBuilder,
+    component: AdminFormBuilder,
     login: true,
-    addId: true,
   },
   {
-    path: config.routes.adminFormResponses,
-    component: FormResponses,
-    login: true,
-    addId: true,
-  },
-  {
-    path: config.routes.adminFormResponseDetail,
-    component: FormResponseDetail,
+    path: config.routes.adminFormBuilder,
+    component: AdminFormBuilder,
     login: true,
     addId: true,
   },
   {
-    path: config.routes.adminFormAnalytics,
-    component: FormAnalytics,
+    path: config.routes.adminFormResults,
+    component: AdminFormResults,
+    login: true,
+    addId: true,
+  },
+  {
+    path: config.routes.adminFormOrg,
+    component: AdminFormOrg,
     login: true,
   },
 ]

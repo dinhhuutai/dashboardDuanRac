@@ -51,17 +51,75 @@ export default function WeighSelectionSummaryModal({
   const [isSaving, setIsSaving] = useState(false);
 
   // --- MQTT (đúng kiểu cũ như Scan) ---
+  // useEffect(() => {
+  //   const client = mqtt.connect(MQTT_BROKER);
+  //   client.on('connect', () => client.subscribe(MQTT_TOPIC));
+  //   client.on('message', (_topic, message) => {
+  //     try {
+  //       const data = JSON.parse(message.toString());
+  //       if (data?.weight) setKhoiLuong(String(data.weight));
+  //     } catch {}
+  //   });
+  //   return () => client.end();
+  // }, []);
+
   useEffect(() => {
-    const client = mqtt.connect(MQTT_BROKER);
-    client.on('connect', () => client.subscribe(MQTT_TOPIC));
-    client.on('message', (_topic, message) => {
-      try {
-        const data = JSON.parse(message.toString());
-        if (data?.weight) setKhoiLuong(String(data.weight));
-      } catch {}
+  console.log("Khởi tạo MQTT...");
+
+  const client = mqtt.connect(MQTT_BROKER);
+
+  client.on("connect", () => {
+    console.log("✅ MQTT Connected");
+
+    client.subscribe(MQTT_TOPIC, (err) => {
+      if (err) {
+        console.log("❌ Subscribe lỗi:", err);
+      } else {
+        console.log("✅ Subscribe thành công:", MQTT_TOPIC);
+      }
     });
-    return () => client.end();
-  }, []);
+  });
+
+  client.on("message", (topic, message) => {
+    console.log("📩 Topic:", topic);
+    console.log("📩 Raw:", message.toString());
+
+    try {
+      const data = JSON.parse(message.toString());
+      console.log("📦 JSON:", data);
+
+      if (data?.weight) {
+        console.log("⚖️ Weight:", data.weight);
+        setKhoiLuong(String(data.weight));
+      } else {
+        console.log("Không có trường weight");
+      }
+    } catch (e) {
+      console.log("JSON Parse Error:", e);
+    }
+  });
+
+  client.on("error", (err) => {
+    console.log("❌ MQTT Error:", err);
+  });
+
+  client.on("offline", () => {
+    console.log("⚠️ MQTT Offline");
+  });
+
+  client.on("close", () => {
+    console.log("🔴 MQTT Closed");
+  });
+
+  client.on("reconnect", () => {
+    console.log("🔄 MQTT Reconnecting");
+  });
+
+  return () => {
+    console.log("Đóng MQTT");
+    client.end();
+  };
+}, []);
 
   // nhận khối lượng từ redux (giữ nguyên như cũ)
   useEffect(() => { setKhoiLuong(weightScale?.weight); }, [weightScale]);
@@ -185,7 +243,7 @@ export default function WeighSelectionSummaryModal({
       trashBinCode: jsonData.id,
       userID: user?.userID,
       weighingTime: nowUTC7.toISOString(),
-      weightKg: weight,
+      weightKg: weight >= 0 ? weight : 0 - weight,
       updatedAt: nowUTC7.toISOString(),
       updatedBy: user?.userID,
       workShift: isWorkShift ? workShift : null,

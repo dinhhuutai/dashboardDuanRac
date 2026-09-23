@@ -103,8 +103,8 @@ function Home() {
     mau: [3, ,9, 5, 7, 6, 2],
     loep: [3, 4],
 
-    rc1: [3, 9, 5],
-    rc2: [3, 9, 5],
+    rc1: [3, ,9, 5, 7, 6, 2],
+    rc2: [3, ,9, 5, 7, 6, 2],
   };
 
   const TRASH_BY_LINE = {
@@ -120,7 +120,7 @@ function Home() {
     { key: 'ban',   name: 'Máy in bàn',     deptId: null },
     { key: 'robot', name: 'Máy in robot',   deptId: null },
     { key: 'mau',   name: 'Mẫu',            deptId: 24, fixedLine: 68 },
-    { key: 'loep',  name: 'Logo - ép',      deptId: 21, fixedLine: 69 },
+    { key: 'loep',  name: 'Logo - ép',      deptId: 30, fixedLine: 69 },
     { key: 'ck',    name: 'Chụp khuôn',     deptId: 25 },
     { key: 'kcs',   name: 'KCS',            deptId: 26 },
     { key: 'sh',    name: 'Sửa hàng',       deptId: 27 },
@@ -143,15 +143,15 @@ function Home() {
   ];
 
   const LINES_BAN = [
-    { label: 'M1A',    deptId: 20, lineId: 40 },
-    { label: 'M1B',    deptId: 20, lineId: 35 },
-    { label: 'M2A-2B', deptId: 20, lineId: 36 },
-    { label: 'M4A-4B', deptId: 20, lineId: 41 },
-    { label: 'M5A-5B', deptId: 20, lineId: 42 },
-    { label: 'M6A-6B', deptId: 20, lineId: 43 },
-    { label: 'M7A-7B', deptId: 20, lineId: 44 },
-    { label: 'M8A-8B', deptId: 20, lineId: 45 },
-    { label: 'M9A-9B', deptId: 20, lineId: 46 },
+    { label: 'M1A',    deptId: 21, lineId: 40 },
+    { label: 'M1B',    deptId: 21, lineId: 35 },
+    { label: 'M2A-2B', deptId: 21, lineId: 36 },
+    { label: 'M4A-4B', deptId: 21, lineId: 41 },
+    { label: 'M5A-5B', deptId: 21, lineId: 42 },
+    { label: 'M6A-6B', deptId: 21, lineId: 43 },
+    { label: 'M7A-7B', deptId: 21, lineId: 44 },
+    { label: 'M8A-8B', deptId: 21, lineId: 45 },
+    { label: 'M9A-9B', deptId: 21, lineId: 46 },
     { label: 'M10A',   deptId: 21, lineId: 52 },
     { label: 'M11A',   deptId: 21, lineId: 53 },
     { label: 'M12A',   deptId: 21, lineId: 54 },
@@ -165,9 +165,9 @@ function Home() {
   ];
 
   const LINES_ROBOT = [
-    { label: 'MRB1', deptId: 20, lineId: 47 },
-    { label: 'MRB2', deptId: 20, lineId: 57 },
-    { label: 'MRB3', deptId: 20, lineId: 66 },
+    { label: 'MRB1', deptId: 21, lineId: 47 },
+    { label: 'MRB2', deptId: 21, lineId: 57 },
+    { label: 'MRB3', deptId: 21, lineId: 66 },
   ];
 
   // Helper trả về lines theo key bộ phận

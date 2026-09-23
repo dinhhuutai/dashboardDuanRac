@@ -109,16 +109,14 @@ const routes = {
   calculateSalaryViewPayslip: '/me/view-payslip',
   
   
-  form: '/form',
-  formHistory: '/form/history',
+  // Module 9 — Biểu mẫu nội bộ
+  form: '/form',                          // danh sách biểu mẫu của tôi
+  formFill: '/form/fill',                 // /form/fill/:id
 
-  adminFormCreate: '/admin/form/create',
-  adminFormDashboard: '/admin/form/dashboard',
   adminFormList: '/admin/form/list',
-  adminFormEdit: '/admin/form/edit',
-  adminFormResponses: '/admin/form/responses',
-  adminFormResponseDetail: '/admin/form/response-detail',
-  adminFormAnalytics: '/admin/form/analyics',
+  adminFormBuilder: '/admin/form/builder', // tạo mới; /admin/form/builder/:id = sửa
+  adminFormResults: '/admin/form/results', // /admin/form/results/:id
+  adminFormOrg: '/admin/form/org',         // phòng ban, chức danh, gán cho nhân viên
   
 
   n20th11: '/luu-thi-thao-nguyen/20-10',

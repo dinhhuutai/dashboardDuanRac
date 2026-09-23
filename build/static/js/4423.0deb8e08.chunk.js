@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[4423],{24423:(e,a,t)=>{t.r(a),t.d(a,{default:()=>s});var r=t(44414);function s(){return(0,r.jsx)("div",{children:"Plan"})}}}]);

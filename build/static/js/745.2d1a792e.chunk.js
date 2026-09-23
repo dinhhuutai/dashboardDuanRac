@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[745],{50745:(e,t,r)=>{r.r(t),r.d(t,{default:()=>s});var c=r(44414);const s=function(){return(0,c.jsx)("div",{children:"ReportByProject"})}}}]);

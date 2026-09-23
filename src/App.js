@@ -19,52 +19,11 @@ import { APP_VERSION } from "./version";
 
 import ScrollToTop from "./components/ScrollToTop";
 
-import DefaultLayoutTrashWeight from "./layouts/DefaultLayout";
-import DefaultLayoutAdmin from "./layoutsAdmin/DefaultLayoutAdmin";
-import DefaultLayoutAdminInk from "./layoutsInkWeighAdmin/DefaultLayoutAdmin";
-import DefaultLayoutAdminSuggest from "./layoutSuggestionAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutSuggest from "./layoutsSuggestion/DefaultLayout";
-
-import DefaultLayoutCalculateSalary from "./layoutCalculateSalary/DefaultLayout";
-
-import DefaultLayoutLunchOrder from "./layoutsLunchOrder/DefaultLayout";
-import DefaultLayoutAdminLunchOrder from './layoutsLuchOrderAdmin/DefaultLayoutAdmin';
-
-import DefaultLayoutAdminProduction from "./layoutsProductionAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutAdminCalculateSalary from "./layoutCalculateSalaryAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutAdminForm from "./layoustFormAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutTaskManagement from "./layoutsTaskManagement/DefaultLayout";
-
-import DefaultLayoutAdminTaskManagement from "./layoutsTaskManagementAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutBMI from "./layoutsBMI/DefaultLayout";
-
-import DefaultLayoutInkCovPerOnFilm from "./layoutsInkCovPerOnFilm/DefaultLayout";
-
-import DefaultLayoutQualityInspectionOQC from "./layoutQualityInspectionOQC/DefaultLayout";
-import DefaultLayoutAdminQualityInspectionOQC from "./layoutQualityInspectionOQCAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutQualityInspectionKCS from "./layoutQualityInspectionKCS/DefaultLayout";
-import DefaultLayoutAdminQualityInspectionKCS from "./layoutQualityInspectionKCSAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutConsolidate from "./layoutConsolidate/DefaultLayout"
-import DefaultLayoutAdminConsolidate from "./layoutConsolidateAdmin/DefaultLayoutAdmin";
-
-import DefaultLayoutForm from "./layoutsForm/DefaultLayout"
-
-import DefaultLayoutAdminMES from "./layoutsMESAdmin/DefaultLayoutAdmin"
-
-import DefaultLayoutCapMoney from "./layoutCapMoney/DefaultLayout"
-
-
 import ProtecteRouterLogin from "./routing/ProtecteRouterLogin";
 import { useDispatch, useSelector } from "react-redux";
 import { userSelector } from "./redux/selectors";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import Spinner from "react-bootstrap/Spinner";
 import Login from "~/pages/Login";
 import config from "./config";
 
@@ -77,6 +36,57 @@ import usePresencePing from "./hooks/usePresencePing";
 import usePageView from "./hooks/usePageView";
 import MODULEID from "./contants/modules";
 import HomeMain from "./pages/HomeMain";
+import lazyPage from "./utils/lazyPage";
+
+// Layout từng module — tải theo nhu cầu để không nhồi code của mọi module vào file JS chính
+const DefaultLayoutTrashWeight = lazyPage(() => import("./layouts/DefaultLayout"));
+const DefaultLayoutAdmin = lazyPage(() => import("./layoutsAdmin/DefaultLayoutAdmin"));
+const DefaultLayoutAdminInk = lazyPage(() => import("./layoutsInkWeighAdmin/DefaultLayoutAdmin"));
+const DefaultLayoutAdminSuggest = lazyPage(() => import("./layoutSuggestionAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutSuggest = lazyPage(() => import("./layoutsSuggestion/DefaultLayout"));
+
+const DefaultLayoutCalculateSalary = lazyPage(() => import("./layoutCalculateSalary/DefaultLayout"));
+
+const DefaultLayoutLunchOrder = lazyPage(() => import("./layoutsLunchOrder/DefaultLayout"));
+const DefaultLayoutAdminLunchOrder = lazyPage(() => import("./layoutsLuchOrderAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutAdminProduction = lazyPage(() => import("./layoutsProductionAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutAdminCalculateSalary = lazyPage(() => import("./layoutCalculateSalaryAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutAdminForm = lazyPage(() => import("./layoutsFormAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutTaskManagement = lazyPage(() => import("./layoutsTaskManagement/DefaultLayout"));
+
+const DefaultLayoutAdminTaskManagement = lazyPage(() => import("./layoutsTaskManagementAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutBMI = lazyPage(() => import("./layoutsBMI/DefaultLayout"));
+
+const DefaultLayoutInkCovPerOnFilm = lazyPage(() => import("./layoutsInkCovPerOnFilm/DefaultLayout"));
+
+const DefaultLayoutQualityInspectionOQC = lazyPage(() => import("./layoutQualityInspectionOQC/DefaultLayout"));
+const DefaultLayoutAdminQualityInspectionOQC = lazyPage(() => import("./layoutQualityInspectionOQCAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutQualityInspectionKCS = lazyPage(() => import("./layoutQualityInspectionKCS/DefaultLayout"));
+const DefaultLayoutAdminQualityInspectionKCS = lazyPage(() => import("./layoutQualityInspectionKCSAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutConsolidate = lazyPage(() => import("./layoutConsolidate/DefaultLayout"));
+const DefaultLayoutAdminConsolidate = lazyPage(() => import("./layoutConsolidateAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutForm = lazyPage(() => import("./layoutsForm/DefaultLayout"));
+
+const DefaultLayoutAdminMES = lazyPage(() => import("./layoutsMESAdmin/DefaultLayoutAdmin"));
+
+const DefaultLayoutCapMoney = lazyPage(() => import("./layoutCapMoney/DefaultLayout"));
+
+function PageLoading() {
+  return (
+    <div className="min-h-screen grid place-items-center">
+      <Spinner animation="border" variant="info" />
+    </div>
+  );
+}
 
 function AppRoutes({ user }) {
   
@@ -92,10 +102,20 @@ function AppRoutes({ user }) {
 
   const dispatch = useDispatch();
 
+  const lastPermReloadRef = useRef(0);
+
   useEffect(() => {
-    const onFocus = () => dispatch(reloadPermissions());
+    // focus và visibilitychange thường bắn cùng lúc khi quay lại app → gộp, tối đa 1 lần / 30s
+    const reload = () => {
+      if (!isLoggedIn) return;
+      const now = Date.now();
+      if (now - lastPermReloadRef.current < 30000) return;
+      lastPermReloadRef.current = now;
+      dispatch(reloadPermissions());
+    };
+    const onFocus = () => reload();
     const onVis = () => {
-      if (document.visibilityState === "visible") dispatch(reloadPermissions());
+      if (document.visibilityState === "visible") reload();
     };
 
     window.addEventListener("focus", onFocus);
@@ -105,9 +125,10 @@ function AppRoutes({ user }) {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [dispatch]);
+  }, [dispatch, isLoggedIn]);
 
   return (
+    <Suspense fallback={<PageLoading />}>
       <Routes>
         {/* Login */}
         <Route
@@ -479,6 +500,7 @@ function AppRoutes({ user }) {
           ))}
         </Route>
       </Routes>
+    </Suspense>
   );
 }
 

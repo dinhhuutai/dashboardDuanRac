@@ -516,23 +516,45 @@ const WASTE_CHART_ROWS = [
   { label: "Vụn logo", indices: [6] },
 ];
 
-const PIE_COLORS = [
-  "#0f766e",
-  "#0e7490",
-  "#1d4ed8",
-  "#5b21b6",
-  "#a21caf",
-  "#c2410c",
-  "#b45309",
-  "#15803d",
-  "#475569",
+// Tách 2 palette để 2 biểu đồ nhìn phân biệt rõ hơn
+const MATERIAL_PIE_COLORS = [
+  // Mỗi lát 1 màu khác nhau + xen kẽ đậm/nhạt
+  "#1d4ed8", // dark blue
+  "#fdba74", // light orange
+  "#7e22ce", // dark purple
+  "#86efac", // light green
+  "#be123c", // dark rose
+  "#67e8f9", // light cyan
+  "#b45309", // dark amber
+  "#c4b5fd", // light violet
+  "#0f766e", // dark teal
+  "#fef08a", // light yellow
+  "#0f172a", // dark slate
+  "#fbcfe8", // light pink
+];
+
+const WASTE_PIE_COLORS = [
+  // Mỗi lát 1 màu khác nhau + xen kẽ đậm/nhạt
+  "#0f766e", // dark teal
+  "#fda4af", // light rose
+  "#b91c1c", // dark red
+  "#93c5fd", // light blue
+  "#6d28d9", // dark violet
+  "#fde68a", // light amber
+  "#0369a1", // dark sky
+  "#bbf7d0", // light green
+  "#7c2d12", // dark brown
+  "#c7d2fe", // light indigo
+  "#334155", // dark slate
+  "#e9d5ff", // light lavender
 ];
 
 /** Màu cạnh trái bảng legend — cùng thứ tự với lát trong biểu đồ (pieRows). */
-function legendStripeColor(pieRows, isMatch) {
+function legendStripeColor(pieRows, isMatch, colors) {
   const i = pieRows.findIndex(isMatch);
   if (i < 0) return "#cbd5e1";
-  return PIE_COLORS[i % PIE_COLORS.length];
+  const pal = colors?.length ? colors : WASTE_PIE_COLORS;
+  return pal[i % pal.length];
 }
 
 const RAD = Math.PI / 180;
@@ -585,7 +607,7 @@ function StructurePieTooltip({ active, payload, total }) {
   );
 }
 
-function StructureDonutChart({ data, total, emptyLabel }) {
+function StructureDonutChart({ data, total, emptyLabel, colors }) {
   if (!data?.length) {
     return (
       <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-gradient-to-b from-slate-50 to-white px-4 text-center text-sm text-slate-500">
@@ -594,6 +616,7 @@ function StructureDonutChart({ data, total, emptyLabel }) {
     );
   }
 
+  const pal = colors?.length ? colors : WASTE_PIE_COLORS;
   return (
     <div className="w-full min-w-0">
       <div className="mx-auto w-full max-w-[420px] sm:max-w-none">
@@ -615,7 +638,7 @@ function StructureDonutChart({ data, total, emptyLabel }) {
                 labelLine={false}
               >
                 {data.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  <Cell key={i} fill={pal[i % pal.length]} />
                 ))}
               </Pie>
               <Tooltip
@@ -1575,7 +1598,8 @@ function TrashAndMaterial() {
                         style={{
                           borderLeftColor: legendStripeColor(
                             materialStructure.pieRows,
-                            (p) => p.key === r.key
+                            (p) => p.key === r.key,
+                            MATERIAL_PIE_COLORS
                           ),
                         }}
                       >
@@ -1597,6 +1621,7 @@ function TrashAndMaterial() {
                 data={materialStructure.pieRows}
                 total={materialStructure.total}
                 emptyLabel="Không có dữ liệu vật tư trong khoảng ngày đã chọn."
+                colors={MATERIAL_PIE_COLORS}
               />
             </div>
           </div>
@@ -1629,7 +1654,8 @@ function TrashAndMaterial() {
                         style={{
                           borderLeftColor: legendStripeColor(
                             wasteStructure.pieRows,
-                            (p) => p.name === r.name
+                            (p) => p.name === r.name,
+                            WASTE_PIE_COLORS
                           ),
                         }}
                       >
@@ -1651,6 +1677,7 @@ function TrashAndMaterial() {
                 data={wasteStructure.pieRows}
                 total={wasteStructure.total}
                 emptyLabel="Không có dữ liệu rác trong khoảng ngày đã chọn."
+                colors={WASTE_PIE_COLORS}
               />
             </div>
           </div>

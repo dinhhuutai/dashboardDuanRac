@@ -498,8 +498,9 @@ import {
   FiX,
   FiUsers,
 } from "react-icons/fi";
-import * as FiIcons from "react-icons/fi";
-import * as FcIcons from "react-icons/fc";
+// cả bộ — ô chọn icon cho module, xem IconSets/README.md
+import FiIcons from "~/components/IconSets/fi";
+import FcIcons from "~/components/IconSets/fc";
 import { Combobox } from "@headlessui/react";
 import { createPortal } from "react-dom";
 import { BASE_URL } from "~/config";
