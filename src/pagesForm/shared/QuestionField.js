@@ -18,8 +18,8 @@ function ChoiceRow({ type, checked, onClick, disabled, children }) {
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
-        checked ? "border-blue-500 bg-blue-50 text-blue-900" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
-        disabled && "cursor-default"
+        checked ? "border-blue-500 bg-blue-50 text-blue-900" : "border-slate-200 bg-white text-slate-700",
+        disabled ? "cursor-not-allowed opacity-60" : !checked && "hover:border-slate-300"
       )}
     >
       <span
@@ -204,7 +204,8 @@ export default function QuestionField({ question: q, value, onChange, disabled, 
                 onClick={() => set(value === v && !q.isRequired ? null : v)}
                 className={cn(
                   "h-10 w-10 rounded-lg border text-sm font-medium transition-colors",
-                  value === v ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-blue-400"
+                  value === v ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700",
+                  disabled ? "cursor-not-allowed opacity-60" : value !== v && "hover:border-blue-400"
                 )}>
                 {v}
               </button>
@@ -227,7 +228,7 @@ export default function QuestionField({ question: q, value, onChange, disabled, 
         <div className="flex gap-1">
           {Array.from({ length: max }, (_, i) => i + 1).map((v) => (
             <button key={v} type="button" disabled={disabled} title={`${v}/${max}`}
-              onClick={() => set(value === v && !q.isRequired ? null : v)} className="p-0.5">
+              onClick={() => set(value === v && !q.isRequired ? null : v)} className={cn("p-0.5", disabled && "cursor-not-allowed opacity-60")}>
               <Star className={cn("h-8 w-8 transition-colors", value >= v ? "fill-amber-400 text-amber-400" : "text-slate-300")} />
             </button>
           ))}

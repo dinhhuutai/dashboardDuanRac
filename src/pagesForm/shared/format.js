@@ -44,6 +44,13 @@ export function deadlineText(closeAt) {
   return { text: `Hạn chót ${fmtDateTime(closeAt)}`, urgent: false };
 }
 
+/** Biểu mẫu chưa tới giờ mở (isOpenNow do server tính; openAt dùng để phân biệt "chưa mở" với "đã đóng") */
+export function isNotYetOpen(form) {
+  if (!form || form.isOpenNow || form.acceptResponses === false) return false;
+  const d = parseLocal(form.openAt);
+  return !!d && d > new Date();
+}
+
 export function todayText() {
   const d = new Date();
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;

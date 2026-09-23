@@ -7,7 +7,7 @@ import config from "~/config";
 import { userSelector } from "~/redux/selectors";
 import { errorCode, errorMessage, fmApi } from "../shared/api";
 import { isAnswered, visibleQuestionKeys } from "../shared/conditions";
-import { deadlineText, fmtDateTime } from "../shared/format";
+import { deadlineText, fmtDateTime, isNotYetOpen, parseLocal } from "../shared/format";
 import ProfileDialog, { ProfileSummary } from "../shared/ProfileDialog";
 import QuestionField, { toSubmitValue } from "../shared/QuestionField";
 import { Badge, Button, ErrorBox, Spinner, confirmDialog, toast } from "../shared/ui";
@@ -69,6 +69,16 @@ export default function FormFill() {
   }, [id, key]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Biểu mẫu chưa tới giờ mở: tới giờ thì tự tải lại để mở khoá (không bắt người dùng F5)
+  const openAt = isNotYetOpen(data?.form) ? data.form.openAt : null;
+  useEffect(() => {
+    if (!openAt) return;
+    const ms = parseLocal(openAt) - new Date();
+    if (ms > 24 * 3600 * 1000) return;
+    const t = setTimeout(load, Math.max(ms, 0) + 3000);
+    return () => clearTimeout(t);
+  }, [openAt, load]);
 
   // Tự lưu nháp trên máy (không gửi server) — tải lại trang không mất câu trả lời
   useEffect(() => {
@@ -205,7 +215,16 @@ export default function FormFill() {
         </div>
       </div>
 
-      {readOnly && (
+      {readOnly && openAt && (
+        <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Biểu mẫu <b>chưa mở</b> — bắt đầu nhận phiếu lúc <b>{fmtDateTime(openAt)}</b>. Bạn chỉ xem trước được câu hỏi,
+            tới giờ trang sẽ tự mở để điền.
+          </span>
+        </div>
+      )}
+      {readOnly && !openAt && (
         <div className="flex items-start gap-2 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{data.blockReason}{data.myResponse ? " — dưới đây là phiếu bạn đã nộp." : "."}</span>

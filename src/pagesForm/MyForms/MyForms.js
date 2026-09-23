@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, ChevronRight, ClipboardList, Clock, Inbox, Lock } from "lucide-react";
 import config from "~/config";
 import { errorMessage, fmApi } from "../shared/api";
-import { deadlineText, fmtDateTime } from "../shared/format";
+import { deadlineText, fmtDateTime, isNotYetOpen } from "../shared/format";
 import ProfileDialog, { ProfileSummary } from "../shared/ProfileDialog";
 import { Badge, EmptyState, ErrorBox, Spinner, cn } from "../shared/ui";
 
@@ -19,8 +19,10 @@ const needsAction = (f) => f.isOpenNow && (f.myResponseCount === 0 || f.allowMul
 function FormCard({ f, onOpen }) {
   const deadline = f.isOpenNow ? deadlineText(f.closeAt) : null;
   const submitted = f.myResponseCount > 0;
+  const notYetOpen = isNotYetOpen(f);
   let cta = "Điền biểu mẫu";
-  if (!f.isOpenNow) cta = submitted ? "Xem phiếu đã nộp" : "Xem";
+  if (notYetOpen) cta = "Xem trước";
+  else if (!f.isOpenNow) cta = submitted ? "Xem phiếu đã nộp" : "Xem";
   else if (submitted && f.allowMultiple) cta = "Nộp thêm";
   else if (submitted && f.allowEditAfterSubmit) cta = "Xem & sửa";
   else if (submitted) cta = "Xem phiếu đã nộp";
@@ -34,7 +36,9 @@ function FormCard({ f, onOpen }) {
       <span className="w-1.5 shrink-0" style={{ background: f.themeColor || "#1f4e79" }} />
       <span className="min-w-0 flex-1 p-4">
         <span className="flex flex-wrap items-center gap-2">
-          {!f.isOpenNow ? (
+          {notYetOpen ? (
+            <Badge tone="amber"><Clock className="h-3 w-3" /> Chưa mở · mở lúc {fmtDateTime(f.openAt)}</Badge>
+          ) : !f.isOpenNow ? (
             <Badge><Lock className="h-3 w-3" /> Đã đóng</Badge>
           ) : submitted ? (
             <Badge tone="green"><CheckCircle2 className="h-3 w-3" /> Đã nộp {fmtDateTime(f.myLastSubmittedAt)}</Badge>
