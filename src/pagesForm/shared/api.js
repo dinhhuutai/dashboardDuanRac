@@ -32,8 +32,9 @@ export const fmApi = {
   missing: (id) => unwrap(http.get(`/api/fm/admin/forms/${id}/missing`)),
   removeResponse: (responseId) => unwrap(http.delete(`/api/fm/admin/responses/${responseId}`)),
 
-  // Admin — phòng ban / chức danh
-  orgList: (kind) => unwrap(http.get(`/api/fm/admin/org/${kind}`)), // kind: departments | job-titles
+  // Admin — phòng ban / tổ / chức danh
+  orgList: (kind) => unwrap(http.get(`/api/fm/admin/org/${kind}`)), // kind: departments | teams | job-titles
+  orgPending: () => unwrap(http.get("/api/fm/admin/org/pending")),
   orgCreate: (kind, body) => unwrap(http.post(`/api/fm/admin/org/${kind}`, body)),
   orgUpdate: (kind, id, body) => unwrap(http.put(`/api/fm/admin/org/${kind}/${id}`, body)),
   orgUsers: (params) => unwrap(http.get("/api/fm/admin/org/users", { params })),

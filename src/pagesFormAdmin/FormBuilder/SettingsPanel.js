@@ -1,6 +1,6 @@
 // Cài đặt biểu mẫu: hiện/ẩn, lịch nhận phiếu, đối tượng, tuỳ chọn nộp, giao diện
 import { useEffect, useState } from "react";
-import { Briefcase, Building2, Search, User, X } from "lucide-react";
+import { Briefcase, Building2, Layers, Search, User, X } from "lucide-react";
 import { errorMessage, fmApi } from "~/pagesForm/shared/api";
 import { toInputDateTime } from "~/pagesForm/shared/format";
 import { Field, Toggle, cn, inputCls, toast } from "~/pagesForm/shared/ui";
@@ -78,12 +78,20 @@ function UserSearch({ onPick, pickedIds }) {
 }
 
 export default function SettingsPanel({ form, onChange }) {
-  const [org, setOrg] = useState({ departments: [], jobTitles: [] });
+  const [org, setOrg] = useState({ departments: [], teams: [], jobTitles: [] });
   useEffect(() => {
-    Promise.all([fmApi.orgList("departments"), fmApi.orgList("job-titles")])
-      .then(([departments, jobTitles]) => setOrg({ departments: departments.filter((d) => d.isActive), jobTitles: jobTitles.filter((t) => t.isActive) }))
-      .catch((e) => toast.error(errorMessage(e, "Không tải được phòng ban / chức danh")));
+    Promise.all([fmApi.orgList("departments"), fmApi.orgList("teams"), fmApi.orgList("job-titles")])
+      .then(([departments, teams, jobTitles]) => setOrg({
+        departments: departments.filter((d) => d.isActive),
+        teams: teams.filter((t) => t.isActive),
+        jobTitles: jobTitles.filter((t) => t.isActive),
+      }))
+      .catch((e) => toast.error(errorMessage(e, "Không tải được phòng ban / tổ / chức danh")));
   }, []);
+  // Tổ nhóm theo phòng ban để dễ tìm
+  const teamGroups = org.departments
+    .map((d) => ({ dept: d, teams: org.teams.filter((t) => t.departmentId === d.id) }))
+    .filter((g) => g.teams.length);
 
   const set = (patch) => onChange({ ...form, ...patch });
   const audiences = form.audiences || [];
@@ -115,7 +123,7 @@ export default function SettingsPanel({ form, onChange }) {
 
       <Section title="Ai được điền?" hint="Chỉ những người có quyền module Biểu mẫu nội bộ mới thấy biểu mẫu.">
         <div className="grid gap-2 sm:grid-cols-2">
-          {[["all", "Tất cả nhân viên"], ["targeted", "Chọn phòng ban / chức danh / người"]].map(([v, label]) => (
+          {[["all", "Tất cả nhân viên"], ["targeted", "Chọn phòng ban / tổ / chức danh / người"]].map(([v, label]) => (
             <button
               key={v}
               type="button"
@@ -135,6 +143,22 @@ export default function SettingsPanel({ form, onChange }) {
               <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-700"><Building2 className="h-4 w-4" /> Phòng ban</p>
               <CheckList items={org.departments} selected={selectedOf("department")} onToggle={(it) => toggleAudience("department", it)} empty="Chưa có phòng ban — thêm ở mục Phòng ban & chức danh" />
             </div>
+            {teamGroups.length > 0 && (
+              <div>
+                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-700"><Layers className="h-4 w-4" /> Tổ</p>
+                <div className="space-y-2">
+                  {teamGroups.map((g) => (
+                    <div key={g.dept.id} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                      <span className="w-full pt-1 text-xs text-slate-500 sm:w-44 sm:shrink-0">{g.dept.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <CheckList items={g.teams} selected={selectedOf("team")}
+                          onToggle={(it) => toggleAudience("team", { id: it.id, name: `${it.name} — ${g.dept.name}` })} empty="" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-slate-700"><Briefcase className="h-4 w-4" /> Chức danh</p>
               <CheckList items={org.jobTitles} selected={selectedOf("jobTitle")} onToggle={(it) => toggleAudience("jobTitle", it)} empty="Chưa có chức danh" />

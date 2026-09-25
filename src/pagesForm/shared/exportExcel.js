@@ -27,6 +27,7 @@ function buildSheet({ form, questions, rows, departmentLabel }) {
   const fixed = [
     { label: "STT", width: 6 },
     { label: "Phòng ban", width: 20 },
+    { label: "Tổ", width: 12 },
     { label: "Họ và tên nhân viên", width: 24 },
     { label: "MSNV", width: 11 },
     { label: "Chức danh / Vị trí", width: 20 },
@@ -58,6 +59,7 @@ function buildSheet({ form, questions, rows, departmentLabel }) {
     aoa.push([
       i + 1,
       r.departmentName || "",
+      r.teamName || "",
       r.fullName || "",
       r.msnv || "",
       r.jobTitleName || "",
@@ -158,13 +160,13 @@ export function exportMissingToExcel(form, rows) {
     [`DANH SÁCH CHƯA NỘP — ${String(form.title || "").toUpperCase()}`],
     [`Ngày: ${todayText()}`],
     [],
-    ["STT", "Phòng ban", "Họ và tên", "MSNV", "Chức danh"],
-    ...rows.map((r, i) => [i + 1, r.departmentName || "(Chưa có phòng ban)", r.fullName || "", r.msnv || "", r.jobTitleName || ""]),
+    ["STT", "Phòng ban", "Tổ", "Họ và tên", "MSNV", "Chức danh"],
+    ...rows.map((r, i) => [i + 1, r.departmentName || "(Chưa có phòng ban)", r.teamName || "", r.fullName || "", r.msnv || "", r.jobTitleName || ""]),
   ];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"] = [{ wch: 6 }, { wch: 24 }, { wch: 28 }, { wch: 12 }, { wch: 22 }];
-  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
-  for (let c = 0; c < 5; c++) {
+  ws["!cols"] = [{ wch: 6 }, { wch: 24 }, { wch: 12 }, { wch: 28 }, { wch: 12 }, { wch: 22 }];
+  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+  for (let c = 0; c < 6; c++) {
     const k = XLSX.utils.encode_cell({ r: 3, c });
     ws[k].s = { font: font({ bold: true, color: { rgb: "FFFFFF" } }), fill: { fgColor: { rgb: HEADER_BLUE } }, border, alignment: { horizontal: "center" } };
   }

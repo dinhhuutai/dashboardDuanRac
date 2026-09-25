@@ -227,7 +227,7 @@ function ResponsesTab({ formId, departments, onChanged }) {
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
               <tr>
                 <th className="px-3 py-2">Nhân viên</th>
-                <th className="px-3 py-2">Phòng ban / Chức danh</th>
+                <th className="px-3 py-2">Phòng ban / Tổ · Chức danh</th>
                 {preview.map((q) => <th key={q.questionId} className="max-w-[180px] truncate px-3 py-2" title={q.label}>{q.label}</th>)}
                 <th className="px-3 py-2">Nộp lúc</th>
                 <th className="px-3 py-2" />
@@ -237,7 +237,7 @@ function ResponsesTab({ formId, departments, onChanged }) {
               {data.rows.map((r) => (
                 <tr key={r.responseId} className="hover:bg-slate-50">
                   <td className="px-3 py-2"><p className="font-medium text-slate-800">{r.fullName}</p><p className="text-xs text-slate-400">{r.msnv}</p></td>
-                  <td className="px-3 py-2 text-slate-600"><p>{r.departmentName || "—"}</p><p className="text-xs text-slate-400">{r.jobTitleName}</p></td>
+                  <td className="px-3 py-2 text-slate-600"><p>{r.departmentName || "—"}</p><p className="text-xs text-slate-400">{[r.teamName, r.jobTitleName].filter(Boolean).join(" · ")}</p></td>
                   {preview.map((q) => <td key={q.questionId} className="max-w-[180px] truncate px-3 py-2 text-slate-700" title={r.answers[q.questionId]?.display}>{r.answers[q.questionId]?.display || "—"}</td>)}
                   <td className="whitespace-nowrap px-3 py-2 text-slate-500">
                     {fmtDateTime(r.submittedAt)}
@@ -271,8 +271,8 @@ function ResponsesTab({ formId, departments, onChanged }) {
         footer={detail && <Button variant="danger" icon={Trash2} onClick={() => remove(detail)}>Xoá phiếu</Button>}>
         {detail && (
           <div className="space-y-4">
-            <dl className="grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-4">
-              {[["Họ tên", detail.fullName], ["MSNV", detail.msnv], ["Phòng ban", detail.departmentName], ["Chức danh", detail.jobTitleName]].map(([k, v]) => (
+            <dl className="grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-5">
+              {[["Họ tên", detail.fullName], ["MSNV", detail.msnv], ["Phòng ban", detail.departmentName], ["Tổ", detail.teamName], ["Chức danh", detail.jobTitleName]].map(([k, v]) => (
                 <div key={k}><dt className="text-xs text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v || "—"}</dd></div>
               ))}
             </dl>
@@ -301,7 +301,7 @@ function MissingTab({ formId, form }) {
   }, [formId]);
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (rows || []).filter((r) => !q || `${r.fullName} ${r.msnv} ${r.departmentName}`.toLowerCase().includes(q));
+    return (rows || []).filter((r) => !q || `${r.fullName} ${r.msnv} ${r.departmentName} ${r.teamName}`.toLowerCase().includes(q));
   }, [rows, search]);
 
   if (!rows) return <Spinner />;
@@ -319,7 +319,7 @@ function MissingTab({ formId, form }) {
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-            <tr><th className="px-3 py-2">Nhân viên</th><th className="px-3 py-2">MSNV</th><th className="px-3 py-2">Phòng ban</th><th className="px-3 py-2">Chức danh</th></tr>
+            <tr><th className="px-3 py-2">Nhân viên</th><th className="px-3 py-2">MSNV</th><th className="px-3 py-2">Phòng ban</th><th className="px-3 py-2">Tổ</th><th className="px-3 py-2">Chức danh</th></tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {shown.map((r) => (
@@ -327,6 +327,7 @@ function MissingTab({ formId, form }) {
                 <td className="px-3 py-2 font-medium text-slate-800">{r.fullName}</td>
                 <td className="px-3 py-2 text-slate-500">{r.msnv}</td>
                 <td className={cn("px-3 py-2", r.departmentName ? "text-slate-600" : "italic text-amber-700")}>{r.departmentName || "Chưa có"}</td>
+                <td className="px-3 py-2 text-slate-600">{r.teamName || "—"}</td>
                 <td className="px-3 py-2 text-slate-600">{r.jobTitleName || "—"}</td>
               </tr>
             ))}
