@@ -21,7 +21,7 @@ import config, { BASE_URL } from "~/config";
 import { userSelector } from "~/redux/selectors";
 import authSlice from "~/redux/slices/authSlice";
 import http from "~/api/http";
-import MODULEID from "~/contants/modules";
+import MODULEID, { isModuleEnabled } from "~/contants/modules";
 
 import FirstLoginChangePasswordModal from "./FirstLoginChangePasswordModal";
 import PasswordChangeSuccessModal from "./PasswordChangeSuccessModal";
@@ -91,9 +91,10 @@ function HomeMain() {
       .replace(/[\u0300-\u036f]/g, "");
   const visibleModules = modules.filter(
     (m) =>
-      !query ||
-      norm(m.name).includes(norm(query)) ||
-      norm(m.description).includes(norm(query))
+      isModuleEnabled(m.moduleId) &&
+      (!query ||
+        norm(m.name).includes(norm(query)) ||
+        norm(m.description).includes(norm(query)))
   );
 
   // Kiểm tra xem user đã đổi mật khẩu chưa (dùng user từ Redux)

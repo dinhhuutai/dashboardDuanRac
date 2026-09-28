@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useMemo } from "react";
 
 import config from "~/config";
+import { isModuleEnabled } from "~/contants/modules";
 import { userSelector } from "~/redux/selectors";
 import { fetchUserModules } from "~/redux/slices/userModulesSlice";
 
@@ -81,6 +82,8 @@ function hasPermission(modules, key, fallbackName, needs) {
   });
 
   if (!found) return false;
+  // Module đã tắt: chặn cả khi danh sách quyền cũ còn lưu trong trình duyệt
+  if (found.moduleId !== undefined && !isModuleEnabled(found.moduleId)) return false;
 
   const roles = coerceRoles(found).map((r) => String(r).toLowerCase());
   const needsLower = (Array.isArray(needs) ? needs : [needs]).map((r) => String(r).toLowerCase());
