@@ -135,8 +135,14 @@ module.exports = {
           '0%': { transform: 'rotate(0deg) translateX(80px) rotate(0deg)' },
           '100%': { transform: 'rotate(360deg) translateX(80px) rotate(-360deg)' },
         },
+        // thanh chạy "đang tải lại" (Refreshing ở pagesForm/shared/ui.js, module Quản lý yêu cầu)
+        indeterminate: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(300%)' },
+        },
       },
       animation: {
+        indeterminate: 'indeterminate 1s ease-in-out infinite',
         'task-comments-slide-in': 'taskCommentsSlideInFromRight 0.25s ease-out',
         gradientMove: 'gradientMove 6s ease infinite',
         orbit: 'orbit 6s linear infinite',

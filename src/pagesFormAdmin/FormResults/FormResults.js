@@ -1,5 +1,5 @@
 // Admin: kết quả & thống kê của 1 biểu mẫu
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Download, Eye, Inbox, Pencil, RefreshCw, Search, Trash2, UserX } from "lucide-react";
 import config from "~/config";
@@ -7,7 +7,20 @@ import { errorMessage, fmApi } from "~/pagesForm/shared/api";
 import { exportMissingToExcel, exportResponsesToExcel } from "~/pagesForm/shared/exportExcel";
 import { fmtDate, fmtDateTime, fmtNumber, fmtPercent } from "~/pagesForm/shared/format";
 import { TYPE_META } from "~/pagesForm/shared/questionTypes";
-import { Badge, Button, EmptyState, ErrorBox, IconButton, Modal, Spinner, Toggle, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
+import { Badge, Button, EmptyState, ErrorBox, IconButton, InlineLoading, Modal, Refreshing, Skeleton, TableSkeleton, Toggle, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
+
+function ResultsSkeleton() {
+  return (
+    <div className="space-y-4" role="status" aria-label="Đang tải kết quả">
+      <div className="flex items-start gap-3"><Skeleton className="h-8 w-8" /><div className="flex-1 space-y-2"><Skeleton className="h-6 w-1/2" /><Skeleton className="h-4 w-1/4" /></div><Skeleton className="h-8 w-28" /></div>
+      <Skeleton className="h-10 w-96 max-w-full rounded-xl" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="rounded-xl border border-slate-200 bg-white p-4"><Skeleton className="h-3 w-24" /><Skeleton className="mt-2 h-7 w-16" /><Skeleton className="mt-2 h-3 w-28" /></div>)}
+      </div>
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-4 w-full" />)}</div>
+    </div>
+  );
+}
 
 const TABS = [
   { key: "overview", label: "Tổng quan" },
@@ -178,20 +191,33 @@ function ResponsesTab({ formId, departments, onChanged }) {
   const [search, setSearch] = useState("");
   const [dept, setDept] = useState("");
   const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState(null);
+  const seq = useRef(0); // chỉ nhận kết quả của lần tải mới nhất (gõ tìm nhanh → nhiều request)
   const pageSize = 20;
 
   const load = useCallback(async () => {
+    const my = ++seq.current;
+    setLoading(true);
     try {
-      setData(await fmApi.responses(formId, { page, pageSize, search: search.trim() || undefined, departmentId: dept || undefined }));
+      const d = await fmApi.responses(formId, { page, pageSize, search: search.trim() || undefined, departmentId: dept || undefined });
+      if (my === seq.current) setData(d);
     } catch (e) {
-      toast.error(errorMessage(e));
+      if (my === seq.current) toast.error(errorMessage(e));
+    } finally {
+      if (my === seq.current) setLoading(false);
     }
   }, [formId, page, search, dept]);
-  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [load]);
+  useEffect(() => {
+    setLoading(true); // hiện "đang tải" ngay khi gõ/đổi lọc, không đợi hết 250 ms chờ gõ xong
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
 
   const remove = async (r) => {
     const ok = await confirmDialog({ title: "Xoá phiếu", message: `Xoá phiếu của ${r.fullName || "nhân viên này"}? Không hoàn tác được.`, confirmText: "Xoá", danger: true });
     if (!ok) return;
+    setRemoving(r.responseId);
     try {
       await fmApi.removeResponse(r.responseId);
       toast.success("Đã xoá phiếu");
@@ -200,6 +226,8 @@ function ResponsesTab({ formId, departments, onChanged }) {
       onChanged?.();
     } catch (e) {
       toast.error(errorMessage(e));
+    } finally {
+      setRemoving(null);
     }
   };
 
@@ -217,11 +245,13 @@ function ResponsesTab({ formId, departments, onChanged }) {
           <option value="">Tất cả phòng ban</option>
           {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
+        <span className="flex min-w-[90px] items-center"><InlineLoading active={loading && !!data} /></span>
       </div>
 
-      {!data ? <Spinner /> : data.rows.length === 0 ? (
-        <EmptyState icon={Inbox} title="Chưa có phiếu nào" />
+      {!data ? <TableSkeleton rows={6} cols={5} /> : data.rows.length === 0 ? (
+        <Refreshing active={loading}><EmptyState icon={Inbox} title={search || dept ? "Không có phiếu phù hợp" : "Chưa có phiếu nào"} /></Refreshing>
       ) : (
+        <Refreshing active={loading}>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
@@ -246,7 +276,7 @@ function ResponsesTab({ formId, departments, onChanged }) {
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
                       <IconButton icon={Eye} title="Xem chi tiết" onClick={() => setDetail(r)} />
-                      <IconButton icon={Trash2} title="Xoá phiếu" danger onClick={() => remove(r)} />
+                      <IconButton icon={Trash2} title="Xoá phiếu" danger loading={removing === r.responseId} disabled={!!removing} onClick={() => remove(r)} />
                     </div>
                   </td>
                 </tr>
@@ -254,21 +284,22 @@ function ResponsesTab({ formId, departments, onChanged }) {
             </tbody>
           </table>
         </div>
+        </Refreshing>
       )}
 
       {data && data.total > pageSize && (
         <div className="flex items-center justify-between text-sm text-slate-500">
           <span>{data.total} phiếu</span>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</Button>
-            <span>{page}/{pages}</span>
-            <Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Sau</Button>
+            <Button variant="secondary" size="sm" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>Trước</Button>
+            <span className="min-w-[48px] text-center">{loading ? <InlineLoading active label="" /> : `${page}/${pages}`}</span>
+            <Button variant="secondary" size="sm" disabled={page >= pages || loading} onClick={() => setPage((p) => p + 1)}>Sau</Button>
           </div>
         </div>
       )}
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết phiếu" size="lg"
-        footer={detail && <Button variant="danger" icon={Trash2} onClick={() => remove(detail)}>Xoá phiếu</Button>}>
+        footer={detail && <Button variant="danger" icon={Trash2} loading={removing === detail.responseId} onClick={() => remove(detail)}>Xoá phiếu</Button>}>
         {detail && (
           <div className="space-y-4">
             <dl className="grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-5">
@@ -296,6 +327,14 @@ function ResponsesTab({ formId, departments, onChanged }) {
 function MissingTab({ formId, form }) {
   const [rows, setRows] = useState(null);
   const [search, setSearch] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const exportNow = () => {
+    setExporting(true);
+    // tạo file Excel chạy đồng bộ, nặng với danh sách dài → nhường 1 nhịp để nút kịp hiện spinner
+    setTimeout(() => {
+      try { exportMissingToExcel(form, rows); } catch (e) { toast.error("Xuất Excel thất bại"); } finally { setExporting(false); }
+    }, 30);
+  };
   useEffect(() => {
     fmApi.missing(formId).then(setRows).catch((e) => toast.error(errorMessage(e)));
   }, [formId]);
@@ -304,7 +343,7 @@ function MissingTab({ formId, form }) {
     return (rows || []).filter((r) => !q || `${r.fullName} ${r.msnv} ${r.departmentName} ${r.teamName}`.toLowerCase().includes(q));
   }, [rows, search]);
 
-  if (!rows) return <Spinner />;
+  if (!rows) return <TableSkeleton rows={8} cols={5} />;
   if (rows.length === 0) return <EmptyState icon={UserX} title="Tất cả mọi người đã nộp 🎉" />;
   return (
     <div className="space-y-3">
@@ -313,7 +352,7 @@ function MissingTab({ formId, form }) {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input className={cn(inputCls, "pl-9")} placeholder="Tìm theo tên / MSNV / phòng ban" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Button variant="secondary" icon={Download} onClick={() => exportMissingToExcel(form, rows)}>Xuất danh sách</Button>
+        <Button variant="secondary" icon={Download} loading={exporting} onClick={exportNow}>Xuất danh sách</Button>
       </div>
       <p className="text-sm text-slate-500">{rows.length} người thuộc đối tượng chưa nộp</p>
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -350,13 +389,18 @@ export default function FormResults() {
   const [perDept, setPerDept] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [departments, setDepartments] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [opening, setOpening] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
+    setRefreshing(true);
     try {
       setStats(await fmApi.stats(id, { departmentId: dept || undefined }));
     } catch (e) {
       setError(errorMessage(e, "Không tải được kết quả"));
+    } finally {
+      setRefreshing(false);
     }
   }, [id, dept]);
   useEffect(() => { load(); }, [load]);
@@ -380,7 +424,7 @@ export default function FormResults() {
   };
 
   if (error) return <ErrorBox message={error} onRetry={load} />;
-  if (!stats) return <Spinner />;
+  if (!stats) return <ResultsSkeleton />;
   const { form } = stats;
   const qStats = stats.questions;
 
@@ -398,8 +442,8 @@ export default function FormResults() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <IconButton icon={RefreshCw} title="Tải lại" onClick={load} />
-          <Button variant="secondary" size="sm" icon={Pencil} onClick={() => navigate(`${config.routes.adminFormBuilder}/${id}`)}>Sửa biểu mẫu</Button>
+          <IconButton icon={RefreshCw} title="Tải lại" spin={refreshing} disabled={refreshing} onClick={load} />
+          <Button variant="secondary" size="sm" icon={Pencil} loading={opening} onClick={() => { setOpening(true); navigate(`${config.routes.adminFormBuilder}/${id}`); }}>Sửa biểu mẫu</Button>
           <Button size="sm" icon={Download} onClick={() => setExportOpen(true)}>Xuất Excel</Button>
         </div>
       </div>
@@ -417,17 +461,22 @@ export default function FormResults() {
           ))}
         </div>
         {(tab === "overview" || tab === "questions") && (
-          <select className={cn(inputCls, "w-auto")} value={dept} onChange={(e) => setDept(e.target.value)} title="Lọc số liệu theo phòng ban của người nộp">
-            <option value="">Tất cả phòng ban</option>
-            {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
+          <div className="flex items-center gap-3">
+            <InlineLoading active={refreshing} />
+            <select className={cn(inputCls, "w-auto")} value={dept} disabled={refreshing} onChange={(e) => setDept(e.target.value)} title="Lọc số liệu theo phòng ban của người nộp">
+              <option value="">Tất cả phòng ban</option>
+              {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
         )}
       </div>
 
-      {tab === "overview" && <Overview stats={stats} />}
+      {tab === "overview" && <Refreshing active={refreshing}><Overview stats={stats} /></Refreshing>}
       {tab === "questions" && (
         qStats.length === 0 ? <EmptyState icon={Inbox} title="Biểu mẫu chưa có câu hỏi" /> : (
-          <div className="space-y-3">{qStats.map((q, i) => <QuestionStat key={q.questionId} q={q} index={i + 1} />)}</div>
+          <Refreshing active={refreshing}>
+            <div className="space-y-3">{qStats.map((q, i) => <QuestionStat key={q.questionId} q={q} index={i + 1} />)}</div>
+          </Refreshing>
         )
       )}
       {tab === "responses" && <ResponsesTab formId={id} departments={departments} onChanged={load} />}

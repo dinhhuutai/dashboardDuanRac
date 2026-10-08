@@ -6,7 +6,7 @@ import {
   FaPenNib,
   FaArrowLeft,
 } from "react-icons/fa";
-import bg_page from "~/assets/imgs/bg_page_3.png";
+import bg_page from "~/assets/imgs/bg_page_3.webp";
 
 export default function MobileFeedbackFlow({
   tmp,

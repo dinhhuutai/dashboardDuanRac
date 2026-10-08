@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
 import { errorMessage, fmApi } from "./api";
-import { Button, Field, Modal, inputCls, toast } from "./ui";
+import { Button, Field, Modal, Skeleton, inputCls, toast } from "./ui";
 
 export function ProfileSummary({ profile, onEdit }) {
   if (!profile) return null;
@@ -112,7 +112,9 @@ export default function ProfileDialog({ open, onClose, onSaved, required }) {
       }
     >
       {!data ? (
-        <p className="py-6 text-center text-sm text-slate-500">Đang tải…</p>
+        <div className="space-y-4 py-2" role="status" aria-label="Đang tải">
+          {[0, 1, 2].map((i) => <div key={i} className="space-y-1.5"><Skeleton className="h-4 w-24" /><Skeleton className="h-9 w-full" /></div>)}
+        </div>
       ) : fullyLocked ? (
         <p className="text-sm text-slate-600">
           Thông tin của bạn do quản trị viên gán ({p.departmentName || "—"}

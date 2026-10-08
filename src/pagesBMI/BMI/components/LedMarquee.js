@@ -1,6 +1,20 @@
-import React, { useId } from "react";
+import React, { useEffect, useId } from "react";
+
+// Font "Baloo 2" chỉ trang này dùng → nạp khi mở trang, không để trong index.html
+// (stylesheet Google Fonts trong <head> chặn hiển thị MỌI trang cho tới khi tải xong).
+const FONT_HREF = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap";
+function useBalooFont() {
+  useEffect(() => {
+    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = FONT_HREF;
+    document.head.appendChild(link);
+  }, []);
+}
 
 export default function LedMarquee({ text }) {
+  useBalooFont();
   const uid = useId();
   const animName = `marq_${uid}`;
   const twinkleName = `twinkle_${uid}`;

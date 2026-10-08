@@ -37,6 +37,7 @@ import ModuleCard from "./ModuleCard";
 import CreateAccountCard from "./CreateAccountCard";
 import ProfileSettingsCard from "./ProfileSettingsCard";
 import lazyPage from "~/utils/lazyPage";
+import { prefetchModules } from "~/routes/prefetch";
 
 // import ThemeToggle from "./components/ThemeToggle";
 
@@ -128,7 +129,8 @@ function HomeMain() {
     }
   }, [user?.userID]);
 
-  // load modules
+  // load modules — 1 lần; ô tìm kiếm lọc ngay trên máy (visibleModules).
+  // Trước đây mỗi lần gõ 1 ký tự lại gọi API + thay lưới module bằng chữ "Đang tải…".
   useEffect(() => {
     const fetchModules = async () => {
       setLoadingModules(true);
@@ -141,7 +143,7 @@ function HomeMain() {
             const r = await http.get(
               `${BASE_URL}/api/users/${uid}/modules-roles`,
               {
-                params: { page: 1, pageSize: 200, q: query },
+                params: { page: 1, pageSize: 200 },
               }
             );
             const list = Array.isArray(r.data?.data)
@@ -150,6 +152,7 @@ function HomeMain() {
               ? r.data
               : [];
             setModules(list);
+            prefetchModules(list);
             return;
           } catch (err) {
             console.warn("modules-roles failed, fallback to all:", err);
@@ -157,7 +160,7 @@ function HomeMain() {
         }
 
         const res = await http.get(`${BASE_URL}/api/modules`, {
-          params: { page: 1, pageSize: 200, q: query },
+          params: { page: 1, pageSize: 200 },
         });
         const all = res.data?.data || res.data || [];
         const allowed = role === "admin" ? ["user", "admin"] : ["user"];
@@ -169,7 +172,7 @@ function HomeMain() {
       }
     };
     fetchModules();
-  }, [user?.userID, user?.role, query]);
+  }, [user?.userID, user?.role]);
 
   // Ctrl/⌘+K focus search
   useEffect(() => {
@@ -321,6 +324,10 @@ function HomeMain() {
       rou = config.routes.adminMesDashboard;
     } else if (m.moduleId === MODULEID.capmoney && role === "user") {
       rou = config.routes.capmoneyHome;
+    } else if (m.moduleId === MODULEID.YEUCAU && role === "user") {
+      rou = config.routes.request;
+    } else if (m.moduleId === MODULEID.YEUCAU && role === "admin") {
+      rou = config.routes.adminRequestTypes;
     }
 
     navigate(rou);
@@ -619,8 +626,19 @@ function HomeMain() {
             <main className="p-4 sm:p-6">
               {view === "home" &&
                 (loadingModules ? (
-                  <div className="grid place-items-center h-48 rounded-2xl border border-dashed border-slate-200 bg-white/60 text-slate-500">
-                    Đang tải danh sách module…
+                  <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Đang tải danh sách module">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="rounded-2xl bg-white/80 p-5 shadow-sm ring-1 ring-slate-100">
+                        <div className="flex gap-3">
+                          <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 w-3/4 animate-pulse rounded bg-slate-200" />
+                            <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                            <div className="h-7 w-20 animate-pulse rounded-full bg-slate-100" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : visibleModules.length === 0 ? (
                   <div className="grid place-items-center h-48 rounded-2xl border border-dashed border-slate-200 bg-white/60 text-slate-500">

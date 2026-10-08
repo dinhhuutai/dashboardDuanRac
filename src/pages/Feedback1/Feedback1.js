@@ -520,8 +520,8 @@ import { useEffect, useState } from "react";
 import logo from "~/assets/imgs/logoAdmin.png";
 import textThanks from "~/assets/imgs/thankyou_transparent_centered.png";
 import avatar from "~/assets/imgs/avatar-main.jpg";
-import logoFeedback from "~/assets/imgs/logoFeedback.png";
-import bg_page from "~/assets/imgs/bg_page_3.png";
+import logoFeedback from "~/assets/imgs/logoFeedback.webp";
+import bg_page from "~/assets/imgs/bg_page_3.webp";
 
 import FaIcons from "~/components/IconSets/fa"; // cả bộ — tra icon theo tên, xem IconSets/README.md
 import { motion } from "framer-motion";

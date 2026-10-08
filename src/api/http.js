@@ -3,6 +3,7 @@ import axios from "axios";
 import { BASE_URL } from "~/config";
 import authSlice from "~/redux/slices/authSlice";
 import { refreshSession } from "~/api/authApi";
+import loadingBar from "~/utils/loadingBar";
 
 // KHÔNG import store ở đây: store → authSlice → http → store là vòng import,
 // app trắng trang ("Cannot access ... before initialization") nếu authSlice
@@ -35,6 +36,33 @@ function isAuthPath(url = "") {
   // Không auto-refresh cho request /login hoặc chính /auth/refresh
   return url.includes("/login") || url.includes(REFRESH_PATH);
 }
+
+// === Thanh tiến trình đầu trang (utils/loadingBar) cho mọi request người dùng đang chờ ===
+// Request chạy nền (ping, polling) không hiện: truyền { silent: true } hoặc khớp SILENT_RE.
+const SILENT_RE = /\/presence\/ping|\/pageview|\/api\/rq\/me\/pulse/;
+const barDone = (config) => {
+  if (config?._bar) {
+    config._bar = false;
+    loadingBar.done();
+  }
+};
+http.interceptors.request.use((config) => {
+  if (!config.silent && !SILENT_RE.test(config.url || "")) {
+    config._bar = true;
+    loadingBar.start();
+  }
+  return config;
+});
+http.interceptors.response.use(
+  (r) => {
+    barDone(r.config);
+    return r;
+  },
+  (error) => {
+    barDone(error?.config);
+    return Promise.reject(error);
+  }
+);
 
 // === REQUEST: gắn Authorization từ Redux nếu có ===
 http.interceptors.request.use((config) => {

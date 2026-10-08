@@ -10,7 +10,26 @@ import { isAnswered, visibleQuestionKeys } from "../shared/conditions";
 import { deadlineText, fmtDateTime, isNotYetOpen, parseLocal } from "../shared/format";
 import ProfileDialog, { ProfileSummary } from "../shared/ProfileDialog";
 import QuestionField, { toSubmitValue } from "../shared/QuestionField";
-import { Badge, Button, ErrorBox, Spinner, confirmDialog, toast } from "../shared/ui";
+import { Badge, Button, ErrorBox, Skeleton, confirmDialog, toast } from "../shared/ui";
+
+function FormSkeleton() {
+  return (
+    <div className="space-y-4" role="status" aria-label="Đang tải biểu mẫu">
+      <Skeleton className="h-4 w-36" />
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="h-2 bg-slate-200" />
+        <div className="space-y-2 p-5"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-1/2" /></div>
+      </div>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <Skeleton className="h-5 w-3/5" />
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-4/5" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const draftKey = (formId, userId) => `fm_draft_${formId}_${userId}`;
 
@@ -165,7 +184,7 @@ export default function FormFill() {
   };
 
   if (error) return <ErrorBox message={error} onRetry={load} />;
-  if (!data) return <Spinner />;
+  if (!data) return <FormSkeleton />;
 
   const { form, profile } = data;
   const accent = form.themeColor || "#1f4e79";
@@ -183,7 +202,7 @@ export default function FormFill() {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Button variant="secondary" icon={ArrowLeft} onClick={() => navigate(config.routes.form)}>Về danh sách</Button>
           {(form.allowEditAfterSubmit || form.allowMultiple) && form.isOpenNow && (
-            <Button onClick={() => { setDone(null); load(); }}>{form.allowMultiple ? "Nộp thêm phiếu" : "Xem / sửa lại"}</Button>
+            <Button onClick={() => { setDone(null); setData(null); load(); }}>{form.allowMultiple ? "Nộp thêm phiếu" : "Xem / sửa lại"}</Button>
           )}
         </div>
       </div>

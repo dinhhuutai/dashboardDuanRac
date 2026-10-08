@@ -14,6 +14,8 @@ import {
   routesKCSAdmin,
   routesOQCAdmin,
   routesConsolidateAdmin,
+  routesRequest,
+  routesRequestAdmin,
 } from "./routes";
 import { APP_VERSION } from "./version";
 
@@ -79,6 +81,8 @@ const DefaultLayoutForm = lazyPage(() => import("./layoutsForm/DefaultLayout"));
 const DefaultLayoutAdminMES = lazyPage(() => import("./layoutsMESAdmin/DefaultLayoutAdmin"));
 
 const DefaultLayoutCapMoney = lazyPage(() => import("./layoutCapMoney/DefaultLayout"));
+
+const DefaultLayoutRequest = lazyPage(() => import("./layoutsRequest/DefaultLayout"));
 
 function PageLoading() {
   return (
@@ -477,6 +481,44 @@ function AppRoutes({ user }) {
           ))}
         </Route>
         
+        {/* ====== MODULE 18 — QUẢN LÝ YÊU CẦU (user + admin, 1 layout route chung) ====== */}
+        <Route
+          element={
+            <RequireModule
+              moduleKey="yeucau"
+              fallbackName="Quản lý yêu cầu"
+              needRoles={["user", "admin"]}
+            />
+          }
+        >
+          <Route element={<DefaultLayoutRequest><Outlet /></DefaultLayoutRequest>}>
+            {routesRequest.map((route, index) => (
+              <Route
+                key={`rq${index}`}
+                path={route.addId ? `${route.path}/:id` : route.path}
+                element={<route.component />}
+              />
+            ))}
+            <Route
+              element={
+                <RequireModule
+                  moduleKey="yeucau"
+                  fallbackName="Quản lý yêu cầu"
+                  needRoles={["admin"]}
+                />
+              }
+            >
+              {routesRequestAdmin.map((route, index) => (
+                <Route
+                  key={`rqa${index}`}
+                  path={route.addId ? `${route.path}/:id` : route.path}
+                  element={<route.component />}
+                />
+              ))}
+            </Route>
+          </Route>
+        </Route>
+
         {/* ====== ADMIN MES (module mes, chỉ admin) ====== */}
         <Route
           element={

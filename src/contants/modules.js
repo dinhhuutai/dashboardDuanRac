@@ -17,6 +17,7 @@ const MODULEID = {
     consolidate: 15,
     mes: 16,
     capmoney: 17,
+    YEUCAU: 18, // Quản lý yêu cầu (sql/10) — moduleKey 'yeucau'
 }
 
 

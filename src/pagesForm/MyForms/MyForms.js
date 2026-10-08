@@ -1,12 +1,15 @@
 // Nhân viên: danh sách biểu mẫu được mở cho mình
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ChevronRight, ClipboardList, Clock, Inbox, Lock } from "lucide-react";
+import { CheckCircle2, ChevronRight, ClipboardList, Clock, Inbox, Loader2, Lock } from "lucide-react";
 import config from "~/config";
 import { errorMessage, fmApi } from "../shared/api";
 import { deadlineText, fmtDateTime, isNotYetOpen } from "../shared/format";
 import ProfileDialog, { ProfileSummary } from "../shared/ProfileDialog";
-import { Badge, EmptyState, ErrorBox, Spinner, cn } from "../shared/ui";
+import { Badge, CardListSkeleton, EmptyState, ErrorBox, Skeleton, cn } from "../shared/ui";
+
+// Tải trước trang điền phiếu (cùng chunk với route /form/fill/:id) → bấm vào biểu mẫu là mở ngay
+const prefetchFill = () => import("../FormFill").catch(() => {});
 
 const TABS = [
   { key: "todo", label: "Cần điền" },
@@ -16,7 +19,7 @@ const TABS = [
 
 const needsAction = (f) => f.isOpenNow && (f.myResponseCount === 0 || f.allowMultiple);
 
-function FormCard({ f, onOpen }) {
+function FormCard({ f, onOpen, opening }) {
   const deadline = f.isOpenNow ? deadlineText(f.closeAt) : null;
   const submitted = f.myResponseCount > 0;
   const notYetOpen = isNotYetOpen(f);
@@ -31,7 +34,13 @@ function FormCard({ f, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:border-blue-300 hover:shadow"
+      onMouseEnter={prefetchFill}
+      onTouchStart={prefetchFill}
+      aria-busy={opening || undefined}
+      className={cn(
+        "group flex w-full overflow-hidden rounded-xl border bg-white text-left shadow-sm transition hover:border-blue-300 hover:shadow active:scale-[0.99]",
+        opening ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200"
+      )}
     >
       <span className="w-1.5 shrink-0" style={{ background: f.themeColor || "#1f4e79" }} />
       <span className="min-w-0 flex-1 p-4">
@@ -53,9 +62,15 @@ function FormCard({ f, onOpen }) {
         {f.description && <span className="mt-1 line-clamp-2 block text-sm text-slate-500">{f.description}</span>}
         <span className="mt-3 flex items-center justify-between text-sm">
           <span className="text-slate-400">{f.questionCount} câu hỏi</span>
-          <span className="flex items-center gap-1 font-medium text-blue-700 group-hover:gap-2 transition-all">
-            {cta} <ChevronRight className="h-4 w-4" />
-          </span>
+          {opening ? (
+            <span className="flex items-center gap-1.5 font-medium text-blue-700">
+              <Loader2 className="h-4 w-4 animate-spin" /> Đang mở…
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 font-medium text-blue-700 group-hover:gap-2 transition-all">
+              {cta} <ChevronRight className="h-4 w-4" />
+            </span>
+          )}
         </span>
       </span>
     </button>
@@ -69,6 +84,7 @@ export default function MyForms() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("todo");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [openingId, setOpeningId] = useState(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -77,12 +93,18 @@ export default function MyForms() {
       setForms(list);
       setProfile(me.profile);
       if (list.filter(needsAction).length === 0 && list.length > 0) setTab("all");
+      if (list.length) prefetchFill();
     } catch (e) {
       setError(errorMessage(e, "Không tải được danh sách biểu mẫu"));
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const open = (f) => {
+    setOpeningId(f.formId);
+    navigate(`${config.routes.formFill}/${f.formId}`);
+  };
 
   const counts = useMemo(() => ({
     todo: forms?.filter(needsAction).length || 0,
@@ -98,7 +120,22 @@ export default function MyForms() {
   }, [forms, tab]);
 
   if (error) return <ErrorBox message={error} onRetry={load} />;
-  if (!forms) return <Spinner />;
+  if (!forms) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Biểu mẫu của tôi</h1>
+          <p className="text-sm text-slate-500">Đang tải biểu mẫu…</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <Skeleton className="h-4 w-40" />
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8" />)}</div>
+        </div>
+        <Skeleton className="h-10 rounded-xl" />
+        <CardListSkeleton rows={3} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -137,7 +174,7 @@ export default function MyForms() {
       ) : (
         <div className="space-y-3">
           {shown.map((f) => (
-            <FormCard key={f.formId} f={f} onOpen={() => navigate(`${config.routes.formFill}/${f.formId}`)} />
+            <FormCard key={f.formId} f={f} opening={openingId === f.formId} onOpen={() => open(f)} />
           ))}
         </div>
       )}

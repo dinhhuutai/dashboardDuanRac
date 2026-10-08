@@ -1,8 +1,8 @@
 // Admin: phòng ban, tổ, chức danh và gán cho nhân viên (bảng org_* dùng chung toàn hệ thống)
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Briefcase, Building2, Layers, Pencil, Plus, Search, Users } from "lucide-react";
 import { errorMessage, fmApi } from "~/pagesForm/shared/api";
-import { Badge, Button, EmptyState, Field, IconButton, Modal, Spinner, Toggle, cn, inputCls, toast } from "~/pagesForm/shared/ui";
+import { Badge, Button, EmptyState, Field, IconButton, InlineLoading, Modal, Refreshing, TableSkeleton, Toggle, cn, inputCls, toast } from "~/pagesForm/shared/ui";
 
 const TABS = [
   { key: "users", label: "Gán cho nhân viên", icon: Users },
@@ -60,7 +60,7 @@ function CatalogTab({ kind, departments, onChanged }) {
     }
   };
 
-  if (!rows) return <Spinner />;
+  if (!rows) return <TableSkeleton rows={6} cols={5} />;
   const Icon = ICON[kind];
   return (
     <div className="space-y-3">
@@ -189,9 +189,13 @@ function UsersTab({ departments, teams, jobTitles }) {
   const [selected, setSelected] = useState(new Set());
   const [assign, setAssign] = useState({ departmentId: "", teamId: "", jobTitleId: "", allowSelfEdit: false });
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const seq = useRef(0);
   const pageSize = 50;
 
   const load = useCallback(async () => {
+    const my = ++seq.current;
+    setLoading(true);
     try {
       const r = await fmApi.orgUsers({
         page, pageSize,
@@ -201,12 +205,18 @@ function UsersTab({ departments, teams, jobTitles }) {
         jobTitleId: filters.jobTitleId || undefined,
         missing: filters.missing ? 1 : undefined,
       });
-      setData(r);
+      if (my === seq.current) setData(r);
     } catch (e) {
-      toast.error(errorMessage(e));
+      if (my === seq.current) toast.error(errorMessage(e));
+    } finally {
+      if (my === seq.current) setLoading(false);
     }
   }, [filters, page]);
-  useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [load]);
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
 
   const setFilter = (patch) => { setFilters((f) => ({ ...f, ...patch })); setPage(1); setSelected(new Set()); };
   const rows = data?.rows || [];
@@ -264,6 +274,7 @@ function UsersTab({ departments, teams, jobTitles }) {
           {jobTitles.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <Toggle label="Chỉ người chưa đủ" hint="Chưa có phòng ban hoặc chức danh" checked={filters.missing} onChange={(v) => setFilter({ missing: v })} />
+        <InlineLoading active={loading && !!data} />
       </div>
 
       {/* Thanh gán hàng loạt */}
@@ -287,9 +298,12 @@ function UsersTab({ departments, teams, jobTitles }) {
         </div>
       </div>
 
-      {!data ? <Spinner /> : rows.length === 0 ? (
-        <EmptyState icon={Users} title={filters.missing ? "Tất cả nhân viên đã có phòng ban và chức danh" : "Không có nhân viên phù hợp"} />
+      {!data ? <TableSkeleton rows={8} cols={5} /> : rows.length === 0 ? (
+        <Refreshing active={loading}>
+          <EmptyState icon={Users} title={filters.missing ? "Tất cả nhân viên đã có phòng ban và chức danh" : "Không có nhân viên phù hợp"} />
+        </Refreshing>
       ) : (
+        <Refreshing active={loading}>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
@@ -321,6 +335,7 @@ function UsersTab({ departments, teams, jobTitles }) {
             </tbody>
           </table>
         </div>
+        </Refreshing>
       )}
 
       {data && (
@@ -328,9 +343,9 @@ function UsersTab({ departments, teams, jobTitles }) {
           <span>{data.total} nhân viên</span>
           {data.total > pageSize && (
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</Button>
-              <span>{page}/{pages}</span>
-              <Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Sau</Button>
+              <Button variant="secondary" size="sm" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>Trước</Button>
+              <span className="min-w-[48px] text-center">{loading ? <InlineLoading active label="" /> : `${page}/${pages}`}</span>
+              <Button variant="secondary" size="sm" disabled={page >= pages || loading} onClick={() => setPage((p) => p + 1)}>Sau</Button>
             </div>
           )}
         </div>

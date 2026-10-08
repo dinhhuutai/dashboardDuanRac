@@ -10,6 +10,7 @@ import {
   FcFactory,
   FcFeedback,
   FcIcons8Cup,
+  FcInspection,
   FcLike,
   FcMoneyTransfer,
   FcPackage,
@@ -34,6 +35,7 @@ const KNOWN_ICONS = {
   FcFactory,
   FcFeedback,
   FcIcons8Cup,
+  FcInspection, // module 18 Quản lý yêu cầu
   FcLike,
   FcMoneyTransfer,
   FcPackage,

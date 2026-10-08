@@ -117,7 +117,18 @@ const routes = {
   adminFormBuilder: '/admin/form/builder', // tạo mới; /admin/form/builder/:id = sửa
   adminFormResults: '/admin/form/results', // /admin/form/results/:id
   adminFormOrg: '/admin/form/org',         // phòng ban, chức danh, gán cho nhân viên
-  
+
+  // Module 18 — Quản lý yêu cầu (đề xuất / duyệt / chat)
+  request: '/request',                     // ?box=inbox|mine|processed|following|all &id=…
+  requestNew: '/request/new',              // ?type=ID
+  requestEdit: '/request/edit',            // /request/edit/:id — sửa & gửi lại
+  requestChat: '/request/chat',            // ?c=conversationId
+  adminRequestTypes: '/admin/request/types',
+  adminRequestTypeBuilder: '/admin/request/type-builder', // + /:id
+  adminRequestHeads: '/admin/request/heads',
+  adminRequestOrg: '/admin/request/org',
+  adminRequestStats: '/admin/request/stats',
+
 
   n20th11: '/luu-thi-thao-nguyen/20-10',
 

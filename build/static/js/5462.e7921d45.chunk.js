@@ -1,0 +1,2 @@
+/*! For license information please see 5462.e7921d45.chunk.js.LICENSE.txt */
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[5462],{45462:(e,t,a)=>{a.d(t,{A:()=>k});const k=(0,a(36230).A)("arrow-left",[["path",{d:"m12 19-7-7 7-7",key:"1l729n"}],["path",{d:"M19 12H5",key:"x3x0zl"}]])}}]);

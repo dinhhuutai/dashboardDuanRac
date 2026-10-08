@@ -1,9 +1,18 @@
 // Layout quản trị — module Biểu mẫu nội bộ
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Building2, ClipboardList, Eye, House, Menu, Plus, X } from "lucide-react";
 import config from "~/config";
 import { ConfirmHost, Toaster, cn } from "~/pagesForm/shared/ui";
+import { preloadWhenIdle } from "~/utils/lazyPage";
+
+// Tải trước các trang quản trị lúc rảnh → bấm menu là mở ngay (không chờ tải JS)
+const ADMIN_PAGES = [
+  { preload: () => import("~/pagesFormAdmin/FormList") },
+  { preload: () => import("~/pagesFormAdmin/FormResults") },
+  { preload: () => import("~/pagesFormAdmin/FormBuilder") },
+  { preload: () => import("~/pagesFormAdmin/OrgManagement") },
+];
 
 const NAV = [
   { to: config.routes.adminFormList, label: "Biểu mẫu", icon: ClipboardList, end: true },
@@ -50,6 +59,7 @@ function Sidebar({ onNavigate }) {
 function DefaultLayoutAdmin({ children }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  useEffect(() => { preloadWhenIdle(...ADMIN_PAGES); }, []);
   const current = NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)));
 
   return (

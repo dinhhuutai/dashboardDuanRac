@@ -1,13 +1,18 @@
 // Layout phía nhân viên — module Biểu mẫu nội bộ
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 import config from "~/config";
 import { userSelector } from "~/redux/selectors";
 import { ConfirmHost, Toaster } from "~/pagesForm/shared/ui";
+import { preloadWhenIdle } from "~/utils/lazyPage";
+
+const PAGES = [{ preload: () => import("~/pagesForm/MyForms") }, { preload: () => import("~/pagesForm/FormFill") }];
 
 function DefaultLayout({ children }) {
   const user = useSelector(userSelector)?.login?.currentUser;
+  useEffect(() => { preloadWhenIdle(...PAGES); }, []);
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>

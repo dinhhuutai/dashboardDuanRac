@@ -1,0 +1,2 @@
+/*! For license information please see 3147.49ce6783.chunk.js.LICENSE.txt */
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[3147],{13147:(e,c,s)=>{s.d(c,{A:()=>a});const a=(0,s(36230).A)("search",[["path",{d:"m21 21-4.34-4.34",key:"14j7rj"}],["circle",{cx:"11",cy:"11",r:"8",key:"4ej97u"}]])}}]);

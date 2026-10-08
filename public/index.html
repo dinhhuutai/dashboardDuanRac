@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/logoAdmin.png" />
-    <link rel="preload" as="audio" href="%PUBLIC_URL%/music/2010.mp3" type="audio/mpeg">
+    <!-- Đã bỏ <link rel="preload" … music/2010.mp3>: 522 KB tải ở MỌI lần mở web mà không trang nào dùng -->
 
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
@@ -27,14 +27,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <!-- <link rel="apple-touch-icon" href="/icons/icon-192.png"> -->
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap"
-  rel="stylesheet"
-/>
-
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Condiment&display=swap" rel="stylesheet">
+<!-- Đã bỏ 2 stylesheet Google Fonts (Baloo 2, Anton, Condiment): chặn hiển thị mọi trang tới khi tải
+     xong từ máy chủ Google. Chỉ trang BMI dùng Baloo 2 → nạp trong LedMarquee.js khi mở trang đó. -->
 
     
     <!--

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import avatarImg from '~/assets/imgs/avatar-main.jpg';
-import coverPhoto from '~/assets/imgs/coverPhoto.png';
+import coverPhoto from '~/assets/imgs/coverPhoto.webp';
 import config from '~/config';
 import { userSelector } from '~/redux/selectors';
 import authSlice from '~/redux/slices/authSlice';

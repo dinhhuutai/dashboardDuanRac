@@ -521,7 +521,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { userSelector } from "~/redux/selectors";
 import authSlice from "~/redux/slices/authSlice";
 import http from "~/api/http";
-import coverPhoto from "~/assets/imgs/coverPhoto.png";
+import coverPhoto from "~/assets/imgs/coverPhoto.webp";
 import avatarFallback from "~/assets/imgs/avatar-main.jpg";
 import Field from "./Field";
 

@@ -6,7 +6,11 @@ import config from "~/config";
 import { errorMessage, fmApi } from "~/pagesForm/shared/api";
 import { fmtDateTime, fmtPercent, parseLocal } from "~/pagesForm/shared/format";
 import { TEMPLATES } from "~/pagesForm/shared/templates";
-import { Badge, Button, EmptyState, ErrorBox, IconButton, Modal, Spinner, Toggle, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
+import { Badge, Button, CardListSkeleton, EmptyState, ErrorBox, IconButton, Modal, Skeleton, Toggle, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
+
+// Tải trước 2 trang hay mở nhất từ danh sách → bấm "Kết quả" / "Sửa" là mở ngay
+const prefetchBuilder = () => import("../FormBuilder").catch(() => {});
+const prefetchResults = () => import("../FormResults").catch(() => {});
 
 function statusOf(f) {
   if (!f.isVisible) return { label: "Đang ẩn", tone: "slate" };
@@ -60,20 +64,29 @@ export default function FormList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [pickerOpen, setPickerOpen] = useState(false);
+  // việc đang chạy theo từng biểu mẫu: { [formId]: 'isVisible' | 'acceptResponses' | 'duplicate' | 'remove' | 'open' }
   const [busy, setBusy] = useState({});
+  const setBusyFor = (id, v) => setBusy((b) => ({ ...b, [id]: v }));
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      setForms(await fmApi.forms());
+      const list = await fmApi.forms();
+      setForms(list);
+      if (list.length) { prefetchResults(); prefetchBuilder(); }
     } catch (e) {
       setError(errorMessage(e, "Không tải được danh sách biểu mẫu"));
     }
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  const go = (f, to) => {
+    setBusyFor(f.formId, "open");
+    navigate(to);
+  };
+
   const setFlag = async (f, flag, value) => {
-    setBusy((b) => ({ ...b, [f.formId]: true }));
+    setBusyFor(f.formId, flag);
     try {
       const r = await fmApi.setFlags(f.formId, { [flag]: value });
       setForms((xs) => xs.map((x) => (x.formId === f.formId ? { ...x, ...r } : x)));
@@ -82,17 +95,19 @@ export default function FormList() {
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
-      setBusy((b) => ({ ...b, [f.formId]: false }));
+      setBusyFor(f.formId, null);
     }
   };
 
   const duplicate = async (f) => {
+    setBusyFor(f.formId, "duplicate");
     try {
       const r = await fmApi.duplicate(f.formId);
-      toast.success("Đã tạo bản sao (đang ẩn)");
+      toast.success("Đã tạo bản sao (đang ẩn) — đang mở…");
       navigate(`${config.routes.adminFormBuilder}/${r.formId}`);
     } catch (e) {
       toast.error(errorMessage(e));
+      setBusyFor(f.formId, null);
     }
   };
 
@@ -104,12 +119,15 @@ export default function FormList() {
       danger: true,
     });
     if (!ok) return;
+    setBusyFor(f.formId, "remove");
     try {
       await fmApi.remove(f.formId);
       setForms((xs) => xs.filter((x) => x.formId !== f.formId));
       toast.success("Đã xoá biểu mẫu");
     } catch (e) {
       toast.error(errorMessage(e));
+    } finally {
+      setBusyFor(f.formId, null);
     }
   };
 
@@ -124,7 +142,20 @@ export default function FormList() {
   }, [forms, search, filter]);
 
   if (error) return <ErrorBox message={error} onRetry={load} />;
-  if (!forms) return <Spinner />;
+  if (!forms) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Biểu mẫu</h1>
+          <p className="text-sm text-slate-500">Đang tải danh sách…</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => <div key={i} className="rounded-xl border border-slate-200 bg-white p-4"><Skeleton className="h-3 w-20" /><Skeleton className="mt-2 h-7 w-12" /></div>)}
+        </div>
+        <CardListSkeleton rows={3} />
+      </div>
+    );
+  }
 
   const openCount = forms.filter((f) => f.isVisible && f.isOpenNow).length;
   const totalResponses = forms.reduce((a, f) => a + f.responseCount, 0);
@@ -170,10 +201,12 @@ export default function FormList() {
         <div className="space-y-3">
           {shown.map((f) => {
             const st = statusOf(f);
+            const b = busy[f.formId];
+            const resultsUrl = `${config.routes.adminFormResults}/${f.formId}`;
             return (
-              <div key={f.formId} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div key={f.formId} className={cn("rounded-xl border bg-white p-4 shadow-sm transition", b === "open" ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200", b === "remove" && "opacity-60")}>
                 <div className="flex flex-wrap items-start gap-4">
-                  <button type="button" className="min-w-0 flex-1 text-left" onClick={() => navigate(`${config.routes.adminFormResults}/${f.formId}`)}>
+                  <button type="button" className="min-w-0 flex-1 text-left" onMouseEnter={prefetchResults} onClick={() => go(f, resultsUrl)}>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone={st.tone}>{st.label}</Badge>
                       {f.closeAt && <span className="text-xs text-slate-500">Hạn: {fmtDateTime(f.closeAt)}</span>}
@@ -190,14 +223,14 @@ export default function FormList() {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
                   <div className="flex flex-wrap gap-5">
-                    <Toggle label="Hiện cho nhân viên" checked={f.isVisible} disabled={busy[f.formId]} onChange={(v) => setFlag(f, "isVisible", v)} />
-                    <Toggle label="Nhận phiếu" checked={f.acceptResponses} disabled={busy[f.formId]} onChange={(v) => setFlag(f, "acceptResponses", v)} />
+                    <Toggle label="Hiện cho nhân viên" checked={f.isVisible} loading={b === "isVisible"} disabled={!!b && b !== "isVisible"} onChange={(v) => setFlag(f, "isVisible", v)} />
+                    <Toggle label="Nhận phiếu" checked={f.acceptResponses} loading={b === "acceptResponses"} disabled={!!b && b !== "acceptResponses"} onChange={(v) => setFlag(f, "acceptResponses", v)} />
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="secondary" size="sm" icon={BarChart3} onClick={() => navigate(`${config.routes.adminFormResults}/${f.formId}`)}>Kết quả</Button>
-                    <IconButton icon={Pencil} title="Sửa" onClick={() => navigate(`${config.routes.adminFormBuilder}/${f.formId}`)} />
-                    <IconButton icon={Copy} title="Nhân bản" onClick={() => duplicate(f)} />
-                    <IconButton icon={Trash2} title="Xoá" danger onClick={() => remove(f)} />
+                    <Button variant="secondary" size="sm" icon={BarChart3} loading={b === "open"} disabled={!!b && b !== "open"} onMouseEnter={prefetchResults} onClick={() => go(f, resultsUrl)}>Kết quả</Button>
+                    <IconButton icon={Pencil} title="Sửa" disabled={!!b} onMouseEnter={prefetchBuilder} onClick={() => go(f, `${config.routes.adminFormBuilder}/${f.formId}`)} />
+                    <IconButton icon={Copy} title="Nhân bản" loading={b === "duplicate"} disabled={!!b} onClick={() => duplicate(f)} />
+                    <IconButton icon={Trash2} title="Xoá" danger loading={b === "remove"} disabled={!!b} onClick={() => remove(f)} />
                   </div>
                 </div>
               </div>

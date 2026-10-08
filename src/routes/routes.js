@@ -118,6 +118,16 @@ const AdminFormBuilder = lazyPage(() => import('~/pagesFormAdmin/FormBuilder'));
 const AdminFormResults = lazyPage(() => import('~/pagesFormAdmin/FormResults'));
 const AdminFormOrg = lazyPage(() => import('~/pagesFormAdmin/OrgManagement'));
 
+// Module 18 — Quản lý yêu cầu
+const RequestHome = lazyPage(() => import('~/pagesRequest/RequestHome'));
+const RequestCreate = lazyPage(() => import('~/pagesRequest/RequestCreate'));
+const RequestChat = lazyPage(() => import('~/pagesRequest/Chat'));
+const AdminRequestTypes = lazyPage(() => import('~/pagesRequestAdmin/TypeList'));
+const AdminRequestTypeBuilder = lazyPage(() => import('~/pagesRequestAdmin/TypeBuilder'));
+const AdminRequestHeads = lazyPage(() => import('~/pagesRequestAdmin/Heads'));
+const AdminRequestOrg = lazyPage(() => import('~/pagesRequestAdmin/Org'));
+const AdminRequestStats = lazyPage(() => import('~/pagesRequestAdmin/Stats'));
+
 
 const N20th11 = lazyPage(() => import('~/pages/N20th11'));
 
@@ -999,6 +1009,23 @@ export const routesFormAdmin = [
     login: true,
   },
 ]
+
+// Module 18 — gắn layout ở App.js (1 layout route chung cho trang nhân viên + quản trị → chuyển trang không dựng lại layout)
+export const routesRequest = [
+  { path: config.routes.request, component: RequestHome },
+  { path: config.routes.requestNew, component: RequestCreate },
+  { path: config.routes.requestEdit, component: RequestCreate, addId: true },
+  { path: config.routes.requestChat, component: RequestChat },
+];
+
+export const routesRequestAdmin = [
+  { path: config.routes.adminRequestTypes, component: AdminRequestTypes },
+  { path: config.routes.adminRequestTypeBuilder, component: AdminRequestTypeBuilder },
+  { path: config.routes.adminRequestTypeBuilder, component: AdminRequestTypeBuilder, addId: true },
+  { path: config.routes.adminRequestHeads, component: AdminRequestHeads },
+  { path: config.routes.adminRequestOrg, component: AdminRequestOrg },
+  { path: config.routes.adminRequestStats, component: AdminRequestStats },
+];
 
 export const routesKCSAdmin = [
   {

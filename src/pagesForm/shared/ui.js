@@ -31,40 +31,54 @@ export function Button({ variant = "primary", size = "md", loading, icon: Icon, 
   );
 }
 
-export function IconButton({ icon: Icon, title, className, danger, ...rest }) {
+/** Nút chỉ có icon. loading → icon thành spinner + khoá nút (bấm là thấy đang xử lý) */
+export function IconButton({ icon: Icon, title, className, danger, loading, disabled, spin, ...rest }) {
   return (
     <button
       type="button"
       title={title}
       aria-label={title}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-40",
+        "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+        loading && "disabled:opacity-100",
         danger ? "text-slate-500 hover:bg-red-50 hover:text-red-600" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
         className
       )}
       {...rest}
     >
-      <Icon className="h-4 w-4" />
+      {loading ? (
+        <Loader2 className={cn("h-4 w-4 animate-spin", danger ? "text-red-500" : "text-blue-600")} />
+      ) : (
+        <Icon className={cn("h-4 w-4", spin && "animate-spin")} />
+      )}
     </button>
   );
 }
 
 /* ----------------------------- Công tắc ----------------------------- */
-export function Toggle({ checked, onChange, disabled, label, hint }) {
+/** loading → hiện spinner trong núm gạt trong lúc chờ server (thay vì chỉ mờ đi) */
+export function Toggle({ checked, onChange, disabled, loading, label, hint }) {
+  const locked = disabled || loading;
   return (
-    <label className={cn("flex items-start gap-3", disabled ? "opacity-60" : "cursor-pointer")}>
+    <label className={cn("flex items-start gap-3", disabled && !loading ? "opacity-60" : locked ? "cursor-wait" : "cursor-pointer")}>
       <button
         type="button"
         role="switch"
         aria-checked={!!checked}
-        disabled={disabled}
+        aria-busy={loading || undefined}
+        disabled={locked}
         onClick={() => onChange?.(!checked)}
         className={cn(
           "relative mt-0.5 inline-flex h-5 w-9 shrink-0 rounded-full transition-colors",
-          checked ? "bg-blue-600" : "bg-slate-300"
+          checked ? "bg-blue-600" : "bg-slate-300",
+          loading && "cursor-wait"
         )}
       >
-        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all", checked ? "left-[18px]" : "left-0.5")} />
+        <span className={cn("absolute top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow transition-all", checked ? "left-[18px]" : "left-0.5")}>
+          {loading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
+        </span>
       </button>
       {(label || hint) && (
         <span className="min-w-0">
@@ -107,9 +121,72 @@ export function Badge({ tone = "slate", children, className }) {
 
 export function Spinner({ label = "Đang tải…" }) {
   return (
-    <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+    <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500" role="status">
       <Loader2 className="h-5 w-5 animate-spin" /> {label}
     </div>
+  );
+}
+
+/* ------------------------------ Hiệu ứng tải ------------------------------ */
+/** Khối xám nhấp nháy giữ chỗ (skeleton) */
+export function Skeleton({ className }) {
+  return <span className={cn("block animate-pulse rounded-md bg-slate-200/80", className)} />;
+}
+
+/** Danh sách thẻ giữ chỗ khi tải lần đầu — trông giống nội dung thật nên cảm giác nhanh hơn spinner */
+export function CardListSkeleton({ rows = 3, className }) {
+  return (
+    <div className={cn("space-y-3", className)} role="status" aria-label="Đang tải">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex gap-2"><Skeleton className="h-5 w-24 rounded-full" /><Skeleton className="h-5 w-16 rounded-full" /></div>
+          <Skeleton className="mt-3 h-5 w-3/4" />
+          <Skeleton className="mt-2 h-4 w-1/2" />
+          <div className="mt-4 flex justify-between"><Skeleton className="h-4 w-20" /><Skeleton className="h-4 w-28" /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Bảng giữ chỗ */
+export function TableSkeleton({ rows = 6, cols = 4 }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white" role="status" aria-label="Đang tải">
+      <div className="flex gap-4 bg-slate-50 px-3 py-3">{Array.from({ length: cols }, (_, i) => <Skeleton key={i} className="h-3 flex-1" />)}</div>
+      {Array.from({ length: rows }, (_, r) => (
+        <div key={r} className="flex gap-4 border-t border-slate-100 px-3 py-3">
+          {Array.from({ length: cols }, (_, i) => <Skeleton key={i} className={cn("h-4 flex-1", i === 0 && "max-w-[40%]")} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Bọc vùng dữ liệu đang tải LẠI (đổi bộ lọc, sang trang, làm mới): dữ liệu cũ mờ đi + thanh chạy ở trên
+ * + không bấm được → người dùng biết thao tác đã nhận, không bấm lại nhiều lần.
+ */
+export function Refreshing({ active, children, className }) {
+  return (
+    <div className={cn("relative", className)} aria-busy={active || undefined}>
+      {active && (
+        <div className="absolute inset-x-0 -top-1 z-10 h-0.5 overflow-hidden rounded-full bg-blue-100">
+          <div className="h-full w-1/3 animate-indeterminate rounded-full bg-blue-600" />
+        </div>
+      )}
+      <div className={cn("transition-opacity", active && "pointer-events-none select-none opacity-50")}>{children}</div>
+    </div>
+  );
+}
+
+/** Chữ nhỏ "Đang tải…" kèm spinner, đặt cạnh tiêu đề/bộ lọc */
+export function InlineLoading({ active, label = "Đang tải…" }) {
+  if (!active) return null;
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500" role="status">
+      <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" /> {label}
+    </span>
   );
 }
 
@@ -207,7 +284,8 @@ export const toast = {
   error: (m) => pushToast("error", m),
   info: (m) => pushToast("info", m),
 };
-export function Toaster() {
+/** position: lớp Tailwind vị trí đáy (layout có thanh tab dưới thì đẩy lên, vd "bottom-20 lg:bottom-6") */
+export function Toaster({ position = "bottom-4 sm:bottom-6" } = {}) {
   const [items, setItems] = useState([]);
   useEffect(() => {
     toastListener = (t) => {
@@ -219,7 +297,7 @@ export function Toaster() {
   const ICON = { success: CheckCircle2, error: AlertTriangle, info: Info };
   const TONE = { success: "bg-emerald-600", error: "bg-red-600", info: "bg-slate-800" };
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[1100] flex flex-col items-center gap-2 px-4 sm:bottom-6">
+    <div className={cn("pointer-events-none fixed inset-x-0 z-[1100] flex flex-col items-center gap-2 px-4", position)}>
       {items.map((t) => {
         const I = ICON[t.kind];
         return (
