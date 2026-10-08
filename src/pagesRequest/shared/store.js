@@ -1,5 +1,5 @@
 // Trạng thái dùng chung của module 18 (không qua Redux): dữ liệu khởi động, danh bạ, huy hiệu,
-// trạng thái mạng công ty. Mọi trang trong module đọc chung → chuyển trang không tải lại.
+// máy chủ tệp đã cấu hình chưa. Mọi trang trong module đọc chung → chuyển trang không tải lại.
 import { useSyncExternalStore } from "react";
 import { rqApi } from "./api";
 
@@ -8,7 +8,7 @@ let snap = {
   bootError: null,
   dir: null,           // { users, departments, teams, userById, deptById, teamById }
   counts: { inbox: 0, returned: 0, minePending: 0, unreadNotifications: 0, lastNotificationId: 0, unreadChat: 0 },
-  lan: "unknown",      // unknown | checking | online | offline | disabled
+  fileState: "unknown", // đính kèm tệp: unknown (chưa bootstrap) | ready | disabled (API chưa cấu hình máy chủ tệp)
 };
 const listeners = new Set();
 
@@ -50,7 +50,7 @@ export function ensureBoot(force = false) {
   bootPromise = rqApi
     .bootstrap()
     .then((b) => {
-      rqStore.set({ boot: b, bootError: null, counts: b.counts || snap.counts });
+      rqStore.set({ boot: b, bootError: null, counts: b.counts || snap.counts, fileState: b.files?.enabled ? "ready" : "disabled" });
       return b;
     })
     .catch((e) => {

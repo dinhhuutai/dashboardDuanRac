@@ -1,4 +1,4 @@
-// Đính kèm tệp / ảnh (module 18) — lưu ở máy chủ tệp nội bộ.
+// Đính kèm tệp / ảnh (module 18) — lưu ở máy chủ tệp nội bộ, tải lên / xem qua API (dùng được ở mọi mạng).
 //   const att = useAttachments();           // trạng thái tải lên
 //   <AttachmentPicker att={att} />           // nút chọn + kéo thả + danh sách đang tải
 //   att.addFiles(files)                      // vd. dán ảnh (Ctrl+V) vào ô bình luận
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "~/pagesForm/shared/ui";
 import { useRq } from "./store";
-import { checkLan, extOf, fmtSize, uploadFile, validateFile } from "./files";
+import { extOf, fileHref, fmtSize, uploadFile, validateFile } from "./files";
 
 /* ================================ TẢI LÊN ================================ */
 let seq = 0;
@@ -40,7 +40,6 @@ export function useAttachments(initial = []) {
   const addFiles = useCallback((fileList, extra = {}) => {
     const files = Array.from(fileList || []).filter(Boolean);
     if (!files.length) return;
-    checkLan();
     const add = files.map((file) => {
       const id = `a${++seq}`;
       const err = validateFile(file);
@@ -116,13 +115,10 @@ export function FileTypeIcon({ name, mime, className = "h-5 w-5" }) {
 
 /** Nút chọn tệp + vùng kéo thả + danh sách tệp đang/đã tải */
 export function AttachmentPicker({ att, fieldKey, label = "Đính kèm tệp / ảnh", hint, max = 20, compact, accept }) {
-  const lan = useRq((s) => s.lan);
+  const blocked = useRq((s) => s.fileState) === "disabled";
   const inputRef = useRef(null);
   const [drag, setDrag] = useState(false);
   const mine = att.items.filter((x) => (x.fieldKey || null) === (fieldKey || null));
-  const blocked = lan === "offline" || lan === "disabled";
-
-  useEffect(() => { checkLan(); }, []);
 
   const pick = (files) => {
     if (blocked) return;
@@ -148,15 +144,12 @@ export function AttachmentPicker({ att, fieldKey, label = "Đính kèm tệp / �
           )}
         >
           {blocked ? <Lock className="h-6 w-6" /> : <UploadCloud className="h-6 w-6" />}
-          <span className="text-sm font-medium">
-            {lan === "disabled" ? "Chưa cấu hình máy chủ tệp nội bộ" : lan === "offline" ? "Cần mạng công ty để đính kèm tệp" : label}
-          </span>
+          <span className="text-sm font-medium">{blocked ? "Chưa cấu hình máy chủ tệp nội bộ" : label}</span>
           {!blocked && <span className="text-xs">{hint || "Bấm để chọn, kéo thả vào đây, hoặc dán ảnh (Ctrl+V)"}</span>}
-          {lan === "checking" && <span className="text-xs text-slate-400">Đang kiểm tra máy chủ tệp…</span>}
         </div>
       )}
       {compact && (
-        <button type="button" disabled={blocked} onClick={() => inputRef.current?.click()} title={blocked ? "Cần mạng công ty để đính kèm" : "Đính kèm tệp / ảnh"}
+        <button type="button" disabled={blocked} onClick={() => inputRef.current?.click()} title={blocked ? "Chưa cấu hình máy chủ tệp nội bộ" : "Đính kèm tệp / ảnh"}
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-40">
           <Paperclip className="h-5 w-5" />
         </button>
@@ -198,26 +191,25 @@ export function UploadList({ att, fieldKey, className }) {
 
 /* ================================ HIỂN THỊ ================================ */
 
-function OfflineTile({ className, small }) {
+function NoServerTile({ className, small }) {
   return (
     <span className={cn("flex flex-col items-center justify-center gap-1 bg-slate-100 text-center text-slate-400", className)}>
       <Lock className={small ? "h-4 w-4" : "h-5 w-5"} />
-      {!small && <span className="px-1 text-[10px] leading-tight">Cần mạng công ty</span>}
+      {!small && <span className="px-1 text-[10px] leading-tight">Chưa có máy chủ tệp</span>}
     </span>
   );
 }
 
 function Thumb({ f, onOpen, size = "h-24 w-24" }) {
-  const lan = useRq((s) => s.lan);
   const [state, setState] = useState("loading");
-  if (lan === "offline" || lan === "disabled" || !f.thumbUrl) return <OfflineTile className={cn(size, "rounded-lg")} />;
+  if (!f.thumbUrl) return <NoServerTile className={cn(size, "rounded-lg")} />;
   return (
     <button type="button" onClick={onOpen} className={cn("group relative overflow-hidden rounded-lg bg-slate-100", size)} title={f.name}>
       {state === "error" ? (
         <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-slate-400"><ImageOff className="h-5 w-5" /><span className="text-[10px]">Không tải được</span></span>
       ) : (
-        <img src={f.thumbUrl} alt={f.name} loading="lazy" decoding="async" onLoad={() => setState("ok")}
-          onError={() => { setState("error"); checkLan(true); }}
+        <img src={fileHref(f.thumbUrl)} alt={f.name} loading="lazy" decoding="async" onLoad={() => setState("ok")}
+          onError={() => setState("error")}
           className={cn("h-full w-full object-cover transition group-hover:scale-105", state === "loading" && "animate-pulse")} />
       )}
     </button>
@@ -228,7 +220,7 @@ function Thumb({ f, onOpen, size = "h-24 w-24" }) {
 function downloadAll(files) {
   files.forEach((f, i) => setTimeout(() => {
     const a = document.createElement("a");
-    a.href = f.downloadUrl;
+    a.href = fileHref(f.downloadUrl);
     a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
@@ -238,12 +230,11 @@ function downloadAll(files) {
 
 /** Lưới ảnh + danh sách tệp. files: kết quả fileOut() của backend */
 export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
-  const lan = useRq((s) => s.lan);
   const [view, setView] = useState(null); // index ảnh đang xem
   const images = useMemo(() => (files || []).filter((f) => f.isImage), [files]);
   const others = useMemo(() => (files || []).filter((f) => !f.isImage), [files]);
-  const offline = lan === "offline" || lan === "disabled";
-  useEffect(() => { if (files?.length) checkLan(); }, [files?.length]);
+  // API chưa cấu hình máy chủ tệp → backend không ký đường dẫn (url = null)
+  const noServer = (files || []).some((f) => !f.downloadUrl);
   if (!files?.length) return null;
   const tile = size === "sm" ? "h-20 w-20" : "h-24 w-24 sm:h-28 sm:w-28";
 
@@ -265,12 +256,12 @@ export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
                   <span className="block truncate text-sm text-slate-800">{f.name}</span>
                   <span className="block text-xs text-slate-400">{fmtSize(f.size)}</span>
                 </span>
-                {offline ? (
-                  <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Lock className="h-3.5 w-3.5" /> Cần mạng công ty</span>
+                {!f.downloadUrl ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Lock className="h-3.5 w-3.5" /> Chưa có máy chủ tệp</span>
                 ) : (
                   <>
-                    {viewable && <a href={f.url} target="_blank" rel="noreferrer" className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Xem"><ExternalLink className="h-4 w-4" /></a>}
-                    <a href={f.downloadUrl} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Tải về"><Download className="h-4 w-4" /></a>
+                    {viewable && <a href={fileHref(f.url)} target="_blank" rel="noreferrer" className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Xem"><ExternalLink className="h-4 w-4" /></a>}
+                    <a href={fileHref(f.downloadUrl)} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Tải về"><Download className="h-4 w-4" /></a>
                   </>
                 )}
               </li>
@@ -278,7 +269,7 @@ export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
           })}
         </ul>
       )}
-      {allowDownloadAll && files.length > 1 && !offline && (
+      {allowDownloadAll && files.length > 1 && !noServer && (
         <button type="button" onClick={() => downloadAll(files)} className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:underline">
           <Download className="h-3.5 w-3.5" /> Tải tất cả ({files.length} tệp)
         </button>
@@ -309,18 +300,18 @@ export function Lightbox({ images, index, onIndex, onClose }) {
     <div className="fixed inset-0 z-[1200] flex flex-col bg-black/90" onClick={onClose}>
       <div className="flex items-center gap-2 px-3 py-2 text-white" onClick={(e) => e.stopPropagation()}>
         <span className="min-w-0 flex-1 truncate text-sm">{f.name} <span className="text-white/50">· {index + 1}/{images.length} · {fmtSize(f.size)}</span></span>
-        <a href={f.downloadUrl} className="rounded-lg p-2 hover:bg-white/10" title="Tải ảnh gốc"><Download className="h-5 w-5" /></a>
-        <a href={f.url} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-white/10" title="Mở tab mới"><ExternalLink className="h-5 w-5" /></a>
+        <a href={fileHref(f.downloadUrl)} className="rounded-lg p-2 hover:bg-white/10" title="Tải ảnh gốc"><Download className="h-5 w-5" /></a>
+        <a href={fileHref(f.url)} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-white/10" title="Mở tab mới"><ExternalLink className="h-5 w-5" /></a>
         <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-white/10" title="Đóng (Esc)"><X className="h-5 w-5" /></button>
       </div>
       <div className="relative flex min-h-0 flex-1 items-center justify-center p-2" onClick={(e) => e.stopPropagation()}>
         {!loaded && (
           <>
-            {f.thumbUrl && <img src={f.thumbUrl} alt="" className="absolute max-h-full max-w-full scale-100 object-contain opacity-60 blur-sm" />}
+            {f.thumbUrl && <img src={fileHref(f.thumbUrl)} alt="" className="absolute max-h-full max-w-full scale-100 object-contain opacity-60 blur-sm" />}
             <Loader2 className="absolute h-8 w-8 animate-spin text-white" />
           </>
         )}
-        <img src={f.url} alt={f.name} onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
+        <img src={fileHref(f.url)} alt={f.name} onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
           className={cn("max-h-full max-w-full object-contain transition-opacity", loaded ? "opacity-100" : "opacity-0")} />
         {index > 0 && (
           <button type="button" onClick={() => onIndex(index - 1)} className="absolute left-2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70" title="Ảnh trước"><ChevronLeft className="h-6 w-6" /></button>
@@ -334,7 +325,7 @@ export function Lightbox({ images, index, onIndex, onClose }) {
   );
 }
 
-/** Báo lỗi tải tệp (gợi ý dùng mạng công ty) */
+/** Báo số tệp tải lên lỗi */
 export function UploadWarning({ att }) {
   if (!att.failed) return null;
   return (

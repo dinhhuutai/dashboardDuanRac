@@ -7,7 +7,7 @@ import { AlertTriangle, ArrowLeft, Check, ChevronRight, Info, Paperclip, Search,
 import config from "~/config";
 import { Button, Field, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
-import { LanNotice, PageScroll, UserList, UserPicker, norm } from "../shared/components";
+import { FileServerNotice, PageScroll, UserList, UserPicker, norm } from "../shared/components";
 import { AttachmentPicker, FileGallery, UploadWarning, useAttachments } from "../shared/Attachments";
 import { FieldInput } from "../shared/FieldInput";
 import { APPROVER_META, validateValues } from "../shared/fieldTypes";
@@ -284,7 +284,7 @@ function RequestForm({ type, edit, onBack }) {
             <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
               <Paperclip className="h-4 w-4" /> Tệp đính kèm {options.requireAttachment && <span className="text-red-500">*</span>}
             </p>
-            <LanNotice className="mb-2" />
+            <FileServerNotice className="mb-2" />
             {edit?.files?.some((x) => !x.fieldKey) && <ExistingFiles files={edit.files.filter((x) => !x.fieldKey)} keepIds={keepIds} setKeepIds={setKeepIds} />}
             <AttachmentPicker att={att} />
             <UploadWarning att={att} />

@@ -1,6 +1,6 @@
 // Thành phần giao diện dùng chung của module 18 "Quản lý yêu cầu"
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Search, WifiOff, X } from "lucide-react";
+import { Check, ChevronDown, Search, ServerOff, X } from "lucide-react";
 import { cn, inputCls } from "~/pagesForm/shared/ui";
 import { useRq, userOrg } from "./store";
 import { STATUS } from "./format";
@@ -69,17 +69,15 @@ export function CountBadge({ n, tone = "red", className }) {
   return <span className={cn("inline-flex min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-[18px]", t, className)}>{n > 99 ? "99+" : n}</span>;
 }
 
-/* ------------------------------ Mạng công ty ------------------------------ */
-export function LanNotice({ compact, className }) {
-  const lan = useRq((s) => s.lan);
-  if (lan === "online" || lan === "unknown" || lan === "checking") return null;
-  const text = lan === "disabled"
-    ? "Chưa cấu hình máy chủ tệp nội bộ — chưa đính kèm/xem tệp được."
-    : "Tệp và hình ảnh lưu ở máy chủ nội bộ — kết nối Wi-Fi/mạng công ty để xem và đính kèm.";
+/* ------------------------------ Máy chủ tệp ------------------------------ */
+/** Chỉ hiện khi API chưa cấu hình máy chủ tệp nội bộ (RQ_FILE_SERVER_URL / RQ_FILE_SECRET) */
+export function FileServerNotice({ compact, className }) {
+  const fileState = useRq((s) => s.fileState);
+  if (fileState !== "disabled") return null;
   return (
     <div className={cn("flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200", className)}>
-      <WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-      <span>{compact ? (lan === "disabled" ? "Chưa có máy chủ tệp" : "Cần mạng công ty để xem tệp") : text}</span>
+      <ServerOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <span>{compact ? "Chưa có máy chủ tệp" : "Chưa cấu hình máy chủ tệp nội bộ — chưa đính kèm/xem tệp được."}</span>
     </div>
   );
 }

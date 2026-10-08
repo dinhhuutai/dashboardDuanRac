@@ -9,7 +9,7 @@ import {
 import config from "~/config";
 import { Button, Modal, Skeleton, cn, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
-import { LanNotice, StatusBadge, UserAvatar, UserPicker } from "../shared/components";
+import { FileServerNotice, StatusBadge, UserAvatar, UserPicker } from "../shared/components";
 import { FileGallery } from "../shared/Attachments";
 import { FieldValues } from "../shared/FieldInput";
 import { TypeIcon } from "../shared/typeIcons";
@@ -296,7 +296,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
 
             {generalFiles.length > 0 && (
               <Section title={`Tệp đính kèm (${generalFiles.length})`} icon={Paperclip}>
-                <LanNotice className="mb-3" />
+                <FileServerNotice className="mb-3" />
                 <FileGallery files={generalFiles} />
               </Section>
             )}

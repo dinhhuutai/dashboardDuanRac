@@ -1,8 +1,11 @@
-// Tệp / ảnh của module 18 — tải THẲNG lên máy chủ tệp nội bộ (ApiDuAnRac/fileserver), không qua API Internet.
-// - checkLan(): gọi <máy chủ tệp>/health — được = đang ở mạng công ty.
-// - uploadFile(): vé tải lên lấy từ API → PUT tệp (có % tiến trình) → ảnh thì tạo thêm ảnh thu nhỏ ~480px
-//   ngay trên trình duyệt và tải lên kèm (danh sách/bình luận mở nhanh, không phải kéo ảnh gốc 3–5 MB).
-import { rqApi } from "./api";
+// Tệp / ảnh của module 18 — tải lên QUA API (https), API chuyển tiếp sang máy chủ tệp nội bộ
+// (ApiDuAnRac/fileserver trên sv-backup). Xem / tải về cũng qua API bằng đường dẫn có chữ ký
+// (backend trả đường dẫn tương đối /api/rq/f/… → fileHref() ghép địa chỉ API). Dùng được ở mọi mạng.
+// - uploadFile(): PUT tệp (có % tiến trình) → ảnh thì tạo thêm ảnh thu nhỏ ~480px ngay trên trình duyệt
+//   và tải lên kèm (danh sách/bình luận mở nhanh, không phải kéo ảnh gốc 3–5 MB).
+import axios from "axios";
+import http from "~/api/http";
+import { BASE_URL } from "~/config";
 import { rqStore } from "./store";
 
 const BLOCKED_EXT = new Set(["exe", "msi", "bat", "cmd", "com", "scr", "pif", "ps1", "psm1", "vbs", "vbe", "js", "jse", "wsf", "wsh",
@@ -15,68 +18,23 @@ function fileCfg() {
   return rqStore.get().boot?.files || { enabled: false };
 }
 
-/* ------------------------------ Mạng công ty ------------------------------ */
-let lanAt = 0;
-let lanPromise = null;
-
-export function checkLan(force = false) {
-  const cfg = fileCfg();
-  if (!cfg.enabled || !cfg.url) {
-    if (rqStore.get().lan !== "disabled") rqStore.set({ lan: "disabled" });
-    return Promise.resolve(false);
-  }
-  const cur = rqStore.get().lan;
-  if (!force && (cur === "online" || cur === "offline") && Date.now() - lanAt < 60000) return Promise.resolve(cur === "online");
-  if (lanPromise) return lanPromise;
-  if (cur === "unknown" || cur === "disabled") rqStore.set({ lan: "checking" });
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 4000);
-  lanPromise = fetch(`${cfg.url}/health`, { cache: "no-store", mode: "cors", signal: ctrl.signal })
-    .then((r) => r.ok)
-    .catch(() => false)
-    .then((ok) => {
-      clearTimeout(timer);
-      lanAt = Date.now();
-      lanPromise = null;
-      rqStore.set({ lan: ok ? "online" : "offline" });
-      return ok;
-    });
-  return lanPromise;
-}
-
-if (typeof window !== "undefined") {
-  // đổi Wi-Fi / có mạng lại → kiểm tra lại
-  window.addEventListener("online", () => checkLan(true));
-}
-
-/* ------------------------------ Vé tải lên ------------------------------ */
-let ticket = null;
-let ticketAt = 0;
-async function getTicket(force) {
-  if (!force && ticket && Date.now() - ticketAt < 90 * 60 * 1000) return ticket;
-  const r = await rqApi.fileTicket();
-  ticket = r.ticket;
-  ticketAt = Date.now();
-  return ticket;
-}
+/** Đường dẫn tệp do backend trả (tương đối /api/rq/f/…) → đường dẫn đầy đủ tới API */
+export const fileHref = (u) => (u && u.startsWith("/") ? `${BASE_URL}${u}` : u || null);
 
 /* ------------------------------ Tải lên ------------------------------ */
-function xhrPut(url, body, headers, onProgress, hold) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    hold?.(xhr);
-    xhr.open("PUT", url);
-    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
-    if (onProgress) xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () => {
-      let data = null;
-      try { data = JSON.parse(xhr.responseText); } catch { /* không phải JSON */ }
-      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-      else reject(Object.assign(new Error(data?.message || `Lỗi máy chủ tệp (${xhr.status})`), { status: xhr.status }));
-    };
-    xhr.onerror = () => reject(Object.assign(new Error("Không kết nối được máy chủ tệp nội bộ — bạn cần dùng mạng công ty"), { network: true }));
-    xhr.onabort = () => reject(Object.assign(new Error("Đã huỷ"), { aborted: true }));
-    xhr.send(body);
+function put(body, headers, { onProgress, signal } = {}) {
+  return http.put("/api/rq/files/upload", body, {
+    // Content-Type luôn octet-stream: loại thật gửi ở X-File-Type (tệp .json không bị API đọc nhầm)
+    headers: { "Content-Type": "application/octet-stream", ...headers },
+    onUploadProgress: onProgress ? (e) => e.total && onProgress(Math.min(1, e.loaded / e.total)) : undefined,
+    signal,
+    silent: true, // có % riêng trên từng tệp → không hiện thanh tiến trình đầu trang
+    timeout: 0,
+  }).then((r) => r.data?.data, (e) => {
+    if (axios.isCancel(e) || e?.code === "ERR_CANCELED") throw Object.assign(new Error("Đã huỷ"), { aborted: true });
+    const msg = e?.response?.data?.message
+      || (e?.response ? `Lỗi tải tệp (${e.response.status})` : "Không kết nối được máy chủ — kiểm tra mạng rồi thử lại");
+    throw Object.assign(new Error(msg), { status: e?.response?.status });
   });
 }
 
@@ -123,50 +81,34 @@ export function validateFile(file) {
 }
 
 /**
- * Tải 1 tệp lên máy chủ tệp nội bộ.
+ * Tải 1 tệp lên (qua API → máy chủ tệp nội bộ).
  * @returns { promise: Promise<{key,name,size,mime,sig,hasThumb,width,height}>, cancel() }
  */
 export function uploadFile(file, { onProgress } = {}) {
-  let xhr = null;
-  let cancelled = false;
+  const ctrl = new AbortController();
   const promise = (async () => {
     const err = validateFile(file);
     if (err) throw new Error(err);
-    const cfg = fileCfg();
-    const headers = (t) => ({
-      Authorization: `Bearer ${t}`,
+    const res = await put(file, {
       "X-File-Name": encodeURIComponent(file.name || "tep"),
-      "Content-Type": file.type || "application/octet-stream",
-    });
-    let res;
-    try {
-      res = await xhrPut(`${cfg.url}/upload`, file, headers(await getTicket()), onProgress, (x) => { xhr = x; });
-    } catch (e) {
-      if (e.status !== 401 || cancelled) {
-        if (e.network) checkLan(true);
-        throw e;
-      }
-      res = await xhrPut(`${cfg.url}/upload`, file, headers(await getTicket(true)), onProgress, (x) => { xhr = x; }); // vé hết hạn → lấy vé mới
-    }
+      "X-File-Type": file.type || "",
+    }, { onProgress, signal: ctrl.signal });
     const meta = { ...res, hasThumb: false, width: null, height: null };
-    if (THUMB_TYPES.test(file.type || "") && !cancelled) {
+    if (THUMB_TYPES.test(file.type || "") && !ctrl.signal.aborted) {
       try {
         const t = await makeThumb(file);
         meta.width = t.width;
         meta.height = t.height;
-        await xhrPut(`${cfg.url}/upload`, t.blob, { ...headers(await getTicket()), "Content-Type": "image/jpeg", "X-Thumb-For": res.key }, null, (x) => { xhr = x; });
+        // mã tệp có tên tiếng Việt (HinhAnh/2026-10-08/Ảnh.jpg) — header HTTP chỉ nhận Latin-1 → mã hoá
+        await put(t.blob, { "X-Thumb-For": encodeURIComponent(res.key) }, { signal: ctrl.signal });
         meta.hasThumb = true;
-      } catch { /* không có ảnh thu nhỏ thì hiện ảnh gốc */ }
+      } catch (e) {
+        if (e.aborted) throw e; // không có ảnh thu nhỏ thì hiện ảnh gốc
+      }
     }
     return meta;
   })();
-  return {
-    promise,
-    cancel: () => {
-      cancelled = true;
-      xhr?.abort();
-    },
-  };
+  return { promise, cancel: () => ctrl.abort() };
 }
 
 /** Kích thước tệp dễ đọc */

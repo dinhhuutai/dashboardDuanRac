@@ -12,7 +12,6 @@ export const rqApi = {
   bootstrap: () => unwrap(http.get("/api/rq/me/bootstrap")),
   pulse: () => unwrap(http.get("/api/rq/me/pulse", silent)),
   directory: () => unwrap(http.get("/api/rq/directory", silent)),
-  fileTicket: () => unwrap(http.post("/api/rq/files/ticket", null, silent)),
 
   // Đề xuất
   list: (params, opts) => unwrap(http.get("/api/rq/requests", { params, ...opts })),

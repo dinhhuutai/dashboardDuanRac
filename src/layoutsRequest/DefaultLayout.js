@@ -12,7 +12,6 @@ import config from "~/config";
 import { ConfirmHost, Skeleton, Toaster, cn, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
 import { ensureBoot, ensureDirectory, refreshCounts, rqEvents, useRq } from "~/pagesRequest/shared/store";
-import { checkLan } from "~/pagesRequest/shared/files";
 import { Avatar, CountBadge } from "~/pagesRequest/shared/components";
 import { timeAgo } from "~/pagesRequest/shared/format";
 import { preloadWhenIdle } from "~/utils/lazyPage";
@@ -221,9 +220,9 @@ export default function DefaultLayoutRequest({ children }) {
   const [q, setQ] = useState(params.get("q") || "");
   const notifRef = useRef(null);
 
-  // khởi động: bootstrap → danh bạ + kiểm tra mạng công ty
+  // khởi động: bootstrap + danh bạ
   useEffect(() => {
-    ensureBoot().then(() => { checkLan(); }).catch(() => {});
+    ensureBoot().catch(() => {});
     ensureDirectory().catch(() => {});
     preloadWhenIdle(...prefetchPages);
   }, []);
@@ -233,7 +232,7 @@ export default function DefaultLayoutRequest({ children }) {
     let timer = null;
     const start = () => { clearInterval(timer); timer = setInterval(refreshCounts, PULSE_MS); };
     const onVis = () => {
-      if (document.visibilityState === "visible") { refreshCounts(); start(); checkLan(); }
+      if (document.visibilityState === "visible") { refreshCounts(); start(); }
       else clearInterval(timer);
     };
     start();
