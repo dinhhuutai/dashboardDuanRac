@@ -486,7 +486,7 @@ function AppRoutes({ user }) {
           element={
             <RequireModule
               moduleKey="yeucau"
-              fallbackName="Quản lý yêu cầu"
+              fallbackName="Quản lý đề xuất"
               needRoles={["user", "admin"]}
             />
           }
@@ -503,7 +503,7 @@ function AppRoutes({ user }) {
               element={
                 <RequireModule
                   moduleKey="yeucau"
-                  fallbackName="Quản lý yêu cầu"
+                  fallbackName="Quản lý đề xuất"
                   needRoles={["admin"]}
                 />
               }

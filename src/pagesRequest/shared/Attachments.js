@@ -4,10 +4,11 @@
 //   att.addFiles(files)                      // vd. dán ảnh (Ctrl+V) vào ô bình luận
 //   att.done → mảng gửi lên API; att.uploading → còn tệp đang tải (khoá nút gửi)
 //   <FileGallery files={detail.files} />     // hiển thị: lưới ảnh thu nhỏ + danh sách tệp + xem ảnh lớn
+//                                            // + XEM TRƯỚC ngay trong trang: PDF, video, âm thanh, văn bản, Excel/CSV, Word (.docx)
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  AlertTriangle, ChevronLeft, ChevronRight, Download, ExternalLink, File, FileArchive, FileAudio, FileImage, FileSpreadsheet,
+  AlertTriangle, ChevronLeft, ChevronRight, Download, ExternalLink, Eye, File, FileArchive, FileAudio, FileImage, FileSpreadsheet,
   FileText, FileVideo, ImageOff, Loader2, Lock, Paperclip, RotateCcw, UploadCloud, X,
 } from "lucide-react";
 import { cn } from "~/pagesForm/shared/ui";
@@ -228,9 +229,153 @@ function downloadAll(files) {
   }, i * 400));
 }
 
+/* ================================ XEM TRƯỚC TỆP ================================ */
+const PREVIEW_MAX_BYTES = 20 * 1024 * 1024; // Excel/Word/văn bản phải tải về trình duyệt để dựng → giới hạn
+const SHEET_MAX_ROWS = 500;
+const SHEET_MAX_COLS = 40;
+
+/** Tệp xem trước được kiểu gì: pdf | video | audio | sheet | docx | text | null (chỉ tải về) */
+export function previewKind(f) {
+  const ext = extOf(f.name);
+  const m = f.mime || "";
+  if (m === "application/pdf" || ext === "pdf") return "pdf";
+  if (/^video\/(mp4|webm|ogg)/.test(m)) return "video";
+  if (/^audio\//.test(m)) return "audio";
+  if (["xlsx", "xls", "xlsm", "csv"].includes(ext)) return "sheet";
+  if (ext === "docx") return "docx";
+  if (m === "text/plain" || ext === "txt") return "text";
+  return null;
+}
+
+function SheetView({ book }) {
+  const [tab, setTab] = useState(0);
+  const sheet = book.sheets[tab];
+  return (
+    <div className="flex h-full flex-col bg-white">
+      {book.sheets.length > 1 && (
+        <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 pt-2">
+          {book.sheets.map((s, i) => (
+            <button key={s.name} type="button" onClick={() => setTab(i)}
+              className={cn("shrink-0 rounded-t-lg border border-b-0 px-3 py-1.5 text-xs font-medium", i === tab ? "border-slate-200 bg-white text-emerald-700" : "border-transparent text-slate-500 hover:text-slate-800")}>{s.name}</button>
+          ))}
+        </div>
+      )}
+      <div className="min-h-0 flex-1 overflow-auto">
+        {sheet.rows.length === 0 ? <p className="p-6 text-center text-sm text-slate-400">Trang tính trống</p> : (
+          <table className="border-collapse text-xs">
+            <tbody>
+              {sheet.rows.map((r, i) => (
+                <tr key={i}>
+                  <td className="sticky left-0 border border-slate-200 bg-slate-50 px-1.5 py-1 text-center text-[10px] text-slate-400">{i + 1}</td>
+                  {Array.from({ length: sheet.cols }, (_, c) => (
+                    <td key={c} className="max-w-[320px] whitespace-pre-wrap break-words border border-slate-200 px-2 py-1 align-top text-slate-800">{r[c] ?? ""}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {sheet.cut && <p className="px-3 py-2 text-xs text-amber-700">Chỉ hiện {SHEET_MAX_ROWS} dòng × {SHEET_MAX_COLS} cột đầu — tải tệp về để xem đủ.</p>}
+      </div>
+    </div>
+  );
+}
+
+/** Xem trước 1 tệp ngay trong trang (không rời đề xuất). Không xem được loại nào → nút tải về. */
+export function FilePreview({ file: f, onClose }) {
+  const kind = previewKind(f);
+  const needFetch = kind === "sheet" || kind === "docx" || kind === "text";
+  const [state, setState] = useState(needFetch ? { status: "loading" } : { status: "ready" });
+  const docxRef = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!needFetch) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        if (f.size > PREVIEW_MAX_BYTES) throw new Error("Tệp lớn hơn 20 MB — hãy tải về để xem");
+        const r = await fetch(fileHref(f.url));
+        if (!r.ok) throw new Error(r.status === 403 ? "Đường dẫn đã hết hạn — tải lại trang" : "Không tải được tệp");
+        const buf = await r.arrayBuffer();
+        if (!alive) return;
+        if (kind === "text") {
+          setState({ status: "ready", text: new TextDecoder("utf-8").decode(buf).slice(0, 500000) });
+        } else if (kind === "sheet") {
+          const XLSX = await import("xlsx-js-style");
+          const wb = XLSX.read(buf, { type: "array" });
+          const sheets = wb.SheetNames.map((name) => {
+            const all = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: "", blankrows: false });
+            const rows = all.slice(0, SHEET_MAX_ROWS).map((x) => x.slice(0, SHEET_MAX_COLS));
+            const cols = rows.reduce((mx, x) => Math.max(mx, x.length), 0);
+            return { name, rows, cols, cut: all.length > SHEET_MAX_ROWS || all.some((x) => x.length > SHEET_MAX_COLS) };
+          });
+          if (alive) setState({ status: "ready", book: { sheets: sheets.length ? sheets : [{ name: "Sheet1", rows: [], cols: 0 }] } });
+        } else {
+          setState({ status: "ready", docxBuf: buf }); // dựng ở effect bên dưới, sau khi khung hiển thị đã gắn vào trang
+        }
+      } catch (e) {
+        if (alive) setState({ status: "error", message: e.message || "Không xem trước được tệp" });
+      }
+    })();
+    return () => { alive = false; };
+  }, [f, kind, needFetch]);
+
+  // Word (.docx): dựng bằng docx-preview (tải lười) vào khung docxRef
+  useEffect(() => {
+    if (state.status !== "ready" || !state.docxBuf || !docxRef.current) return undefined;
+    let alive = true;
+    import("docx-preview")
+      .then(({ renderAsync }) => renderAsync(state.docxBuf, docxRef.current, null, { inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: true }))
+      .catch(() => { if (alive) setState({ status: "error", message: "Không dựng được tệp Word này — hãy tải về để xem" }); });
+    return () => { alive = false; };
+  }, [state]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1200] flex flex-col bg-slate-900/95" role="dialog" aria-label={`Xem trước ${f.name}`} onClick={onClose}>
+      <div className="flex shrink-0 items-center gap-2 px-3 py-2 text-white" onClick={(e) => e.stopPropagation()}>
+        <FileTypeIcon name={f.name} mime={f.mime} className="h-5 w-5 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-sm">{f.name} <span className="text-white/50">· {fmtSize(f.size)}</span></span>
+        <a href={fileHref(f.downloadUrl)} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm hover:bg-white/10" title="Tải về"><Download className="h-4 w-4" /> <span className="hidden sm:inline">Tải về</span></a>
+        {(kind === "pdf" || kind === "video" || kind === "audio" || kind === "text") && (
+          <a href={fileHref(f.url)} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-white/10" title="Mở tab mới"><ExternalLink className="h-5 w-5" /></a>
+        )}
+        <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-white/10" title="Đóng (Esc)"><X className="h-5 w-5" /></button>
+      </div>
+      <div className="relative mx-auto min-h-0 w-full max-w-6xl flex-1 overflow-hidden sm:px-3 sm:pb-3" onClick={(e) => e.stopPropagation()}>
+        {state.status === "loading" && (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-white/80"><Loader2 className="h-8 w-8 animate-spin" /><span className="text-sm">Đang mở tệp…</span></div>
+        )}
+        {state.status === "error" && (
+          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-white">
+            <AlertTriangle className="h-8 w-8 text-amber-400" />
+            <p className="text-sm">{state.message}</p>
+            <a href={fileHref(f.downloadUrl)} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-800"><Download className="h-4 w-4" /> Tải về</a>
+          </div>
+        )}
+        {state.status === "ready" && kind === "pdf" && <iframe title={f.name} src={fileHref(f.url)} className="h-full w-full bg-white sm:rounded-lg" />}
+        {state.status === "ready" && kind === "video" && <div className="flex h-full items-center justify-center"><video controls autoPlay src={fileHref(f.url)} className="max-h-full max-w-full" /></div>}
+        {state.status === "ready" && kind === "audio" && <div className="flex h-full items-center justify-center p-6"><audio controls autoPlay src={fileHref(f.url)} className="w-full max-w-xl" /></div>}
+        {state.status === "ready" && kind === "text" && <pre className="h-full overflow-auto whitespace-pre-wrap break-words bg-white p-4 text-sm text-slate-800 sm:rounded-lg">{state.text}</pre>}
+        {state.status === "ready" && kind === "sheet" && <div className="h-full overflow-hidden sm:rounded-lg"><SheetView book={state.book} /></div>}
+        {state.status === "ready" && kind === "docx" && <div ref={docxRef} className="h-full overflow-auto bg-slate-200 sm:rounded-lg" data-docx-preview />}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 /** Lưới ảnh + danh sách tệp. files: kết quả fileOut() của backend */
 export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
   const [view, setView] = useState(null); // index ảnh đang xem
+  const [preview, setPreview] = useState(null); // tệp (không phải ảnh) đang xem trước
   const images = useMemo(() => (files || []).filter((f) => f.isImage), [files]);
   const others = useMemo(() => (files || []).filter((f) => !f.isImage), [files]);
   // API chưa cấu hình máy chủ tệp → backend không ký đường dẫn (url = null)
@@ -248,19 +393,26 @@ export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
       {others.length > 0 && (
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white">
           {others.map((f) => {
-            const viewable = /^(application\/pdf|video\/|audio\/|text\/plain)/.test(f.mime || "");
-            return (
-              <li key={f.fileId} className="flex items-center gap-2.5 px-3 py-2">
+            const viewable = !!f.url && !!previewKind(f);
+            const info = (
+              <>
                 <FileTypeIcon name={f.name} mime={f.mime} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-slate-800">{f.name}</span>
-                  <span className="block text-xs text-slate-400">{fmtSize(f.size)}</span>
+                  <span className={cn("block truncate text-sm text-slate-800", viewable && "group-hover:text-blue-700 group-hover:underline")}>{f.name}</span>
+                  <span className="block text-xs text-slate-400">{fmtSize(f.size)}{viewable ? " · bấm để xem trước" : ""}</span>
                 </span>
+              </>
+            );
+            return (
+              <li key={f.fileId} className="flex items-center gap-2.5 px-3 py-2">
+                {viewable ? (
+                  <button type="button" onClick={() => setPreview(f)} className="group flex min-w-0 flex-1 items-center gap-2.5 text-left" title="Xem trước">{info}</button>
+                ) : info}
                 {!f.downloadUrl ? (
                   <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Lock className="h-3.5 w-3.5" /> Chưa có máy chủ tệp</span>
                 ) : (
                   <>
-                    {viewable && <a href={fileHref(f.url)} target="_blank" rel="noreferrer" className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Xem"><ExternalLink className="h-4 w-4" /></a>}
+                    {viewable && <button type="button" onClick={() => setPreview(f)} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Xem trước" aria-label={`Xem trước ${f.name}`}><Eye className="h-4 w-4" /></button>}
                     <a href={fileHref(f.downloadUrl)} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-700" title="Tải về"><Download className="h-4 w-4" /></a>
                   </>
                 )}
@@ -275,6 +427,7 @@ export function FileGallery({ files, size = "md", allowDownloadAll = true }) {
         </button>
       )}
       {view !== null && <Lightbox images={images} index={view} onIndex={setView} onClose={() => setView(null)} />}
+      {preview && <FilePreview file={preview} onClose={() => setPreview(null)} />}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-// Gọi API module 18 "Quản lý yêu cầu" (backend: ApiDuAnRac/src/RequestManagement)
+// Gọi API module 18 "Quản lý đề xuất" (backend: ApiDuAnRac/src/RequestManagement)
 import http from "~/api/http";
 
 const unwrap = (p) => p.then((r) => r.data?.data);
@@ -22,6 +22,8 @@ export const rqApi = {
   act: (id, action, note) => unwrap(http.post(`/api/rq/requests/${id}/${action}`, { note })), // approve | reject | return
   bulk: (ids, action, note) => unwrap(http.post("/api/rq/requests/bulk", { ids, action, note })),
   cancel: (id, note) => unwrap(http.post(`/api/rq/requests/${id}/cancel`, { note })),
+  forward: (id, body) => unwrap(http.post(`/api/rq/requests/${id}/forward`, body)), // { userId, note, approve }
+  remove: (id) => unwrap(http.delete(`/api/rq/requests/${id}`)),
   addFollowers: (id, userIds) => unwrap(http.post(`/api/rq/requests/${id}/followers`, { userIds })),
   removeFollower: (id, userId) => unwrap(http.delete(`/api/rq/requests/${id}/followers/${userId}`)),
   comment: (id, body) => unwrap(http.post(`/api/rq/requests/${id}/comments`, body)),

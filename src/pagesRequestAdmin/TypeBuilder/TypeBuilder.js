@@ -8,6 +8,7 @@ import { Badge, Button, Field, Skeleton, Toggle, cn, inputCls, toast } from "~/p
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
 import { UserPicker } from "~/pagesRequest/shared/components";
 import { FieldInput } from "~/pagesRequest/shared/FieldInput";
+import { FULL_WIDTH_TYPES, isNumericCol, withComputed } from "~/pagesRequest/shared/fieldTypes";
 import { useAttachments } from "~/pagesRequest/shared/Attachments";
 import { TYPE_COLORS, TYPE_ICONS, TypeIcon } from "~/pagesRequest/shared/typeIcons";
 import { ensureBoot, useRq } from "~/pagesRequest/shared/store";
@@ -35,6 +36,19 @@ function problemsOf(t) {
   for (const f of t.fields) {
     if (!f.label?.trim()) p[f.key] = "Chưa đặt tên trường";
     else if ((f.type === "select" || f.type === "multiselect") && !(f.options || []).some((o) => o.label.trim())) p[f.key] = "Chưa có lựa chọn";
+    else if (f.type === "table") {
+      const cols = f.columns || [];
+      const plain = new Set(cols.filter((c) => c.type === "number" || c.type === "currency").map((c) => c.key));
+      if (!cols.length) p[f.key] = "Bảng chưa có cột";
+      else if (cols.some((c) => !c.label?.trim())) p[f.key] = `Bảng "${f.label}": có cột chưa đặt tên`;
+      else if (cols.some((c) => c.type === "formula" && !(plain.has(c.of?.[0]) && plain.has(c.of?.[1])))) p[f.key] = `Bảng "${f.label}": cột tự tính chưa chọn đủ 2 cột số`;
+    } else if (f.sumOf) {
+      const tb = t.fields.find((x) => x.key === f.sumOf.table && x.type === "table");
+      if (!isNumericCol(tb?.columns?.find((c) => c.key === f.sumOf.column))) p[f.key] = `Trường "${f.label}": chọn lại cột của bảng để tính tổng`;
+    } else if (f.wordsOf) {
+      const src = t.fields.find((x) => x.key === f.wordsOf);
+      if (!src || (src.type !== "currency" && src.type !== "number")) p[f.key] = `Trường "${f.label}": chọn lại trường số tiền để đọc bằng chữ`;
+    }
   }
   if (!t.flow.length) p.__flow = "Cần ít nhất 1 bước duyệt";
   for (const s of t.flow) if (s.approverType === "users" && !s.userIds.length) p[s.key] = "Chưa chọn người duyệt";
@@ -119,9 +133,9 @@ function Preview({ t }) {
         {t.fields.map((f) => f.type === "section" ? (
           <h3 key={f.key} className="col-span-2 border-b border-slate-100 pb-1 font-semibold text-slate-800">{f.label}</h3>
         ) : (
-          <div key={f.key} className={f.width === "half" ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+          <div key={f.key} className={f.width === "half" && !FULL_WIDTH_TYPES.includes(f.type) ? "col-span-2 sm:col-span-1" : "col-span-2"}>
             <label className="mb-1 block text-sm font-medium text-slate-700">{f.label || "(chưa đặt tên)"} {f.required && <span className="text-red-500">*</span>}</label>
-            <FieldInput field={f} value={values[f.key]} onChange={(v) => setValues((x) => ({ ...x, [f.key]: v }))} att={att} />
+            <FieldInput field={f} value={values[f.key]} onChange={(v) => setValues((x) => withComputed(t.fields, { ...x, [f.key]: v }))} att={att} />
           </div>
         ))}
       </div>

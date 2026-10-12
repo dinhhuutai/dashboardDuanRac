@@ -35,7 +35,7 @@ const KNOWN_ICONS = {
   FcFactory,
   FcFeedback,
   FcIcons8Cup,
-  FcInspection, // module 18 Quản lý yêu cầu
+  FcInspection, // module 18 Quản lý đề xuất
   FcLike,
   FcMoneyTransfer,
   FcPackage,

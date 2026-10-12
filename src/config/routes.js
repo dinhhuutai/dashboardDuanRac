@@ -118,7 +118,7 @@ const routes = {
   adminFormResults: '/admin/form/results', // /admin/form/results/:id
   adminFormOrg: '/admin/form/org',         // phòng ban, chức danh, gán cho nhân viên
 
-  // Module 18 — Quản lý yêu cầu (đề xuất / duyệt / chat)
+  // Module 18 — Quản lý đề xuất (đề xuất / duyệt / chat)
   request: '/request',                     // ?box=inbox|mine|processed|following|all &id=…
   requestNew: '/request/new',              // ?type=ID
   requestEdit: '/request/edit',            // /request/edit/:id — sửa & gửi lại

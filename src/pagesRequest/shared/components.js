@@ -1,4 +1,4 @@
-// Thành phần giao diện dùng chung của module 18 "Quản lý yêu cầu"
+// Thành phần giao diện dùng chung của module 18 "Quản lý đề xuất"
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search, ServerOff, X } from "lucide-react";
 import { cn, inputCls } from "~/pagesForm/shared/ui";
@@ -132,6 +132,7 @@ export function UserPicker({ value, onChange, multiple = true, placeholder = "Ch
       return;
     }
     if (selected.includes(id)) onChange(selected.filter((x) => x !== id));
+    else if (max === 1) { onChange([id]); setOpen(false); setQ(""); return; } // chỉ chọn 1: chọn người khác = thay
     else if (!max || selected.length < max) onChange([...selected, id]);
     setQ("");
     inputRef.current?.focus();

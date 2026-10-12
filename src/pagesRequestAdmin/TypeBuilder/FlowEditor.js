@@ -33,7 +33,8 @@ export default function FlowEditor({ flow, onChange, problems }) {
 
       <ol className="space-y-3">
         {flow.map((s, i) => {
-          const multi = s.approverType === "users" ? s.userIds.length > 1 : s.approverType !== "requester_pick";
+          // "khi bước có nhiều người duyệt" chỉ có nghĩa khi bước có thể có > 1 người
+          const multi = s.approverType === "users" ? s.userIds.length > 1 : s.approverType === "requester_pick" ? s.maxPick !== 1 : true;
           return (
             <li key={s.key} className={cn("rounded-xl border bg-white p-3", problems[s.key] ? "border-red-300" : "border-slate-200")}>
               <div className="flex items-center gap-2">
@@ -46,7 +47,7 @@ export default function FlowEditor({ flow, onChange, problems }) {
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {APPROVER_TYPES.map((t) => (
                   <label key={t.value} className={cn("flex cursor-pointer items-start gap-2 rounded-lg border p-2 text-sm", s.approverType === t.value ? "border-blue-500 bg-blue-50/60" : "border-slate-200 hover:border-slate-300")}>
-                    <input type="radio" className="mt-0.5" checked={s.approverType === t.value} onChange={() => set(i, { approverType: t.value, userIds: t.value === "users" || t.value === "requester_pick" ? s.userIds : [] })} />
+                    <input type="radio" className="mt-0.5" checked={s.approverType === t.value} onChange={() => set(i, { approverType: t.value, userIds: t.value === "users" || t.value === "requester_pick" ? s.userIds : [], optional: t.value === "requester_pick" ? s.optional : undefined, maxPick: t.value === "requester_pick" ? s.maxPick : undefined })} />
                     <span><span className="block font-medium text-slate-800">{t.label}</span><span className="block text-xs text-slate-500">{t.hint}</span></span>
                   </label>
                 ))}
@@ -57,9 +58,27 @@ export default function FlowEditor({ flow, onChange, problems }) {
                 </Field>
               )}
               {s.approverType === "requester_pick" && (
-                <Field label="Chỉ cho chọn trong danh sách" hint="Để trống = người gửi chọn bất kỳ ai" className="mt-3">
-                  <UserPicker value={s.userIds} onChange={(v) => set(i, { userIds: v })} placeholder="Giới hạn danh sách (tuỳ chọn)…" />
-                </Field>
+                <>
+                  <Field label="Chỉ cho chọn trong danh sách" hint="Để trống = người gửi chọn bất kỳ ai" className="mt-3">
+                    <UserPicker value={s.userIds} onChange={(v) => set(i, { userIds: v })} placeholder="Giới hạn danh sách (tuỳ chọn)…" />
+                  </Field>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                    <label className="inline-flex items-center gap-2 text-slate-700">
+                      Người gửi được chọn
+                      <span className="inline-block w-36">
+                        <select className={cn(inputCls, "py-1")} value={s.maxPick === 1 ? "1" : ""} aria-label="Số người được chọn"
+                          onChange={(e) => { const { maxPick, ...rest } = s; onChange(flow.map((x, j) => (j === i ? (e.target.value ? { ...rest, maxPick: 1 } : rest) : x))); }}>
+                          <option value="1">1 người</option>
+                          <option value="">Nhiều người</option>
+                        </select>
+                      </span>
+                    </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-slate-700">
+                      <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-blue-600" checked={!!s.optional} onChange={(e) => set(i, { optional: e.target.checked })} />
+                      Không bắt buộc <span className="text-xs text-slate-400">(người gửi không chọn ai → bỏ qua bước này)</span>
+                    </label>
+                  </div>
+                </>
               )}
               {multi && (
                 <div className="mt-3 flex flex-wrap gap-2 text-sm">

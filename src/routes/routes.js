@@ -118,7 +118,7 @@ const AdminFormBuilder = lazyPage(() => import('~/pagesFormAdmin/FormBuilder'));
 const AdminFormResults = lazyPage(() => import('~/pagesFormAdmin/FormResults'));
 const AdminFormOrg = lazyPage(() => import('~/pagesFormAdmin/OrgManagement'));
 
-// Module 18 — Quản lý yêu cầu
+// Module 18 — Quản lý đề xuất
 const RequestHome = lazyPage(() => import('~/pagesRequest/RequestHome'));
 const RequestCreate = lazyPage(() => import('~/pagesRequest/RequestCreate'));
 const RequestChat = lazyPage(() => import('~/pagesRequest/Chat'));

@@ -1,4 +1,4 @@
-// Layout module 18 "Quản lý yêu cầu" (giao diện kiểu request.base.vn) — dùng chung cho trang nhân viên + quản trị.
+// Layout module 18 "Quản lý đề xuất" (giao diện kiểu request.base.vn) — dùng chung cho trang nhân viên + quản trị.
 // Thanh trên: tìm kiếm, Tạo đề xuất, Tin nhắn, Thông báo. Menu trái: hộp đề xuất, nhóm, chat, quản trị.
 // Điện thoại: menu trái thành ngăn kéo + thanh tab dưới.
 // Khởi động 1 lần (bootstrap + danh bạ) cho mọi trang; huy hiệu cập nhật mỗi 30 giây khi tab đang mở.
@@ -282,7 +282,7 @@ export default function DefaultLayoutRequest({ children }) {
         <button type="button" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setDrawer(true)} aria-label="Mở menu"><Menu className="h-5 w-5" /></button>
         <Link to={R.request} className="flex min-w-0 items-center gap-2 lg:w-[220px]">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white"><ListChecks className="h-5 w-5" /></span>
-          <span className="truncate font-bold text-slate-800">Quản lý yêu cầu</span>
+          <span className="truncate font-bold text-slate-800">Quản lý đề xuất</span>
         </Link>
         <form onSubmit={search} className="mx-2 hidden max-w-xl flex-1 md:block">
           <label className="relative block">
@@ -327,7 +327,7 @@ export default function DefaultLayoutRequest({ children }) {
             <div className="absolute inset-0 bg-slate-900/40" onClick={() => setDrawer(false)} />
             <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl">
               <div className="flex h-14 items-center justify-between border-b border-slate-100 px-4">
-                <span className="font-bold">Quản lý yêu cầu</span>
+                <span className="font-bold">Quản lý đề xuất</span>
                 <button type="button" onClick={() => setDrawer(false)} className="rounded p-1 text-slate-500 hover:bg-slate-100" aria-label="Đóng"><X className="h-5 w-5" /></button>
               </div>
               <div className="h-[calc(100%-56px)]"><Sidebar onNavigate={() => setDrawer(false)} /></div>
@@ -338,7 +338,7 @@ export default function DefaultLayoutRequest({ children }) {
         <main className="min-h-0 min-w-0 flex-1 pb-14 lg:pb-0">
           {bootError && !boot ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="text-slate-600">{errorMessage(bootError, "Không tải được module Quản lý yêu cầu")}</p>
+              <p className="text-slate-600">{errorMessage(bootError, "Không tải được module Quản lý đề xuất")}</p>
               <button type="button" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => ensureBoot(true).catch(() => {})}>Thử lại</button>
             </div>
           ) : !boot ? (

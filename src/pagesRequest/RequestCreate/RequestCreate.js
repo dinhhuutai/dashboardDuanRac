@@ -1,20 +1,53 @@
-// Tạo đề xuất mới (/request/new?type=ID) và sửa & gửi lại (/request/edit/:id).
+// Tạo đề xuất mới (/request/new?type=ID), nhân bản (/request/new?copy=ID) và sửa & gửi lại (/request/edit/:id).
 // Bước 1: chọn mẫu (nhóm theo nhóm đề xuất, tìm kiếm). Bước 2: điền form + đính kèm + xem trước quy trình duyệt.
 // Tự lưu nháp trên máy theo từng mẫu (tải lại trang không mất).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, ChevronRight, Info, Paperclip, Search, Send, Trash2, Users, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, Info, Paperclip, Search, Send, Trash2, Users, Zap } from "lucide-react";
 import config from "~/config";
 import { Button, Field, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
 import { FileServerNotice, PageScroll, UserList, UserPicker, norm } from "../shared/components";
 import { AttachmentPicker, FileGallery, UploadWarning, useAttachments } from "../shared/Attachments";
 import { FieldInput } from "../shared/FieldInput";
-import { APPROVER_META, validateValues } from "../shared/fieldTypes";
+import { APPROVER_META, FULL_WIDTH_TYPES, isComputed, validateValues, withComputed } from "../shared/fieldTypes";
 import { TypeIcon } from "../shared/typeIcons";
 import { refreshCounts, rqEvents, useRq } from "../shared/store";
 
 const R = config.routes;
+
+/**
+ * Nhân bản: lấy lại nội dung của đề xuất cũ cho mẫu HIỆN TẠI (mẫu có thể đã được sửa) —
+ * chỉ giữ trường còn tồn tại và cùng loại; lựa chọn / cột đã xoá thì bỏ. Tệp đính kèm không chép.
+ */
+function valuesFromCopy(type, src) {
+  const out = {};
+  const old = new Map((src.fields || []).map((f) => [f.key, f]));
+  for (const f of type.fields) {
+    const v = src.values?.[f.key];
+    if (v === undefined || v === null || isComputed(f) || f.type === "files" || f.type === "section" || old.get(f.key)?.type !== f.type) continue;
+    if (f.type === "select") { if (f.options.some((o) => o.id === v)) out[f.key] = v; }
+    else if (f.type === "multiselect") { const a = (Array.isArray(v) ? v : []).filter((id) => f.options.some((o) => o.id === id)); if (a.length) out[f.key] = a; }
+    else if (f.type === "table") {
+      const keys = new Set(f.columns.filter((c) => c.type !== "formula").map((c) => c.key));
+      const rows = (Array.isArray(v) ? v : []).map((r) => Object.fromEntries(Object.entries(r || {}).filter(([k]) => keys.has(k)))).filter((r) => Object.keys(r).length);
+      if (rows.length) out[f.key] = rows;
+    } else out[f.key] = v;
+  }
+  return out;
+}
+/** Người duyệt đã chọn ở đề xuất cũ → gợi ý lại cho các bước "người gửi tự chọn" trùng tên (người gửi đổi được) */
+function pickedFromCopy(type, src, meId) {
+  const out = {};
+  for (const s of type.flow) {
+    if (s.approverType !== "requester_pick") continue;
+    let ids = [...new Set((src.approvers || []).filter((a) => a.stepName === s.name).map((a) => a.userId))].filter((id) => id !== meId);
+    if (s.userIds?.length) ids = ids.filter((id) => s.userIds.includes(id));
+    if (s.maxPick) ids = ids.slice(0, s.maxPick);
+    if (ids.length) out[s.key] = ids;
+  }
+  return out;
+}
 
 /* ------------------------------ Bước 1: chọn mẫu ------------------------------ */
 function TypePicker({ onPick }) {
@@ -96,19 +129,23 @@ function FlowPreview({ flow, picked, setPicked, errors }) {
           body = <span className="text-sm text-slate-600">{heads.team.length ? "Tổ trưởng" : "Trưởng phòng (tổ chưa có tổ trưởng)"}: {ids.length ? <UserList ids={ids} /> : "—"}</span>;
         } else {
           body = (
-            <div>
-              <UserPicker value={picked[s.key] || []} onChange={(v) => setPicked((p) => ({ ...p, [s.key]: v }))}
-                allowIds={s.userIds?.length ? s.userIds : undefined} excludeIds={me ? [me.userId] : []} placeholder="Chọn người duyệt…" />
+            <div data-pick-step={s.key}>
+              <UserPicker value={picked[s.key] || []} onChange={(v) => setPicked((p) => ({ ...p, [s.key]: v }))} max={s.maxPick || undefined}
+                allowIds={s.userIds?.length ? s.userIds : undefined} excludeIds={me ? [me.userId] : []}
+                placeholder={s.optional ? "Chọn người duyệt (có thể bỏ qua)…" : "Chọn người duyệt…"} />
               {errors[s.key] && <p className="mt-1 text-xs text-red-600">{errors[s.key]}</p>}
             </div>
           );
         }
+        const pick = s.approverType === "requester_pick";
         return (
           <li key={s.key} className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700 ring-1 ring-blue-200">{i + 1}</span>
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-sm font-medium text-slate-800">
-                {s.name} <span className="text-xs font-normal text-slate-400">· {APPROVER_META[s.approverType]?.label}{s.mode === "any" ? " · 1 người duyệt là đủ" : ""}</span>
+                {s.name} {pick && !s.optional && <span className="text-red-500">*</span>}
+                <span className="text-xs font-normal text-slate-400"> · {pick ? (s.maxPick === 1 ? "bạn chọn 1 người" : "bạn chọn người duyệt") : APPROVER_META[s.approverType]?.label}
+                  {pick && s.optional ? " · không bắt buộc" : ""}{s.mode === "any" && !(pick && s.maxPick === 1) ? " · 1 người duyệt là đủ" : ""}</span>
               </p>
               {body}
               {warn && <p className="flex items-start gap-1 text-xs text-amber-700"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{warn}</p>}
@@ -121,21 +158,25 @@ function FlowPreview({ flow, picked, setPicked, errors }) {
 }
 
 /* ------------------------------ Bước 2: điền form ------------------------------ */
-function RequestForm({ type, edit, onBack }) {
+function RequestForm({ type, edit, copy, onBack }) {
   const navigate = useNavigate();
   const me = useRq((s) => s.boot?.me);
   const draftKey = edit ? null : `rq_draft_${me?.userId}_${type.typeId}`;
   const draft = useMemo(() => {
-    if (!draftKey) return null;
+    if (!draftKey || copy) return null; // nhân bản: lấy nội dung đề xuất cũ, không lấy nháp
     try { return JSON.parse(localStorage.getItem(draftKey) || "null"); } catch { return null; }
-  }, [draftKey]);
+  }, [draftKey, copy]);
 
-  const [title, setTitle] = useState(edit?.title ?? draft?.title ?? "");
-  const [values, setValues] = useState(edit?.values ?? draft?.values ?? {});
-  const [priority, setPriority] = useState(edit?.priority ?? draft?.priority ?? "normal");
+  const fields = edit ? edit.fields : type.fields;
+  const options = edit ? edit.options : type.options;
+  const flow = useMemo(() => (edit ? [] : type.flow), [edit, type.flow]);
+
+  const [title, setTitle] = useState(edit?.title ?? copy?.title ?? draft?.title ?? "");
+  const [values, setValues] = useState(() => withComputed(fields, edit?.values ?? (copy ? valuesFromCopy(type, copy) : draft?.values) ?? {}));
+  const [priority, setPriority] = useState(edit?.priority ?? copy?.priority ?? draft?.priority ?? "normal");
   const [deadline, setDeadline] = useState(edit?.deadline ?? draft?.deadline ?? "");
   const [followers, setFollowers] = useState(draft?.followers ?? []);
-  const [picked, setPicked] = useState(draft?.picked ?? {});
+  const [picked, setPicked] = useState(() => (copy ? pickedFromCopy(type, copy, me?.userId) : draft?.picked ?? {}));
   const [keepIds, setKeepIds] = useState(() => new Set((edit?.files || []).map((f) => f.fileId)));
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState({});
@@ -143,10 +184,6 @@ function RequestForm({ type, edit, onBack }) {
   const [restored, setRestored] = useState(!!draft && !edit);
   const att = useAttachments();
   const cardRefs = useRef({});
-
-  const fields = edit ? edit.fields : type.fields;
-  const options = edit ? edit.options : type.options;
-  const flow = edit ? [] : type.flow;
 
   // tự lưu nháp (chỉ khi tạo mới)
   useEffect(() => {
@@ -162,9 +199,16 @@ function RequestForm({ type, edit, onBack }) {
   }, [draftKey, title, values, priority, deadline, followers, picked]);
 
   const setValue = (k, v) => {
-    setValues((xs) => ({ ...xs, [k]: v }));
+    setValues((xs) => withComputed(fields, { ...xs, [k]: v })); // kèm các trường tự tính (tổng của bảng, bằng chữ)
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
+  // chọn người duyệt xong → bỏ dòng báo "Chọn người duyệt" của bước đó
+  useEffect(() => {
+    setErrors((e) => {
+      const fixed = flow.filter((s) => e[s.key] && (picked[s.key] || []).length);
+      return fixed.length ? { ...e, ...Object.fromEntries(fixed.map((s) => [s.key, undefined])) } : e;
+    });
+  }, [picked, flow]);
 
   const discardDraft = async () => {
     if (!(await confirmDialog({ title: "Xoá nháp", message: "Xoá nội dung đang điền dở của mẫu này?", confirmText: "Xoá nháp", danger: true }))) return;
@@ -180,7 +224,7 @@ function RequestForm({ type, edit, onBack }) {
     for (const f of att.done) if (f.fieldKey) filesByField[f.fieldKey] = (filesByField[f.fieldKey] || 0) + 1;
     for (const f of edit?.files || []) if (f.fieldKey && keepIds.has(f.fileId)) filesByField[f.fieldKey] = (filesByField[f.fieldKey] || 0) + 1;
     const errs = validateValues(fields, values, filesByField);
-    for (const s of flow) if (s.approverType === "requester_pick" && !(picked[s.key] || []).length) errs[s.key] = "Chọn người duyệt";
+    for (const s of flow) if (s.approverType === "requester_pick" && !s.optional && !(picked[s.key] || []).length) errs[s.key] = "Chọn người duyệt";
     const generalCount = att.done.filter((f) => !f.fieldKey).length + (edit?.files || []).filter((f) => !f.fieldKey && keepIds.has(f.fileId)).length;
     if (options.requireAttachment && generalCount + Object.values(filesByField).reduce((a, b) => a + b, 0) === 0) errs.__files = "Mẫu này bắt buộc đính kèm tệp";
     setErrors(errs);
@@ -217,12 +261,12 @@ function RequestForm({ type, edit, onBack }) {
     }
   };
 
-  const halfOk = (f) => f.width === "half" && !["textarea", "files", "multiselect", "section"].includes(f.type);
+  const halfOk = (f) => f.width === "half" && !FULL_WIDTH_TYPES.includes(f.type);
 
   return (
     <PageScroll max="max-w-3xl">
       <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-        <ArrowLeft className="h-4 w-4" /> {edit ? "Quay lại đề xuất" : "Chọn mẫu khác"}
+        <ArrowLeft className="h-4 w-4" /> {edit || copy ? "Quay lại đề xuất" : "Chọn mẫu khác"}
       </button>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -240,6 +284,12 @@ function RequestForm({ type, edit, onBack }) {
         <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
           <span>Đã khôi phục nội dung bạn điền dở lần trước.</span>
           <button type="button" className="font-medium underline" onClick={discardDraft}>Xoá nháp</button>
+        </div>
+      )}
+      {copy && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          <Copy className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>Nhân bản từ đề xuất <b>#{copy.requestId}</b>. Nội dung đã được điền sẵn — hãy kiểm tra lại, <b>chọn lại người duyệt</b> nếu cần và đính kèm lại tệp (tệp cũ không được chép).</span>
         </div>
       )}
       {edit?.status === "returned" && (
@@ -395,8 +445,21 @@ export default function RequestCreate() {
   const navigate = useNavigate();
   const boot = useRq((s) => s.boot);
   const typeId = Number(params.get("type")) || null;
+  const copyId = Number(params.get("copy")) || null;
   const [edit, setEdit] = useState(null);
   const [editError, setEditError] = useState(null);
+  const [copy, setCopy] = useState(null);
+  const [copyError, setCopyError] = useState(null);
+
+  // nhân bản: tải đề xuất gốc (chỉ đề xuất mình xem được)
+  useEffect(() => {
+    if (!copyId || id) return undefined;
+    let alive = true;
+    setCopy(null);
+    setCopyError(null);
+    rqApi.detail(copyId).then((d) => { if (alive) setCopy(d); }).catch((e) => { if (alive) setCopyError(errorMessage(e, "Không tải được đề xuất gốc")); });
+    return () => { alive = false; };
+  }, [copyId, id]);
 
   const loadEdit = useCallback(async () => {
     setEditError(null);
@@ -424,6 +487,32 @@ export default function RequestCreate() {
     if (!edit) return <FormSkeleton />;
     const type = { typeId: edit.typeId, name: edit.typeName, icon: edit.icon, color: edit.color };
     return <RequestForm key={`e${id}`} type={type} edit={edit} onBack={() => navigate(`${R.request}?box=mine&id=${id}`)} />;
+  }
+
+  if (copyId) {
+    if (copyError) {
+      return (
+        <PageScroll max="max-w-xl">
+          <div className="rounded-xl bg-red-50 p-6 text-center text-sm text-red-700">
+            <p>{copyError}</p>
+            <Button variant="secondary" className="mt-3" onClick={() => setParams({})}>Tạo đề xuất mới</Button>
+          </div>
+        </PageScroll>
+      );
+    }
+    if (!copy || !boot) return <FormSkeleton />;
+    const copyType = boot.types?.find((t) => t.typeId === copy.typeId);
+    if (!copyType) {
+      return (
+        <PageScroll max="max-w-xl">
+          <div className="rounded-xl bg-amber-50 p-6 text-center text-sm text-amber-800">
+            Mẫu "{copy.typeName}" của đề xuất #{copy.requestId} đã ngừng dùng hoặc không còn dành cho bạn — không nhân bản được.
+            <div><Button variant="secondary" className="mt-3" onClick={() => setParams({})}>Chọn mẫu khác</Button></div>
+          </div>
+        </PageScroll>
+      );
+    }
+    return <RequestForm key={`c${copyId}`} type={copyType} copy={copy} onBack={() => navigate(`${R.request}?id=${copyId}`)} />;
   }
 
   const type = typeId ? boot?.types?.find((t) => t.typeId === typeId) : null;

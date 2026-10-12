@@ -135,7 +135,7 @@ module.exports = {
           '0%': { transform: 'rotate(0deg) translateX(80px) rotate(0deg)' },
           '100%': { transform: 'rotate(360deg) translateX(80px) rotate(-360deg)' },
         },
-        // thanh chạy "đang tải lại" (Refreshing ở pagesForm/shared/ui.js, module Quản lý yêu cầu)
+        // thanh chạy "đang tải lại" (Refreshing ở pagesForm/shared/ui.js, module Quản lý đề xuất)
         indeterminate: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(300%)' },

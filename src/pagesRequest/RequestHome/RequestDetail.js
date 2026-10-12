@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle, ArrowLeft, Ban, Check, CornerUpLeft, Flag, History, Link2, Loader2, MessagesSquare, Paperclip, Pencil, Plus, RefreshCw,
-  Star, X, Zap,
+  AlertTriangle, ArrowLeft, Ban, Check, Copy, CornerUpLeft, Flag, Forward, History, Link2, Loader2, MessagesSquare, Paperclip, Pencil, Plus, RefreshCw,
+  Star, Trash2, X, Zap,
 } from "lucide-react";
 import config from "~/config";
-import { Button, Modal, Skeleton, cn, toast } from "~/pagesForm/shared/ui";
+import { Button, Modal, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
 import { FileServerNotice, StatusBadge, UserAvatar, UserPicker } from "../shared/components";
 import { FileGallery } from "../shared/Attachments";
@@ -31,6 +31,9 @@ const ACTIVITY = {
   edit: "đã sửa đề xuất",
   cancel: "đã huỷ đề xuất",
   follow: "đã thêm người theo dõi",
+  forward: "đã chuyển tiếp cho người khác duyệt",
+  approve_forward: "đã duyệt và chuyển tiếp",
+  delete: "đã xoá đề xuất",
 };
 
 function DetailSkeleton() {
@@ -60,7 +63,9 @@ function Section({ title, icon: Icon, right, children }) {
 export default function RequestDetail({ id, onBack, onChanged }) {
   const navigate = useNavigate();
   const me = useRq((s) => s.boot?.me);
+  const myTypes = useRq((s) => s.boot?.types);
   const unread = useRq((s) => s.counts.unreadNotifications);
+  const [fwd, setFwd] = useState(null); // hộp chuyển tiếp: { to: [userId], note, approve, saving }
   const [data, setData] = useState(() => cache.get(id) || null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -149,6 +154,42 @@ export default function RequestDetail({ id, onBack, onChanged }) {
     }
   };
 
+  const doForward = async () => {
+    if (!fwd?.to?.length || fwd.saving) return;
+    setFwd((f) => ({ ...f, saving: true }));
+    try {
+      await rqApi.forward(id, { userId: fwd.to[0], note: fwd.note.trim() || null, approve: !!fwd.approve });
+      setFwd(null);
+      after(fwd.approve ? "Đã duyệt và chuyển tiếp" : "Đã chuyển tiếp cho người khác duyệt");
+    } catch (e) {
+      toast.error(errorMessage(e));
+      setFwd((f) => (f ? { ...f, saving: false } : f));
+      if (e?.response?.status === 409) load(true);
+    }
+  };
+
+  const doDelete = async () => {
+    const ok = await confirmDialog({
+      title: "Xoá đề xuất",
+      message: `Xoá đề xuất #${id} "${data?.title || ""}"? Đề xuất sẽ không còn hiện với bất kỳ ai.`,
+      confirmText: "Xoá đề xuất", danger: true,
+    });
+    if (!ok) return;
+    setBusy("delete");
+    try {
+      await rqApi.remove(id);
+      cache.delete(id);
+      toast.success("Đã xoá đề xuất");
+      refreshCounts();
+      onChanged?.();
+      rqEvents.emit("changed", { requestId: Number(id), deleted: true });
+      onBack?.();
+    } catch (e) {
+      toast.error(errorMessage(e));
+      setBusy(null);
+    }
+  };
+
   const openChat = async () => {
     setBusy("chat");
     try {
@@ -208,6 +249,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
   if (!data) return <DetailSkeleton />;
 
   const p = data.permissions;
+  const canCopy = !!myTypes?.some((t) => t.typeId === data.typeId); // mẫu còn dùng + mình được gửi
   const dl = deadlineInfo(data.deadline, data.status);
   const returnedNote = data.status === "returned" ? data.approvers.find((a) => a.status === "returned") : null;
   const rejectedNote = data.status === "rejected" ? data.approvers.find((a) => a.status === "rejected") : null;
@@ -271,7 +313,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
         )}
 
         {/* Thao tác chính */}
-        {(p.approve || p.edit || p.cancel) && (
+        {(p.approve || p.edit || p.cancel || p.delete || canCopy) && (
           <div className="flex flex-wrap gap-2">
             {p.approve && (
               <>
@@ -280,8 +322,11 @@ export default function RequestDetail({ id, onBack, onChanged }) {
                 <Button variant="secondary" icon={CornerUpLeft} className="!text-violet-700" onClick={() => setAction("return")}>Trả lại</Button>
               </>
             )}
+            {p.forward && <Button variant="secondary" icon={Forward} className="!text-sky-700" onClick={() => setFwd({ to: [], note: "", approve: false, saving: false })}>Chuyển tiếp</Button>}
             {p.edit && !returnedNote && <Button variant="secondary" icon={Pencil} loading={busy === "edit"} onClick={() => { setBusy("edit"); navigate(`${R.requestEdit}/${id}`); }}>Sửa đề xuất</Button>}
+            {canCopy && <Button variant="secondary" icon={Copy} onClick={() => navigate(`${R.requestNew}?copy=${id}`)} title="Tạo đề xuất mới với nội dung giống đề xuất này">Nhân bản</Button>}
             {p.cancel && <Button variant="ghost" icon={Ban} className="!text-slate-500" onClick={() => setAction("cancel")}>Huỷ đề xuất</Button>}
+            {p.delete && <Button variant="ghost" icon={Trash2} className="!text-red-600" loading={busy === "delete"} onClick={doDelete}>Xoá</Button>}
           </div>
         )}
 
@@ -368,10 +413,36 @@ export default function RequestDetail({ id, onBack, onChanged }) {
           <Button className="flex-1 !bg-emerald-600" icon={Check} onClick={() => setAction("approve")}>Duyệt</Button>
           <Button variant="secondary" className="flex-1 !text-red-600" icon={X} onClick={() => setAction("reject")}>Từ chối</Button>
           <Button variant="secondary" className="!text-violet-700" icon={CornerUpLeft} onClick={() => setAction("return")} aria-label="Trả lại" />
+          <Button variant="secondary" className="!text-sky-700" icon={Forward} onClick={() => setFwd({ to: [], note: "", approve: false, saving: false })} aria-label="Chuyển tiếp" />
         </div>
       )}
 
       {action && <ActionDialog action={action} onClose={() => setAction(null)} onConfirm={doAction} />}
+
+      <Modal open={!!fwd} onClose={() => { if (!fwd?.saving) setFwd(null); }} title="Chuyển tiếp cho người khác duyệt" size="sm"
+        footer={<><Button variant="secondary" disabled={fwd?.saving} onClick={() => setFwd(null)}>Đóng</Button><Button icon={Forward} loading={fwd?.saving} disabled={!fwd?.to?.length} onClick={doForward}>{fwd?.approve ? "Duyệt và chuyển tiếp" : "Chuyển tiếp"}</Button></>}>
+        {fwd && (
+          <div className="space-y-3">
+            <div>
+              <p className="mb-1 text-sm font-medium text-slate-700">Người nhận <span className="text-red-500">*</span></p>
+              <UserPicker value={fwd.to} max={1} autoFocus placeholder="Chọn người duyệt thay…"
+                excludeIds={[me?.userId, data.requesterId, ...data.approvers.filter((a) => a.stepNo === data.currentStep && ["pending", "approved"].includes(a.status)).map((a) => a.userId)]}
+                onChange={(v) => setFwd((f) => ({ ...f, to: v }))} />
+            </div>
+            <div className="space-y-1.5">
+              {[[false, "Chuyển tiếp", "Người nhận duyệt THAY bạn ở bước này. Bạn vẫn theo dõi được đề xuất."],
+                [true, "Duyệt và chuyển tiếp", "Bạn duyệt, đồng thời thêm người nhận cùng duyệt ở bước này."]].map(([v, l, h]) => (
+                <label key={String(v)} className={cn("flex cursor-pointer items-start gap-2 rounded-lg border p-2 text-sm", fwd.approve === v ? "border-sky-500 bg-sky-50/60" : "border-slate-200")}>
+                  <input type="radio" className="mt-0.5" checked={fwd.approve === v} onChange={() => setFwd((f) => ({ ...f, approve: v }))} />
+                  <span><span className="block font-medium text-slate-800">{l}</span><span className="block text-xs text-slate-500">{h}</span></span>
+                </label>
+              ))}
+            </div>
+            <textarea value={fwd.note} maxLength={800} placeholder="Lời nhắn cho người nhận (không bắt buộc)"
+              onChange={(e) => setFwd((f) => ({ ...f, note: e.target.value }))} className={cn(inputCls, "min-h-[80px] resize-y")} />
+          </div>
+        )}
+      </Modal>
 
       <Modal open={followOpen} onClose={() => setFollowOpen(false)} title="Thêm người theo dõi" size="sm"
         footer={<><Button variant="secondary" onClick={() => setFollowOpen(false)}>Huỷ</Button><Button loading={savingFollow} disabled={!followIds.length} onClick={addFollowers}>Thêm</Button></>}>
