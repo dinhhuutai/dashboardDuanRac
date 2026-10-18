@@ -6,7 +6,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileStack, Home, Inbox, Layers, ListChecks, Loader2,
-  Menu, MessagesSquare, Plus, Search, Send, Star, UserCog, X,
+  Menu, MessagesSquare, PieChart, Plus, Search, Send, Star, UserCog, X,
 } from "lucide-react";
 import config from "~/config";
 import { ConfirmHost, Skeleton, Toaster, cn, toast } from "~/pagesForm/shared/ui";
@@ -164,6 +164,18 @@ function Sidebar({ onNavigate }) {
                 <span className="flex-1 truncate">{g.name}</span>
               </Link>
             ))}
+          </>
+        )}
+
+        {(boot?.me?.isAdmin || boot?.reportCount > 0) && (
+          <>
+            <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Phân tích</p>
+            <NavLink to={R.requestReports} onClick={onNavigate}
+              className={() => item(pathname.startsWith(R.requestReports) || pathname.startsWith(R.adminRequestReportBuilder))}>
+              <PieChart className="h-4 w-4 shrink-0" />
+              <span className="flex-1">Báo cáo</span>
+              {boot?.reportCount > 0 && <CountBadge n={boot.reportCount} tone="slate" />}
+            </NavLink>
           </>
         )}
 

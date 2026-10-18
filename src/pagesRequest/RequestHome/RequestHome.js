@@ -1,9 +1,8 @@
-// Trang chính module 18: danh sách đề xuất (trái) + chi tiết (phải) — giống request.base.vn.
+// Trang chính module 18: DANH SÁCH đề xuất chiếm cả màn hình; bấm 1 đề xuất → CHI TIẾT mở toàn màn hình
+// (danh sách vẫn giữ trong trang, chỉ bị che → quay lại đúng chỗ đang cuộn, không tải lại).
 // Trạng thái nằm trên URL (?box=&status=&q=&id=…) → bấm Back của trình duyệt / gửi link đều đúng.
-// Điện thoại: chỉ 1 khung — chọn đề xuất thì hiện chi tiết toàn màn hình.
 import { useCallback, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileStack } from "lucide-react";
 import { cn } from "~/pagesForm/shared/ui";
 import { useRq } from "../shared/store";
 import RequestList, { BOX_TITLE } from "./RequestList";
@@ -58,20 +57,16 @@ export default function RequestHome() {
   if (!box) return null;
 
   return (
-    <div className="flex h-full">
-      <div className={cn("h-full w-full shrink-0 border-r border-slate-200 lg:w-[380px] xl:w-[420px]", id && "hidden lg:block")}>
+    <div className="relative h-full">
+      {/* danh sách: bị che (không xoá) khi đang xem chi tiết → giữ vị trí cuộn + dữ liệu đã tải */}
+      <div className={cn("h-full", id && "invisible pointer-events-none")} aria-hidden={id ? true : undefined}>
         <RequestList box={box} filters={filters} setFilter={setFilter} selectedId={id} onOpen={open} />
       </div>
-      <div className={cn("h-full min-w-0 flex-1 bg-slate-50", !id && "hidden lg:block")}>
-        {id ? (
+      {id && (
+        <div className="absolute inset-0 z-10 bg-slate-100">
           <RequestDetail key={id} id={id} onBack={back} />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-slate-400">
-            <FileStack className="h-12 w-12 text-slate-300" />
-            <p className="text-sm">Chọn một đề xuất bên trái để xem chi tiết</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

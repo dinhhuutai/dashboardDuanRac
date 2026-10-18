@@ -21,9 +21,21 @@ const STATUS_TABS = [
 ];
 const PAGE = 30;
 
+// Màn hình rộng: mỗi đề xuất 1 dòng chia cột (như bảng); điện thoại: thẻ gọn.
+const COLS = "md:grid md:grid-cols-[minmax(0,1fr)_minmax(160px,220px)_150px_minmax(150px,220px)_92px] md:items-center md:gap-4";
+
 const Row = memo(function Row({ r, selected, onOpen, picking, picked, onPick }) {
   const dl = deadlineInfo(r.deadline, r.status);
   const waiting = r.status === "pending" && r.waitingIds.length ? r.waitingIds.map((id) => userName(id)).join(", ") : null;
+  const badges = (
+    <>
+      {r.myTurn && <span className="rounded-full bg-amber-500 px-2 py-0.5 font-semibold text-white">Đến lượt bạn</span>}
+      {r.priority === "high" && <span className="inline-flex items-center gap-0.5 font-semibold text-red-600"><Zap className="h-3 w-3" />Gấp</span>}
+      {dl && dl.tone !== "slate" && <span className={cn("inline-flex items-center gap-0.5", dl.tone === "red" ? "text-red-600" : "text-amber-700")}><Flag className="h-3 w-3" />{dl.text}</span>}
+      {r.commentCount > 0 && <span className="inline-flex items-center gap-0.5 text-slate-400"><MessageCircle className="h-3 w-3" />{r.commentCount}</span>}
+      {r.fileCount > 0 && <span className="inline-flex items-center gap-0.5 text-slate-400"><Paperclip className="h-3 w-3" />{r.fileCount}</span>}
+    </>
+  );
   return (
     <li>
       <div
@@ -32,35 +44,54 @@ const Row = memo(function Row({ r, selected, onOpen, picking, picked, onPick }) 
         onClick={() => (picking ? onPick(r.requestId) : onOpen(r.requestId))}
         onKeyDown={(e) => e.key === "Enter" && onOpen(r.requestId)}
         className={cn(
-          "flex cursor-pointer gap-3 border-l-[3px] px-3 py-3 transition-colors",
-          selected ? "border-blue-600 bg-blue-50/70" : r.myTurn ? "border-amber-400 hover:bg-slate-50" : "border-transparent hover:bg-slate-50"
+          "flex cursor-pointer gap-3 border-l-[3px] px-3 py-3 transition-colors md:px-5",
+          COLS,
+          selected ? "border-blue-600 bg-blue-50/70" : r.myTurn ? "border-amber-400 bg-amber-50/30 hover:bg-amber-50/60" : "border-transparent hover:bg-slate-50"
         )}
       >
-        {picking && (
-          <input type="checkbox" checked={picked} onChange={() => onPick(r.requestId)} onClick={(e) => e.stopPropagation()}
-            className="mt-2.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600" />
-        )}
-        <UserAvatar id={r.requesterId} name={r.requesterName} size={36} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2">
-            <p className={cn("min-w-0 flex-1 truncate text-sm", r.myTurn ? "font-bold text-slate-900" : "font-semibold text-slate-800")}>{r.title}</p>
-            <span className="shrink-0 text-[11px] text-slate-400">{timeAgo(r.lastActivityAt)}</span>
-          </div>
-          <p className="mt-0.5 truncate text-xs text-slate-500">
-            <span className="text-slate-400">#{r.requestId}</span> · <span style={{ color: r.color || undefined }}>{r.typeName}</span> · {r.requesterName}{r.departmentName ? ` · ${r.departmentName}` : ""}
-          </p>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-            <StatusBadge status={r.status} />
-            {r.myTurn && <span className="rounded-full bg-amber-500 px-2 py-0.5 font-semibold text-white">Đến lượt bạn</span>}
-            {r.priority === "high" && <span className="inline-flex items-center gap-0.5 font-semibold text-red-600"><Zap className="h-3 w-3" />Gấp</span>}
-            {dl && dl.tone !== "slate" && <span className={cn("inline-flex items-center gap-0.5", dl.tone === "red" ? "text-red-600" : "text-amber-700")}><Flag className="h-3 w-3" />{dl.text}</span>}
-            {r.commentCount > 0 && <span className="inline-flex items-center gap-0.5 text-slate-400"><MessageCircle className="h-3 w-3" />{r.commentCount}</span>}
-            {r.fileCount > 0 && <span className="inline-flex items-center gap-0.5 text-slate-400"><Paperclip className="h-3 w-3" />{r.fileCount}</span>}
-          </div>
-          {waiting && !r.myTurn && r.stepCount > 0 && (
-            <p className="mt-1 truncate text-[11px] text-slate-400">Bước {r.currentStep}/{r.stepCount} · chờ {waiting}</p>
+        {/* cột 1: đề xuất */}
+        <div className="flex min-w-0 flex-1 gap-3">
+          {picking && (
+            <input type="checkbox" checked={picked} onChange={() => onPick(r.requestId)} onClick={(e) => e.stopPropagation()}
+              className="mt-2.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600" />
           )}
+          <span className="md:hidden"><UserAvatar id={r.requesterId} name={r.requesterName} size={36} /></span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start gap-2">
+              <p className={cn("min-w-0 flex-1 truncate text-sm md:text-[15px]", r.myTurn ? "font-bold text-slate-900" : "font-semibold text-slate-800")}>{r.title}</p>
+              <span className="shrink-0 text-[11px] text-slate-400 md:hidden">{timeAgo(r.lastActivityAt)}</span>
+            </div>
+            <p className="mt-0.5 truncate text-xs text-slate-500">
+              <span className="text-slate-400">#{r.requestId}</span> · <span className="font-medium" style={{ color: r.color || undefined }}>{r.typeName}</span>
+              <span className="md:hidden"> · {r.requesterName}{r.departmentName ? ` · ${r.departmentName}` : ""}</span>
+            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] md:mt-1">
+              <span className="md:hidden"><StatusBadge status={r.status} /></span>
+              {badges}
+            </div>
+            {waiting && !r.myTurn && r.stepCount > 0 && (
+              <p className="mt-1 truncate text-[11px] text-slate-400 md:hidden">Bước {r.currentStep}/{r.stepCount} · chờ {waiting}</p>
+            )}
+          </div>
         </div>
+        {/* các cột trên màn hình rộng */}
+        <div className="hidden min-w-0 items-center gap-2 md:flex">
+          <UserAvatar id={r.requesterId} name={r.requesterName} size={30} />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-slate-800">{r.requesterName}</span>
+            <span className="block truncate text-xs text-slate-500">{[r.departmentName, r.teamName].filter(Boolean).join(" · ") || "—"}</span>
+          </span>
+        </div>
+        <div className="hidden md:block"><StatusBadge status={r.status} /></div>
+        <div className="hidden min-w-0 text-xs md:block">
+          {r.status === "pending" && r.stepCount > 0 ? (
+            <>
+              <p className="font-medium text-slate-700">Bước {r.currentStep}/{r.stepCount}</p>
+              <p className="truncate text-slate-500" title={waiting || ""}>{r.myTurn ? <b className="text-amber-700">Bạn</b> : waiting ? `Chờ ${waiting}` : "—"}</p>
+            </>
+          ) : <span className="text-slate-400">{r.finishedAt ? `Xong ${timeAgo(r.finishedAt)}` : "—"}</span>}
+        </div>
+        <div className="hidden text-right text-xs text-slate-500 md:block">{timeAgo(r.lastActivityAt)}</div>
       </div>
     </li>
   );
@@ -193,7 +224,7 @@ export default function RequestList({ box, filters, setFilter, selectedId, onOpe
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Đầu danh sách */}
-      <div className="shrink-0 space-y-2 border-b border-slate-200 px-3 pb-2 pt-3">
+      <div className="shrink-0 space-y-2 border-b border-slate-200 px-3 pb-2 pt-3 md:px-5">
         <div className="flex items-center gap-2">
           <h2 className="min-w-0 flex-1 truncate text-base font-bold text-slate-800">
             {filters.groupId ? boot?.groups?.find((g) => String(g.groupId) === String(filters.groupId))?.name || "Nhóm" : BOX_TITLE[box]}
@@ -212,26 +243,26 @@ export default function RequestList({ box, filters, setFilter, selectedId, onOpe
             {activeFilterCount > 0 && <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">{activeFilterCount}</span>}
           </button>
         </div>
-        <label className="relative block">
+        <label className="relative block md:max-w-xl">
           <Search className="pointer-events-none absolute left-2.5 top-2 h-4 w-4 text-slate-400" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tiêu đề, người gửi, #mã…"
             className="h-8 w-full rounded-lg border-0 bg-slate-100 pl-8 pr-7 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-200" />
           {q && <button type="button" onClick={() => setQ("")} className="absolute right-1.5 top-1.5 rounded p-0.5 text-slate-400 hover:text-slate-700"><X className="h-4 w-4" /></button>}
         </label>
         {showFilters && (
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2">
-            <select className={cn(inputCls, "col-span-2 py-1.5")} value={filters.typeId || ""} onChange={(e) => setFilter({ typeId: e.target.value || null })}>
+          <div className="grid grid-cols-2 items-end gap-2 rounded-lg bg-slate-50 p-2 md:grid-cols-[repeat(4,minmax(0,220px))_auto]">
+            <select className={cn(inputCls, "col-span-2 py-1.5 md:col-span-1")} value={filters.typeId || ""} onChange={(e) => setFilter({ typeId: e.target.value || null })}>
               <option value="">Mọi mẫu đề xuất</option>
               {types.map((t) => <option key={t.typeId} value={t.typeId}>{t.name}</option>)}
             </select>
-            <select className={cn(inputCls, "col-span-2 py-1.5")} value={filters.departmentId || ""} onChange={(e) => setFilter({ departmentId: e.target.value || null })}>
+            <select className={cn(inputCls, "col-span-2 py-1.5 md:col-span-1")} value={filters.departmentId || ""} onChange={(e) => setFilter({ departmentId: e.target.value || null })}>
               <option value="">Mọi phòng ban</option>
               {dir?.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
             <label className="text-xs text-slate-500">Từ ngày<input type="date" className={cn(inputCls, "mt-0.5 py-1")} value={filters.from || ""} onChange={(e) => setFilter({ from: e.target.value || null })} /></label>
             <label className="text-xs text-slate-500">Đến ngày<input type="date" className={cn(inputCls, "mt-0.5 py-1")} value={filters.to || ""} onChange={(e) => setFilter({ to: e.target.value || null })} /></label>
             {activeFilterCount > 0 && (
-              <button type="button" className="col-span-2 text-xs font-medium text-blue-700 hover:underline" onClick={() => setFilter({ typeId: null, departmentId: null, from: null, to: null })}>Xoá bộ lọc</button>
+              <button type="button" className="col-span-2 py-2 text-xs font-medium text-blue-700 hover:underline md:col-span-1" onClick={() => setFilter({ typeId: null, departmentId: null, from: null, to: null })}>Xoá bộ lọc</button>
             )}
           </div>
         )}
@@ -260,6 +291,9 @@ export default function RequestList({ box, filters, setFilter, selectedId, onOpe
           </Refreshing>
         ) : (
           <Refreshing active={loading}>
+            <div className={cn("sticky top-0 z-10 hidden border-b border-slate-200 bg-slate-50 px-5 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500", COLS)}>
+              <span className="pl-[3px]">Đề xuất</span><span>Người gửi</span><span>Trạng thái</span><span>Đang chờ</span><span className="text-right">Cập nhật</span>
+            </div>
             <ul className="divide-y divide-slate-100">
               {rows.map((r) => (
                 <Row key={r.requestId} r={r} selected={String(selectedId) === String(r.requestId)} onOpen={onOpen}

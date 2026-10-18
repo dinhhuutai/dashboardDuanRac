@@ -56,4 +56,13 @@ export const rqApi = {
   heads: () => unwrap(http.get("/api/rq/admin/heads")),
   saveHeads: (body) => unwrap(http.put("/api/rq/admin/heads", body)),
   stats: (params) => unwrap(http.get("/api/rq/admin/stats", { params })),
+
+  // Báo cáo tự thiết kế (xem: người được chia sẻ + admin; tạo/sửa/xem trước: admin)
+  reports: () => unwrap(http.get("/api/rq/reports")),
+  report: (id) => unwrap(http.get(`/api/rq/reports/${id}`)),
+  runReport: (id, params, opts) => unwrap(http.get(`/api/rq/reports/${id}/run`, { params, ...opts })), // params: { period, from, to }
+  previewReport: (body, opts) => unwrap(http.post("/api/rq/reports/preview", body, opts)), // { typeId, definition, range }
+  createReport: (body) => unwrap(http.post("/api/rq/reports", body)),
+  updateReport: (id, body) => unwrap(http.put(`/api/rq/reports/${id}`, body)),
+  deleteReport: (id) => unwrap(http.delete(`/api/rq/reports/${id}`)),
 };

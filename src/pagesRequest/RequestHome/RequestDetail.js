@@ -1,10 +1,13 @@
-// Chi tiết 1 đề xuất (khung phải): thông tin, tệp, quy trình duyệt, người theo dõi, bình luận, lịch sử.
+// Chi tiết 1 đề xuất — TOÀN MÀN HÌNH, bố cục kiểu request.base.vn:
+//   thanh trên (quay lại danh sách, mã, trạng thái, thao tác) → đầu trang (mẫu, tiêu đề, người gửi, phòng ban, ngày gửi,
+//   tiến độ — in đậm) + tiến trình duyệt nằm ngang → khung "đang chờ bạn duyệt" → nội dung (nhãn trái, giá trị đậm phải)
+//   → tệp → bình luận / lịch sử; cột phải: quy trình duyệt chi tiết, người theo dõi, thông tin khác.
 // Mở lại đề xuất đã xem → hiện ngay bản đã nhớ rồi tải mới ngầm. Đang mở thì hỏi cập nhật mỗi 15 giây.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle, ArrowLeft, Ban, Check, Copy, CornerUpLeft, Flag, Forward, History, Link2, Loader2, MessagesSquare, Paperclip, Pencil, Plus, RefreshCw,
-  Star, Trash2, X, Zap,
+  AlertTriangle, ArrowLeft, Ban, CalendarClock, Check, CheckCircle2, Clock, Copy, CornerUpLeft, Flag, Forward, History, Link2, Loader2, Lock,
+  MessagesSquare, Paperclip, Pencil, Plus, RefreshCw, Star, Trash2, X, XCircle, Zap,
 } from "lucide-react";
 import config from "~/config";
 import { Button, Modal, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
@@ -15,7 +18,7 @@ import { FieldValues } from "../shared/FieldInput";
 import { TypeIcon } from "../shared/typeIcons";
 import { refreshCounts, rqEvents, useRq } from "../shared/store";
 import { deadlineInfo, fmtDateTime, timeAgo } from "../shared/format";
-import ApprovalFlow from "./ApprovalFlow";
+import ApprovalFlow, { FlowStepper } from "./ApprovalFlow";
 import ActionDialog from "./ActionDialog";
 import Comments from "./Comments";
 
@@ -36,27 +39,44 @@ const ACTIVITY = {
   delete: "đã xoá đề xuất",
 };
 
-function DetailSkeleton() {
+function DetailSkeleton({ onBack }) {
   return (
-    <div className="space-y-4 p-4 lg:p-6" role="status" aria-label="Đang tải đề xuất">
-      <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-xl" /><div className="flex-1 space-y-2"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-4 w-1/3" /></div></div>
-      <Skeleton className="h-9 w-64" />
-      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">{[0, 1].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+    <div className="h-full overflow-y-auto">
+      <div className="flex h-12 items-center gap-2 border-b border-slate-200 bg-white px-3 lg:px-5">
+        {onBack && <button type="button" onClick={onBack} className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /> Danh sách</button>}
+      </div>
+      <div className="mx-auto max-w-[1600px] space-y-4 p-3 lg:p-6" role="status" aria-label="Đang tải đề xuất">
+        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5"><Skeleton className="h-4 w-40" /><Skeleton className="h-8 w-2/3" /><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-12" />)}</div></div>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-9 w-full" />)}</div>
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Section({ title, icon: Icon, right, children }) {
+function Section({ title, icon: Icon, right, children, bodyClass = "p-4" }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white">
-      <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
         {Icon && <Icon className="h-4 w-4 text-slate-400" />}
-        <h3 className="flex-1 text-sm font-semibold text-slate-700">{title}</h3>
+        <h3 className="flex-1 text-[15px] font-bold text-slate-800">{title}</h3>
         {right}
       </div>
-      <div className="p-4">{children}</div>
+      <div className={bodyClass}>{children}</div>
     </section>
+  );
+}
+
+/** 1 ô thông tin chính ở đầu trang: nhãn nhỏ xám + giá trị in đậm */
+function Fact({ label, children, sub, className, wrap }) {
+  return (
+    <div className={cn("min-w-0", className)}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
+      <div className={cn("mt-0.5 text-sm font-bold text-slate-900", wrap ? "break-words" : "truncate")}>{children}</div>
+      {sub && <p className="truncate text-xs text-slate-500">{sub}</p>}
+    </div>
   );
 }
 
@@ -246,7 +266,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
       </div>
     );
   }
-  if (!data) return <DetailSkeleton />;
+  if (!data) return <DetailSkeleton onBack={onBack} />;
 
   const p = data.permissions;
   const canCopy = !!myTypes?.some((t) => t.typeId === data.typeId); // mẫu còn dùng + mình được gửi
@@ -254,89 +274,123 @@ export default function RequestDetail({ id, onBack, onChanged }) {
   const returnedNote = data.status === "returned" ? data.approvers.find((a) => a.status === "returned") : null;
   const rejectedNote = data.status === "rejected" ? data.approvers.find((a) => a.status === "rejected") : null;
   const activeComments = data.comments;
+  const accent = data.color || "#2563eb";
+  const waiting = data.approvers.filter((a) => a.status === "pending");
+  const myStep = p.approve ? data.approvers.find((a) => a.userId === me?.userId && a.status === "pending") : null;
+  const progress = data.status === "pending"
+    ? (data.stepCount ? <>Bước {data.currentStep}/{data.stepCount} · <span className="text-amber-600">chờ {waiting.map((a) => a.fullName).join(", ") || "—"}</span></> : "Chờ duyệt")
+    : data.status === "approved" ? <span className="text-emerald-600">Đã duyệt xong</span>
+      : data.status === "rejected" ? <span className="text-red-600">Bị từ chối</span>
+        : data.status === "returned" ? <span className="text-violet-600">Trả lại để bổ sung</span> : <span className="text-slate-500">Đã huỷ</span>;
+  const editBtn = (label) => <Button variant="secondary" size="sm" icon={Pencil} loading={busy === "edit"} onClick={() => { setBusy("edit"); navigate(`${R.requestEdit}/${id}`); }}>{label}</Button>;
 
   return (
     <div className="h-full overflow-y-auto">
       {/* Thanh thao tác */}
-      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-200 bg-white/95 px-3 py-2 backdrop-blur lg:px-5">
-        {onBack && <button type="button" onClick={onBack} className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 lg:hidden" aria-label="Quay lại"><ArrowLeft className="h-5 w-5" /></button>}
-        <span className="text-sm font-medium text-slate-400">#{data.requestId}</span>
-        <StatusBadge status={data.status} />
-        {refreshing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
-        <div className="ml-auto flex items-center gap-1">
-          <button type="button" onClick={() => load()} title="Tải lại" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /></button>
-          <button type="button" onClick={copyLink} title="Sao chép liên kết" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><Link2 className="h-4 w-4" /></button>
-          <button type="button" onClick={openChat} disabled={busy === "chat"} title="Chat nhóm với những người liên quan" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100">
-            {busy === "chat" ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessagesSquare className="h-4 w-4" />} <span className="hidden sm:inline">Chat</span>
-          </button>
+      <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-3 py-2 lg:px-6">
+          {onBack && (
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100" aria-label="Quay lại danh sách">
+              <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Danh sách</span>
+            </button>
+          )}
+          <span className="text-sm font-semibold text-slate-400">#{data.requestId}</span>
+          <StatusBadge status={data.status} />
+          {refreshing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
+            {p.edit && !returnedNote && <span className="hidden sm:inline">{editBtn("Sửa đề xuất")}</span>}
+            {canCopy && <Button variant="ghost" size="sm" icon={Copy} onClick={() => navigate(`${R.requestNew}?copy=${id}`)} title="Tạo đề xuất mới với nội dung giống đề xuất này">Nhân bản</Button>}
+            {p.cancel && <Button variant="ghost" size="sm" icon={Ban} className="!text-slate-500" onClick={() => setAction("cancel")}>Huỷ đề xuất</Button>}
+            {p.delete && <Button variant="ghost" size="sm" icon={Trash2} className="!text-red-600" loading={busy === "delete"} onClick={doDelete}>Xoá</Button>}
+            {!p.delete && p.deleteBlocked && <span className="hidden items-center gap-1 px-2 text-xs text-slate-400 lg:inline-flex" title="Đề xuất đã có người duyệt — không xoá được (chỉ huỷ được khi còn chờ duyệt)"><Lock className="h-3.5 w-3.5" /> Đã duyệt · không xoá được</span>}
+            <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+            <button type="button" onClick={() => load()} title="Tải lại" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /></button>
+            <button type="button" onClick={copyLink} title="Sao chép liên kết" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><Link2 className="h-4 w-4" /></button>
+            <button type="button" onClick={openChat} disabled={busy === "chat"} title="Chat nhóm với những người liên quan" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100">
+              {busy === "chat" ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessagesSquare className="h-4 w-4" />} <span className="hidden sm:inline">Chat</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4 p-3 pb-28 lg:p-5 lg:pb-10">
-        {/* Tiêu đề */}
-        <div className="flex items-start gap-3">
-          <TypeIcon icon={data.icon} color={data.color || "#2563eb"} size="lg" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold leading-snug text-slate-900 lg:text-xl">{data.title}</h1>
-            <p className="mt-0.5 text-sm text-slate-500">{data.typeName}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              {data.priority === "high" && <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 font-medium text-red-700 ring-1 ring-red-200"><Zap className="h-3 w-3" /> Gấp</span>}
-              {dl && <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 ring-1", dl.tone === "red" ? "bg-red-50 text-red-700 ring-red-200" : dl.tone === "amber" ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-slate-50 text-slate-600 ring-slate-200")}><Flag className="h-3 w-3" /> {dl.text}</span>}
-              {data.editCount > 0 && <span className="text-slate-400">đã sửa {data.editCount} lần</span>}
+      <div className="mx-auto max-w-[1600px] space-y-4 p-3 pb-28 lg:p-6 lg:pb-10">
+        {/* Đầu trang: mẫu, tiêu đề, thông tin chính (in đậm), tiến trình duyệt */}
+        <header className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="h-1.5" style={{ background: accent }} />
+          <div className="p-4 lg:p-6">
+            <div className="flex items-start gap-3">
+              <TypeIcon icon={data.icon} color={accent} size="lg" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: accent }}>{data.typeName}</p>
+                <h1 className="mt-0.5 text-xl font-bold leading-snug text-slate-900 lg:text-2xl">{data.title}</h1>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  {data.priority === "high" && <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 font-bold text-red-700 ring-1 ring-red-200"><Zap className="h-3 w-3" /> Gấp</span>}
+                  {dl && <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ring-1", dl.tone === "red" ? "bg-red-50 text-red-700 ring-red-200" : dl.tone === "amber" ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-slate-50 text-slate-600 ring-slate-200")}><Flag className="h-3 w-3" /> {dl.text}</span>}
+                  {data.editCount > 0 && <span className="text-slate-400">đã sửa {data.editCount} lần</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-slate-100 pt-4 lg:grid-cols-4">
+              <div className="col-span-2 flex min-w-0 items-center gap-3 lg:col-span-1">
+                <UserAvatar id={data.requesterId} name={data.requesterName} size={40} />
+                <Fact label="Người đề xuất" sub={[data.msnv, data.jobTitleName].filter(Boolean).join(" · ")}>{data.requesterName}</Fact>
+              </div>
+              <Fact label="Phòng ban" sub={data.teamName}>{data.departmentName || <span className="font-normal text-slate-400">Chưa có phòng ban</span>}</Fact>
+              <Fact label="Ngày gửi" sub={timeAgo(data.createdAt)}>{fmtDateTime(data.createdAt)}</Fact>
+              <Fact label="Tiến độ" wrap className="col-span-2 lg:col-span-1" sub={data.finishedAt && data.status !== "pending" ? `lúc ${fmtDateTime(data.finishedAt)}` : null}>{progress}</Fact>
+            </div>
+
+            {data.stepCount > 0 && <div className="mt-5 border-t border-slate-100 pt-4"><FlowStepper request={data} /></div>}
+          </div>
+        </header>
+
+        {/* Đến lượt mình duyệt */}
+        {myStep && (
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4" data-my-turn>
+            <Clock className="h-6 w-6 shrink-0 text-amber-600" />
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-amber-900">Đề xuất đang chờ bạn duyệt</p>
+              <p className="text-sm text-amber-800">Bước {myStep.stepNo}: {myStep.stepName}{waiting.length > 1 ? ` · ${myStep.stepMode === "any" ? "1 người duyệt là đủ" : "tất cả cùng duyệt"}` : ""}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button icon={Check} className="!bg-emerald-600 hover:!bg-emerald-700" onClick={() => setAction("approve")}>Duyệt</Button>
+              <Button variant="secondary" icon={X} className="!text-red-600" onClick={() => setAction("reject")}>Từ chối</Button>
+              <Button variant="secondary" icon={CornerUpLeft} className="!text-violet-700" onClick={() => setAction("return")}>Trả lại</Button>
+              {p.forward && <Button variant="secondary" icon={Forward} className="!text-sky-700" onClick={() => setFwd({ to: [], note: "", approve: false, saving: false })}>Chuyển tiếp</Button>}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Người gửi */}
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-          <UserAvatar id={data.requesterId} name={data.requesterName} size={40} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-800">{data.requesterName}{data.msnv ? <span className="font-normal text-slate-400"> · {data.msnv}</span> : null}</p>
-            <p className="truncate text-xs text-slate-500">{[data.departmentName, data.teamName, data.jobTitleName].filter(Boolean).join(" · ") || "Chưa có phòng ban"}</p>
-          </div>
-          <span className="shrink-0 text-right text-xs text-slate-400" title={fmtDateTime(data.createdAt)}>Gửi {timeAgo(data.createdAt)}<br />{fmtDateTime(data.createdAt).slice(0, 10)}</span>
-        </div>
-
-        {/* Lý do trả lại / từ chối */}
+        {/* Kết quả / lý do trả lại, từ chối */}
         {returnedNote && (
-          <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900">
-            <p className="font-semibold">↩️ {returnedNote.fullName} trả lại để bổ sung</p>
+          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
+            <p className="font-bold">↩️ {returnedNote.fullName} trả lại để bổ sung</p>
             {returnedNote.note && <p className="mt-1 whitespace-pre-wrap">“{returnedNote.note}”</p>}
             {p.edit && <Button size="sm" className="mt-2 !bg-violet-600 hover:!bg-violet-700" icon={Pencil} loading={busy === "edit"} onClick={() => { setBusy("edit"); navigate(`${R.requestEdit}/${id}`); }}>Sửa và gửi lại</Button>}
           </div>
         )}
         {rejectedNote && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900">
-            <p className="font-semibold">❌ {rejectedNote.fullName} đã từ chối</p>
-            {rejectedNote.note && <p className="mt-1 whitespace-pre-wrap">“{rejectedNote.note}”</p>}
+          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <div><p className="font-bold">{rejectedNote.fullName} đã từ chối</p>{rejectedNote.note && <p className="mt-1 whitespace-pre-wrap">“{rejectedNote.note}”</p>}</div>
           </div>
         )}
-
-        {/* Thao tác chính */}
-        {(p.approve || p.edit || p.cancel || p.delete || canCopy) && (
-          <div className="flex flex-wrap gap-2">
-            {p.approve && (
-              <>
-                <Button icon={Check} className="!bg-emerald-600 hover:!bg-emerald-700" onClick={() => setAction("approve")}>Duyệt</Button>
-                <Button variant="secondary" icon={X} className="!text-red-600" onClick={() => setAction("reject")}>Từ chối</Button>
-                <Button variant="secondary" icon={CornerUpLeft} className="!text-violet-700" onClick={() => setAction("return")}>Trả lại</Button>
-              </>
-            )}
-            {p.forward && <Button variant="secondary" icon={Forward} className="!text-sky-700" onClick={() => setFwd({ to: [], note: "", approve: false, saving: false })}>Chuyển tiếp</Button>}
-            {p.edit && !returnedNote && <Button variant="secondary" icon={Pencil} loading={busy === "edit"} onClick={() => { setBusy("edit"); navigate(`${R.requestEdit}/${id}`); }}>Sửa đề xuất</Button>}
-            {canCopy && <Button variant="secondary" icon={Copy} onClick={() => navigate(`${R.requestNew}?copy=${id}`)} title="Tạo đề xuất mới với nội dung giống đề xuất này">Nhân bản</Button>}
-            {p.cancel && <Button variant="ghost" icon={Ban} className="!text-slate-500" onClick={() => setAction("cancel")}>Huỷ đề xuất</Button>}
-            {p.delete && <Button variant="ghost" icon={Trash2} className="!text-red-600" loading={busy === "delete"} onClick={doDelete}>Xoá</Button>}
+        {data.status === "approved" && (
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+            <p><b>Đề xuất đã được duyệt hoàn tất</b>{data.finishedAt ? ` lúc ${fmtDateTime(data.finishedAt)}` : ""}.</p>
           </div>
         )}
+        {p.edit && !returnedNote && <div className="sm:hidden">{editBtn("Sửa đề xuất")}</div>}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="min-w-0 space-y-4">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0 space-y-5">
             {/* Nội dung */}
-            <Section title="Nội dung đề xuất">
+            <Section title="Nội dung đề xuất" bodyClass="">
               {data.fields.length ? (
-                <FieldValues fields={data.fields} values={data.values} filesByField={filesByField} renderFiles={(fs) => <FileGallery files={fs} size="sm" />} />
-              ) : <p className="text-sm text-slate-400">Mẫu đề xuất không có trường thông tin.</p>}
+                <FieldValues fields={data.fields} values={data.values} filesByField={filesByField} accent={accent} renderFiles={(fs) => <FileGallery files={fs} size="sm" />} />
+              ) : <p className="p-4 text-sm text-slate-400">Mẫu đề xuất không có trường thông tin.</p>}
             </Section>
 
             {generalFiles.length > 0 && (
@@ -347,7 +401,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
             )}
 
             {/* Bình luận / lịch sử */}
-            <section className="rounded-xl border border-slate-200 bg-white">
+            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="flex gap-1 border-b border-slate-100 px-2 pt-2">
                 {[["comments", `Bình luận (${activeComments.filter((c) => !c.isDeleted).length})`], ["history", "Lịch sử"]].map(([k, label]) => (
                   <button key={k} type="button" onClick={() => setTab(k)}
@@ -379,7 +433,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
             </section>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             <Section title="Quy trình duyệt" icon={Check} right={data.stepCount > 0 && <span className="text-xs text-slate-400">{data.status === "pending" ? `Bước ${data.currentStep}/${data.stepCount}` : `${data.stepCount} bước`}</span>}>
               <ApprovalFlow request={data} meId={me?.userId} />
             </Section>
@@ -392,7 +446,8 @@ export default function RequestDetail({ id, onBack, onChanged }) {
                     <li key={f.userId} className="flex items-center gap-2">
                       <UserAvatar id={f.userId} name={f.fullName} size={26} />
                       <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{f.fullName}</span>
-                      {(f.userId === me?.userId || data.my.isRequester || me?.isAdmin) && (
+                      {f.isFixed && <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500" title="Người theo dõi cố định theo mẫu đề xuất — chỉ quản trị viên bỏ được"><Lock className="h-3 w-3" /> cố định</span>}
+                      {(me?.isAdmin || (!f.isFixed && (f.userId === me?.userId || data.my.isRequester))) && (
                         <button type="button" onClick={() => unfollow(f.userId)} disabled={busy === `unfollow-${f.userId}`} title={f.userId === me?.userId ? "Bỏ theo dõi" : "Bỏ người này"}
                           className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600">
                           {busy === `unfollow-${f.userId}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
@@ -402,6 +457,21 @@ export default function RequestDetail({ id, onBack, onChanged }) {
                   ))}
                 </ul>
               )}
+            </Section>
+
+            <Section title="Thông tin khác" icon={CalendarClock}>
+              <dl className="space-y-2 text-sm">
+                {[
+                  ["Mã đề xuất", `#${data.requestId}`],
+                  ["Mẫu đề xuất", data.typeName],
+                  ["Mức độ", data.priority === "high" ? "Gấp" : "Bình thường"],
+                  ["Hạn xử lý", data.deadline ? dl?.text?.replace(/^Hạn /, "") : null],
+                  ["Cập nhật", fmtDateTime(data.lastActivityAt)],
+                  ["Số lần sửa", data.editCount || null],
+                ].filter(([, v]) => v).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-3"><dt className="text-slate-500">{k}</dt><dd className="text-right font-semibold text-slate-800">{v}</dd></div>
+                ))}
+              </dl>
             </Section>
           </div>
         </div>

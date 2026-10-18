@@ -127,6 +127,9 @@ const AdminRequestTypeBuilder = lazyPage(() => import('~/pagesRequestAdmin/TypeB
 const AdminRequestHeads = lazyPage(() => import('~/pagesRequestAdmin/Heads'));
 const AdminRequestOrg = lazyPage(() => import('~/pagesRequestAdmin/Org'));
 const AdminRequestStats = lazyPage(() => import('~/pagesRequestAdmin/Stats'));
+const RequestReports = lazyPage(() => import('~/pagesRequest/Reports'));
+const RequestReportView = lazyPage(() => import('~/pagesRequest/Reports/ReportView'));
+const AdminRequestReportBuilder = lazyPage(() => import('~/pagesRequestAdmin/ReportBuilder'));
 
 
 const N20th11 = lazyPage(() => import('~/pages/N20th11'));
@@ -1016,6 +1019,8 @@ export const routesRequest = [
   { path: config.routes.requestNew, component: RequestCreate },
   { path: config.routes.requestEdit, component: RequestCreate, addId: true },
   { path: config.routes.requestChat, component: RequestChat },
+  { path: config.routes.requestReports, component: RequestReports },
+  { path: config.routes.requestReports, component: RequestReportView, addId: true },
 ];
 
 export const routesRequestAdmin = [
@@ -1025,6 +1030,8 @@ export const routesRequestAdmin = [
   { path: config.routes.adminRequestHeads, component: AdminRequestHeads },
   { path: config.routes.adminRequestOrg, component: AdminRequestOrg },
   { path: config.routes.adminRequestStats, component: AdminRequestStats },
+  { path: config.routes.adminRequestReportBuilder, component: AdminRequestReportBuilder },
+  { path: config.routes.adminRequestReportBuilder, component: AdminRequestReportBuilder, addId: true },
 ];
 
 export const routesKCSAdmin = [

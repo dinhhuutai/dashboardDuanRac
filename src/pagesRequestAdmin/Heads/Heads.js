@@ -74,18 +74,18 @@ export default function Heads() {
   const missingDept = data?.departments.filter((d) => !d.heads.length).length || 0;
 
   return (
-    <PageScroll max="max-w-4xl">
+    <PageScroll max="max-w-[1500px]">
       <h1 className="text-xl font-bold text-slate-800">Trưởng phòng & tổ trưởng</h1>
       <p className="text-sm text-slate-500">
         Dùng cho bước duyệt "Trưởng phòng / Tổ trưởng của người gửi". Một phòng/tổ có thể có nhiều người (vd. trưởng + phó) — tuỳ cấu hình bước là tất cả hay 1 người duyệt.
         Người gửi lấy phòng/tổ theo hồ sơ ở <Link to={config.routes.adminRequestOrg} className="text-blue-700 underline">Phòng ban & tổ</Link>.
       </p>
       {data && missingDept > 0 && <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{missingDept} phòng ban chưa có trưởng phòng — nhân viên phòng đó không gửi được mẫu có bước "Trưởng phòng".</p>}
-      <label className="relative mt-4 block">
+      <label className="relative mt-4 block max-w-xl">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm phòng ban / tổ" className="h-9 w-full rounded-lg border border-slate-300 pl-9 text-sm" />
       </label>
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 grid items-start gap-3 2xl:grid-cols-2">
         {!data && [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
         {shown.map((d) => (
           <section key={d.id} className="rounded-xl border border-slate-200 bg-white">

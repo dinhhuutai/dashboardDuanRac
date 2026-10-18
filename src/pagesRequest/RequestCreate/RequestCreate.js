@@ -3,7 +3,7 @@
 // Tự lưu nháp trên máy theo từng mẫu (tải lại trang không mất).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, Info, Paperclip, Search, Send, Trash2, Users, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, Info, Lock, Paperclip, Search, Send, Trash2, Users, Zap } from "lucide-react";
 import config from "~/config";
 import { Button, Field, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
@@ -70,7 +70,7 @@ function TypePicker({ onPick }) {
   }, [boot, q]);
 
   return (
-    <PageScroll max="max-w-4xl">
+    <PageScroll max="max-w-6xl">
       <h1 className="text-xl font-bold text-slate-800">Tạo đề xuất</h1>
       <p className="text-sm text-slate-500">Chọn loại đề xuất bạn muốn gửi.</p>
       <label className="relative mt-4 block">
@@ -87,7 +87,7 @@ function TypePicker({ onPick }) {
           <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: group.color || "#64748b" }} /> {group.name}
           </h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {types.map((t) => (
               <button key={t.typeId} type="button" onClick={() => onPick(t.typeId)}
                 className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-blue-400 hover:shadow-sm active:scale-[0.99]">
@@ -262,13 +262,25 @@ function RequestForm({ type, edit, copy, onBack }) {
   };
 
   const halfOk = (f) => f.width === "half" && !FULL_WIDTH_TYPES.includes(f.type);
+  const fixedFollowers = (type.defaultFollowers || []).filter((uid) => uid !== me?.userId);
+  const submitBar = (cls) => (
+    <div className={cls}>
+      <div className="flex items-center justify-end gap-2">
+        <span className="mr-auto text-xs text-slate-400">{att.uploading ? "Đang tải tệp lên…" : flow.length ? `${flow.length} bước duyệt` : ""}</span>
+        <Button variant="secondary" onClick={onBack} disabled={sending}>Huỷ</Button>
+        <Button icon={Send} loading={sending || att.uploading} onClick={submit}>{edit ? (edit.status === "returned" ? "Gửi lại" : "Lưu thay đổi") : "Gửi đề xuất"}</Button>
+      </div>
+    </div>
+  );
 
   return (
-    <PageScroll max="max-w-3xl">
+    <PageScroll max="max-w-[1400px]">
       <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
         <ArrowLeft className="h-4 w-4" /> {edit || copy ? "Quay lại đề xuất" : "Chọn mẫu khác"}
       </button>
 
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+      <div className="min-w-0">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="h-1.5" style={{ background: type.color || "#2563eb" }} />
         <div className="flex items-start gap-3 p-4">
@@ -365,40 +377,46 @@ function RequestForm({ type, edit, copy, onBack }) {
         )}
       </div>
 
+      </div>
+
+      {/* cột phải (màn hình rộng): quy trình duyệt + người theo dõi + nút gửi luôn trong tầm mắt */}
+      <aside className="space-y-4 xl:sticky xl:top-0">
       {!edit && (
-        <div className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
           <div>
             <h3 className="mb-3 flex items-center gap-1.5 font-semibold text-slate-800"><Check className="h-4 w-4 text-emerald-600" /> Quy trình duyệt</h3>
             <div ref={(el) => { flow.forEach((s) => { cardRefs.current[s.key] = el; }); }}>
               <FlowPreview flow={flow} picked={picked} setPicked={setPicked} errors={errors} />
             </div>
           </div>
-          {options.allowFollowers && (
-            <div>
+          {(options.allowFollowers || fixedFollowers.length > 0) && (
+            <div className="border-t border-slate-100 pt-4">
               <h3 className="mb-1 flex items-center gap-1.5 font-semibold text-slate-800"><Users className="h-4 w-4 text-slate-400" /> Người theo dõi</h3>
               <p className="mb-2 text-xs text-slate-500">Người theo dõi xem được đề xuất và nhận thông báo kết quả.</p>
-              {type.defaultFollowers?.length > 0 && <div className="mb-2"><span className="mr-2 text-xs text-slate-400">Mặc định:</span><UserList ids={type.defaultFollowers} /></div>}
-              <UserPicker value={followers} onChange={setFollowers} excludeIds={[me?.userId, ...(type.defaultFollowers || [])]} placeholder="Thêm người theo dõi…" />
+              {fixedFollowers.length > 0 && (
+                <div className="mb-2 rounded-lg bg-slate-50 p-2" data-fixed-followers>
+                  <p className="mb-1 flex items-center gap-1 text-xs font-medium text-slate-500"><Lock className="h-3 w-3" /> Cố định theo mẫu (luôn được thêm, không bỏ được):</p>
+                  <UserList ids={fixedFollowers} />
+                </div>
+              )}
+              {options.allowFollowers && <UserPicker value={followers} onChange={setFollowers} excludeIds={[me?.userId, ...(type.defaultFollowers || [])]} placeholder="Thêm người theo dõi…" />}
             </div>
           )}
         </div>
       )}
 
       {edit && (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
           <Field label="Ghi chú cho người duyệt" hint="Không bắt buộc — vd. đã bổ sung hoá đơn">
             <textarea className={cn(inputCls, "min-h-[70px]")} value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} />
           </Field>
         </div>
       )}
-
-      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:rounded-2xl sm:border">
-        <div className="flex items-center justify-end gap-2">
-          <span className="mr-auto text-xs text-slate-400">{att.uploading ? "Đang tải tệp lên…" : flow.length ? `${flow.length} bước duyệt` : ""}</span>
-          <Button variant="secondary" onClick={onBack} disabled={sending}>Huỷ</Button>
-          <Button icon={Send} loading={sending || att.uploading} onClick={submit}>{edit ? (edit.status === "returned" ? "Gửi lại" : "Lưu thay đổi") : "Gửi đề xuất"}</Button>
-        </div>
+      {submitBar("hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 xl:block")}
+      </aside>
       </div>
+
+      {submitBar("sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:rounded-2xl sm:border xl:hidden")}
     </PageScroll>
   );
 }
@@ -429,7 +447,7 @@ function ExistingFiles({ files, keepIds, setKeepIds }) {
 
 function FormSkeleton() {
   return (
-    <PageScroll max="max-w-3xl">
+    <PageScroll max="max-w-[1400px]">
       <div className="space-y-4" role="status" aria-label="Đang tải">
         <Skeleton className="h-20 w-full rounded-2xl" />
         <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">{[0, 1, 2, 3].map((i) => <div key={i} className="space-y-1.5"><Skeleton className="h-4 w-32" /><Skeleton className="h-10 w-full" /></div>)}</div>

@@ -5,7 +5,7 @@ import { PageScroll } from "~/pagesRequest/shared/components";
 
 export default function Org() {
   return (
-    <PageScroll max="max-w-6xl">
+    <PageScroll max="max-w-[1500px]">
       <OrgManagement />
     </PageScroll>
   );

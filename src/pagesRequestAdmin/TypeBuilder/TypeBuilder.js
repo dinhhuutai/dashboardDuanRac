@@ -2,7 +2,7 @@
 // Sửa mẫu KHÔNG ảnh hưởng đề xuất đã gửi (mỗi đề xuất lưu bản chụp trường + quy trình lúc gửi).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Eye, GitBranch, ListChecks, Save, Settings2, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Eye, GitBranch, ListChecks, Lock, Save, Settings2, SlidersHorizontal } from "lucide-react";
 import config from "~/config";
 import { Badge, Button, Field, Skeleton, Toggle, cn, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
@@ -20,7 +20,7 @@ const R = config.routes;
 const TABS = [
   { key: "info", label: "Thông tin chung", icon: Settings2 },
   { key: "fields", label: "Trường thông tin", icon: ListChecks },
-  { key: "flow", label: "Quy trình duyệt", icon: GitBranch },
+  { key: "flow", label: "Quy trình duyệt & theo dõi", icon: GitBranch },
   { key: "scope", label: "Phạm vi & tuỳ chọn", icon: SlidersHorizontal },
   { key: "preview", label: "Xem trước", icon: Eye },
 ];
@@ -122,7 +122,7 @@ function Preview({ t }) {
   const [values, setValues] = useState({});
   const att = useAttachments();
   return (
-    <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="h-1.5" style={{ background: t.color }} />
       <div className="flex items-start gap-3 p-4">
         <TypeIcon icon={t.icon} color={t.color} size="lg" />
@@ -270,7 +270,7 @@ export default function TypeBuilder() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-5 pb-24 lg:pb-10">
+        <div className="mx-auto max-w-6xl px-4 py-5 pb-24 lg:pb-10">
           {tab === "info" && (
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
               <Field label="Tên mẫu đề xuất" required>
@@ -314,6 +314,14 @@ export default function TypeBuilder() {
             <>
               {problems.__flow && <p className="mb-2 text-sm text-red-600">{problems.__flow}</p>}
               <FlowEditor flow={t.flow} onChange={(flow) => update({ flow })} problems={problems} />
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4" data-fixed-followers-editor>
+                <h3 className="mb-1 flex items-center gap-1.5 font-semibold text-slate-800"><Lock className="h-4 w-4 text-slate-400" /> Người theo dõi cố định</h3>
+                <p className="mb-2 text-xs text-slate-500">
+                  Luôn được thêm vào MỌI đề xuất của mẫu này (vd. phòng Nhân sự, Kế toán): xem được đề xuất, nhận thông báo kết quả.
+                  Người gửi không bỏ được — chỉ quản trị viên. Không áp dụng cho đề xuất đã gửi trước đó.
+                </p>
+                <UserPicker value={t.defaultFollowers} onChange={(v) => update({ defaultFollowers: v })} placeholder="Chọn người theo dõi cố định…" />
+              </div>
             </>
           )}
 
@@ -322,11 +330,6 @@ export default function TypeBuilder() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <h3 className="mb-3 font-semibold text-slate-800">Ai được gửi mẫu này</h3>
                 <AudienceEditor audience={t.audience} onChange={(audience) => update({ audience })} error={problems.__audience} />
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <h3 className="mb-1 font-semibold text-slate-800">Người theo dõi mặc định</h3>
-                <p className="mb-2 text-xs text-slate-500">Tự thêm vào mọi đề xuất của mẫu này (vd. phòng Nhân sự, Kế toán) — xem được và nhận thông báo kết quả.</p>
-                <UserPicker value={t.defaultFollowers} onChange={(v) => update({ defaultFollowers: v })} />
               </div>
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
                 <h3 className="font-semibold text-slate-800">Tuỳ chọn</h3>

@@ -123,6 +123,8 @@ const routes = {
   requestNew: '/request/new',              // ?type=ID
   requestEdit: '/request/edit',            // /request/edit/:id — sửa & gửi lại
   requestChat: '/request/chat',            // ?c=conversationId
+  requestReports: '/request/reports',      // + /:id — xem báo cáo
+  adminRequestReportBuilder: '/admin/request/report-builder', // + /:id — thiết kế báo cáo
   adminRequestTypes: '/admin/request/types',
   adminRequestTypeBuilder: '/admin/request/type-builder', // + /:id
   adminRequestHeads: '/admin/request/heads',

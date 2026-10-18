@@ -288,31 +288,44 @@ export function FieldInput({ field: f, value, onChange, error, att, disabled }) 
   }
 }
 
-/** Bảng thông tin đề xuất đã gửi (2 cột cho trường "nửa dòng") */
-export function FieldValues({ fields, values, filesByField, renderFiles }) {
+/**
+ * Nội dung đề xuất đã gửi — kiểu Base Request: mỗi trường 1 dòng, nhãn bên trái (xám), GIÁ TRỊ IN ĐẬM bên phải;
+ * số tiền to + đậm, "bằng chữ" in nghiêng; bảng / đoạn văn / tệp chiếm cả dòng dưới nhãn; tiêu đề phần có vạch màu mẫu.
+ */
+export function FieldValues({ fields, values, filesByField, renderFiles, accent = "#2563eb" }) {
   const rows = [];
   for (const f of fields || []) {
     if (f.type === "section") {
-      rows.push(<h4 key={f.key} className="col-span-2 mt-2 border-b border-slate-100 pb-1 text-sm font-semibold text-slate-700 first:mt-0">{f.label}</h4>);
+      rows.push(
+        <div key={f.key} className="border-l-4 bg-slate-50 px-4 py-2" style={{ borderLeftColor: accent }}>
+          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-700">{f.label}</h4>
+          {f.description && <p className="text-xs text-slate-500">{f.description}</p>}
+        </div>
+      );
       continue;
     }
+    const block = f.type === "table" || f.type === "files" || f.type === "textarea";
     let content;
     if (f.type === "files") {
       const fs = filesByField?.[f.key] || [];
-      content = fs.length ? renderFiles(fs) : <span className="text-slate-400">—</span>;
+      content = fs.length ? renderFiles(fs) : <span className="font-normal text-slate-400">—</span>;
     } else if (f.type === "table") {
       content = <TableValue field={f} rows={values?.[f.key]} />;
     } else {
       const text = displayValue(f, values?.[f.key], (id) => userName(id));
-      content = text ? <span className="whitespace-pre-wrap break-words text-slate-800">{text}</span> : <span className="text-slate-400">—</span>;
+      const money = f.type === "currency" && text;
+      content = text ? (
+        <span className={cn("whitespace-pre-wrap break-words",
+          money ? "text-lg font-bold tabular-nums text-slate-900" : f.wordsOf ? "font-semibold italic text-slate-700" : f.type === "textarea" ? "font-normal leading-relaxed text-slate-800" : "font-semibold text-slate-900")}>{text}</span>
+      ) : <span className="font-normal text-slate-400">—</span>;
     }
     rows.push(
-      <div key={f.key} className={cn("min-w-0", f.width === "half" && f.type !== "files" && f.type !== "table" ? "col-span-2 sm:col-span-1" : "col-span-2")}>
-        <dt className="text-xs font-medium text-slate-500">{f.label}</dt>
-        <dd className="mt-0.5 text-sm">{content}</dd>
+      <div key={f.key} className={cn("min-w-0 px-4 py-3", block ? "space-y-1.5" : "grid gap-0.5 sm:grid-cols-[minmax(150px,32%)_minmax(0,1fr)] sm:items-baseline sm:gap-4")}>
+        <dt className="text-sm text-slate-500">{f.label}</dt>
+        <dd className="min-w-0 text-[15px]">{content}</dd>
       </div>
     );
   }
   if (!rows.length) return null;
-  return <dl className="grid grid-cols-2 gap-x-6 gap-y-3">{rows}</dl>;
+  return <dl className="divide-y divide-slate-100">{rows}</dl>;
 }

@@ -5,7 +5,8 @@
 //   att.done → mảng gửi lên API; att.uploading → còn tệp đang tải (khoá nút gửi)
 //   <FileGallery files={detail.files} />     // hiển thị: lưới ảnh thu nhỏ + danh sách tệp + xem ảnh lớn
 //                                            // + XEM TRƯỚC ngay trong trang: PDF, video, âm thanh, văn bản, Excel/CSV, Word (.docx)
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+//                                            //   .xlsx/.xlsm giữ nguyên định dạng như Excel (ExcelView.js)
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle, ChevronLeft, ChevronRight, Download, ExternalLink, Eye, File, FileArchive, FileAudio, FileImage, FileSpreadsheet,
@@ -14,6 +15,9 @@ import {
 import { cn } from "~/pagesForm/shared/ui";
 import { useRq } from "./store";
 import { extOf, fileHref, fmtSize, uploadFile, validateFile } from "./files";
+
+// trình xem Excel đủ định dạng (ExcelJS ~1 MB) — chỉ tải khi mở 1 tệp .xlsx
+const ExcelView = lazy(() => import("./ExcelView"));
 
 /* ================================ TẢI LÊN ================================ */
 let seq = 0;
@@ -281,6 +285,19 @@ function SheetView({ book }) {
   );
 }
 
+/** Bảng chữ đơn giản bằng SheetJS (không giữ định dạng) — cho .xls / .csv */
+async function readSimpleSheets(buf) {
+  const XLSX = await import("xlsx-js-style");
+  const wb = XLSX.read(buf, { type: "array" });
+  const sheets = wb.SheetNames.map((name) => {
+    const all = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: "", blankrows: false });
+    const rows = all.slice(0, SHEET_MAX_ROWS).map((x) => x.slice(0, SHEET_MAX_COLS));
+    const cols = rows.reduce((mx, x) => Math.max(mx, x.length), 0);
+    return { name, rows, cols, cut: all.length > SHEET_MAX_ROWS || all.some((x) => x.length > SHEET_MAX_COLS) };
+  });
+  return { sheets: sheets.length ? sheets : [{ name: "Sheet1", rows: [], cols: 0 }] };
+}
+
 /** Xem trước 1 tệp ngay trong trang (không rời đề xuất). Không xem được loại nào → nút tải về. */
 export function FilePreview({ file: f, onClose }) {
   const kind = previewKind(f);
@@ -309,15 +326,18 @@ export function FilePreview({ file: f, onClose }) {
         if (kind === "text") {
           setState({ status: "ready", text: new TextDecoder("utf-8").decode(buf).slice(0, 500000) });
         } else if (kind === "sheet") {
-          const XLSX = await import("xlsx-js-style");
-          const wb = XLSX.read(buf, { type: "array" });
-          const sheets = wb.SheetNames.map((name) => {
-            const all = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: "", blankrows: false });
-            const rows = all.slice(0, SHEET_MAX_ROWS).map((x) => x.slice(0, SHEET_MAX_COLS));
-            const cols = rows.reduce((mx, x) => Math.max(mx, x.length), 0);
-            return { name, rows, cols, cut: all.length > SHEET_MAX_ROWS || all.some((x) => x.length > SHEET_MAX_COLS) };
-          });
-          if (alive) setState({ status: "ready", book: { sheets: sheets.length ? sheets : [{ name: "Sheet1", rows: [], cols: 0 }] } });
+          // .xlsx/.xlsm: giữ định dạng như Excel. .xls/.csv, hoặc tệp ExcelJS không đọc được (mã hoá, hỏng nhẹ…) → bảng đơn giản
+          if (["xlsx", "xlsm"].includes(extOf(f.name))) {
+            try {
+              const { parseWorkbook, releaseWorkbook } = await import("./ExcelView");
+              const excel = await parseWorkbook(buf);
+              if (!alive) { releaseWorkbook(excel); return; }
+              setState({ status: "ready", excel, release: () => releaseWorkbook(excel) });
+              return;
+            } catch { /* thử SheetJS */ }
+          }
+          const book = await readSimpleSheets(buf);
+          if (alive) setState({ status: "ready", book });
         } else {
           setState({ status: "ready", docxBuf: buf }); // dựng ở effect bên dưới, sau khi khung hiển thị đã gắn vào trang
         }
@@ -327,6 +347,9 @@ export function FilePreview({ file: f, onClose }) {
     })();
     return () => { alive = false; };
   }, [f, kind, needFetch]);
+
+  // đóng xem trước → giải phóng ảnh trong tệp Excel
+  useEffect(() => () => state.release?.(), [state]);
 
   // Word (.docx): dựng bằng docx-preview (tải lười) vào khung docxRef
   useEffect(() => {
@@ -349,7 +372,7 @@ export function FilePreview({ file: f, onClose }) {
         )}
         <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-white/10" title="Đóng (Esc)"><X className="h-5 w-5" /></button>
       </div>
-      <div className="relative mx-auto min-h-0 w-full max-w-6xl flex-1 overflow-hidden sm:px-3 sm:pb-3" onClick={(e) => e.stopPropagation()}>
+      <div className={cn("relative mx-auto min-h-0 w-full flex-1 overflow-hidden sm:px-3 sm:pb-3", kind === "sheet" ? "max-w-none" : "max-w-6xl")} onClick={(e) => e.stopPropagation()}>
         {state.status === "loading" && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-white/80"><Loader2 className="h-8 w-8 animate-spin" /><span className="text-sm">Đang mở tệp…</span></div>
         )}
@@ -364,7 +387,14 @@ export function FilePreview({ file: f, onClose }) {
         {state.status === "ready" && kind === "video" && <div className="flex h-full items-center justify-center"><video controls autoPlay src={fileHref(f.url)} className="max-h-full max-w-full" /></div>}
         {state.status === "ready" && kind === "audio" && <div className="flex h-full items-center justify-center p-6"><audio controls autoPlay src={fileHref(f.url)} className="w-full max-w-xl" /></div>}
         {state.status === "ready" && kind === "text" && <pre className="h-full overflow-auto whitespace-pre-wrap break-words bg-white p-4 text-sm text-slate-800 sm:rounded-lg">{state.text}</pre>}
-        {state.status === "ready" && kind === "sheet" && <div className="h-full overflow-hidden sm:rounded-lg"><SheetView book={state.book} /></div>}
+        {state.status === "ready" && kind === "sheet" && state.excel && (
+          <div className="h-full overflow-hidden sm:rounded-lg">
+            <Suspense fallback={<div className="flex h-full items-center justify-center bg-white"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>}>
+              <ExcelView book={state.excel} />
+            </Suspense>
+          </div>
+        )}
+        {state.status === "ready" && kind === "sheet" && state.book && <div className="h-full overflow-hidden sm:rounded-lg"><SheetView book={state.book} /></div>}
         {state.status === "ready" && kind === "docx" && <div ref={docxRef} className="h-full overflow-auto bg-slate-200 sm:rounded-lg" data-docx-preview />}
       </div>
     </div>,

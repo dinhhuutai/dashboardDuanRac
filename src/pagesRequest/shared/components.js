@@ -232,8 +232,8 @@ export function UserList({ ids, empty = "—" }) {
 }
 
 /* ------------------------------ Bố cục ------------------------------ */
-/** Vùng cuộn của 1 trang trong layout (layout cố định chiều cao, trang tự cuộn) */
-export function PageScroll({ children, className, max = "max-w-5xl" }) {
+/** Vùng cuộn của 1 trang trong layout (layout cố định chiều cao, trang tự cuộn). Mặc định rộng — tận dụng màn hình lớn */
+export function PageScroll({ children, className, max = "max-w-[1600px]" }) {
   return (
     <div className="h-full overflow-y-auto">
       <div className={cn("mx-auto px-4 py-5 pb-24 lg:px-6 lg:pb-10", max, className)}>{children}</div>
