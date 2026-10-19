@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, ArrowLeft, Ban, CalendarClock, Check, CheckCircle2, Clock, Copy, CornerUpLeft, Flag, Forward, History, Link2, Loader2, Lock,
-  MessagesSquare, Paperclip, Pencil, Plus, RefreshCw, Star, Trash2, X, XCircle, Zap,
+  MessagesSquare, Paperclip, Pencil, Plus, Printer, RefreshCw, Star, Trash2, X, XCircle, Zap,
 } from "lucide-react";
 import config from "~/config";
 import { Button, Modal, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
@@ -20,6 +20,7 @@ import { refreshCounts, rqEvents, useRq } from "../shared/store";
 import { deadlineInfo, fmtDateTime, timeAgo } from "../shared/format";
 import ApprovalFlow, { FlowStepper } from "./ApprovalFlow";
 import ActionDialog from "./ActionDialog";
+import PrintDialog from "./PrintDialog";
 import Comments from "./Comments";
 
 const cache = new Map(); // requestId → chi tiết đã tải (mở lại hiện ngay)
@@ -86,6 +87,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
   const myTypes = useRq((s) => s.boot?.types);
   const unread = useRq((s) => s.counts.unreadNotifications);
   const [fwd, setFwd] = useState(null); // hộp chuyển tiếp: { to: [userId], note, approve, saving }
+  const [printing, setPrinting] = useState(false); // hộp In đề xuất
   const [data, setData] = useState(() => cache.get(id) || null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -305,6 +307,11 @@ export default function RequestDetail({ id, onBack, onChanged }) {
             {!p.delete && p.deleteBlocked && <span className="hidden items-center gap-1 px-2 text-xs text-slate-400 lg:inline-flex" title="Đề xuất đã có người duyệt — không xoá được (chỉ huỷ được khi còn chờ duyệt)"><Lock className="h-3.5 w-3.5" /> Đã duyệt · không xoá được</span>}
             <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
             <button type="button" onClick={() => load()} title="Tải lại" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /></button>
+            {data.prints?.length > 0 && (
+              <button type="button" onClick={() => setPrinting(true)} title="In đề xuất theo mẫu in" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100">
+                <Printer className="h-4 w-4" /> <span className="hidden sm:inline">In</span>
+              </button>
+            )}
             <button type="button" onClick={copyLink} title="Sao chép liên kết" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><Link2 className="h-4 w-4" /></button>
             <button type="button" onClick={openChat} disabled={busy === "chat"} title="Chat nhóm với những người liên quan" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100">
               {busy === "chat" ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessagesSquare className="h-4 w-4" />} <span className="hidden sm:inline">Chat</span>
@@ -488,6 +495,7 @@ export default function RequestDetail({ id, onBack, onChanged }) {
       )}
 
       {action && <ActionDialog action={action} onClose={() => setAction(null)} onConfirm={doAction} />}
+      {printing && <PrintDialog request={data} onClose={() => setPrinting(false)} />}
 
       <Modal open={!!fwd} onClose={() => { if (!fwd?.saving) setFwd(null); }} title="Chuyển tiếp cho người khác duyệt" size="sm"
         footer={<><Button variant="secondary" disabled={fwd?.saving} onClick={() => setFwd(null)}>Đóng</Button><Button icon={Forward} loading={fwd?.saving} disabled={!fwd?.to?.length} onClick={doForward}>{fwd?.approve ? "Duyệt và chuyển tiếp" : "Chuyển tiếp"}</Button></>}>

@@ -2,7 +2,7 @@
 // Sửa mẫu KHÔNG ảnh hưởng đề xuất đã gửi (mỗi đề xuất lưu bản chụp trường + quy trình lúc gửi).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Eye, GitBranch, ListChecks, Lock, Save, Settings2, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Eye, GitBranch, ListChecks, Lock, Printer, Save, Settings2, SlidersHorizontal } from "lucide-react";
 import config from "~/config";
 import { Badge, Button, Field, Skeleton, Toggle, cn, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
@@ -15,6 +15,7 @@ import { ensureBoot, useRq } from "~/pagesRequest/shared/store";
 import { TEMPLATES } from "../templates";
 import FieldsEditor from "./FieldsEditor";
 import FlowEditor from "./FlowEditor";
+import PrintEditor from "./PrintEditor";
 
 const R = config.routes;
 const TABS = [
@@ -22,9 +23,10 @@ const TABS = [
   { key: "fields", label: "Trường thông tin", icon: ListChecks },
   { key: "flow", label: "Quy trình duyệt & theo dõi", icon: GitBranch },
   { key: "scope", label: "Phạm vi & tuỳ chọn", icon: SlidersHorizontal },
+  { key: "print", label: "Mẫu in", icon: Printer },
   { key: "preview", label: "Xem trước", icon: Eye },
 ];
-const DEFAULT_OPTIONS = { requireAttachment: false, allowAttachments: true, allowFollowers: true, allowPriority: true, allowDeadline: true, titleHint: "" };
+const DEFAULT_OPTIONS = { requireAttachment: false, allowAttachments: true, allowFollowers: true, allowPriority: true, allowDeadline: true, titleHint: "", printTemplates: [] };
 const EMPTY = {
   name: "", groupId: null, description: "", icon: "FileText", color: "#2563eb", fields: [], flow: [],
   audience: { type: "all" }, defaultFollowers: [], options: DEFAULT_OPTIONS, sortOrder: 0, isActive: true,
@@ -270,7 +272,7 @@ export default function TypeBuilder() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 py-5 pb-24 lg:pb-10">
+        <div className={cn("mx-auto px-4 py-5 pb-24 lg:pb-10", tab === "print" ? "max-w-[1700px]" : "max-w-6xl")}>
           {tab === "info" && (
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
               <Field label="Tên mẫu đề xuất" required>
@@ -343,6 +345,11 @@ export default function TypeBuilder() {
                 </Field>
               </div>
             </div>
+          )}
+
+          {tab === "print" && (
+            <PrintEditor type={{ ...t, typeId: isNew ? null : Number(id) }} value={t.options.printTemplates}
+              onChange={(printTemplates) => update({ options: { ...t.options, printTemplates } })} />
           )}
 
           {tab === "preview" && <Preview t={t} />}

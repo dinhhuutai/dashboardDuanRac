@@ -24,6 +24,7 @@ export const rqApi = {
   cancel: (id, note) => unwrap(http.post(`/api/rq/requests/${id}/cancel`, { note })),
   forward: (id, body) => unwrap(http.post(`/api/rq/requests/${id}/forward`, body)), // { userId, note, approve }
   remove: (id) => unwrap(http.delete(`/api/rq/requests/${id}`)),
+  printTemplates: (id) => unwrap(http.get(`/api/rq/requests/${id}/print`)), // mẫu in của mẫu đề xuất (đủ khối)
   addFollowers: (id, userIds) => unwrap(http.post(`/api/rq/requests/${id}/followers`, { userIds })),
   removeFollower: (id, userId) => unwrap(http.delete(`/api/rq/requests/${id}/followers/${userId}`)),
   comment: (id, body) => unwrap(http.post(`/api/rq/requests/${id}/comments`, body)),
