@@ -130,6 +130,7 @@ const routes = {
   adminRequestHeads: '/admin/request/heads',
   adminRequestOrg: '/admin/request/org',
   adminRequestStats: '/admin/request/stats',
+  adminRequestImport: '/admin/request/import', // nhập đề xuất cũ từ Base Request (tệp Excel)
 
 
   n20th11: '/luu-thi-thao-nguyen/20-10',

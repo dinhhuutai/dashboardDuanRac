@@ -38,6 +38,7 @@ const ACTIVITY = {
   forward: "đã chuyển tiếp cho người khác duyệt",
   approve_forward: "đã duyệt và chuyển tiếp",
   delete: "đã xoá đề xuất",
+  import: "đã nhập đề xuất từ Base Request",
 };
 
 function DetailSkeleton({ onBack }) {

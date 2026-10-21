@@ -5,7 +5,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileStack, Home, Inbox, Layers, ListChecks, Loader2,
+  BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileStack, FileUp, Home, Inbox, Layers, ListChecks, Loader2,
   Menu, MessagesSquare, PieChart, Plus, Search, Send, Star, UserCog, X,
 } from "lucide-react";
 import config from "~/config";
@@ -31,6 +31,7 @@ const ADMIN = [
   { to: R.adminRequestHeads, label: "Trưởng phòng & tổ trưởng", icon: UserCog },
   { to: R.adminRequestOrg, label: "Phòng ban & tổ", icon: Building2 },
   { to: R.adminRequestStats, label: "Thống kê", icon: BarChart3 },
+  { to: R.adminRequestImport, label: "Nhập từ Base", icon: FileUp },
 ];
 
 // trang con của module — tải trước khi rảnh để chuyển trang tức thì

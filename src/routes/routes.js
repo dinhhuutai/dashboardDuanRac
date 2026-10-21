@@ -130,6 +130,7 @@ const AdminRequestStats = lazyPage(() => import('~/pagesRequestAdmin/Stats'));
 const RequestReports = lazyPage(() => import('~/pagesRequest/Reports'));
 const RequestReportView = lazyPage(() => import('~/pagesRequest/Reports/ReportView'));
 const AdminRequestReportBuilder = lazyPage(() => import('~/pagesRequestAdmin/ReportBuilder'));
+const AdminRequestImport = lazyPage(() => import('~/pagesRequestAdmin/Import'));
 
 
 const N20th11 = lazyPage(() => import('~/pages/N20th11'));
@@ -1032,6 +1033,7 @@ export const routesRequestAdmin = [
   { path: config.routes.adminRequestStats, component: AdminRequestStats },
   { path: config.routes.adminRequestReportBuilder, component: AdminRequestReportBuilder },
   { path: config.routes.adminRequestReportBuilder, component: AdminRequestReportBuilder, addId: true },
+  { path: config.routes.adminRequestImport, component: AdminRequestImport },
 ];
 
 export const routesKCSAdmin = [

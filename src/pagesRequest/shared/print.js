@@ -1,4 +1,5 @@
-// MẪU IN đề xuất (module 18) — giống "In đề xuất" của request.base.vn nhưng thiết kế ngay trên web (không cần tệp .docx).
+// MẪU IN đề xuất (module 18) — giống "In đề xuất" của request.base.vn. 2 loại mẫu in:
+//   • thiết kế ngay trên web (file này)   • tải lên tệp Word .docx có biến ${...} (docxTemplate.js — dùng chung printValues)
 // Mẫu = khổ giấy (A4/A5, dọc/ngang, lề, phông) + danh sách KHỐI; chữ trong khối có biến ${...} lấy từ dữ liệu đề xuất.
 //   renderPrintHtml(tpl, request, { mode })  → HTML trang in đầy đủ: mode "screen" (xem trước, có vạch chia trang),
 //                                              "print" (in / lưu PDF bằng hộp in của trình duyệt), "word" (.doc mở bằng Word)
@@ -155,8 +156,11 @@ function buildVars(r, userName) {
   return v;
 }
 
+/** Giá trị mọi biến của 1 đề xuất: Map tên → { text, raw } (dùng chung cho mẫu thiết kế trên web và mẫu Word) */
+export const printValues = (r, userName) => buildVars(r, userName || ((id) => `#${id}`));
+
 /** Bộ lọc sau dấu |: chu (số tiền bằng chữ) · so (số không đơn vị) · hoa (VIẾT HOA) · thuong (viết thường) */
-function applyFilter(val, filter) {
+export function applyFilter(val, filter) {
   if (!filter) return val.text;
   const num = typeof val.raw === "number" ? val.raw : Number(String(val.raw ?? "").replace(/[^\d.-]/g, ""));
   if (filter === "chu") return Number.isFinite(num) && String(val.raw ?? "") !== "" ? moneyToWords(num) : "";
@@ -377,6 +381,7 @@ export function printDocument(html) {
   doc.close();
   const go = () => {
     try { f.contentWindow.focus(); f.contentWindow.print(); } catch { /* bỏ qua */ }
+    window.focus(); // trả con trỏ về trang — nếu không, phím Esc rơi vào khung in ẩn, hộp "In đề xuất" không đóng được
     setTimeout(() => f.remove(), 60000); // giữ đủ lâu cho hộp in (Safari in bất đồng bộ)
   };
   if (doc.readyState === "complete") setTimeout(go, 50);

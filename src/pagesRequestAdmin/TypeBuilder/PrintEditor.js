@@ -2,9 +2,11 @@
 // Trái: cài đặt khổ giấy + các khối (tiêu đề, đoạn văn, bảng tự do gộp ô, danh sách trường, bảng chi tiết, ký duyệt…).
 // Phải: xem trước đúng khổ A4/A5 bằng dữ liệu mẫu hoặc 1 đề xuất thật. Chữ có biến ${...}: bấm vào ô chữ rồi "Chèn dữ liệu".
 // Dựng trang in + danh sách biến: pagesRequest/shared/print.js. Lưu cùng mẫu đề xuất (options.printTemplates).
+// Loại thứ 2 — TẢI LÊN TỆP WORD (.docx) có biến ${…} như Base (DocxEditor bên dưới, xử lý ở shared/docxTemplate.js).
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, Braces, Copy, FileDown, Italic, Plus, Printer, Search, Star, Trash2, Underline,
+  AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, Braces, Check, Copy, FileDown, FileText, Italic, Loader2, Plus, Printer, Search, Star, Trash2,
+  Underline, Upload,
 } from "lucide-react";
 import { Button, Field, IconButton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
@@ -15,6 +17,11 @@ import {
   renderPrintHtml, sampleRequest, stepTokens,
 } from "~/pagesRequest/shared/print";
 import { uid } from "~/pagesRequest/shared/fieldTypes";
+import { fileHref, fmtSize, uploadFile } from "~/pagesRequest/shared/files";
+import DocxPreview, { useFilledDocx } from "~/pagesRequest/shared/DocxPreview";
+import {
+  docxVariables, downloadBlob, loadDocx, mappingRows, printDocx, rememberDocx, sampleDocx, scanDocx, targetOptions,
+} from "~/pagesRequest/shared/docxTemplate";
 
 /* ------------------------------ ô chữ có thể chèn biến ------------------------------ */
 // Ô chữ đang được chọn (để nút "Chèn dữ liệu" biết chèn vào đâu)
@@ -410,6 +417,122 @@ function BlockBody({ b, set, fields, flow }) {
   }
 }
 
+/* ------------------------------ MẪU WORD (.docx) ------------------------------ */
+function DocxEditor({ tpl, setTpl, type, fields, flow, data, sourceSelect, onReplace, uploading }) {
+  const [tokens, setTokens] = useState(null);
+  const [scanErr, setScanErr] = useState(null);
+  const [showVars, setShowVars] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setTokens(null);
+    setScanErr(null);
+    loadDocx(tpl.file).then(scanDocx).then((t) => { if (alive) setTokens(t); }).catch((e) => { if (alive) setScanErr(e.message); });
+    return () => { alive = false; };
+  }, [tpl.file]);
+  const rows = useMemo(() => (tokens ? mappingRows(tokens, tpl, fields, flow) : []), [tokens, tpl, fields, flow]);
+  const options = useMemo(() => targetOptions(fields, flow), [fields, flow]);
+  const optLabel = useMemo(() => new Map(options.map((o) => [o.value, o.label])), [options]);
+  const groups = useMemo(() => [...new Set(options.map((o) => o.group))], [options]);
+  const vars = useMemo(() => docxVariables(fields, flow), [fields, flow]);
+  const { blob, size, error } = useFilledDocx(tpl, data);
+  const unmatched = rows.filter((r) => !r.target);
+  const setMap = (name, value) => {
+    const map = { ...(tpl.map || {}) };
+    if (value) map[name] = value;
+    else delete map[name];
+    setTpl({ map });
+  };
+  const copy = (token) => { navigator.clipboard?.writeText(T(token)).then(() => toast.success(`Đã chép ${T(token)} — dán vào tệp Word`)).catch(() => toast.info(T(token))); };
+  const original = async () => {
+    if (tpl.file.downloadUrl) { window.location.href = fileHref(tpl.file.downloadUrl); return; }
+    try { downloadBlob(new Blob([await loadDocx(tpl.file)]), tpl.file.name); } catch (e) { toast.error(e.message); }
+  };
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start" data-docx-editor>
+      <div className="space-y-3">
+        <section className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><FileText className="h-5 w-5" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold text-slate-800">{tpl.file.name}</p>
+            <p className="text-xs text-slate-500">{fmtSize(tpl.file.size)}{size ? ` · khổ ${size.name}${size.landscape ? " ngang" : " dọc"} (theo tệp Word)` : ""}</p>
+          </div>
+          <Button size="sm" variant="secondary" icon={Upload} loading={!!uploading} onClick={onReplace}>Đổi tệp khác</Button>
+          <Button size="sm" variant="ghost" icon={FileDown} onClick={original}>Tệp gốc</Button>
+        </section>
+
+        <section className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">
+          <p className="font-semibold">Cách soạn tệp Word mẫu</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[13px]">
+            <li>Gõ biến vào đúng chỗ cần điền, dạng <code>{T("nguoi_de_xuat")}</code>, <code>{T("so_tien|chu")}</code> (bằng chữ). Bảng, khung, logo, phông chữ… giữ nguyên như tệp.</li>
+            <li>Bảng chi tiết: đặt biến cột vào <b>1 dòng</b> của bảng Word, vd. <code>{T("noi_dung_de_nghi.stt")}</code> <code>{T("noi_dung_de_nghi.so_tien")}</code> — dòng đó tự nhân theo số dòng của đề xuất.</li>
+            <li>Dùng lại được tệp Word của Base (<code>{T("creator_name")}</code>, <code>{T("block_approvals_..._name")}</code>, <code>{T("column.nddn.1")}</code>…): biến nào chưa tự khớp thì chọn ở bảng dưới.</li>
+          </ul>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="secondary" icon={FileDown} onClick={async () => downloadBlob(await sampleDocx(type), `Mẫu gợi ý - ${type.name || "de xuat"}.docx`)}>Tải tệp Word gợi ý (đủ biến)</Button>
+            <Button size="sm" variant="ghost" icon={Braces} onClick={() => setShowVars((v) => !v)}>{showVars ? "Ẩn" : "Xem"} danh sách biến</Button>
+          </div>
+        </section>
+
+        {showVars && (
+          <section className="max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2" data-docx-vars>
+            {[...new Set(vars.map((v) => v.group))].map((g) => (
+              <div key={g}>
+                <p className="px-2 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{g}</p>
+                {vars.filter((v) => v.group === g).map((v) => (
+                  <button key={v.token} type="button" onClick={() => copy(v.token)} title="Bấm để chép"
+                    className="flex w-full items-baseline justify-between gap-2 rounded px-2 py-0.5 text-left text-sm hover:bg-blue-50">
+                    <span className="min-w-0 truncate text-slate-700">{v.label}</span><code className="shrink-0 text-[11px] text-slate-500">{T(v.token)}</code>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </section>
+        )}
+
+        <section className="rounded-xl border border-slate-200 bg-white">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+            <p className="flex-1 text-sm font-semibold text-slate-700">Biến trong tệp Word {tokens ? `(${tokens.length})` : ""}</p>
+            {tokens && (unmatched.length
+              ? <span className="text-xs font-medium text-amber-700">{unmatched.length} biến chưa khớp → sẽ để trống</span>
+              : <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><Check className="h-3.5 w-3.5" /> Đã khớp hết</span>)}
+          </div>
+          {scanErr ? <p className="p-3 text-sm text-red-600">{scanErr}</p> : !tokens ? <p className="flex items-center gap-2 p-3 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Đang đọc tệp…</p>
+            : !tokens.length ? <p className="p-3 text-sm text-amber-700">Tệp chưa có biến nào dạng {T("ten_bien")} — mở tệp bằng Word, gõ biến vào chỗ cần điền rồi tải lên lại.</p> : (
+              <div className="max-h-[420px] overflow-y-auto">
+                <table className="w-full text-sm" data-docx-map>
+                  <tbody>
+                    {rows.map((r) => (
+                      <tr key={r.name} className="border-t border-slate-100 first:border-0">
+                        <td className="w-[40%] px-3 py-1.5 align-middle"><code className="break-all text-xs text-slate-700">{T(r.name)}</code></td>
+                        <td className="px-2 py-1.5">
+                          <select className={cn(inputCls, "py-1 text-xs", !r.target && "border-amber-400 bg-amber-50")} value={tpl.map?.[r.name] || ""} onChange={(e) => setMap(r.name, e.target.value)} aria-label={`Dữ liệu cho ${r.name}`}>
+                            <option value="">{r.auto ? `Tự khớp: ${optLabel.get(r.auto) || r.auto}` : "— chưa khớp (để trống) —"}</option>
+                            {groups.map((g) => <optgroup key={g} label={g}>{options.filter((o) => o.group === g).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</optgroup>)}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+        </section>
+      </div>
+
+      <div className="space-y-2 xl:sticky xl:top-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-slate-700">Xem trước tệp Word đã điền</span>
+          {sourceSelect}
+          <Button size="sm" variant="secondary" icon={Printer} disabled={!blob} onClick={() => printDocx(blob, size, tpl.name).catch((e) => toast.error(e.message))}>In thử</Button>
+          <Button size="sm" variant="secondary" icon={FileDown} disabled={!blob} onClick={() => downloadBlob(blob, `${tpl.name}.docx`)}>Tải Word</Button>
+        </div>
+        <DocxPreview blob={blob} error={error || scanErr} height="78vh" />
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ trang ------------------------------ */
 export default function PrintEditor({ type, value, onChange }) {
   const me = useRq((s) => s.boot?.me);
@@ -459,6 +582,48 @@ export default function PrintEditor({ type, value, onChange }) {
   const setDefault = () => onChange(templates.map((x) => ({ ...x, isDefault: x.id === tpl.id })));
   const html = (mode) => renderPrintHtml(tpl, data, { mode, userName: (id) => userName(id) });
 
+  // tải lên tệp Word mẫu (mới, hoặc đổi tệp của mẫu Word đang mở)
+  const fileInput = useRef(null);
+  const uploadMode = useRef("new");
+  const [uploading, setUploading] = useState(null); // { name, progress }
+  const pickWord = (mode) => {
+    setAddOpen(false);
+    if (mode === "new" && templates.length >= 10) return toast.info("Tối đa 10 mẫu in cho 1 mẫu đề xuất");
+    uploadMode.current = mode;
+    fileInput.current?.click();
+  };
+  const onWordFile = async (file) => {
+    if (!file) return;
+    if (!/\.docx$/i.test(file.name)) return toast.error("Chỉ nhận tệp Word .docx — tệp .doc đời cũ: mở bằng Word rồi Lưu thành (.docx)");
+    try {
+      const buf = await file.arrayBuffer();
+      await scanDocx(buf); // đọc thử trước khi tải lên
+      setUploading({ name: file.name, progress: 0 });
+      const res = await uploadFile(file, { onProgress: (p) => setUploading({ name: file.name, progress: p }) }).promise;
+      rememberDocx(res.key, buf);
+      const f = { key: res.key, name: file.name, size: res.size ?? file.size, sig: res.sig };
+      if (uploadMode.current === "replace" && tpl?.kind === "docx") setTpl({ file: f });
+      else {
+        const t = { id: uid("p"), name: file.name.replace(/\.docx$/i, "").slice(0, 150), kind: "docx", file: f, map: {}, isDefault: !templates.length };
+        onChange([...templates, t]);
+        setSelId(t.id);
+      }
+      toast.success("Đã tải lên tệp Word — bấm Lưu mẫu đề xuất để áp dụng");
+    } catch (e) {
+      toast.error(e.message || "Tải tệp thất bại");
+    } finally {
+      setUploading(null);
+    }
+  };
+  const wordInput = <input ref={fileInput} type="file" hidden accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => { onWordFile(e.target.files?.[0]); e.target.value = ""; }} data-word-input />;
+  const uploadingNote = uploading && <p className="flex items-center gap-2 text-sm text-blue-700"><Loader2 className="h-4 w-4 animate-spin" /> Đang tải lên {uploading.name} — {Math.round(uploading.progress * 100)}%</p>;
+  const sourceSelect = (
+    <select className={cn(inputCls, "w-auto flex-1 py-1 text-xs")} value={source} onChange={(e) => setSource(e.target.value)} aria-label="Dữ liệu xem trước">
+      <option value="sample">Dữ liệu mẫu</option>
+      {(real.list || []).map((r) => <option key={r.requestId} value={r.requestId}>#{r.requestId} · {r.title}</option>)}
+    </select>
+  );
+
   if (!tpl) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
@@ -470,8 +635,11 @@ export default function PrintEditor({ type, value, onChange }) {
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button icon={Plus} onClick={() => addTemplate("auto")}>Tạo tự động từ trường của mẫu</Button>
-          <Button variant="secondary" onClick={() => addTemplate("blank")}>Mẫu trống</Button>
+          <Button variant="secondary" icon={Upload} loading={!!uploading} onClick={() => pickWord("new")}>Tải lên mẫu Word (.docx)</Button>
+          <Button variant="ghost" onClick={() => addTemplate("blank")}>Mẫu trống</Button>
         </div>
+        <div className="mt-3 flex justify-center">{uploadingNote}</div>
+        {wordInput}
       </div>
     );
   }
@@ -484,21 +652,37 @@ export default function PrintEditor({ type, value, onChange }) {
           {templates.map((x) => (
             <button key={x.id} type="button" onClick={() => setSelId(x.id)}
               className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm", x.id === tpl.id ? "border-blue-600 bg-blue-50 font-semibold text-blue-700" : "border-slate-300 text-slate-600 hover:border-blue-400")}>
-              {x.isDefault && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}{x.name} <span className="text-[11px] font-normal text-slate-400">{x.paper}</span>
+              {x.isDefault && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}{x.name} <span className="text-[11px] font-normal text-slate-400">{x.kind === "docx" ? "Word" : x.paper}</span>
             </button>
           ))}
           <div className="relative">
             <button type="button" onClick={() => setAddOpen((v) => !v)} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium text-blue-700 hover:bg-blue-50"><Plus className="h-4 w-4" /> Thêm mẫu in</button>
             {addOpen && (
               <div className="absolute left-0 z-30 mt-1 w-60 rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
-                {[["auto", "Tự động từ trường của mẫu"], ["copy", "Nhân bản mẫu in đang mở"], ["blank", "Mẫu trống"]].map(([k, l]) => (
+                <button type="button" onClick={() => pickWord("new")} className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50">Tải lên mẫu Word (.docx)</button>
+                {[["auto", "Thiết kế: tự động từ trường của mẫu"], ["copy", "Nhân bản mẫu in đang mở"], ["blank", "Thiết kế: mẫu trống"]].map(([k, l]) => (
                   <button key={k} type="button" onClick={() => addTemplate(k)} className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50">{l}</button>
                 ))}
               </div>
             )}
           </div>
+          {uploadingNote}
+          {wordInput}
         </div>
 
+        {tpl.kind === "docx" ? (
+          <>
+            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3">
+              <Field label="Tên mẫu in" className="min-w-[200px] flex-1"><input className={cn(inputCls, "py-1.5")} value={tpl.name} maxLength={150} onChange={(e) => setTpl({ name: e.target.value })} /></Field>
+              <div className="flex items-center gap-1 pb-1">
+                {!tpl.isDefault ? <Button size="sm" variant="ghost" icon={Star} onClick={setDefault}>Đặt mặc định</Button> : <span className="px-2 text-xs text-amber-600">★ Mặc định</span>}
+                <IconButton icon={Trash2} title="Xoá mẫu in" danger onClick={removeTemplate} />
+              </div>
+            </div>
+            <DocxEditor tpl={tpl} setTpl={setTpl} type={type} fields={fields} flow={flow} data={data} sourceSelect={sourceSelect} uploading={uploading} onReplace={() => pickWord("replace")} />
+          </>
+        ) : (
+        <>
         {/* cài đặt trang */}
         <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3">
           <Field label="Tên mẫu in" className="min-w-[200px] flex-1"><input className={cn(inputCls, "py-1.5")} value={tpl.name} maxLength={150} onChange={(e) => setTpl({ name: e.target.value })} /></Field>
@@ -556,10 +740,7 @@ export default function PrintEditor({ type, value, onChange }) {
           <div className="space-y-2 xl:sticky xl:top-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-semibold text-slate-700">Xem trước {tpl.paper} {tpl.orientation === "landscape" ? "ngang" : "dọc"}</span>
-              <select className={cn(inputCls, "w-auto flex-1 py-1 text-xs")} value={source} onChange={(e) => setSource(e.target.value)} aria-label="Dữ liệu xem trước">
-                <option value="sample">Dữ liệu mẫu</option>
-                {(real.list || []).map((r) => <option key={r.requestId} value={r.requestId}>#{r.requestId} · {r.title}</option>)}
-              </select>
+              {sourceSelect}
               <Button size="sm" variant="secondary" icon={Printer} onClick={() => printDocument(html("print"))}>In thử</Button>
               <Button size="sm" variant="secondary" icon={FileDown} onClick={() => downloadWord(html("word"), tpl.name)}>Word</Button>
             </div>
@@ -567,6 +748,8 @@ export default function PrintEditor({ type, value, onChange }) {
             <p className="text-[11px] text-slate-400">Chữ đỏ <span className="rounded bg-red-100 px-1 text-red-600">{T("…")}</span> = biến không có trong mẫu (tên trường đã đổi?). Vạch xám = hết 1 trang giấy.</p>
           </div>
         </div>
+        </>
+        )}
       </div>
     </ActiveInput.Provider>
   );

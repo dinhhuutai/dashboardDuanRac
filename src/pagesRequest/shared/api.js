@@ -8,6 +8,25 @@ export function errorMessage(err, fallback = "Có lỗi xảy ra, vui lòng th�
   return err?.response?.data?.message || (err?.response ? fallback : "Không kết nối được máy chủ — kiểm tra mạng");
 }
 
+// Nhập từ Base: tệp ~1 MB chữ → nén gzip trên trình duyệt (còn ~10%) và gửi Content-Type riêng
+// (backend RequestManagement/imports.js có bộ đọc JSON riêng, giới hạn 8 MB; express.json() chung chỉ nhận 100 KB).
+const IMPORT_TYPE = "application/vnd.noibo.import+json";
+async function postImport(url, payload, opts) {
+  const text = JSON.stringify(payload);
+  const plain = () => http.post(url, text, { ...opts, headers: { "Content-Type": IMPORT_TYPE } });
+  if (typeof CompressionStream === "undefined" || text.length < 16384) return unwrap(plain());
+  const blob = await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+  try {
+    return await unwrap(http.post(url, blob, { ...opts, headers: { "Content-Type": IMPORT_TYPE, "Content-Encoding": "gzip" } }));
+  } catch (e) {
+    // thân nén không đọc được (máy chủ trung gian / bộ đọc không giải nén) → gửi lại không nén.
+    // Lỗi kiểm tra dữ liệu của imports.js (JSON có success) thì không gửi lại.
+    const st = e?.response?.status, d = e?.response?.data;
+    if (st === 415 || (st === 400 && (d?.success === undefined || d?.message === "Dữ liệu gửi lên không đọc được"))) return unwrap(plain());
+    throw e;
+  }
+}
+
 export const rqApi = {
   bootstrap: () => unwrap(http.get("/api/rq/me/bootstrap")),
   pulse: () => unwrap(http.get("/api/rq/me/pulse", silent)),
@@ -57,6 +76,14 @@ export const rqApi = {
   heads: () => unwrap(http.get("/api/rq/admin/heads")),
   saveHeads: (body) => unwrap(http.put("/api/rq/admin/heads", body)),
   stats: (params) => unwrap(http.get("/api/rq/admin/stats", { params })),
+
+  // Nhập dữ liệu cũ từ Base Request (sql/12)
+  importAnalyze: (body, opts) => postImport("/api/rq/admin/import/base/analyze", body, opts), // { header, rows, settings }
+  importStart: (body) => postImport("/api/rq/admin/import/base/batches", body), // + fileName → { batchId, willCreate, createdTypes }
+  importRows: (batchId, body) => postImport(`/api/rq/admin/import/base/batches/${batchId}/rows`, body), // { header, rows ≤ 100 }
+  importFinish: (batchId) => unwrap(http.post(`/api/rq/admin/import/base/batches/${batchId}/finish`)),
+  importBatches: () => unwrap(http.get("/api/rq/admin/import/batches")),
+  importUndo: (batchId) => unwrap(http.post(`/api/rq/admin/import/batches/${batchId}/undo`)),
 
   // Báo cáo tự thiết kế (xem: người được chia sẻ + admin; tạo/sửa/xem trước: admin)
   reports: () => unwrap(http.get("/api/rq/reports")),
