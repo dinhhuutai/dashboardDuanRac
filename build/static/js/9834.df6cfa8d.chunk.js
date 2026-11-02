@@ -1,1 +1,0 @@
-(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[9834],{61976:()=>{},71581:()=>{}}]);

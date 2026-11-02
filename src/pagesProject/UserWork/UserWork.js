@@ -86,8 +86,8 @@ export default function UserWork() {
   const k = d?.kpi;
   return (
     <Page wide>
-      <Link to={isSelf && !boot?.me?.isAdmin ? `${R.projectTasks}?scope=mine` : R.projectPeople} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-        <ArrowLeft className="h-4 w-4" /> {isSelf && !boot?.me?.isAdmin ? "Việc của tôi" : "Nhân sự"}
+      <Link to={isSelf && !boot?.me?.isAdmin ? R.projectTasks : R.projectPeople} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
+        <ArrowLeft className="h-4 w-4" /> {isSelf && !boot?.me?.isAdmin ? "Công việc" : "Nhân sự"}
       </Link>
       {!d ? <><Skeleton className="h-28 w-full rounded-xl" /><div className="mt-4"><CardListSkeleton rows={3} /></div></> : (
         <Refreshing active={loading}>
@@ -133,7 +133,7 @@ export default function UserWork() {
                 <h2 className="flex-1 font-semibold text-slate-800">Công việc</h2>
                 <Pills value={taskFilter} onChange={setTaskFilter} items={[["open", "Đang mở"], ["done", "Hoàn thành"], ["all", "Trong kỳ"]]} />
               </div>
-              {tasks.length ? <div className="space-y-2">{tasks.map((t) => <TaskCard key={t.taskId} t={t} today={today} showProject showAssigner />)}</div>
+              {tasks.length ? <div className="space-y-2">{tasks.map((t) => <TaskCard key={t.taskId} t={t} today={today} showProject />)}</div>
                 : <EmptyState title={taskFilter === "open" ? "Không có việc đang mở" : "Không có việc"} />}
             </section>
             <div className="space-y-4 lg:col-span-2">

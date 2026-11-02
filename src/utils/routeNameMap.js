@@ -126,7 +126,7 @@ export const ROUTE_KEY_TO_NAME = {
 
   // ===== QUẢN LÝ DỰ ÁN (module 3) =====
   project: "Quản lý dự án - Danh sách dự án",
-  projectDashboard: "Quản lý dự án - Dashboard",
+  projectDashboard: "Quản lý dự án - Báo cáo",
   projectPeople: "Quản lý dự án - Nhân sự",
   projectTasks: "Quản lý dự án - Việc của tôi",
   projectNew: "Quản lý dự án - Tạo dự án",

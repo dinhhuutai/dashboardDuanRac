@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[9588],{19588:(a,e,r)=>{r.r(e),r.d(e,{default:()=>t});var s=r(44414);function t(){return(0,s.jsx)("div",{children:"Dashboard"})}}}]);

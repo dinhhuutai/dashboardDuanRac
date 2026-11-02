@@ -1,8 +1,8 @@
 // Layout module 3 "Quản lý dự án" (khung chung ModuleShell, giống module 18) — 1 layout cho cả nhân viên + quản trị.
 // Khởi động 1 lần (vai trò, cấu hình tệp, con số); huy hiệu cập nhật 60 giây/lần khi tab đang mở.
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Bell, FolderKanban, GanttChartSquare, Inbox, LayoutDashboard, ListTodo, Plus, Send, UsersRound, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { BarChart3, Bell, FolderKanban, ListTodo, X } from "lucide-react";
 import config from "~/config";
 import ModuleShell from "~/components/ModuleShell";
 import { Skeleton, cn, toast } from "~/pagesForm/shared/ui";
@@ -16,11 +16,11 @@ const R = config.routes;
 const PULSE_MS = 60000;
 
 const PAGES = [
+  { preload: () => import("~/pagesProject/TaskInbox") },
+  { preload: () => import("~/pagesProject/TaskDetail") },
+  { preload: () => import("~/pagesProject/Dashboard") },
   { preload: () => import("~/pagesProject/ProjectList") },
   { preload: () => import("~/pagesProject/ProjectDetail") },
-  { preload: () => import("~/pagesProject/TaskDetail") },
-  { preload: () => import("~/pagesProject/TaskInbox") },
-  { preload: () => import("~/pagesProject/Dashboard") },
 ];
 
 function NotificationPanel({ onClose, mobile }) {
@@ -77,7 +77,6 @@ function BootSkeleton() {
 
 export default function DefaultLayoutProject({ children }) {
   const { pathname } = useLocation();
-  const [params] = useSearchParams();
   const boot = usePj((s) => s.boot);
   const bootError = usePj((s) => s.bootError);
   const counts = usePj((s) => s.counts);
@@ -109,38 +108,22 @@ export default function DefaultLayoutProject({ children }) {
     return () => document.removeEventListener("mousedown", onDown);
   }, [notifOpen]);
 
-  const isAdmin = !!boot?.me?.isAdmin;
-  const canGive = isAdmin || counts.isAssigner;
-  const meId = boot?.me?.userId;
-  const scope = pathname === R.projectTasks ? params.get("scope") || "mine" : null;
-  const onProjects = pathname === R.project || [R.projectView, R.projectEdit, R.projectTask].some((p) => pathname.startsWith(`${p}/`));
-  const myChart = meId ? `${R.projectPeople}/${meId}` : null;
-
-  const dashboard = { to: R.projectDashboard, label: "Dashboard", icon: LayoutDashboard, active: pathname === R.projectDashboard };
+  // 3 mục để demo 1 lần là nhớ: Công việc · Báo cáo · Dự án
+  const onTasks = pathname === R.projectTasks || pathname.startsWith(`${R.projectTask}/`);
+  const onReport = pathname === R.projectDashboard || pathname === R.projectPeople || pathname.startsWith(`${R.projectPeople}/`);
+  const onProjects = pathname === R.project || [R.projectView, R.projectEdit].some((p) => pathname.startsWith(`${p}/`)) || pathname === R.projectNew;
+  const tasks = { to: R.projectTasks, label: "Công việc", icon: ListTodo, active: onTasks, badge: counts.todo + counts.overdue + counts.waiting };
+  const report = { to: R.projectDashboard, label: "Báo cáo", icon: BarChart3, active: onReport };
   const projects = { to: R.project, label: "Dự án", icon: FolderKanban, active: onProjects, badge: counts.chatUnread };
-  const mine = { to: `${R.projectTasks}?scope=mine`, label: "Việc của tôi", icon: ListTodo, active: scope === "mine", badge: counts.todo + counts.overdue };
-  const waiting = { to: `${R.projectTasks}?scope=waiting`, label: "Chờ tôi phản hồi", icon: Inbox, active: scope === "waiting", badge: counts.waiting, hidden: !canGive };
-  const assigned = { to: `${R.projectTasks}?scope=assigned`, label: "Việc tôi đã giao", icon: Send, active: scope === "assigned", hidden: !canGive };
-  const people = { to: R.projectPeople, label: "Nhân sự", icon: UsersRound, active: pathname === R.projectPeople || (pathname.startsWith(`${R.projectPeople}/`) && pathname !== myChart), hidden: !canGive };
-  const chart = { to: myChart || R.projectPeople, label: "Sơ đồ công việc của tôi", icon: GanttChartSquare, active: !!myChart && pathname === myChart, hidden: !myChart };
 
   return (
     <ModuleShell
-      title="Quản lý dự án" icon={FolderKanban} home={R.project} moduleId={3}
+      title="Quản lý dự án" icon={FolderKanban} home={R.projectTasks} moduleId={3}
       // điện thoại: thông báo nổi nằm trên ô soạn tin + thanh tab (thấp hơn sẽ che nút gửi của tab Trò chuyện; đặt ở trên thì che
       // danh sách thông báo mở toàn màn hình — cả 2 E2E bắt được)
       toasterPosition="bottom-[8.5rem] lg:bottom-6"
-      primary={isAdmin ? { to: R.projectNew, label: "Tạo dự án", icon: Plus } : null}
-      sections={[
-        { items: [dashboard, projects, mine, waiting, assigned] },
-        { title: "Theo dõi", items: [people, chart] },
-      ]}
-      tabs={[
-        { ...projects, label: "Dự án" },
-        { ...mine, label: "Của tôi" },
-        ...(canGive ? [{ ...waiting, label: "Chờ phản hồi" }] : []),
-        { ...dashboard, label: "Tổng quan" },
-      ]}
+      sections={[{ items: [tasks, report, projects] }]}
+      tabs={[tasks, report, projects]}
       headerActions={(
         <div ref={notifRef} className="relative">
           <button type="button" onClick={() => setNotifOpen((v) => !v)} title="Thông báo"

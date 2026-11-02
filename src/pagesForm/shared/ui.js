@@ -301,7 +301,8 @@ export function Toaster({ position = "bottom-4 sm:bottom-6" } = {}) {
       {items.map((t) => {
         const I = ICON[t.kind];
         return (
-          <div key={t.id} className={cn("pointer-events-auto flex max-w-md items-start gap-2 rounded-lg px-4 py-3 text-sm text-white shadow-lg", TONE[t.kind])}>
+          // thông báo không có nút bấm → không chặn thao tác bên dưới (từng che nút "Nộp kết quả" trên điện thoại)
+          <div key={t.id} className={cn("flex max-w-md items-start gap-2 rounded-lg px-4 py-3 text-sm text-white shadow-lg", TONE[t.kind])}>
             <I className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{t.message}</span>
           </div>

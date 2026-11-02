@@ -297,7 +297,7 @@ function HomeMain() {
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === "user") {
       rou = config.routes.form;
     } else if (m.moduleId === MODULEID.CONGVIEC) {
-      rou = config.routes.project; // Quản lý dự án — 1 trang cho mọi vai trò
+      rou = config.routes.projectTasks; // Quản lý dự án — vào thẳng danh sách công việc
     } else if (m.moduleId === MODULEID.XEPHOIVAI && role === "user") {
       rou = config.routes.dryingCart;
     } else if (m.moduleId === MODULEID.BMI && role === "user") {

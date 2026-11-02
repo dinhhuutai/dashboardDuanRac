@@ -1,1 +1,0 @@
-(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[1844],{1844:(e,a,k)=>{e.exports=k(40629)}}]);

@@ -35,9 +35,33 @@ export const EVENT_TEXT = {
   reopen: "mở lại công việc",
 };
 
+/** Mã công việc hiển thị: 12 → CV-0012 */
+export const taskCode = (id) => `CV-${String(id).padStart(4, "0")}`;
+
+/** Cột "Kết quả" của danh sách: lần nộp cuối (đã nộp / đã xong) hoặc lý do huỷ (đã huỷ) */
+export function resultText(t) {
+  if (t.status === "cancelled") return t.resultKind === "cancel" && t.resultBody ? `Huỷ: ${t.resultBody}` : "Đã huỷ";
+  if (!["submitted", "done"].includes(t.status) || t.resultKind !== "submit") return "";
+  return t.resultBody || "Đã nộp tệp / đường dẫn";
+}
+
+/** Việc nghẽn đang kẹt ở bước nào */
+export function waitReason(t) {
+  if (t.overdue) return "Quá hạn";
+  return { new: "Chờ xác nhận", clarify: "Chờ trả lời câu hỏi", submitted: "Chờ duyệt", revise: "Chờ làm lại" }[t.status] || "";
+}
+
+/** Tách đường dẫn ra khỏi nội dung nộp: "Xong rồi https://x.vn" → { body: "Xong rồi", links: ["https://x.vn"] } */
+export function splitLinks(text) {
+  const links = [];
+  const body = String(text || "").replace(/\bhttps?:\/\/[^\s<>"']+/gi, (u) => { links.push(u.replace(/[.,;:!?)]+$/, "")); return ""; })
+    .replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
+  return { body, links: [...new Set(links)] };
+}
+
 /** Bấm 1 thông báo → trang nào (kind từ backend: assign, question, …, mention, mention_chat, post, member) */
 export function notificationLink(n, R) {
-  if (n.taskId) return `${R.projectTask}/${n.taskId}`;
+  if (n.taskId) return `${R.projectTask}/${n.taskId}${["comment", "mention"].includes(n.kind) ? "?chat=1" : ""}`;
   if (n.projectId && n.kind === "mention_chat") return `${R.projectView}/${n.projectId}?tab=chat`;
   if (n.projectId) return `${R.projectView}/${n.projectId}`;
   return R.project;
@@ -79,7 +103,7 @@ export function daysLeft(ymd, today) {
 }
 /** Hạn → { text, tone } để hiển thị */
 export function dueInfo(t, today) {
-  if (!t.dueDate) return t.expectedDate ? { text: `Hạn mong muốn ${fmtYmd(t.expectedDate)}`, tone: "slate" } : null;
+  if (!t.dueDate) return t.expectedDate ? { text: `Hạn ${fmtYmd(t.expectedDate)}`, tone: "slate" } : null;
   if (!["doing", "revise"].includes(t.status)) return { text: `Hạn ${fmtYmd(t.dueDate)}`, tone: "slate" };
   const d = daysLeft(t.dueDate, today);
   if (d < 0) return { text: `Quá hạn ${-d} ngày`, tone: "red" };

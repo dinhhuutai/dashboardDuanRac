@@ -26,8 +26,9 @@ export const pjApi = {
 
   // Công việc
   projectTasks: (id, params, opts) => unwrap(http.get(`/api/pj/projects/${id}/tasks`, { params, ...opts })), // { assigneeId, status }
-  tasks: (params, opts) => unwrap(http.get("/api/pj/tasks", { params, ...opts })), // { scope: mine|waiting|assigned, status }
+  tasks: (params, opts) => unwrap(http.get("/api/pj/tasks", { params, ...opts })), // { scope: all|mine|waiting|assigned, status, projectId }
   createTask: (projectId, body) => unwrap(http.post(`/api/pj/projects/${projectId}/tasks`, body)),
+  aiExtract: (projectId, text) => unwrap(http.post(`/api/pj/projects/${projectId}/ai/extract`, { text })),
   task: (id, opts) => unwrap(http.get(`/api/pj/tasks/${id}`, opts)),
   updateTask: (id, body) => unwrap(http.put(`/api/pj/tasks/${id}`, body)),
   act: (id, action, body) => unwrap(http.post(`/api/pj/tasks/${id}/${action}`, body)), // question|answer|accept|comment|submit|approve|revise|cancel|reopen
@@ -46,7 +47,7 @@ export const pjApi = {
   // Theo dõi
   people: (opts) => unwrap(http.get("/api/pj/people", opts)),
   person: (userId, params, opts) => unwrap(http.get(`/api/pj/people/${userId}`, { params, ...opts })), // { days }
-  dashboard: (params, opts) => unwrap(http.get("/api/pj/dashboard", { params, ...opts })), // { days, projectId }
+  dashboard: (params, opts) => unwrap(http.get("/api/pj/dashboard", { params, ...opts })), // báo cáo: { projectId }
 };
 
 export { silent };
