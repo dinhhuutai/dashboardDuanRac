@@ -135,29 +135,16 @@ const AdminRequestImport = lazyPage(() => import('~/pagesRequestAdmin/Import'));
 
 const N20th11 = lazyPage(() => import('~/pages/N20th11'));
 
-const TaskManagementDashboard = lazyPage(() => import('~/pagesTaskManagement/Tasks/Dashboard'));
-const TaskManagementHome = lazyPage(() => import('~/pagesTaskManagement/Home'));
-
-const TaskManagementMyTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/MyTasks'));
-const TaskManagementTeamTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/TeamTasks'));
-const TaskManagementDepartmentTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/DepartmentTasks'));
-const TaskManagementCompanyTasks = lazyPage(() => import('~/pagesTaskManagement/Tasks/CompanyTasks'));
-const TaskManagementRequests = lazyPage(() => import('~/pagesTaskManagement/Requests/Requests'));
-
-const TaskManagementProjectList = lazyPage(() => import('~/pagesTaskManagement/Projects/ProjectList'));
-const TaskManagementProjectOverview = lazyPage(() => import('~/pagesTaskManagement/Projects/ProjectOverview'));
-
-const AdminTaskManagementDashboard = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/Dashboard'));
-
-const AdminTaskManagementReportByEmployee = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByEmployee'));
-const AdminTaskManagementReportByProject = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByProeject'));
-const AdminTaskManagementReportByStatus = lazyPage(() => import('~/pagesTaskManagementAdmin/Menu/ReportByStatus'));
-
-const AdminTaskManagementDepartments = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Departments'));
-const AdminTaskManagementRoles = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Roles'));
-const AdminTaskManagementStatuses = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Statuses'));
-const AdminTaskManagementTeams = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/Teams'));
-const AdminTaskManagementUserRoles = lazyPage(() => import('~/pagesTaskManagementAdmin/Manage/UserRoles'));
+// Module 3 — Quản lý dự án (làm lại 2026-11-01; trang "Quản lý công việc" cũ ở pagesTaskManagement* không còn gắn route)
+const ProjectList = lazyPage(() => import('~/pagesProject/ProjectList'));
+const ProjectDetail = lazyPage(() => import('~/pagesProject/ProjectDetail'));
+const ProjectMemberTasks = lazyPage(() => import('~/pagesProject/MemberTasks'));
+const ProjectTaskDetail = lazyPage(() => import('~/pagesProject/TaskDetail'));
+const ProjectTaskInbox = lazyPage(() => import('~/pagesProject/TaskInbox'));
+const ProjectForm = lazyPage(() => import('~/pagesProject/ProjectForm'));
+const ProjectDashboard = lazyPage(() => import('~/pagesProject/Dashboard'));
+const ProjectPeople = lazyPage(() => import('~/pagesProject/People'));
+const ProjectUserWork = lazyPage(() => import('~/pagesProject/UserWork'));
 
 const BMI = lazyPage(() => import('~/pagesBMI/BMI'));
 const BMICheck = lazyPage(() => import('~/pagesBMI/Check'));
@@ -344,112 +331,20 @@ const routesBMI = [
   },
 ]
 
-const routesTaskManagement = [
-  {
-    path: config.routes.taskManagementHome,
-    component: TaskManagementHome,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementDashboard,
-    component: TaskManagementDashboard,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementMyTasks,
-    component: TaskManagementMyTasks,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementTeamTasks,
-    component: TaskManagementTeamTasks,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementDepartmentTasks,
-    component: TaskManagementDepartmentTasks,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementCompanyTasks,
-    component: TaskManagementCompanyTasks,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementRequests,
-    component: TaskManagementRequests,
-    login: true,
-    module: 'quanlycongviec',
-  },
-
-  {
-    path: config.routes.taskManagementProjectList,
-    component: TaskManagementProjectList,
-    login: true,
-    module: 'quanlycongviec',
-  },
-  {
-    path: config.routes.taskManagementProjectOverview,
-    component: TaskManagementProjectOverview,
-    login: true,
-    module: 'quanlycongviec',
-    addId: true,
-  },
-]
-
-export const routesTaskManagementAdmin = [
-  {
-    path: config.routes.adminTaskManagementDashboard,
-    component: AdminTaskManagementDashboard,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementDepartments,
-    component: AdminTaskManagementDepartments,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementTeams,
-    component: AdminTaskManagementTeams,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementRoles,
-    component: AdminTaskManagementRoles,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementUserRoles,
-    component: AdminTaskManagementUserRoles,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementStatuses,
-    component: AdminTaskManagementStatuses,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementReportByEmployee,
-    component: AdminTaskManagementReportByEmployee,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementReportByProject,
-    component: AdminTaskManagementReportByProject,
-    login: true,
-  },
-  {
-    path: config.routes.adminTaskManagementReportByStatus,
-    component: AdminTaskManagementReportByStatus,
-    login: true,
-  },
-]
+// Module 3 — Quản lý dự án: gắn layout ở App.js (1 layout route chung cho nhân viên + quản trị, như module 18).
+// Đường dẫn cụ thể (có tham số) — không dùng addId.
+export const routesProject = [
+  { path: config.routes.project, component: ProjectList },
+  { path: config.routes.projectDashboard, component: ProjectDashboard },
+  { path: config.routes.projectPeople, component: ProjectPeople },
+  { path: `${config.routes.projectPeople}/:userId`, component: ProjectUserWork },
+  { path: config.routes.projectTasks, component: ProjectTaskInbox },
+  { path: config.routes.projectNew, component: ProjectForm },
+  { path: `${config.routes.projectEdit}/:id`, component: ProjectForm },
+  { path: `${config.routes.projectView}/:id`, component: ProjectDetail },
+  { path: `${config.routes.projectView}/:id/member/:userId`, component: ProjectMemberTasks },
+  { path: `${config.routes.projectTask}/:id`, component: ProjectTaskDetail },
+];
 
 export const routes = [
   {
@@ -607,7 +502,6 @@ export const routes = [
     isLogin: false,
   },
 
-  ...routesTaskManagement,
 
   ...routesBMI,
 

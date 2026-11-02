@@ -9,7 +9,7 @@ import {
   routesProductionAdmin, 
   routesCalculateSalaryAdmin,
   routesFormAdmin,
-  routesTaskManagementAdmin,
+  routesProject,
   routesMesAdmin,
   routesKCSAdmin,
   routesOQCAdmin,
@@ -59,9 +59,9 @@ const DefaultLayoutAdminCalculateSalary = lazyPage(() => import("./layoutCalcula
 
 const DefaultLayoutAdminForm = lazyPage(() => import("./layoutsFormAdmin/DefaultLayoutAdmin"));
 
-const DefaultLayoutTaskManagement = lazyPage(() => import("./layoutsTaskManagement/DefaultLayout"));
-
-const DefaultLayoutAdminTaskManagement = lazyPage(() => import("./layoutsTaskManagementAdmin/DefaultLayoutAdmin"));
+// Module 3 — Quản lý dự án (1 layout cho nhân viên + quản trị, như module 18). Hình ảnh drawer (module 7) có layout riêng.
+const DefaultLayoutProject = lazyPage(() => import("./layoutsProject/DefaultLayout"));
+const DefaultLayoutImageCaddi = lazyPage(() => import("./layoutsImageCaddi/DefaultLayout"));
 
 const DefaultLayoutBMI = lazyPage(() => import("./layoutsBMI/DefaultLayout"));
 
@@ -176,10 +176,10 @@ function AppRoutes({ user }) {
                       <DefaultLayoutLunchOrder>
                         <route.component />
                       </DefaultLayoutLunchOrder>
-                    ) : route.module === 'quanlycongviec' ? (
-                      <DefaultLayoutTaskManagement>
+                    ) : route.module === 'imageCaddi' ? (
+                      <DefaultLayoutImageCaddi>
                         <route.component />
-                      </DefaultLayoutTaskManagement>
+                      </DefaultLayoutImageCaddi>
                     ) : route.module === 'bmi' ? (
                       <DefaultLayoutBMI>
                         <route.component />
@@ -389,27 +389,21 @@ function AppRoutes({ user }) {
         </Route>
 
         
-        {/* ====== ADMIN QUAN LY CÔNG VIỆC (module congviec, chỉ admin) ====== */}
+        {/* ====== MODULE 3 — QUẢN LÝ DỰ ÁN (user + admin, 1 layout route chung; trang tự phân quyền theo vai trò trong dự án) ====== */}
         <Route
           element={
             <RequireModule
               moduleKey="qlcongviec"
-              fallbackName="Quản lý công việc"
-              needRoles={["admin"]}
+              fallbackName="Quản lý dự án"
+              needRoles={["user", "admin"]}
             />
           }
         >
-          {routesTaskManagementAdmin.map((route, index) => (
-            <Route
-              key={index}
-              path={route.addId ? `${route.path}/:id` : route.path}
-              element={
-                <DefaultLayoutAdminTaskManagement>
-                  <route.component />
-                </DefaultLayoutAdminTaskManagement>
-              }
-            />
-          ))}
+          <Route element={<DefaultLayoutProject><Outlet /></DefaultLayoutProject>}>
+            {routesProject.map((route) => (
+              <Route key={route.path} path={route.path} element={<route.component />} />
+            ))}
+          </Route>
         </Route>
         
         {/* ====== ADMIN OQC (module oqc, chỉ admin) ====== */}

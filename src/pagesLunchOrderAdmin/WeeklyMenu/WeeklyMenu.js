@@ -553,7 +553,7 @@ export default function WeeklyMenu() {
   <div className="space-y-6">
 
     {/* ================= MOBILE: CHỌN NGÀY ================= */}
-    <div className="lg:hidden sticky top-0 z-20 bg-white pb-3">
+    <div className="lg:hidden sticky top-14 z-20 bg-white pb-3">
   <div className="flex gap-2 overflow-x-auto px-1 pt-2">
     {days.map(({ d, name }) => {
       const date = addDays(monday, d - 1);

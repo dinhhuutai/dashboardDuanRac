@@ -136,33 +136,15 @@ const routes = {
   n20th11: '/luu-thi-thao-nguyen/20-10',
 
 
-  taskManagement: '/task-management',
-  taskManagementHome: '/task-management/home',
-
-  taskManagementDashboard: '/task-management/dashboard',
-  
-  taskManagementMyTasks: '/task-management/my-tasks',
-  taskManagementTeamTasks: '/task-management/team-tasks',
-  taskManagementDepartmentTasks: '/task-management/department-tasks',
-  taskManagementCompanyTasks: '/task-management/company-tasks',
-  taskManagementRequests: '/task-management/requests',
-
-  taskManagementProjectList: '/task-management/project-list',
-  taskManagementProjectOverview: '/task-management/project-overview',
-
-  adminTaskManagementDashboard: '/admin/task-management/dashboard',
-  
-  adminTaskManagementReportByEmployee: '/admin/task-management/report-by-employee',
-  adminTaskManagementReportByProject: '/admin/task-management/report-by-project',
-  adminTaskManagementReportByStatus: '/admin/task-management/report-by-status',
-  
-  adminTaskManagementDepartments: '/admin/task-management/departments',
-  adminTaskManagementTeams: '/admin/task-management/teams',
-
-  adminTaskManagementRoles: '/admin/task-management/roles',
-  adminTaskManagementUserRoles: '/admin/task-management/user-roles',
-
-  adminTaskManagementStatuses: '/admin/task-management/statuses',
+  // Module 3 — Quản lý dự án (làm lại 2026-11-01)
+  project: '/project',                       // danh sách dự án
+  projectDashboard: '/project/dashboard',    // dashboard công việc (admin: cả công ty · người giao: dự án mình giao · người nhận: việc của mình)
+  projectPeople: '/project/people',          // nhân sự: ai đang làm gì (admin / người giao việc); /project/people/:userId — công việc + sơ đồ của 1 người
+  projectTasks: '/project/tasks',            // ?scope=mine|waiting|assigned — việc của tôi / chờ tôi phản hồi / tôi đã giao
+  projectNew: '/project/new',                // admin tạo dự án
+  projectEdit: '/project/edit',              // /project/edit/:id
+  projectView: '/project/p',                 // /project/p/:id?tab=overview|tasks|timeline|chat|files — chi tiết dự án; /project/p/:id/member/:userId — việc của 1 thành viên
+  projectTask: '/project/task',              // /project/task/:taskId
 
 
   dryingCart: '/drying-cart',

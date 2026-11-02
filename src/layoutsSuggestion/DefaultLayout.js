@@ -1,31 +1,18 @@
-import { useSelector } from "react-redux";
-import Footer from "./components/Footer";
-import Header from "./components/Header";
-import { userSelector } from "~/redux/selectors";
+// Layout nhân viên — module 4 "Hòm thư góp ý" (khung chung ModuleShell, giống module 18).
+// Trang góp ý là CÔNG KHAI (quét QR, không cần đăng nhập) → khách chưa đăng nhập chỉ thấy nội dung, như trước.
+import { MessageSquareHeart, Send } from "lucide-react";
+import config from "~/config";
+import ModuleShell from "~/components/ModuleShell";
 
-function DefaultLayout({children}) {
+const R = config.routes;
 
-    const tmp = useSelector(userSelector);
-
-    return (
-        <div>
-            {
-                tmp?.login?.currentUser?.fullName &&
-                <div className='hidden md:block h-[70px] fixed z-[999] top-[0px] left-[0px] right-[0px]'>
-                    <Header />
-                </div>
-            }
-            <div className={`${tmp?.login?.currentUser?.fullName && 'md:mt-[70px]'}`}>
-                {children}
-            </div>
-            {
-                tmp?.login?.currentUser?.fullName &&
-                <div className='hidden md:block'>
-                    <Footer />
-                </div>
-            }
-        </div>
-    );
+function DefaultLayout({ children }) {
+  return (
+    <ModuleShell title="Hòm thư góp ý" icon={MessageSquareHeart} home={R.feedback1} moduleId={4} adminTo={R.adminSuggestionList} guestBare
+      sections={[{ items: [{ to: R.feedback1, label: "Gửi góp ý", icon: Send, end: true }] }]}>
+      {children}
+    </ModuleShell>
+  );
 }
 
 export default DefaultLayout;

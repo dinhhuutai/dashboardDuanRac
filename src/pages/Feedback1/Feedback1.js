@@ -680,9 +680,10 @@ function FeedbackFlow() {
       }
 
       {/* ===================== DESKTOP (GIỮ LAYOUT CŨ) ===================== */}
-      <div className={`${tmp?.login?.currentUser?.fullName ? 'md:flex hidden' : 'flex'} min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-pink-50`}>
+      {/* Đã đăng nhập → trang nằm trong ModuleShell (thanh trên h-14) → trừ 3.5rem để khung không tràn xuống dưới màn hình */}
+      <div className={`${tmp?.login?.currentUser?.fullName ? 'md:flex hidden min-h-[calc(100dvh-3.5rem)]' : 'flex min-h-screen'} items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-pink-50`}>
         <div
-          className="relative w-full max-w-3xl h-[calc(100vh-4rem)] mx-4 rounded-3xl shadow-xl ring-1 ring-slate-200/70 overflow-hidden backdrop-blur-xl bg-white/80"
+          className={`relative w-full max-w-3xl ${tmp?.login?.currentUser?.fullName ? 'h-[calc(100dvh-7.5rem)]' : 'h-[calc(100vh-4rem)]'} mx-4 rounded-3xl shadow-xl ring-1 ring-slate-200/70 overflow-hidden backdrop-blur-xl bg-white/80`}
           style={{
             backgroundImage: `url('${bg_page}')`,
             backgroundSize: "cover",

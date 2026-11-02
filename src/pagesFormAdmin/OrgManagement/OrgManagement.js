@@ -278,7 +278,7 @@ function UsersTab({ departments, teams, jobTitles }) {
       </div>
 
       {/* Thanh gán hàng loạt */}
-      <div className={cn("sticky top-14 z-10 rounded-xl border p-3 transition-colors lg:top-2", selected.size ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white")}>
+      <div className={cn("sticky top-16 z-10 rounded-xl border p-3 transition-colors", selected.size ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white")}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-1 text-sm font-medium text-slate-700">{selected.size ? `Đã chọn ${selected.size} người` : "Chọn nhân viên để gán"}</span>
           <select className={cn(inputCls, "w-auto")} value={assign.departmentId} onChange={(e) => setAssign((a) => ({ ...a, departmentId: e.target.value, teamId: "" }))}>

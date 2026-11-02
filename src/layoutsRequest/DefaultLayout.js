@@ -1,15 +1,17 @@
 // Layout module 18 "Quản lý đề xuất" (giao diện kiểu request.base.vn) — dùng chung cho trang nhân viên + quản trị.
 // Thanh trên: tìm kiếm, Tạo đề xuất, Tin nhắn, Thông báo. Menu trái: hộp đề xuất, nhóm, chat, quản trị.
 // Điện thoại: menu trái thành ngăn kéo + thanh tab dưới.
+// Khung (thanh trên, menu trái, ngăn kéo, tab dưới) là ModuleShell dùng chung cho mọi module — giao diện module này là mẫu.
 // Khởi động 1 lần (bootstrap + danh bạ) cho mọi trang; huy hiệu cập nhật mỗi 30 giây khi tab đang mở.
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileStack, FileUp, Home, Inbox, Layers, ListChecks, Loader2,
-  Menu, MessagesSquare, PieChart, Plus, Search, Send, Star, UserCog, X,
+  MessagesSquare, PieChart, Plus, Search, Send, Star, UserCog, X,
 } from "lucide-react";
 import config from "~/config";
-import { ConfirmHost, Skeleton, Toaster, cn, toast } from "~/pagesForm/shared/ui";
+import ModuleShell from "~/components/ModuleShell";
+import { Skeleton, cn, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "~/pagesRequest/shared/api";
 import { ensureBoot, ensureDirectory, refreshCounts, rqEvents, useRq } from "~/pagesRequest/shared/store";
 import { Avatar, CountBadge } from "~/pagesRequest/shared/components";
@@ -228,7 +230,6 @@ export default function DefaultLayoutRequest({ children }) {
   const boot = useRq((s) => s.boot);
   const bootError = useRq((s) => s.bootError);
   const counts = useRq((s) => s.counts);
-  const [drawer, setDrawer] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [q, setQ] = useState(params.get("q") || "");
   const notifRef = useRef(null);
@@ -262,7 +263,7 @@ export default function DefaultLayoutRequest({ children }) {
     } catch { /* bỏ qua */ }
   }), []);
 
-  useEffect(() => { setDrawer(false); setNotifOpen(false); }, [pathname]);
+  useEffect(() => { setNotifOpen(false); }, [pathname]);
   useEffect(() => { setQ(params.get("q") || ""); }, [params]);
 
   useEffect(() => {
@@ -278,33 +279,25 @@ export default function DefaultLayoutRequest({ children }) {
     navigate(`${R.request}?box=all${v ? `&q=${encodeURIComponent(v)}` : ""}`);
   };
 
-  const me = boot?.me;
-  const tab = (to, active, Icon, label, badge) => (
-    <Link to={to} className={cn("relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[11px]", active ? "text-blue-700" : "text-slate-500")}>
-      <Icon className="h-5 w-5" />
-      {label}
-      {badge > 0 && <span className="absolute right-[22%] top-0.5"><CountBadge n={badge} /></span>}
-    </Link>
-  );
   const box = params.get("box");
+  const onHome = pathname === R.request;
 
+  // Khung chung (ModuleShell) — module này dùng chế độ fixedHeight: vùng nội dung tự cuộn (trang dùng h-full)
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-slate-100 text-slate-800">
-      {/* Thanh trên */}
-      <header className="z-30 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-2 sm:px-3" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        <button type="button" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setDrawer(true)} aria-label="Mở menu"><Menu className="h-5 w-5" /></button>
-        <Link to={R.request} className="flex min-w-0 items-center gap-2 lg:w-[220px]">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white"><ListChecks className="h-5 w-5" /></span>
-          <span className="truncate font-bold text-slate-800">Quản lý đề xuất</span>
-        </Link>
-        <form onSubmit={search} className="mx-2 hidden max-w-xl flex-1 md:block">
+    <ModuleShell
+      title="Quản lý đề xuất" icon={ListChecks} home={R.request} moduleId={18} fixedHeight
+      sidebar={(onNavigate) => <Sidebar onNavigate={onNavigate} />}
+      headerCenter={(
+        <form onSubmit={search}>
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm đề xuất theo tên, người gửi, mã số…"
               className="h-9 w-full rounded-lg border-0 bg-slate-100 pl-9 pr-3 text-sm outline-none ring-1 ring-transparent focus:bg-white focus:ring-blue-300" />
           </label>
         </form>
-        <div className="ml-auto flex items-center gap-1">
+      )}
+      headerActions={(
+        <>
           <Link to={R.requestNew} className="hidden h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white hover:bg-blue-700 sm:inline-flex lg:hidden">
             <Plus className="h-4 w-4" /> Tạo
           </Link>
@@ -324,57 +317,27 @@ export default function DefaultLayoutRequest({ children }) {
               </>
             )}
           </div>
-          {me && (
-            <span className="ml-1 hidden items-center gap-2 sm:flex" title={[me.fullName, me.departmentName, me.teamName].filter(Boolean).join(" · ")}>
-              <Avatar user={{ name: me.fullName, avatar: me.avatar }} size={32} />
-            </span>
-          )}
+        </>
+      )}
+      tabs={[
+        { to: `${R.request}?box=inbox`, label: "Cần duyệt", icon: Inbox, active: onHome && box === "inbox", badge: counts.inbox },
+        { to: `${R.request}?box=mine`, label: "Của tôi", icon: Send, active: onHome && box === "mine", badge: counts.returned },
+        { to: R.requestNew, label: "Tạo đề xuất", icon: Plus, center: true },
+        { to: R.requestChat, label: "Tin nhắn", icon: MessagesSquare, active: pathname.startsWith(R.requestChat), badge: counts.unreadChat },
+        { to: `${R.request}?box=all`, label: "Tất cả", icon: Layers, active: onHome && ["all", "following", "processed"].includes(box) },
+      ]}
+      toasterPosition="bottom-[7.5rem] lg:bottom-6"
+    >
+      {bootError && !boot ? (
+        <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="text-slate-600">{errorMessage(bootError, "Không tải được module Quản lý đề xuất")}</p>
+          <button type="button" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => ensureBoot(true).catch(() => {})}>Thử lại</button>
         </div>
-      </header>
-
-      <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:block"><Sidebar /></aside>
-
-        {drawer && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-slate-900/40" onClick={() => setDrawer(false)} />
-            <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl">
-              <div className="flex h-14 items-center justify-between border-b border-slate-100 px-4">
-                <span className="font-bold">Quản lý đề xuất</span>
-                <button type="button" onClick={() => setDrawer(false)} className="rounded p-1 text-slate-500 hover:bg-slate-100" aria-label="Đóng"><X className="h-5 w-5" /></button>
-              </div>
-              <div className="h-[calc(100%-56px)]"><Sidebar onNavigate={() => setDrawer(false)} /></div>
-            </aside>
-          </div>
-        )}
-
-        <main className="min-h-0 min-w-0 flex-1 pb-14 lg:pb-0">
-          {bootError && !boot ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="text-slate-600">{errorMessage(bootError, "Không tải được module Quản lý đề xuất")}</p>
-              <button type="button" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => ensureBoot(true).catch(() => {})}>Thử lại</button>
-            </div>
-          ) : !boot ? (
-            <BootSkeleton />
-          ) : (
-            <Suspense fallback={<BootSkeleton />}>{children}</Suspense>
-          )}
-        </main>
-      </div>
-
-      {/* Thanh tab dưới (điện thoại) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-200 bg-white lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        {tab(`${R.request}?box=inbox`, pathname === R.request && box === "inbox", Inbox, "Cần duyệt", counts.inbox)}
-        {tab(`${R.request}?box=mine`, pathname === R.request && box === "mine", Send, "Của tôi", counts.returned)}
-        <Link to={R.requestNew} className="flex flex-1 items-center justify-center">
-          <span className="flex h-11 w-11 -translate-y-2 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30"><Plus className="h-6 w-6" /></span>
-        </Link>
-        {tab(R.requestChat, pathname.startsWith(R.requestChat), MessagesSquare, "Tin nhắn", counts.unreadChat)}
-        {tab(`${R.request}?box=all`, pathname === R.request && (box === "all" || box === "following" || box === "processed"), Layers, "Tất cả", 0)}
-      </nav>
-
-      <Toaster position="bottom-[7.5rem] lg:bottom-6" />
-      <ConfirmHost />
-    </div>
+      ) : !boot ? (
+        <BootSkeleton />
+      ) : (
+        <Suspense fallback={<BootSkeleton />}>{children}</Suspense>
+      )}
+    </ModuleShell>
   );
 }

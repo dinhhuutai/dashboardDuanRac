@@ -296,10 +296,8 @@ function HomeMain() {
       rou = config.routes.adminFormList;
     } else if (m.moduleId === MODULEID.BIEUMAUNOIBO && role === "user") {
       rou = config.routes.form;
-    } else if (m.moduleId === MODULEID.CONGVIEC && role === "user") {
-      rou = config.routes.taskManagementMyTasks;
-    } else if (m.moduleId === MODULEID.CONGVIEC && role === "admin") {
-      rou = config.routes.adminTaskManagementDashboard;
+    } else if (m.moduleId === MODULEID.CONGVIEC) {
+      rou = config.routes.project; // Quản lý dự án — 1 trang cho mọi vai trò
     } else if (m.moduleId === MODULEID.XEPHOIVAI && role === "user") {
       rou = config.routes.dryingCart;
     } else if (m.moduleId === MODULEID.BMI && role === "user") {

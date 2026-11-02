@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useMemo } from "react";
 
 import config from "~/config";
-import { isModuleEnabled } from "~/contants/modules";
+import { isModuleEnabled, MODULE_ID_BY_KEY } from "~/contants/modules";
 import { userSelector } from "~/redux/selectors";
 import { fetchUserModules } from "~/redux/slices/userModulesSlice";
 
@@ -74,12 +74,12 @@ function coerceRoles(mod) {
 function hasPermission(modules, key, fallbackName, needs) {
   if (!Array.isArray(modules)) return false;
 
-  const found = modules.find((m) => {
-    const keyMatch = m.key === key || m.moduleKey === key;
-    if (keyMatch) return true;
-    const nameMatch = fallbackName ? norm(m.name || "") === norm(fallbackName) : false;
-    return nameMatch;
-  });
+  // Thứ tự: moduleKey (nếu API trả) → moduleId suy từ moduleKey → tên (dễ vỡ khi đổi tên module)
+  const idOfKey = MODULE_ID_BY_KEY[key];
+  const found =
+    modules.find((m) => m.key === key || m.moduleKey === key) ||
+    (idOfKey !== undefined ? modules.find((m) => Number(m.moduleId) === idOfKey) : undefined) ||
+    (fallbackName ? modules.find((m) => norm(m.name || "") === norm(fallbackName)) : undefined);
 
   if (!found) return false;
   // Module đã tắt: chặn cả khi danh sách quyền cũ còn lưu trong trình duyệt

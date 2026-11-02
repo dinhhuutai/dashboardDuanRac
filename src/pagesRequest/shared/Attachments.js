@@ -22,9 +22,15 @@ const ExcelView = lazy(() => import("./ExcelView"));
 /* ================================ TẢI LÊN ================================ */
 let seq = 0;
 
-export function useAttachments(initial = []) {
+/**
+ * @param initial  danh sách ban đầu
+ * @param opts     { endpoint, config } — module khác module 18 dùng chung nơi lưu tệp (vd module 3:
+ *                 { endpoint: "/api/pj/files/upload", config: boot.files }); bỏ trống = module 18
+ */
+export function useAttachments(initial = [], opts = {}) {
   const [items, setItems] = useState(initial);
   const jobs = useRef(new Map());
+  const { endpoint, config } = opts;
 
   useEffect(() => () => {
     // rời trang → huỷ tệp đang tải dở + giải phóng ảnh xem trước
@@ -34,20 +40,20 @@ export function useAttachments(initial = []) {
   const patch = (id, p) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...p } : x)));
 
   const start = useCallback((id, file) => {
-    const job = uploadFile(file, { onProgress: (p) => patch(id, { progress: p }) });
+    const job = uploadFile(file, { onProgress: (p) => patch(id, { progress: p }), endpoint, config });
     jobs.current.set(id, job);
     job.promise
       .then((result) => patch(id, { status: "done", progress: 1, result }))
       .catch((e) => { if (!e.aborted) patch(id, { status: "error", error: e.message }); })
       .finally(() => jobs.current.delete(id));
-  }, []);
+  }, [endpoint, config]);
 
   const addFiles = useCallback((fileList, extra = {}) => {
     const files = Array.from(fileList || []).filter(Boolean);
     if (!files.length) return;
     const add = files.map((file) => {
       const id = `a${++seq}`;
-      const err = validateFile(file);
+      const err = validateFile(file, config);
       const isImg = /^image\//.test(file.type || "");
       return {
         id, file, name: file.name || "anh-dan.png", size: file.size, mime: file.type, ...extra,
@@ -57,7 +63,7 @@ export function useAttachments(initial = []) {
     });
     setItems((xs) => [...xs, ...add]);
     add.filter((a) => a.status === "uploading").forEach((a) => start(a.id, a.file));
-  }, [start]);
+  }, [start, config]);
 
   const remove = useCallback((id) => {
     jobs.current.get(id)?.cancel();
@@ -81,6 +87,7 @@ export function useAttachments(initial = []) {
 
   return useMemo(() => ({
     items,
+    config, // AttachmentPicker: khoá khi máy chủ tệp chưa cấu hình (module khác module 18)
     addFiles,
     remove,
     retry,
@@ -89,7 +96,7 @@ export function useAttachments(initial = []) {
     failed: items.filter((x) => x.status === "error").length,
     // gửi lên API: { key, name, size, mime, sig, hasThumb, width, height, fieldKey }
     done: items.filter((x) => x.status === "done").map((x) => ({ ...x.result, name: x.name, fieldKey: x.fieldKey || null })),
-  }), [items, addFiles, remove, retry, clear]);
+  }), [items, config, addFiles, remove, retry, clear]);
 }
 
 /** Lấy tệp từ sự kiện dán (Ctrl+V ảnh chụp màn hình) */
@@ -120,7 +127,8 @@ export function FileTypeIcon({ name, mime, className = "h-5 w-5" }) {
 
 /** Nút chọn tệp + vùng kéo thả + danh sách tệp đang/đã tải */
 export function AttachmentPicker({ att, fieldKey, label = "Đính kèm tệp / ảnh", hint, max = 20, compact, accept }) {
-  const blocked = useRq((s) => s.fileState) === "disabled";
+  const rqBlocked = useRq((s) => s.fileState) === "disabled";
+  const blocked = att.config ? !att.config.enabled : rqBlocked;
   const inputRef = useRef(null);
   const [drag, setDrag] = useState(false);
   const mine = att.items.filter((x) => (x.fieldKey || null) === (fieldKey || null));

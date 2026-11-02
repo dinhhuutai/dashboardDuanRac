@@ -240,7 +240,7 @@ export default function FormBuilder() {
   return (
     <div className="space-y-4">
       {/* Thanh trên */}
-      <div className="sticky top-14 z-20 -mx-4 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur lg:top-0 lg:-mx-8 lg:px-8">
+      <div className="sticky top-14 z-20 -mx-4 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center gap-3">
           <Link to={config.routes.adminFormList} className="rounded-md p-1.5 text-slate-500 hover:bg-slate-200" title="Danh sách biểu mẫu">
             <ArrowLeft className="h-5 w-5" />

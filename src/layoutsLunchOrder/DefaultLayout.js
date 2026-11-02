@@ -1,24 +1,22 @@
-import Footer from "./components/Footer";
-import Header from "./components/Header";
-import TabBar from "./components/TabBar";
+// Layout nhân viên — module 6 "Đặt cơm" (khung chung ModuleShell, giống module 18)
+import { History, UsersRound, UtensilsCrossed } from "lucide-react";
+import config from "~/config";
+import ModuleShell from "~/components/ModuleShell";
 
-function DefaultLayout({children}) {
-    return (
-        <div>
-            <div className="hidden md:block h-14 fixed z-[999] top-0 left-0 right-0">
-                <Header />
-            </div>
-            <div className="md:mt-14">
-                {children}
-            </div>
-            <div className='hidden md:block'>
-                <Footer />
-            </div>
+const R = config.routes;
+const ITEMS = [
+  { to: R.lunchOrder, label: "Đặt cơm", icon: UtensilsCrossed, end: true },
+  { to: R.lunchOrderHistory, label: "Lịch sử", icon: History, end: true },
+  { to: R.lunchOrderProxy, label: "Đặt giùm", icon: UsersRound },
+];
 
-            {/* TabBar mobile */}
-            <TabBar />
-        </div>
-    );
+function DefaultLayout({ children }) {
+  return (
+    <ModuleShell title="Đặt cơm" icon={UtensilsCrossed} home={R.lunchOrder} moduleId={6} adminTo={R.adminLunchOrderDashboard}
+      sections={[{ items: ITEMS }]} tabs={ITEMS}>
+      {children}
+    </ModuleShell>
+  );
 }
 
 export default DefaultLayout;

@@ -22,8 +22,11 @@ function fileCfg() {
 export const fileHref = (u) => (u && u.startsWith("/") ? `${BASE_URL}${u}` : u || null);
 
 /* ------------------------------ Tải lên ------------------------------ */
-function put(body, headers, { onProgress, signal } = {}) {
-  return http.put("/api/rq/files/upload", body, {
+// endpoint: mặc định của module 18; module khác dùng chung nơi lưu tệp truyền đường dẫn của mình (vd module 3: /api/pj/files/upload)
+const DEFAULT_ENDPOINT = "/api/rq/files/upload";
+
+function put(body, headers, { onProgress, signal, endpoint = DEFAULT_ENDPOINT } = {}) {
+  return http.put(endpoint, body, {
     // Content-Type luôn octet-stream: loại thật gửi ở X-File-Type (tệp .json không bị API đọc nhầm)
     headers: { "Content-Type": "application/octet-stream", ...headers },
     onUploadProgress: onProgress ? (e) => e.total && onProgress(Math.min(1, e.loaded / e.total)) : undefined,
@@ -69,9 +72,9 @@ async function makeThumb(file) {
   return { blob, width: w, height: h };
 }
 
-/** Kiểm tra trước khi tải. Trả về thông báo lỗi hoặc null */
-export function validateFile(file) {
-  const cfg = fileCfg();
+/** Kiểm tra trước khi tải. Trả về thông báo lỗi hoặc null. config: { enabled, maxMb } — mặc định lấy từ bootstrap module 18 */
+export function validateFile(file, config) {
+  const cfg = config || fileCfg();
   if (!cfg.enabled) return "Chưa cấu hình máy chủ tệp nội bộ — liên hệ IT";
   const ext = extOf(file.name);
   if (BLOCKED_EXT.has(ext)) return `Không nhận tệp .${ext} (tệp chạy chương trình)`;
@@ -82,17 +85,18 @@ export function validateFile(file) {
 
 /**
  * Tải 1 tệp lên (qua API → máy chủ tệp nội bộ).
+ * @param opts { onProgress, endpoint, config } — endpoint/config: module khác module 18 (xem DEFAULT_ENDPOINT)
  * @returns { promise: Promise<{key,name,size,mime,sig,hasThumb,width,height}>, cancel() }
  */
-export function uploadFile(file, { onProgress } = {}) {
+export function uploadFile(file, { onProgress, endpoint, config } = {}) {
   const ctrl = new AbortController();
   const promise = (async () => {
-    const err = validateFile(file);
+    const err = validateFile(file, config);
     if (err) throw new Error(err);
     const res = await put(file, {
       "X-File-Name": encodeURIComponent(file.name || "tep"),
       "X-File-Type": file.type || "",
-    }, { onProgress, signal: ctrl.signal });
+    }, { onProgress, signal: ctrl.signal, endpoint });
     const meta = { ...res, hasThumb: false, width: null, height: null };
     if (THUMB_TYPES.test(file.type || "") && !ctrl.signal.aborted) {
       try {
@@ -100,7 +104,7 @@ export function uploadFile(file, { onProgress } = {}) {
         meta.width = t.width;
         meta.height = t.height;
         // mã tệp có tên tiếng Việt (HinhAnh/2026-10-08/Ảnh.jpg) — header HTTP chỉ nhận Latin-1 → mã hoá
-        await put(t.blob, { "X-Thumb-For": encodeURIComponent(res.key) }, { signal: ctrl.signal });
+        await put(t.blob, { "X-Thumb-For": encodeURIComponent(res.key) }, { signal: ctrl.signal, endpoint });
         meta.hasThumb = true;
       } catch (e) {
         if (e.aborted) throw e; // không có ảnh thu nhỏ thì hiện ảnh gốc

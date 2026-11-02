@@ -1,24 +1,21 @@
-import Footer from "./components/Footer";
-import Header from "./components/Header";
-import TabBar from "./components/TabBar";
+// Layout module 12 "Tính % tỷ lệ hình in với kích phim" (khung chung ModuleShell, giống module 18)
+import { FileUp, Percent } from "lucide-react";
+import config from "~/config";
+import ModuleShell from "~/components/ModuleShell";
 
-function DefaultLayout({children}) {
-    return (
-        <div>
-            <div className='hidden md:block h-[70px] fixed z-[999] top-[0px] left-[0px] right-[0px]'>
-                <Header />
-            </div>
-            <div className="md:mt-[70px]">
-                {children}
-            </div>
-            <div className='hidden md:block'>
-                <Footer />
-            </div>
+const R = config.routes;
+const ITEMS = [
+  { to: R.inkCovPerOnFilm, label: "Tính độ phủ", icon: Percent, end: true },
+  { to: R.uploadFileFilm, label: "Tải file lên", icon: FileUp },
+];
 
-            {/* TabBar mobile */}
-            <TabBar />
-        </div>
-    );
+function DefaultLayout({ children }) {
+  return (
+    <ModuleShell title="Tính % mực" icon={Percent} home={R.inkCovPerOnFilm} moduleId={12}
+      sections={[{ items: ITEMS }]} tabs={ITEMS}>
+      {children}
+    </ModuleShell>
+  );
 }
 
 export default DefaultLayout;

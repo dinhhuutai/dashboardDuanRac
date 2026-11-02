@@ -124,24 +124,13 @@ export const ROUTE_KEY_TO_NAME = {
   adminFormResponseDetail: "Admin - Biểu mẫu - Chi tiết phản hồi",
   adminFormAnalytics: "Admin - Biểu mẫu - Analytics",
 
-  // ===== QUẢN LÝ CÔNG VIỆC (User) =====
-  taskManagement: "Trang quản lý công việc",
-  taskManagementDashboard: "Trang quản lý công việc - Dashboard",
-  taskManagementMyTasks: "Trang quản lý công việc - Việc của tôi",
-  taskManagementTeamTasks: "Trang quản lý công việc - Việc theo tổ",
-  taskManagementDepartmentTasks: "Trang quản lý công việc - Việc theo phòng",
-  taskManagementCompanyTasks: "Trang quản lý công việc - Việc toàn công ty",
-  taskManagementProjectList: "Trang quản lý công việc - Danh sách dự án",
-  taskManagementProjectOverview: "Trang quản lý công việc - Tổng quan dự án",
-
-  // ===== QUẢN LÝ CÔNG VIỆC (Admin) =====
-  adminTaskManagementDashboard: "Trang Admin quản lý công việc - Dashboard",
-  adminTaskManagementReportByEmployee: "Trang Admin quản lý công việc - Báo cáo theo nhân viên",
-  adminTaskManagementReportByProject: "Trang Admin quản lý công việc - Báo cáo theo dự án",
-  adminTaskManagementReportByStatus: "Trang Admin quản lý công việc - Báo cáo theo trạng thái",
-  adminTaskManagementDepartments: "Trang Admin quản lý công việc - Phòng ban",
-  adminTaskManagementTeams: "Trang Admin quản lý công việc - Tổ/Team",
-  adminTaskManagementRoles: "Trang Admin quản lý công việc - Roles",
-  adminTaskManagementUserRoles: "Trang Admin quản lý công việc - Gán role user",
-  adminTaskManagementStatuses: "Trang Admin quản lý công việc - Statuses",
+  // ===== QUẢN LÝ DỰ ÁN (module 3) =====
+  project: "Quản lý dự án - Danh sách dự án",
+  projectDashboard: "Quản lý dự án - Dashboard",
+  projectPeople: "Quản lý dự án - Nhân sự",
+  projectTasks: "Quản lý dự án - Việc của tôi",
+  projectNew: "Quản lý dự án - Tạo dự án",
+  projectEdit: "Quản lý dự án - Sửa dự án",
+  projectView: "Quản lý dự án - Chi tiết dự án",
+  projectTask: "Quản lý dự án - Chi tiết công việc",
 };

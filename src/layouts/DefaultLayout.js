@@ -1,24 +1,21 @@
-import Footer from "./components/Footer";
-import Header from "./components/Header";
-import TabBar from "./components/TabBar";
+// Layout nhân viên — module 1 "Quản lý cân rác" (khung chung ModuleShell, giống module 18)
+import { House, Recycle, UserRound } from "lucide-react";
+import config from "~/config";
+import ModuleShell from "~/components/ModuleShell";
 
-function DefaultLayout({children}) {
-    return (
-        <div>
-            <div className='hidden md:block h-[70px] fixed z-[999] top-[0px] left-[0px] right-[0px]'>
-                <Header />
-            </div>
-            <div className="md:mt-[70px]">
-                {children}
-            </div>
-            <div className='hidden md:block'>
-                <Footer />
-            </div>
+const R = config.routes;
+const ITEMS = [
+  { to: R.home, label: "Trang chủ", icon: House, end: true },
+  { to: R.user, label: "Hồ sơ", icon: UserRound },
+];
 
-            {/* TabBar mobile */}
-            <TabBar />
-        </div>
-    );
+function DefaultLayout({ children }) {
+  return (
+    <ModuleShell title="Quản lý cân rác" icon={Recycle} home={R.home} moduleId={1} adminTo={R.adminAnalytics}
+      sections={[{ items: ITEMS }]} tabs={ITEMS}>
+      {children}
+    </ModuleShell>
+  );
 }
 
 export default DefaultLayout;

@@ -1,7 +1,5 @@
 export const userSelector = (state) => state.auth;
 
-export const userRoleTaskManager = (state) => state.auth.login.roleTaskManager;
-
 export const weightSelector = (state) => state.weight;
 
 export const noticeAdminSelector = (state) => state.noticeAdmin;

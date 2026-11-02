@@ -21,6 +21,10 @@ const ENTRY = {
   [MODULEID.TINHLUONG]: {
     user: [() => import("~/layoutCalculateSalary/DefaultLayout"), () => import("~/pagesCalculateSalary/ViewPayslip")],
   },
+  [MODULEID.CONGVIEC]: {
+    user: [() => import("~/layoutsProject/DefaultLayout"), () => import("~/pagesProject/ProjectList")],
+    admin: [() => import("~/layoutsProject/DefaultLayout"), () => import("~/pagesProject/ProjectList")],
+  },
 };
 
 let started = false;

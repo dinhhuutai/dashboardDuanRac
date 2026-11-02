@@ -1,20 +1,17 @@
-import Footer from "./components/Footer";
-import Header from "./components/Header";
+// Layout nhân viên — module 5 "Xem bảng lương" (khung chung ModuleShell, giống module 18)
+import { ReceiptText, Wallet } from "lucide-react";
+import config from "~/config";
+import ModuleShell from "~/components/ModuleShell";
 
-function DefaultLayout({children}) {
-    return (
-        <div>
-            <div className='hidden md:block h-[70px] fixed z-[999] top-[0px] left-[0px] right-[0px]'>
-                <Header />
-            </div>
-            <div className="md:mt-[70px]">
-                {children}
-            </div>
-            <div className='hidden md:block'>
-                <Footer />
-            </div>
-        </div>
-    );
+const R = config.routes;
+
+function DefaultLayout({ children }) {
+  return (
+    <ModuleShell title="Xem bảng lương" icon={Wallet} home={R.calculateSalaryViewPayslip} moduleId={5} adminTo={R.adminCalculateSalaryUploadPayrollReport}
+      sections={[{ items: [{ to: R.calculateSalaryViewPayslip, label: "Phiếu lương của tôi", icon: ReceiptText }] }]}>
+      {children}
+    </ModuleShell>
+  );
 }
 
 export default DefaultLayout;
