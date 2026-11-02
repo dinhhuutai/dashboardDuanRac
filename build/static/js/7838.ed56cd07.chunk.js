@@ -1,0 +1,2 @@
+/*! For license information please see 7838.ed56cd07.chunk.js.LICENSE.txt */
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[7838],{7838:(c,e,a)=>{a.d(e,{A:()=>k});const k=(0,a(36230).A)("eye",[["path",{d:"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",key:"1nclc0"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}]])}}]);

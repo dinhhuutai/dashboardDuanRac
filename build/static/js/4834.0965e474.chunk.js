@@ -1,0 +1,2 @@
+/*! For license information please see 4834.0965e474.chunk.js.LICENSE.txt */
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[4834,7838],{7838:(c,e,s)=>{s.d(e,{A:()=>t});const t=(0,s(36230).A)("eye",[["path",{d:"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",key:"1nclc0"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}]])},27453:(c,e,s)=>{s.d(e,{A:()=>t});const t=(0,s(36230).A)("chevron-down",[["path",{d:"m6 9 6 6 6-6",key:"qrunsl"}]])}}]);

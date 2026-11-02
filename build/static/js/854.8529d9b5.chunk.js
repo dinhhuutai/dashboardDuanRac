@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[854],{10854:(e,r,t)=>{t.r(r),t.d(r,{default:()=>s});var a=t(44414);function s(){return(0,a.jsx)("div",{children:"Profile"})}}}]);

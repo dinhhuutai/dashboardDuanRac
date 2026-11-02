@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[841],{50841:(e,t,a)=>{a.r(t),a.d(t,{default:()=>r});var c=a(44414);const r=function(){return(0,c.jsx)("div",{children:"QrcodeUpdate"})}}}]);

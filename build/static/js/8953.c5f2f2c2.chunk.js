@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[8953],{28953:(e,t,a)=>{a.r(t),a.d(t,{default:()=>s});var c=a(44414);const s=function(){return(0,c.jsx)("div",{children:"FeedbackAnalytics"})}}}]);

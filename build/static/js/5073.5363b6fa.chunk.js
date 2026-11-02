@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[5073],{95073:(t,c,e)=>{e.r(c),e.d(c,{default:()=>a});var s=e(44414);const a=function(){return(0,s.jsx)("div",{children:"Account"})}}}]);

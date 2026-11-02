@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[7990],{17990:(e,t,s)=>{s.r(t),s.d(t,{default:()=>c});var a=s(44414);const c=function(){return(0,a.jsx)("div",{children:"Budget"})}}}]);

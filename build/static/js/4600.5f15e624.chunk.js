@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwaste_track=self.webpackChunkwaste_track||[]).push([[4600],{54600:(e,t,a)=>{a.r(t),a.d(t,{default:()=>r});var s=a(44414);const r=function(){return(0,s.jsx)("div",{children:"TrashTypeUpdate"})}}}]);
