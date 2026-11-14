@@ -51,6 +51,35 @@ async function readBaseFile(file) {
   return sheets;
 }
 
+/** Gộp mọi trang tính thành 1, bỏ trùng theo "Mã đề xuất". Base không phải lúc nào cũng để đủ dòng ở trang "Tất cả"
+ *  (tệp "Báo cáo cá nhân" 2026-11-14: "Tất cả" 1 dòng, các trang trạng thái thêm 10 dòng nữa) → phải gộp mới đủ.
+ *  Cột ghép theo TÊN tiêu đề (trang nào thiếu cột thì để trống). Trùng mã → giữ bản ở trang gặp trước;
+ *  trang "Quá hạn" xét sau cùng (là bản sao của đề xuất đang chờ, chỉ khác chữ trạng thái). */
+function mergeSheets(sheets) {
+  const header = [];
+  const colOf = new Map();
+  for (const s of sheets) for (const h of s.header) {
+    const k = norm(h);
+    if (k && !colOf.has(k)) { colOf.set(k, header.length); header.push(h); }
+  }
+  const codeCol = header.findIndex(isCodeHeader);
+  const order = [...sheets].sort((a, b) => (norm(a.name) === "qua han") - (norm(b.name) === "qua han"));
+  const seen = new Set();
+  const rows = [];
+  for (const s of order) {
+    const map = s.header.map((h) => colOf.get(norm(h)));
+    for (const r of s.rows) {
+      const out = new Array(header.length).fill("");
+      r.forEach((c, i) => { if (map[i] !== undefined && out[map[i]] === "") out[map[i]] = c; });
+      const code = String(out[codeCol] ?? "").trim();
+      if (code && seen.has(code)) continue;
+      if (code) seen.add(code);
+      rows.push(out);
+    }
+  }
+  return { name: "Tất cả các trang (gộp, bỏ trùng)", header, rows, merged: true };
+}
+
 /* ------------------------------ Người: Base → tài khoản NOIBO ------------------------------ */
 function PersonCell({ p, info, chosenNone, onChange }) {
   const dir = useRq((s) => s.dir);
@@ -357,12 +386,11 @@ export default function BaseImport() {
     setError(null);
     setRun(null);
     try {
-      const sheets = await readBaseFile(f);
-      if (!sheets.length) { setFile(null); toast.error('Không thấy dòng tiêu đề có cột "Mã đề xuất" — đây có phải tệp xuất từ Base Request?'); return; }
-      // Base xuất thêm các trang lọc theo trạng thái (tập con của "Tất cả") → mặc định trang "Tất cả" / nhiều dòng nhất
-      let best = sheets.findIndex((s) => norm(s.name) === "tat ca");
-      if (best < 0) best = sheets.reduce((bi, s, i) => (s.rows.length > sheets[bi].rows.length ? i : bi), 0);
-      setFile({ name: f.name, sheets, sheet: best });
+      const found = await readBaseFile(f);
+      if (!found.length) { setFile(null); toast.error('Không thấy dòng tiêu đề có cột "Mã đề xuất" — đây có phải tệp xuất từ Base Request?'); return; }
+      // Base xuất "Tất cả" + các trang lọc theo trạng thái, nhưng "Tất cả" có thể THIẾU dòng → mặc định bản gộp mọi trang
+      const sheets = found.length > 1 ? [mergeSheets(found), ...found] : found;
+      setFile({ name: f.name, sheets, sheet: 0 });
       setSettings({ people: {}, groups: {}, pendingMode: "continue" });
     } catch (e) {
       console.error(e);
@@ -480,7 +508,9 @@ export default function BaseImport() {
               <FileSpreadsheet className="h-9 w-9 text-emerald-600" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-slate-800">{file.name}</p>
-                <p className="text-xs text-slate-500">{sheet.rows.length} dòng đề xuất · trang tính “{sheet.name}”</p>
+                <p className="text-xs text-slate-500">
+                  {sheet.rows.length} đề xuất · {sheet.merged ? `gộp ${file.sheets.length - 1} trang tính, bỏ trùng theo mã đề xuất` : `trang tính “${sheet.name}”`}
+                </p>
               </div>
               {file.sheets.length > 1 && (
                 // inputCls có sẵn w-full và cn() không gộp lớp trùng → thu hẹp bằng khung bọc
