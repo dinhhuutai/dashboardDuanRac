@@ -7,7 +7,7 @@ let snap = {
   boot: null,          // { me, myHeads, groups, types, counts, files, pushPublicKey }
   bootError: null,
   dir: null,           // { users, departments, teams, userById, deptById, teamById }
-  counts: { inbox: 0, returned: 0, minePending: 0, unreadNotifications: 0, lastNotificationId: 0, unreadChat: 0 },
+  counts: { inbox: 0, returned: 0, minePending: 0, unreadNotifications: 0, lastNotificationId: 0, unreadChat: 0, drafts: 0, draftsDue: 0 },
   fileState: "unknown", // đính kèm tệp: unknown (chưa bootstrap) | ready | disabled (API chưa cấu hình máy chủ tệp)
 };
 const listeners = new Set();

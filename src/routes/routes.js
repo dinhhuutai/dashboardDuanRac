@@ -122,6 +122,7 @@ const AdminFormOrg = lazyPage(() => import('~/pagesFormAdmin/OrgManagement'));
 const RequestHome = lazyPage(() => import('~/pagesRequest/RequestHome'));
 const RequestCreate = lazyPage(() => import('~/pagesRequest/RequestCreate'));
 const RequestChat = lazyPage(() => import('~/pagesRequest/Chat'));
+const RequestDrafts = lazyPage(() => import('~/pagesRequest/Drafts'));
 const AdminRequestTypes = lazyPage(() => import('~/pagesRequestAdmin/TypeList'));
 const AdminRequestTypeBuilder = lazyPage(() => import('~/pagesRequestAdmin/TypeBuilder'));
 const AdminRequestHeads = lazyPage(() => import('~/pagesRequestAdmin/Heads'));
@@ -913,6 +914,7 @@ export const routesRequest = [
   { path: config.routes.request, component: RequestHome },
   { path: config.routes.requestNew, component: RequestCreate },
   { path: config.routes.requestEdit, component: RequestCreate, addId: true },
+  { path: config.routes.requestDrafts, component: RequestDrafts },
   { path: config.routes.requestChat, component: RequestChat },
   { path: config.routes.requestReports, component: RequestReports },
   { path: config.routes.requestReports, component: RequestReportView, addId: true },

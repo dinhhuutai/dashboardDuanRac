@@ -49,6 +49,13 @@ export const rqApi = {
   comment: (id, body) => unwrap(http.post(`/api/rq/requests/${id}/comments`, body)),
   deleteComment: (commentId) => unwrap(http.delete(`/api/rq/comments/${commentId}`)),
 
+  // Lưu tạm (sql/18) — gửi từ bản lưu tạm: create({ ..., draftId }) → máy chủ xoá bản lưu tạm cùng lúc
+  drafts: (opts) => unwrap(http.get("/api/rq/drafts", opts)),
+  draft: (id) => unwrap(http.get(`/api/rq/drafts/${id}`)),
+  createDraft: (body) => unwrap(http.post("/api/rq/drafts", body)),
+  updateDraft: (id, body) => unwrap(http.put(`/api/rq/drafts/${id}`, body)),
+  deleteDraft: (id) => unwrap(http.delete(`/api/rq/drafts/${id}`)),
+
   // Thông báo
   notifications: (params) => unwrap(http.get("/api/rq/notifications", { params, ...silent })),
   readNotifications: (body) => unwrap(http.post("/api/rq/notifications/read", body, silent)),

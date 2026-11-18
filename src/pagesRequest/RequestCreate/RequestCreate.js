@@ -1,11 +1,13 @@
-// Tạo đề xuất mới (/request/new?type=ID), nhân bản (/request/new?copy=ID) và sửa & gửi lại (/request/edit/:id).
-// Bước 1: chọn mẫu (nhóm theo nhóm đề xuất, tìm kiếm). Bước 2: điền form + đính kèm + xem trước quy trình duyệt.
-// Tự lưu nháp trên máy theo từng mẫu (tải lại trang không mất).
+// Tạo đề xuất mới (/request/new?type=ID), nhân bản (/request/new?copy=ID), mở bản LƯU TẠM (/request/new?draft=ID)
+// và sửa & gửi lại (/request/edit/:id).
+// Bước 1: chọn mẫu (nhóm theo nhóm đề xuất, tìm kiếm; đầu trang là các bản lưu tạm). Bước 2: điền form + đính kèm
+// + xem trước quy trình duyệt → "Gửi đề xuất" hoặc "Lưu tạm" (lưu trên máy chủ, gửi vào ngày khác — sql/18).
+// Tự lưu nháp trên máy theo từng mẫu (tải lại trang không mất) — trừ khi đang mở bản lưu tạm.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, Info, Lock, Paperclip, Search, Send, Trash2, Users, Zap } from "lucide-react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, FileClock, Info, Lock, Paperclip, Save, Search, Send, Trash2, Users, Zap } from "lucide-react";
 import config from "~/config";
-import { Button, Field, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
+import { Button, Field, Modal, Skeleton, cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { errorMessage, rqApi } from "../shared/api";
 import { FileServerNotice, PageScroll, UserList, UserPicker, norm } from "../shared/components";
 import { AttachmentPicker, FileGallery, UploadWarning, useAttachments } from "../shared/Attachments";
@@ -13,6 +15,9 @@ import { FieldInput } from "../shared/FieldInput";
 import { APPROVER_META, FULL_WIDTH_TYPES, isComputed, validateValues, withComputed } from "../shared/fieldTypes";
 import { TypeIcon } from "../shared/typeIcons";
 import { refreshCounts, rqEvents, useRq } from "../shared/store";
+import { fileHref } from "../shared/files";
+import { fmtDateTime, fmtYmd } from "../shared/format";
+import { DraftCard, localYmd, useDrafts } from "../shared/drafts";
 
 const R = config.routes;
 
@@ -49,6 +54,58 @@ function pickedFromCopy(type, src, meId) {
   return out;
 }
 
+/* ------------------------------ Bản lưu tạm → form ------------------------------ */
+// Mẫu có thể đã được sửa sau khi lưu tạm → giữ giá trị như nhân bản (trường còn tồn tại + cùng loại).
+const valuesFromSaved = (type, saved) => valuesFromCopy(type, {
+  fields: Object.entries(saved.fieldTypes || {}).map(([key, t]) => ({ key, type: t })),
+  values: saved.values || {},
+});
+/** Người duyệt đã chọn: chỉ giữ bước "người gửi tự chọn" còn tồn tại, người còn được phép chọn */
+function pickedFromSaved(type, saved, meId) {
+  const out = {};
+  for (const s of type.flow) {
+    if (s.approverType !== "requester_pick") continue;
+    let ids = (saved.pickedApprovers?.[s.key] || []).filter((id) => id !== meId);
+    if (s.userIds?.length) ids = ids.filter((id) => s.userIds.includes(id));
+    if (s.maxPick) ids = ids.slice(0, s.maxPick);
+    if (ids.length) out[s.key] = ids;
+  }
+  return out;
+}
+/** Tệp đã tải lên lúc lưu tạm → mục "đã tải xong" của useAttachments (gửi lại kèm chữ ký cũ) */
+const attItemsFromSaved = (saved) => (saved?.attachments || []).map((f, i) => ({
+  id: `s${i + 1}`,
+  name: f.name, size: f.size, mime: f.mime, fieldKey: f.fieldKey || undefined,
+  preview: f.thumbUrl ? fileHref(f.thumbUrl) : null,
+  status: "done", progress: 1,
+  result: { key: f.key, size: f.size, mime: f.mime, sig: f.sig, hasThumb: f.hasThumb, width: f.width, height: f.height },
+}));
+
+/** Ngày gợi ý cho "Ngày định gửi" */
+function quickDates() {
+  const d = new Date();
+  const tomorrow = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  return [["Ngày mai", localYmd(tomorrow)], ["Ngày 1 tháng sau", localYmd(nextMonth)]];
+}
+
+/** Đầu trang chọn mẫu: các bản lưu tạm (đến ngày gửi trước) — chỉ tải khi có */
+function DraftShelf() {
+  const count = useRq((s) => s.counts.drafts);
+  const { rows, today, remove } = useDrafts(count > 0);
+  if (!count || !rows?.length) return null;
+  const shown = rows.slice(0, 5);
+  return (
+    <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/50 p-3 sm:p-4" data-draft-shelf>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-slate-800"><FileClock className="h-4 w-4 text-amber-600" /> Đề xuất lưu tạm của bạn</h2>
+        {rows.length > shown.length && <Link to={R.requestDrafts} className="text-xs font-medium text-blue-700 hover:underline">Xem tất cả ({rows.length})</Link>}
+      </div>
+      <ul className="space-y-2">{shown.map((d) => <DraftCard key={d.draftId} d={d} today={today} onDelete={remove} />)}</ul>
+    </section>
+  );
+}
+
 /* ------------------------------ Bước 1: chọn mẫu ------------------------------ */
 function TypePicker({ onPick }) {
   const boot = useRq((s) => s.boot);
@@ -77,6 +134,7 @@ function TypePicker({ onPick }) {
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
         <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm mẫu đề xuất (nghỉ phép, tạm ứng, mua sắm…)" className={cn(inputCls, "pl-9")} />
       </label>
+      {!q && <DraftShelf />}
       {(boot?.types || []).length === 0 && (
         <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
           Chưa có mẫu đề xuất nào dành cho bạn. {boot?.me?.isAdmin ? "Vào Quản trị → Mẫu đề xuất để tạo." : "Liên hệ quản trị viên."}
@@ -158,10 +216,11 @@ function FlowPreview({ flow, picked, setPicked, errors }) {
 }
 
 /* ------------------------------ Bước 2: điền form ------------------------------ */
-function RequestForm({ type, edit, copy, onBack }) {
+function RequestForm({ type, edit, copy, saved, onBack }) {
   const navigate = useNavigate();
   const me = useRq((s) => s.boot?.me);
-  const draftKey = edit ? null : `rq_draft_${me?.userId}_${type.typeId}`;
+  // nháp trên máy (localStorage) chỉ khi tạo mới — bản lưu tạm trên máy chủ (saved) thì không
+  const draftKey = edit || saved ? null : `rq_draft_${me?.userId}_${type.typeId}`;
   const draft = useMemo(() => {
     if (!draftKey || copy) return null; // nhân bản: lấy nội dung đề xuất cũ, không lấy nháp
     try { return JSON.parse(localStorage.getItem(draftKey) || "null"); } catch { return null; }
@@ -171,19 +230,26 @@ function RequestForm({ type, edit, copy, onBack }) {
   const options = edit ? edit.options : type.options;
   const flow = useMemo(() => (edit ? [] : type.flow), [edit, type.flow]);
 
-  const [title, setTitle] = useState(edit?.title ?? copy?.title ?? draft?.title ?? "");
-  const [values, setValues] = useState(() => withComputed(fields, edit?.values ?? (copy ? valuesFromCopy(type, copy) : draft?.values) ?? {}));
-  const [priority, setPriority] = useState(edit?.priority ?? copy?.priority ?? draft?.priority ?? "normal");
-  const [deadline, setDeadline] = useState(edit?.deadline ?? draft?.deadline ?? "");
-  const [followers, setFollowers] = useState(draft?.followers ?? []);
-  const [picked, setPicked] = useState(() => (copy ? pickedFromCopy(type, copy, me?.userId) : draft?.picked ?? {}));
+  const [title, setTitle] = useState(edit?.title ?? copy?.title ?? saved?.title ?? draft?.title ?? "");
+  const [values, setValues] = useState(() => withComputed(fields,
+    edit?.values ?? (copy ? valuesFromCopy(type, copy) : saved ? valuesFromSaved(type, saved) : draft?.values) ?? {}));
+  const [priority, setPriority] = useState(edit?.priority ?? copy?.priority ?? saved?.priority ?? draft?.priority ?? "normal");
+  const [deadline, setDeadline] = useState(edit?.deadline ?? saved?.deadline ?? draft?.deadline ?? "");
+  const [followers, setFollowers] = useState(saved ? saved.followerIds || [] : draft?.followers ?? []);
+  const [picked, setPicked] = useState(() => (copy ? pickedFromCopy(type, copy, me?.userId)
+    : saved ? pickedFromSaved(type, saved, me?.userId) : draft?.picked ?? {}));
   const [keepIds, setKeepIds] = useState(() => new Set((edit?.files || []).map((f) => f.fileId)));
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [restored, setRestored] = useState(!!draft && !edit);
-  const att = useAttachments();
+  const [initialAtt] = useState(() => attItemsFromSaved(saved));
+  const att = useAttachments(initialAtt);
   const cardRefs = useRef({});
+  // lưu tạm (máy chủ): hộp chọn ngày định gửi
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [sendDate, setSendDate] = useState(saved?.sendDate || "");
+  const [savingDraft, setSavingDraft] = useState(false);
 
   // tự lưu nháp (chỉ khi tạo mới)
   useEffect(() => {
@@ -248,8 +314,9 @@ function RequestForm({ type, edit, copy, onBack }) {
         const r = await rqApi.create({
           typeId: type.typeId, title: title.trim(), values, priority, deadline: deadline || null,
           attachments: att.done, followerIds: followers, pickedApprovers: picked,
+          draftId: saved?.draftId, // gửi từ bản lưu tạm → máy chủ xoá bản đó cùng lúc
         });
-        try { localStorage.removeItem(draftKey); } catch { /* bỏ qua */ }
+        try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* bỏ qua */ }
         toast.success(r.status === "approved" ? "Đã gửi — đề xuất tự duyệt (bạn là người duyệt)" : "Đã gửi đề xuất");
         rqEvents.emit("changed", { requestId: r.requestId });
         refreshCounts();
@@ -261,14 +328,40 @@ function RequestForm({ type, edit, copy, onBack }) {
     }
   };
 
+  // Lưu tạm trên máy chủ: được lưu khi còn điền dở (không kiểm trường bắt buộc) — lúc gửi mới kiểm
+  const saveDraft = async () => {
+    if (savingDraft) return;
+    if (att.uploading) return toast.info("Đợi tải tệp xong rồi lưu tạm");
+    if (att.failed) return toast.error("Có tệp tải lên lỗi — thử lại hoặc bỏ tệp đó");
+    setSavingDraft(true);
+    try {
+      const body = {
+        typeId: type.typeId, title: title.trim(), values, fieldTypes: Object.fromEntries(fields.map((f) => [f.key, f.type])),
+        priority, deadline: deadline || null, sendDate: sendDate || null,
+        followerIds: followers, pickedApprovers: picked, attachments: att.done,
+      };
+      if (saved) await rqApi.updateDraft(saved.draftId, body);
+      else await rqApi.createDraft(body);
+      try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* bỏ qua */ }
+      toast.success(sendDate ? `Đã lưu tạm — ngày định gửi ${fmtYmd(sendDate)}` : "Đã lưu tạm");
+      refreshCounts();
+      navigate(R.requestDrafts, { replace: true });
+    } catch (e) {
+      toast.error(errorMessage(e, "Lưu tạm thất bại"));
+      setSavingDraft(false);
+    }
+  };
+
   const halfOk = (f) => f.width === "half" && !FULL_WIDTH_TYPES.includes(f.type);
   const fixedFollowers = (type.defaultFollowers || []).filter((uid) => uid !== me?.userId);
+  const busy = sending || savingDraft;
   const submitBar = (cls) => (
     <div className={cls}>
       <div className="flex items-center justify-end gap-2">
-        <span className="mr-auto text-xs text-slate-400">{att.uploading ? "Đang tải tệp lên…" : flow.length ? `${flow.length} bước duyệt` : ""}</span>
-        <Button variant="secondary" onClick={onBack} disabled={sending}>Huỷ</Button>
-        <Button icon={Send} loading={sending || att.uploading} onClick={submit}>{edit ? (edit.status === "returned" ? "Gửi lại" : "Lưu thay đổi") : "Gửi đề xuất"}</Button>
+        <span className="mr-auto hidden min-w-0 truncate text-xs text-slate-400 sm:inline">{att.uploading ? "Đang tải tệp lên…" : flow.length ? `${flow.length} bước duyệt` : ""}</span>
+        <Button variant="secondary" className="shrink-0 whitespace-nowrap" onClick={onBack} disabled={busy}>Huỷ</Button>
+        {!edit && <Button variant="secondary" icon={Save} className="shrink-0 whitespace-nowrap" disabled={busy || att.uploading} onClick={() => setSaveOpen(true)} data-save-draft>Lưu tạm</Button>}
+        <Button icon={Send} className="shrink-0 whitespace-nowrap" loading={sending || att.uploading} disabled={savingDraft} onClick={submit}>{edit ? (edit.status === "returned" ? "Gửi lại" : "Lưu thay đổi") : "Gửi đề xuất"}</Button>
       </div>
     </div>
   );
@@ -276,7 +369,7 @@ function RequestForm({ type, edit, copy, onBack }) {
   return (
     <PageScroll max="max-w-[1400px]">
       <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-        <ArrowLeft className="h-4 w-4" /> {edit || copy ? "Quay lại đề xuất" : "Chọn mẫu khác"}
+        <ArrowLeft className="h-4 w-4" /> {saved ? "Về danh sách lưu tạm" : edit || copy ? "Quay lại đề xuất" : "Chọn mẫu khác"}
       </button>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
@@ -296,6 +389,15 @@ function RequestForm({ type, edit, copy, onBack }) {
         <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
           <span>Đã khôi phục nội dung bạn điền dở lần trước.</span>
           <button type="button" className="font-medium underline" onClick={discardDraft}>Xoá nháp</button>
+        </div>
+      )}
+      {saved && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900" data-saved-banner>
+          <FileClock className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Đang mở <b>đề xuất lưu tạm</b> (lưu lúc {fmtDateTime(saved.updatedAt)}{saved.sendDate ? <>, ngày định gửi <b>{fmtYmd(saved.sendDate)}</b></> : ""}).
+            Kiểm tra lại rồi bấm <b>Gửi đề xuất</b> — hoặc <b>Lưu tạm</b> để sửa tiếp lần sau.
+          </span>
         </div>
       )}
       {copy && (
@@ -417,6 +519,31 @@ function RequestForm({ type, edit, copy, onBack }) {
       </div>
 
       {submitBar("sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:rounded-2xl sm:border xl:hidden")}
+
+      <Modal open={saveOpen} onClose={() => !savingDraft && setSaveOpen(false)} title="Lưu tạm đề xuất" size="sm"
+        footer={(
+          <>
+            <Button variant="secondary" disabled={savingDraft} onClick={() => setSaveOpen(false)}>Huỷ</Button>
+            <Button icon={Save} loading={savingDraft} onClick={saveDraft} data-confirm-save-draft>Lưu tạm</Button>
+          </>
+        )}>
+        <p className="text-sm text-slate-600">
+          Đề xuất <b>chưa được gửi</b> — chưa ai thấy. Tới ngày, vào mục <b>Lưu tạm</b> (hoặc bấm <b>Tạo đề xuất</b>) bấm vào đề xuất này,
+          kiểm tra lại rồi bấm <b>Gửi đề xuất</b>. Tệp đã đính kèm được giữ lại.
+        </p>
+        <Field label="Ngày định gửi" hint={'Không bắt buộc — tới ngày này đề xuất hiện nhãn "Đến ngày gửi" và được đếm ở menu Lưu tạm'} className="mt-4">
+          <input type="date" className={inputCls} value={sendDate} min={localYmd()} onChange={(e) => setSendDate(e.target.value)} data-send-date />
+        </Field>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {quickDates().map(([label, ymd]) => (
+            <button key={label} type="button" onClick={() => setSendDate(ymd)}
+              className={cn("rounded-full px-2.5 py-1 text-xs ring-1", sendDate === ymd ? "bg-blue-600 text-white ring-blue-600" : "bg-white text-slate-600 ring-slate-300 hover:bg-slate-50")}>
+              {label} ({fmtYmd(ymd)})
+            </button>
+          ))}
+          {sendDate && <button type="button" onClick={() => setSendDate("")} className="rounded-full px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100">Bỏ ngày</button>}
+        </div>
+      </Modal>
     </PageScroll>
   );
 }
@@ -464,10 +591,23 @@ export default function RequestCreate() {
   const boot = useRq((s) => s.boot);
   const typeId = Number(params.get("type")) || null;
   const copyId = Number(params.get("copy")) || null;
+  const draftId = Number(params.get("draft")) || null;
   const [edit, setEdit] = useState(null);
   const [editError, setEditError] = useState(null);
   const [copy, setCopy] = useState(null);
   const [copyError, setCopyError] = useState(null);
+  const [saved, setSaved] = useState(null);
+  const [savedError, setSavedError] = useState(null);
+
+  // mở bản lưu tạm (chỉ bản của mình)
+  useEffect(() => {
+    if (!draftId || id) return undefined;
+    let alive = true;
+    setSaved(null);
+    setSavedError(null);
+    rqApi.draft(draftId).then((d) => { if (alive) setSaved(d); }).catch((e) => { if (alive) setSavedError(errorMessage(e, "Không tải được bản lưu tạm")); });
+    return () => { alive = false; };
+  }, [draftId, id]);
 
   // nhân bản: tải đề xuất gốc (chỉ đề xuất mình xem được)
   useEffect(() => {
@@ -505,6 +645,33 @@ export default function RequestCreate() {
     if (!edit) return <FormSkeleton />;
     const type = { typeId: edit.typeId, name: edit.typeName, icon: edit.icon, color: edit.color };
     return <RequestForm key={`e${id}`} type={type} edit={edit} onBack={() => navigate(`${R.request}?box=mine&id=${id}`)} />;
+  }
+
+  if (draftId) {
+    const back = () => navigate(R.requestDrafts);
+    if (savedError) {
+      return (
+        <PageScroll max="max-w-xl">
+          <div className="rounded-xl bg-red-50 p-6 text-center text-sm text-red-700">
+            <p>{savedError}</p>
+            <Button variant="secondary" className="mt-3" onClick={back}>Về danh sách lưu tạm</Button>
+          </div>
+        </PageScroll>
+      );
+    }
+    if (!saved || !boot) return <FormSkeleton />;
+    const savedType = boot.types?.find((t) => t.typeId === saved.typeId);
+    if (!savedType) {
+      return (
+        <PageScroll max="max-w-xl">
+          <div className="rounded-xl bg-amber-50 p-6 text-center text-sm text-amber-800">
+            Mẫu "{saved.typeName}" của bản lưu tạm này đã ngừng dùng hoặc không còn dành cho bạn — không gửi được. Xoá bản lưu tạm ở trang Lưu tạm.
+            <div><Button variant="secondary" className="mt-3" onClick={back}>Về danh sách lưu tạm</Button></div>
+          </div>
+        </PageScroll>
+      );
+    }
+    return <RequestForm key={`d${draftId}`} type={savedType} saved={saved} onBack={back} />;
   }
 
   if (copyId) {

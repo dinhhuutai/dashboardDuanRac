@@ -83,6 +83,8 @@ const DefaultLayoutAdminMES = lazyPage(() => import("./layoutsMESAdmin/DefaultLa
 const DefaultLayoutCapMoney = lazyPage(() => import("./layoutCapMoney/DefaultLayout"));
 
 const DefaultLayoutRequest = lazyPage(() => import("./layoutsRequest/DefaultLayout"));
+// module 18: mở web lên → nhắc đề xuất lưu tạm đã tới ngày gửi (mọi trang)
+const DraftDueReminder = lazyPage(() => import("./pagesRequest/DraftDueReminder"));
 
 function PageLoading() {
   return (
@@ -536,6 +538,12 @@ function AppRoutes({ user }) {
           ))}
         </Route>
       </Routes>
+      {/* nhắc đề xuất lưu tạm tới ngày gửi — Suspense riêng: tải lười không làm hiện màn hình chờ của cả trang */}
+      {isLoggedIn && hasModule(MODULEID.YEUCAU) && user?.login?.currentUser?.hasChangedPassword !== false && (
+        <Suspense fallback={null}>
+          <DraftDueReminder userId={user.login.currentUser.userID} />
+        </Suspense>
+      )}
     </Suspense>
   );
 }

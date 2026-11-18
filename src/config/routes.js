@@ -120,7 +120,8 @@ const routes = {
 
   // Module 18 — Quản lý đề xuất (đề xuất / duyệt / chat)
   request: '/request',                     // ?box=inbox|mine|processed|following|all &id=…
-  requestNew: '/request/new',              // ?type=ID
+  requestNew: '/request/new',              // ?type=ID | ?copy=ID | ?draft=ID (mở bản lưu tạm)
+  requestDrafts: '/request/drafts',        // đề xuất lưu tạm của tôi
   requestEdit: '/request/edit',            // /request/edit/:id — sửa & gửi lại
   requestChat: '/request/chat',            // ?c=conversationId
   requestReports: '/request/reports',      // + /:id — xem báo cáo

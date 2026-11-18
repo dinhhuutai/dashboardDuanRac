@@ -6,7 +6,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileStack, FileUp, Home, Inbox, Layers, ListChecks, Loader2,
+  BarChart3, Bell, BellRing, Building2, CheckCheck, ClipboardCheck, FileClock, FileStack, FileUp, Home, Inbox, Layers, ListChecks, Loader2,
   MessagesSquare, PieChart, Plus, Search, Send, Star, UserCog, X,
 } from "lucide-react";
 import config from "~/config";
@@ -41,6 +41,7 @@ const prefetchPages = [
   { preload: () => import("~/pagesRequest/RequestHome") },
   { preload: () => import("~/pagesRequest/RequestCreate") },
   { preload: () => import("~/pagesRequest/Chat") },
+  { preload: () => import("~/pagesRequest/Drafts") },
 ];
 
 /* ------------------------------ Thông báo ------------------------------ */
@@ -157,6 +158,14 @@ function Sidebar({ onNavigate }) {
             </Link>
           );
         })}
+        {/* đề xuất lưu tạm (sql/18): đỏ = số bản đã tới ngày định gửi, xám = tổng số bản */}
+        <NavLink to={R.requestDrafts} onClick={onNavigate} className={({ isActive }) => item(isActive)}>
+          <FileClock className="h-4 w-4 shrink-0" />
+          <span className="flex-1 truncate">Lưu tạm</span>
+          {counts.draftsDue > 0
+            ? <span title="Đến ngày gửi"><CountBadge n={counts.draftsDue} tone="red" /></span>
+            : <CountBadge n={counts.drafts} tone="slate" />}
+        </NavLink>
 
         {boot?.groups?.length > 0 && (
           <>
