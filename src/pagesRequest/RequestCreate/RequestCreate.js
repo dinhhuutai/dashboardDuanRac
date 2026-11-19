@@ -42,11 +42,11 @@ function valuesFromCopy(type, src) {
   return out;
 }
 /** Người duyệt đã chọn ở đề xuất cũ → gợi ý lại cho các bước "người gửi tự chọn" trùng tên (người gửi đổi được) */
-function pickedFromCopy(type, src, meId) {
+function pickedFromCopy(type, src) {
   const out = {};
   for (const s of type.flow) {
     if (s.approverType !== "requester_pick") continue;
-    let ids = [...new Set((src.approvers || []).filter((a) => a.stepName === s.name).map((a) => a.userId))].filter((id) => id !== meId);
+    let ids = [...new Set((src.approvers || []).filter((a) => a.stepName === s.name).map((a) => a.userId))];
     if (s.userIds?.length) ids = ids.filter((id) => s.userIds.includes(id));
     if (s.maxPick) ids = ids.slice(0, s.maxPick);
     if (ids.length) out[s.key] = ids;
@@ -61,11 +61,11 @@ const valuesFromSaved = (type, saved) => valuesFromCopy(type, {
   values: saved.values || {},
 });
 /** Người duyệt đã chọn: chỉ giữ bước "người gửi tự chọn" còn tồn tại, người còn được phép chọn */
-function pickedFromSaved(type, saved, meId) {
+function pickedFromSaved(type, saved) {
   const out = {};
   for (const s of type.flow) {
     if (s.approverType !== "requester_pick") continue;
-    let ids = (saved.pickedApprovers?.[s.key] || []).filter((id) => id !== meId);
+    let ids = saved.pickedApprovers?.[s.key] || [];
     if (s.userIds?.length) ids = ids.filter((id) => s.userIds.includes(id));
     if (s.maxPick) ids = ids.slice(0, s.maxPick);
     if (ids.length) out[s.key] = ids;
@@ -186,11 +186,18 @@ function FlowPreview({ flow, picked, setPicked, errors }) {
           else if (!ids.length) warn = "Tổ/phòng của bạn chưa được cấu hình người duyệt — liên hệ quản trị viên.";
           body = <span className="text-sm text-slate-600">{heads.team.length ? "Tổ trưởng" : "Trưởng phòng (tổ chưa có tổ trưởng)"}: {ids.length ? <UserList ids={ids} /> : "—"}</span>;
         } else {
+          // người gửi được chọn CHÍNH MÌNH (vd. trưởng phòng gửi đề xuất, tự duyệt bước Trưởng phòng) → tự bấm Duyệt sau khi gửi
+          const selfPicked = !!me && (picked[s.key] || []).includes(me.userId);
           body = (
             <div data-pick-step={s.key}>
               <UserPicker value={picked[s.key] || []} onChange={(v) => setPicked((p) => ({ ...p, [s.key]: v }))} max={s.maxPick || undefined}
-                allowIds={s.userIds?.length ? s.userIds : undefined} excludeIds={me ? [me.userId] : []}
+                allowIds={s.userIds?.length ? s.userIds : undefined}
                 placeholder={s.optional ? "Chọn người duyệt (có thể bỏ qua)…" : "Chọn người duyệt…"} />
+              {selfPicked && (
+                <p className="mt-1 flex items-start gap-1 text-xs text-blue-700" data-self-approve>
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Bạn tự duyệt bước này — gửi xong, vào &quot;Cần tôi duyệt&quot; để bấm Duyệt.
+                </p>
+              )}
               {errors[s.key] && <p className="mt-1 text-xs text-red-600">{errors[s.key]}</p>}
             </div>
           );
@@ -236,8 +243,8 @@ function RequestForm({ type, edit, copy, saved, onBack }) {
   const [priority, setPriority] = useState(edit?.priority ?? copy?.priority ?? saved?.priority ?? draft?.priority ?? "normal");
   const [deadline, setDeadline] = useState(edit?.deadline ?? saved?.deadline ?? draft?.deadline ?? "");
   const [followers, setFollowers] = useState(saved ? saved.followerIds || [] : draft?.followers ?? []);
-  const [picked, setPicked] = useState(() => (copy ? pickedFromCopy(type, copy, me?.userId)
-    : saved ? pickedFromSaved(type, saved, me?.userId) : draft?.picked ?? {}));
+  const [picked, setPicked] = useState(() => (copy ? pickedFromCopy(type, copy)
+    : saved ? pickedFromSaved(type, saved) : draft?.picked ?? {}));
   const [keepIds, setKeepIds] = useState(() => new Set((edit?.files || []).map((f) => f.fileId)));
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState({});
