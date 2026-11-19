@@ -397,7 +397,8 @@ export default function RequestDetail({ id, onBack, onChanged }) {
             {/* Nội dung */}
             <Section title="Nội dung đề xuất" bodyClass="">
               {data.fields.length ? (
-                <FieldValues fields={data.fields} values={data.values} filesByField={filesByField} accent={accent} renderFiles={(fs) => <FileGallery files={fs} size="sm" />} />
+                <FieldValues fields={data.fields} values={data.values} filesByField={filesByField} accent={accent} renderFiles={(fs) => <FileGallery files={fs} size="sm" />}
+                  exportName={`De xuat ${data.requestId}`} />
               ) : <p className="p-4 text-sm text-slate-400">Mẫu đề xuất không có trường thông tin.</p>}
             </Section>
 

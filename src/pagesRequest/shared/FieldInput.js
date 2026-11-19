@@ -1,6 +1,8 @@
 // Ô nhập cho 1 trường của mẫu đề xuất + hiển thị giá trị đã gửi
-import { Calculator, Check, Plus, Trash2 } from "lucide-react";
-import { cn, inputCls } from "~/pagesForm/shared/ui";
+// Trường bảng: tải file mẫu Excel / nhập từ Excel (form) và tải Excel (xem) — shared/tableExcel.js
+import { useRef, useState } from "react";
+import { Calculator, Check, Download, FileDown, FileSpreadsheet, Loader2, Plus, Trash2 } from "lucide-react";
+import { cn, confirmDialog, inputCls, toast } from "~/pagesForm/shared/ui";
 import { UserPicker } from "./components";
 import { AttachmentPicker } from "./Attachments";
 import { cellText, columnSum, computeRow, displayValue, isComputed, isNumericCol, rowHasData } from "./fieldTypes";
@@ -50,6 +52,51 @@ function totalsOf(columns, rows) {
   return any ? sums : null;
 }
 
+const toolBtn = "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-800 disabled:opacity-50";
+
+/** Thanh Excel trên ô nhập bảng: tải file mẫu + nhập từ Excel (thay nội dung bảng) */
+function TableExcelBar({ field: f, rows, onChange }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(null); // "template" | "import"
+  const run = async (kind, fn) => {
+    setBusy(kind);
+    try { await fn(await import("./tableExcel")); } catch (e) {
+      console.error(e);
+      toast.error(e.user ? e.message : kind === "import" ? "Không đọc được tệp Excel" : "Không tạo được tệp mẫu");
+    } finally { setBusy(null); }
+  };
+  const pick = (file) => file && run("import", async (X) => {
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) { toast.error("Chọn tệp Excel (.xlsx)"); return; }
+    const r = await X.importTableFile(f, file);
+    if (!r.rows.length) { toast.error(`Tệp không có dòng nào có dữ liệu ở các cột: ${r.matched.join(", ")}`); return; }
+    const current = rows.filter((x) => rowHasData(f.columns || [], x)).length;
+    if (current && !(await confirmDialog({
+      title: "Nhập từ Excel",
+      message: `Thay ${current} dòng đang có bằng ${r.rows.length} dòng trong tệp "${file.name}"?`,
+      confirmText: "Thay nội dung",
+    }))) return;
+    onChange(r.rows);
+    const notes = [
+      r.missing.length ? `tệp không có cột: ${r.missing.join(", ")}` : "",
+      r.cut ? `bỏ ${r.cut} dòng vượt quá ${f.maxRows || 50} dòng` : "",
+      r.bad.length ? `${r.bad.length} ô không đọc được (${r.bad.slice(0, 2).join("; ")}${r.bad.length > 2 ? "…" : ""})` : "",
+    ].filter(Boolean);
+    if (notes.length) toast.info(`Đã nhập ${r.rows.length} dòng — ${notes.join(" · ")}`);
+    else toast.success(`Đã nhập ${r.rows.length} dòng từ Excel`);
+  });
+  return (
+    <div className="mb-2 flex flex-wrap gap-2" data-table-excel={f.key}>
+      <button type="button" className={toolBtn} disabled={!!busy} onClick={() => run("template", (X) => X.downloadTemplate(f))}>
+        {busy === "template" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 text-emerald-600" />} Tải file mẫu Excel
+      </button>
+      <button type="button" className={toolBtn} disabled={!!busy} onClick={() => inputRef.current?.click()}>
+        {busy === "import" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />} Nhập từ Excel
+      </button>
+      <input ref={inputRef} type="file" hidden accept=".xlsx,.xls,.csv" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+    </div>
+  );
+}
+
 /** Ô nhập kiểu bảng: thêm/xoá dòng, cột "= A × B" tự tính, dòng tổng. Điện thoại: mỗi dòng 1 thẻ. */
 export function TableInput({ field: f, value, onChange, error, disabled }) {
   const cols = f.columns || [];
@@ -67,6 +114,7 @@ export function TableInput({ field: f, value, onChange, error, disabled }) {
 
   return (
     <div data-table-field={f.key}>
+      {!disabled && <TableExcelBar field={f} rows={rows} onChange={onChange} />}
       {/* Máy tính / máy tính bảng */}
       <div className={cn("hidden overflow-x-auto rounded-xl border sm:block", error ? "border-red-300" : "border-slate-200")}>
         <table className="w-full border-collapse text-sm">
@@ -144,13 +192,32 @@ export function TableInput({ field: f, value, onChange, error, disabled }) {
   );
 }
 
-/** Bảng đã gửi (chỉ xem) */
-export function TableValue({ field: f, rows }) {
+/** Nút "Tải Excel" của bảng đã gửi */
+function TableExportButton({ field, rows, fileName }) {
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    try { await (await import("./tableExcel")).exportTable(field, rows, fileName); } catch (e) {
+      console.error(e);
+      toast.error("Không tạo được tệp Excel");
+    } finally { setBusy(false); }
+  };
+  return (
+    <button type="button" onClick={go} disabled={busy} className={toolBtn} data-table-export={field.key}>
+      {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 text-emerald-600" />} Tải Excel
+    </button>
+  );
+}
+
+/** Bảng đã gửi (chỉ xem). exportName → hiện nút "Tải Excel" (tên tệp) */
+export function TableValue({ field: f, rows, exportName }) {
   const cols = f.columns || [];
   const list = Array.isArray(rows) ? rows : [];
   if (!list.length) return <span className="text-slate-400">—</span>;
   const totals = totalsOf(cols, list);
   return (
+    <div>
+    {exportName && <div className="mb-2 flex justify-end"><TableExportButton field={f} rows={list} fileName={exportName} /></div>}
     <div className="overflow-x-auto rounded-xl border border-slate-200">
       <table className="w-full border-collapse text-sm">
         <thead>
@@ -182,6 +249,7 @@ export function TableValue({ field: f, rows }) {
           </tfoot>
         )}
       </table>
+    </div>
     </div>
   );
 }
@@ -292,7 +360,7 @@ export function FieldInput({ field: f, value, onChange, error, att, disabled }) 
  * Nội dung đề xuất đã gửi — kiểu Base Request: mỗi trường 1 dòng, nhãn bên trái (xám), GIÁ TRỊ IN ĐẬM bên phải;
  * số tiền to + đậm, "bằng chữ" in nghiêng; bảng / đoạn văn / tệp chiếm cả dòng dưới nhãn; tiêu đề phần có vạch màu mẫu.
  */
-export function FieldValues({ fields, values, filesByField, renderFiles, accent = "#2563eb" }) {
+export function FieldValues({ fields, values, filesByField, renderFiles, accent = "#2563eb", exportName }) {
   const rows = [];
   for (const f of fields || []) {
     if (f.type === "section") {
@@ -310,7 +378,7 @@ export function FieldValues({ fields, values, filesByField, renderFiles, accent 
       const fs = filesByField?.[f.key] || [];
       content = fs.length ? renderFiles(fs) : <span className="font-normal text-slate-400">—</span>;
     } else if (f.type === "table") {
-      content = <TableValue field={f} rows={values?.[f.key]} />;
+      content = <TableValue field={f} rows={values?.[f.key]} exportName={exportName ? `${exportName} - ${f.label}` : undefined} />;
     } else {
       const text = displayValue(f, values?.[f.key], (id) => userName(id));
       const money = f.type === "currency" && text;
